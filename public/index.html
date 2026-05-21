@@ -7027,14 +7027,16 @@ function applyDarkMode(isDark, silent) {
   _isDark = !!isDark;
   var html = document.documentElement;
   html.setAttribute('data-dark', _isDark ? '1' : '0');
-  // 토글 UI 동기화 (양쪽 설정 패널)
+  // 토글 UI 동기화
   var dtEl = document.getElementById('dark-toggle');
   if (dtEl) dtEl.classList.toggle('off', !_isDark);
   // 바깥 배경 전환
   document.body.style.background = _isDark
     ? 'radial-gradient(ellipse at 30% 20%,#1a1a38 0%,#0e0e20 60%,#080812 100%)'
     : 'radial-gradient(ellipse at 30% 20%,#1a2a22 0%,#0C1410 60%,#080E0B 100%)';
-  // 다크모드에서 --green-light 를 테마에 맞게 tint로 재적용
+  // 항상 저장 (라이트 전환 시도 저장 누락 버그 수정)
+  localStorage.setItem('riq_dark', _isDark ? '1' : '0');
+  // 다크모드: CSS 변수 tint 적용 / 라이트모드: 테마 복원
   if (_isDark) {
     var t = THEMES[_currentTheme];
     if (t) {
@@ -7043,10 +7045,8 @@ function applyDarkMode(isDark, silent) {
       document.documentElement.style.setProperty('--gold-light',  t.color + '22');
     }
   } else {
-    applyTheme(_currentTheme); // 라이트 복원
-    return;
+    applyTheme(_currentTheme);
   }
-  localStorage.setItem('riq_dark', _isDark ? '1' : '0');
   if (!silent) showToast(_isDark ? '🌙 다크모드로 전환했어요' : '☀️ 라이트모드로 전환했어요');
 }
 
@@ -7543,8 +7543,9 @@ function showApp() {
     r.style.setProperty('--gold-shadow', '0 6px 24px '+t.dark+'4D, 0 2px 8px '+t.dark+'26');
     document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = t.grad; });
   })();
-  // 저장된 다크모드 복원
-  applyDarkMode(localStorage.getItem('riq_dark') === '1', true);
+  // 저장된 다크모드 복원 (미설정 시 기본값: 라이트모드)
+  var savedDark = localStorage.getItem('riq_dark');
+  applyDarkMode(savedDark === '1', true);
   loadFromSupabase();
   applyProfile();
   var _now = new Date();
