@@ -2556,6 +2556,41 @@ var _ctNoticeIdx = 0;
 var _ctNoticeTimer = null;
 var _ctCommunityInited = false;
 
+async function ctLoadPosts() {
+  var list = document.getElementById('ct-post-list');
+  if (list) list.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:13px;">読み込み中...</div>';
+
+  var res = await _sb.from('ct_posts')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
+
+  if (res.error) {
+    console.warn('posts load:', res.error.message);
+    if (list) list.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:13px;">読み込みに失敗しました</div>';
+    return;
+  }
+
+  _ctDummyPosts = (res.data || []).map(function(p) {
+    var d = new Date(p.created_at);
+    return {
+      id: p.id,
+      cat: p.cat,
+      title: p.title,
+      content: p.content,
+      user: p.user_name,
+      user_avatar: p.user_avatar || '😊',
+      likes: p.likes || 0,
+      date: (d.getMonth() + 1) + '/' + d.getDate(),
+      comments: 0,
+      img: null,
+      allImgs: [],
+      user_id: p.user_id,
+    };
+  });
+  ctRenderPosts();
+}
+
 function ctGetPostCat(key) {
   return CT_POST_CATS.find(function(c) { return c.key === key; }) || CT_POST_CATS[0];
 }
@@ -2563,9 +2598,9 @@ function ctGetPostCat(key) {
 function ctInitCommunity() {
   if (!_ctCommunityInited) {
     ctRenderCatBar();
-    ctRenderPosts();
     _ctCommunityInited = true;
   }
+  ctLoadPosts();
   ctStartBanner();
 }
 
@@ -2636,7 +2671,7 @@ function ctRenderPosts() {
       }
       return (
         '<div style="background:var(--surface);border-radius:14px;margin-bottom:8px;border:0.5px solid var(--border);overflow:hidden;">' +
-          '<div onclick="ctTogglePost(' + p.id + ')" style="padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;">' +
+          '<div onclick="ctTogglePost(\'' + p.id + '\')" style="padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;">' +
             '<div style="flex:1;min-width:0;">' +
               '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;overflow:hidden;">' +
                 '<span style="font-size:10px;font-weight:700;color:' + cat.color + ';background:' + cat.bg + ';border-radius:5px;padding:2px 7px;flex-shrink:0;">' + cat.label + '</span>' +
@@ -2657,15 +2692,15 @@ function ctRenderPosts() {
               '<div style="font-size:13px;color:var(--text-2);line-height:1.75;padding:12px 0 14px;">' + contentLines + '</div>' +
               imgGallery +
               '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
-                '<button id="ct-like-btn-' + p.id + '" onclick="ctLikePost(' + p.id + ')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);transition:all .15s;">❤️ ' + p.likes + '</button>' +
-                '<button onclick="ctFocusComment(' + p.id + ')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);">💬 コメント</button>' +
+                '<button id="ct-like-btn-' + p.id + '" onclick="ctLikePost(\'' + p.id + '\')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);transition:all .15s;">❤️ ' + p.likes + '</button>' +
+                '<button onclick="ctFocusComment(\'' + p.id + '\')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);">💬 コメント</button>' +
               '</div>' +
               '<div id="ct-comments-' + p.id + '" style="margin-bottom:10px;"></div>' +
               '<div style="display:flex;gap:8px;align-items:center;">' +
                 '<input id="ct-comment-input-' + p.id + '" type="text" placeholder="コメントを書く..." ' +
-                  'onkeydown="if(event.key===\'Enter\')ctAddComment(' + p.id + ')" ' +
+                  'onkeydown="if(event.key===\'Enter\')ctAddComment(\'' + p.id + '\')" ' +
                   'style="flex:1;padding:9px 13px;border-radius:20px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">' +
-                '<button onclick="ctAddComment(' + p.id + ')" style="width:36px;height:36px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+                '<button onclick="ctAddComment(\'' + p.id + '\')" style="width:36px;height:36px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
                   '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
                 '</button>' +
               '</div>' +
@@ -2715,7 +2750,7 @@ function ctTogglePost(id) {
   }
 }
 
-function ctLikePost(id) {
+async function ctLikePost(id) {
   var p = _ctDummyPosts.find(function(x) { return x.id === id; });
   if (!p) return;
   p.likes++;
@@ -2725,7 +2760,9 @@ function ctLikePost(id) {
     btn.style.color = 'var(--red)';
     btn.style.background = 'var(--red-bg)';
     btn.style.borderColor = 'var(--red)';
+    btn.disabled = true; // 중복 클릭 방지
   }
+  await _sb.from('ct_posts').update({ likes: p.likes }).eq('id', id);
 }
 
 var _ctPostComments = {};
@@ -2957,26 +2994,55 @@ function ctWritePickImg(input) {
   input.value = '';
 }
 
-function ctSubmitPost() {
+async function ctSubmitPost() {
   var title   = (document.getElementById('ct-write-title').value || '').trim();
   var content = (document.getElementById('ct-write-content').value || '').trim();
   if (!title)   { alert('タイトルを入力してください'); return; }
   if (!content) { alert('内容を入力してください'); return; }
-  var now  = new Date();
-  var date = (now.getMonth() + 1) + '/' + now.getDate();
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+
+  var nickname = _userNickname || '節約ユーザー';
+  var avatar   = _userAvatar   || '😊';
+
+  var res = await _sb.from('ct_posts').insert({
+    user_id:    _currentUser.id,
+    user_name:  nickname,
+    user_avatar: avatar,
+    cat:        _ctWriteCat,
+    title:      title,
+    content:    content,
+  }).select().single();
+
+  if (res.error) {
+    showToast('投稿に失敗しました 😢');
+    console.error(res.error);
+    return;
+  }
+
+  var now = new Date();
   _ctDummyPosts.unshift({
-    id: Date.now(), cat: _ctWriteCat,
-    title: title, content: content,
-    user: document.getElementById('sp-nickname-display').textContent || '節約ユーザー',
-    comments: 0, likes: 0, date: date,
-    img: _ctWriteImgs.length ? _ctWriteImgs[0] : null,
-    allImgs: _ctWriteImgs.slice(),
+    id:          res.data.id,
+    cat:         _ctWriteCat,
+    title:       title,
+    content:     content,
+    user:        nickname,
+    user_avatar: avatar,
+    likes:       0,
+    date:        (now.getMonth() + 1) + '/' + now.getDate(),
+    comments:    0,
+    img:         _ctWriteImgs.length ? _ctWriteImgs[0] : null,
+    allImgs:     _ctWriteImgs.slice(),
+    user_id:     _currentUser.id,
   });
+
   ctCloseWrite();
   _ctPostCat = 'all';
   _ctPostPage = 1;
   ctRenderCatBar();
   ctRenderPosts();
+  showToast('✅ 投稿しました！ +5コイン');
+  _ctCoinBalance += 5;
+  ctUpdateCoinDisplay();
 }
 
 function ctCloseStoreSheet() {
