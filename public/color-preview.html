@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>チリつも カラープレビュー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;800&family=DM+Sans:wght@400;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#111;font-family:'DM Sans','Noto Sans JP',sans-serif;padding:24px;display:flex;gap:20px;justify-content:center;flex-wrap:wrap;min-height:100vh;align-items:flex-start;}
+.phone{width:320px;background:#eee;border-radius:32px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.6);border:6px solid #222;}
+.label{text-align:center;color:#fff;font-size:11px;font-weight:700;letter-spacing:.8px;margin-bottom:10px;opacity:.6;text-transform:uppercase;}
+.option-title{color:#fff;font-size:14px;font-weight:800;text-align:center;margin-bottom:6px;}
+
+/* ── OPTION 1 — 따뜻한 절약감 ── */
+.o1-hdr{background:linear-gradient(135deg,#E8A020,#B87A10);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.o1-pin{background:rgba(255,255,255,.2);border-radius:10px;padding:8px 14px;display:flex;align-items:center;gap:6px;}
+.o1-map{background:#FAFAF5;height:160px;position:relative;display:flex;align-items:center;justify-content:center;}
+.o1-pill{background:#fff;border:2px solid #E8A020;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:#B87A10;box-shadow:0 2px 8px rgba(232,160,32,.3);}
+.o1-pill.active{background:#E8A020;color:#fff;}
+.o1-tabbar{background:#fff;height:56px;display:flex;border-top:1px solid #eee;}
+.o1-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:700;color:#bbb;}
+.o1-tab.active{color:#E8A020;}
+.o1-tab-dot{width:20px;height:20px;border-radius:6px;background:currentColor;opacity:.15;}
+.o1-tab.active .o1-tab-dot{background:#E8A020;opacity:1;}
+.o1-card{background:#fff;border-radius:16px;margin:10px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.o1-btn{background:#E8A020;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:800;width:100%;cursor:pointer;font-family:inherit;}
+.o1-tag{background:#FDF3DC;color:#B87A10;font-size:10px;font-weight:700;border-radius:6px;padding:3px 8px;display:inline-block;}
+
+/* ── OPTION 2 — 모던 심플 ── */
+.o2-hdr{background:#1A1A2E;padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.o2-map{background:#f0f0f0;height:160px;position:relative;display:flex;align-items:center;justify-content:center;}
+.o2-pill{background:#fff;border:2px solid #F4A261;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:#d4773a;box-shadow:0 2px 8px rgba(244,162,97,.3);}
+.o2-pill.active{background:#F4A261;color:#fff;}
+.o2-tabbar{background:#fff;height:56px;display:flex;border-top:1px solid #eee;}
+.o2-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:700;color:#bbb;}
+.o2-tab.active{color:#F4A261;}
+.o2-card{background:#fff;border-radius:16px;margin:10px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.o2-btn{background:#1A1A2E;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:800;width:100%;cursor:pointer;font-family:inherit;}
+.o2-tag{background:#FEF0E8;color:#d4773a;font-size:10px;font-weight:700;border-radius:6px;padding:3px 8px;display:inline-block;}
+.o2-accent{color:#F4A261;}
+
+/* ── OPTION 3 — 민트 + 레드 ── */
+.o3-hdr{background:linear-gradient(135deg,#4ECDC4,#2eb8ae);padding:14px 16px;display:flex;align-items:center;gap:10px;}
+.o3-map{background:#F7F7F7;height:160px;position:relative;display:flex;align-items:center;justify-content:center;}
+.o3-pill{background:#fff;border:2px solid #4ECDC4;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:#2eb8ae;box-shadow:0 2px 8px rgba(78,205,196,.3);}
+.o3-pill.active{background:#4ECDC4;color:#fff;}
+.o3-tabbar{background:#fff;height:56px;display:flex;border-top:1px solid #eee;}
+.o3-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;font-weight:700;color:#bbb;}
+.o3-tab.active{color:#4ECDC4;}
+.o3-card{background:#fff;border-radius:16px;margin:10px;padding:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
+.o3-btn{background:#4ECDC4;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:800;width:100%;cursor:pointer;font-family:inherit;}
+.o3-tag{background:#e8faf9;color:#2eb8ae;font-size:10px;font-weight:700;border-radius:6px;padding:3px 8px;display:inline-block;}
+.o3-accent{color:#FF6B6B;}
+
+.coin-badge{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.15);border-radius:20px;padding:5px 10px;}
+.coin-val{font-size:12px;font-weight:800;color:#fff;}
+.hdr-title{font-size:16px;font-weight:800;color:#fff;flex:1;}
+.map-pin-group{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.card-name{font-size:14px;font-weight:800;color:#1a1a2e;}
+.card-price{font-size:18px;font-weight:900;}
+.card-meta{font-size:10px;color:#999;margin-bottom:12px;}
+.swatch-row{display:flex;gap:6px;margin-top:6px;}
+.swatch{width:28px;height:28px;border-radius:8px;}
+</style>
+</head>
+<body>
+
+<!-- ── OPTION 1 ── -->
+<div>
+  <div class="option-title">オプション 1</div>
+  <div class="label">따뜻한 절약감 · 황금/녹색</div>
+  <div class="phone">
+    <!-- header -->
+    <div class="o1-hdr">
+      <div class="hdr-title">📍 チリつも</div>
+      <div class="coin-badge"><span>✨</span><span class="coin-val">340</span></div>
+    </div>
+    <!-- map mock -->
+    <div class="o1-map">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#e8e4d8 0%,#d4d0c4 100%);"></div>
+      <div style="position:absolute;top:18px;left:20px;" class="o1-pill active">🍜 ¥780</div>
+      <div style="position:absolute;top:50px;right:24px;" class="o1-pill">🍔 ¥430</div>
+      <div style="position:absolute;bottom:24px;left:36px;" class="o1-pill">☕ ¥550</div>
+      <div style="position:absolute;bottom:14px;right:20px;" class="o1-pill active">🥩 ¥890</div>
+    </div>
+    <!-- card -->
+    <div style="background:#FAFAF5;padding:0 0 4px;">
+      <div class="o1-card">
+        <div class="card-row">
+          <div>
+            <span class="o1-tag">レビュー</span>
+            <div class="card-name" style="margin-top:5px;">業務スーパー 餃子</div>
+          </div>
+          <div class="card-price" style="color:#E8A020;">¥598</div>
+        </div>
+        <div class="card-meta">節約マスター · 💬12 · ❤️34 · 5/19</div>
+        <button class="o1-btn">✨ コスパ判定に参加する</button>
+      </div>
+      <!-- swatch -->
+      <div style="padding:0 12px 10px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;color:#999;font-weight:600;">カラー</span>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#E8A020;" title="Main"></div>
+          <div class="swatch" style="background:#2D5A27;" title="Sub"></div>
+          <div class="swatch" style="background:#FAFAF5;border:1px solid #ddd;" title="BG"></div>
+        </div>
+      </div>
+    </div>
+    <!-- tabbar -->
+    <div class="o1-tabbar">
+      <div class="o1-tab active">
+        <div style="width:20px;height:20px;background:#E8A020;border-radius:5px;"></div>
+        <span>地図</span>
+      </div>
+      <div class="o1-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>部屋</span>
+      </div>
+      <div class="o1-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>リワード</span>
+      </div>
+      <div class="o1-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>設定</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPTION 2 ── -->
+<div>
+  <div class="option-title">オプション 2</div>
+  <div class="label">모던 심플 · 네이비/오렌지</div>
+  <div class="phone">
+    <div class="o2-hdr">
+      <div class="hdr-title">📍 チリつも</div>
+      <div class="coin-badge"><span>✨</span><span class="coin-val">340</span></div>
+    </div>
+    <div class="o2-map">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#e8e8e8 0%,#d8d8d8 100%);"></div>
+      <div style="position:absolute;top:18px;left:20px;" class="o2-pill active">🍜 ¥780</div>
+      <div style="position:absolute;top:50px;right:24px;" class="o2-pill">🍔 ¥430</div>
+      <div style="position:absolute;bottom:24px;left:36px;" class="o2-pill">☕ ¥550</div>
+      <div style="position:absolute;bottom:14px;right:20px;" class="o2-pill active">🥩 ¥890</div>
+    </div>
+    <div style="background:#FFFFFF;padding:0 0 4px;">
+      <div class="o2-card">
+        <div class="card-row">
+          <div>
+            <span class="o2-tag">レビュー</span>
+            <div class="card-name" style="margin-top:5px;">業務スーパー 餃子</div>
+          </div>
+          <div class="card-price o2-accent">¥598</div>
+        </div>
+        <div class="card-meta">節約マスター · 💬12 · ❤️34 · 5/19</div>
+        <button class="o2-btn">✨ コスパ判定に参加する</button>
+      </div>
+      <div style="padding:0 12px 10px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;color:#999;font-weight:600;">カラー</span>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#1A1A2E;"></div>
+          <div class="swatch" style="background:#F4A261;"></div>
+          <div class="swatch" style="background:#FFFFFF;border:1px solid #ddd;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="o2-tabbar">
+      <div class="o2-tab active">
+        <div style="width:20px;height:20px;background:#F4A261;border-radius:5px;"></div>
+        <span style="color:#F4A261;">地図</span>
+      </div>
+      <div class="o2-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>部屋</span>
+      </div>
+      <div class="o2-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>リワード</span>
+      </div>
+      <div class="o2-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>設定</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── OPTION 3 ── -->
+<div>
+  <div class="option-title">オプション 3</div>
+  <div class="label">밝고 친근 · 민트/레드</div>
+  <div class="phone">
+    <div class="o3-hdr">
+      <div class="hdr-title">📍 チリつも</div>
+      <div class="coin-badge"><span>✨</span><span class="coin-val">340</span></div>
+    </div>
+    <div class="o3-map">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,#efefef 0%,#e3e3e3 100%);"></div>
+      <div style="position:absolute;top:18px;left:20px;" class="o3-pill active">🍜 ¥780</div>
+      <div style="position:absolute;top:50px;right:24px;" class="o3-pill">🍔 ¥430</div>
+      <div style="position:absolute;bottom:24px;left:36px;" class="o3-pill">☕ ¥550</div>
+      <div style="position:absolute;bottom:14px;right:20px;" class="o3-pill active">🥩 ¥890</div>
+    </div>
+    <div style="background:#F7F7F7;padding:0 0 4px;">
+      <div class="o3-card">
+        <div class="card-row">
+          <div>
+            <span class="o3-tag">レビュー</span>
+            <div class="card-name" style="margin-top:5px;">業務スーパー 餃子</div>
+          </div>
+          <div class="card-price o3-accent">¥598</div>
+        </div>
+        <div class="card-meta">節約マスター · 💬12 · ❤️34 · 5/19</div>
+        <button class="o3-btn">✨ コスパ判定に参加する</button>
+      </div>
+      <div style="padding:0 12px 10px;display:flex;align-items:center;gap:8px;">
+        <span style="font-size:10px;color:#999;font-weight:600;">カラー</span>
+        <div class="swatch-row">
+          <div class="swatch" style="background:#4ECDC4;"></div>
+          <div class="swatch" style="background:#FF6B6B;"></div>
+          <div class="swatch" style="background:#F7F7F7;border:1px solid #ddd;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="o3-tabbar">
+      <div class="o3-tab active">
+        <div style="width:20px;height:20px;background:#4ECDC4;border-radius:5px;"></div>
+        <span style="color:#4ECDC4;">地図</span>
+      </div>
+      <div class="o3-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>部屋</span>
+      </div>
+      <div class="o3-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>リワード</span>
+      </div>
+      <div class="o3-tab">
+        <div style="width:20px;height:20px;background:#ccc;border-radius:5px;"></div>
+        <span>設定</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>개인정보 처리방침 — ReceiptIQ</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Sans:wght@400;600;700&display=swap');
+
+:root {
+  --green: #16A87A;
+  --green-dark: #0C6B52;
+  --green-light: #E0F5EE;
+  --bg: #F5F5F3;
+  --surface: #FFFFFF;
+  --text-1: #0C1815;
+  --text-2: #3D5A50;
+  --text-3: #8BA49A;
+  --border: rgba(0,0,0,0.07);
+  --font: 'DM Sans','Noto Sans JP',sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text-1);
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── 헤더 ── */
+.header {
+  background: linear-gradient(140deg, #1BBF8A 0%, #0D7A5F 55%, #085C47 100%);
+  padding: 48px 24px 36px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute; right: -60px; top: -60px;
+  width: 220px; height: 220px;
+  border-radius: 50%; background: rgba(255,255,255,.06);
+}
+.header::after {
+  content: '';
+  position: absolute; left: -30px; bottom: -70px;
+  width: 160px; height: 160px;
+  border-radius: 50%; background: rgba(255,255,255,.04);
+}
+.logo {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.15);
+  border-radius: 14px; padding: 8px 14px;
+  margin-bottom: 20px; text-decoration: none;
+}
+.logo-icon { font-size: 22px; }
+.logo-text { font-size: 15px; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+.header h1 { font-size: 26px; font-weight: 800; letter-spacing: -.6px; margin-bottom: 8px; }
+.header p { font-size: 13px; opacity: .75; font-weight: 500; }
+.updated-badge {
+  display: inline-block; margin-top: 14px;
+  background: rgba(255,255,255,.15); border-radius: 20px;
+  padding: 4px 12px; font-size: 11px; font-weight: 600; opacity: .9;
+}
+
+/* ── 본문 ── */
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+
+/* 목차 */
+.toc {
+  background: var(--surface);
+  border-radius: 18px;
+  border: 0.5px solid var(--border);
+  padding: 20px 22px;
+  margin-bottom: 28px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.toc-title {
+  font-size: 12px; font-weight: 700; color: var(--text-3);
+  letter-spacing: .5px; text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.toc ol { padding-left: 18px; }
+.toc li { margin-bottom: 6px; }
+.toc a {
+  font-size: 13px; font-weight: 600; color: var(--green);
+  text-decoration: none; transition: opacity .15s;
+}
+.toc a:hover { opacity: .7; }
+
+/* 섹션 카드 */
+.section {
+  background: var(--surface);
+  border-radius: 18px;
+  border: 0.5px solid var(--border);
+  padding: 24px 22px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+.section-header {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 14px; padding-bottom: 14px;
+  border-bottom: 0.5px solid var(--border);
+}
+.section-num {
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--green-light); color: var(--green);
+  font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.section h2 { font-size: 16px; font-weight: 800; color: var(--text-1); letter-spacing: -.3px; }
+
+p { font-size: 13.5px; color: var(--text-2); margin-bottom: 10px; }
+p:last-child { margin-bottom: 0; }
+
+ul, ol { padding-left: 20px; margin-bottom: 10px; }
+li { font-size: 13.5px; color: var(--text-2); margin-bottom: 5px; }
+
+/* 강조 박스 */
+.highlight-box {
+  background: var(--green-light);
+  border-left: 3px solid var(--green);
+  border-radius: 0 10px 10px 0;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.highlight-box p { color: var(--text-1); font-weight: 600; margin: 0; }
+
+.warn-box {
+  background: #FFF8E7;
+  border-left: 3px solid #F5A623;
+  border-radius: 0 10px 10px 0;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+.warn-box p { color: #7A5A10; font-weight: 600; margin: 0; }
+
+/* 테이블 */
+.data-table {
+  width: 100%; border-collapse: collapse;
+  margin: 12px 0; font-size: 13px;
+}
+.data-table th {
+  background: var(--bg); padding: 9px 12px;
+  text-align: left; font-size: 11px; font-weight: 700;
+  color: var(--text-3); letter-spacing: .3px; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.data-table td {
+  padding: 10px 12px; border-bottom: 0.5px solid var(--border);
+  color: var(--text-2); vertical-align: top;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 10px;
+  font-size: 10px; font-weight: 700;
+}
+.badge-green { background: var(--green-light); color: var(--green); }
+.badge-gray  { background: #F0F0F0; color: #888; }
+
+/* 연락처 */
+.contact-card {
+  background: linear-gradient(140deg, var(--green-light), #fff);
+  border-radius: 14px; border: 0.5px solid rgba(22,168,122,.2);
+  padding: 18px 20px; margin-top: 12px;
+}
+.contact-card p { color: var(--text-2); margin: 0; }
+.contact-card a { color: var(--green); font-weight: 700; text-decoration: none; }
+
+/* 푸터 */
+.footer {
+  text-align: center; padding: 28px 20px;
+  font-size: 12px; color: var(--text-3);
+  border-top: 0.5px solid var(--border);
+  margin-top: 20px;
+}
+.footer a { color: var(--green); text-decoration: none; font-weight: 600; }
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .header { padding: 36px 18px 28px; }
+  .header h1 { font-size: 22px; }
+  .container { padding: 20px 14px 50px; }
+  .section { padding: 18px 16px; }
+  .data-table th, .data-table td { padding: 8px 10px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── 헤더 ── -->
+<div class="header">
+  <a class="logo" href="./index.html">
+    <span class="logo-icon">🧾</span>
+    <span class="logo-text">ReceiptIQ</span>
+  </a>
+  <h1>개인정보 처리방침</h1>
+  <p>Privacy Policy · プライバシーポリシー</p>
+  <span class="updated-badge">최종 업데이트: 2026년 5월</span>
+</div>
+
+<!-- ── 본문 ── -->
+<div class="container">
+
+  <!-- 목차 -->
+  <div class="toc">
+    <div class="toc-title">📋 목차</div>
+    <ol>
+      <li><a href="#s1">수집하는 정보</a></li>
+      <li><a href="#s2">정보의 이용 목적</a></li>
+      <li><a href="#s3">정보의 저장 및 보관</a></li>
+      <li><a href="#s4">제3자 서비스</a></li>
+      <li><a href="#s5">카메라 및 기기 권한</a></li>
+      <li><a href="#s6">쿠키 및 광고</a></li>
+      <li><a href="#s7">이용자의 권리</a></li>
+      <li><a href="#s8">아동 개인정보 보호</a></li>
+      <li><a href="#s9">방침 변경 안내</a></li>
+      <li><a href="#s10">문의하기</a></li>
+    </ol>
+  </div>
+
+  <div class="highlight-box" style="margin-bottom:20px;">
+    <p>🛡️ ReceiptIQ는 이용자의 개인정보를 소중히 여깁니다. 본 방침은 앱이 수집·사용·보호하는 정보에 대해 명확히 설명합니다.</p>
+  </div>
+
+  <!-- 1. 수집하는 정보 -->
+  <div class="section" id="s1">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <h2>수집하는 정보</h2>
+    </div>
+    <p>ReceiptIQ는 가계부 서비스 제공을 위해 아래와 같은 정보를 수집합니다.</p>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>수집 항목</th>
+          <th>수집 방법</th>
+          <th>필수 여부</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>영수증 정보<br><small style="color:var(--text-3);">가게명, 품목, 금액, 날짜</small></td>
+          <td>이용자 직접 입력 / 카메라 촬영 후 AI 분석</td>
+          <td><span class="badge badge-green">필수</span></td>
+        </tr>
+        <tr>
+          <td>위치 정보<br><small style="color:var(--text-3);">가게 주소, 위도·경도</small></td>
+          <td>이용자 직접 입력 또는 지도 검색</td>
+          <td><span class="badge badge-gray">선택</span></td>
+        </tr>
+        <tr>
+          <td>영수증 이미지</td>
+          <td>카메라 촬영 또는 갤러리 선택</td>
+          <td><span class="badge badge-gray">선택</span></td>
+        </tr>
+        <tr>
+          <td>계정 정보<br><small style="color:var(--text-3);">이메일, 비밀번호</small></td>
+          <td>회원가입 시 이용자 입력</td>
+          <td><span class="badge badge-gray">선택</span></td>
+        </tr>
+        <tr>
+          <td>기기 설정<br><small style="color:var(--text-3);">테마 색상, 앱 설정</small></td>
+          <td>기기 내 LocalStorage 자동 저장</td>
+          <td><span class="badge badge-gray">선택</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="warn-box">
+      <p>⚠️ 영수증 이미지는 AI 분석 후 서버에 저장되지 않으며, 분석 완료 즉시 삭제됩니다.</p>
+    </div>
+  </div>
+
+  <!-- 2. 이용 목적 -->
+  <div class="section" id="s2">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <h2>정보의 이용 목적</h2>
+    </div>
+    <p>수집한 정보는 다음 목적으로만 사용되며, 사전 동의 없이 다른 목적으로 활용하지 않습니다.</p>
+    <ul>
+      <li>📊 지출 내역 기록 및 리포트 제공</li>
+      <li>🗺️ 가성비 맵 — 방문 가게 위치 표시</li>
+      <li>🤖 영수증 AI 분석 (OCR) 서비스 제공</li>
+      <li>📱 앱 설정 및 테마 유지</li>
+      <li>🔒 계정 인증 및 데이터 동기화</li>
+      <li>📈 서비스 품질 개선 (익명 통계만 활용)</li>
+    </ul>
+  </div>
+
+  <!-- 3. 저장 및 보관 -->
+  <div class="section" id="s3">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <h2>정보의 저장 및 보관</h2>
+    </div>
+    <p>이용자의 데이터는 아래 방식으로 저장됩니다.</p>
+    <table class="data-table">
+      <thead>
+        <tr><th>저장 위치</th><th>저장 데이터</th><th>보관 기간</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>기기 내부</strong><br><small style="color:var(--text-3);">LocalStorage</small></td>
+          <td>앱 설정, 테마 선택</td>
+          <td>앱 삭제 시까지</td>
+        </tr>
+        <tr>
+          <td><strong>Supabase 서버</strong><br><small style="color:var(--text-3);">클라우드 DB</small></td>
+          <td>영수증 데이터, 계정 정보</td>
+          <td>회원 탈퇴 시 즉시 삭제</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="highlight-box">
+      <p>🔐 서버 데이터는 암호화 전송(HTTPS)되며, Supabase의 보안 정책에 따라 관리됩니다.</p>
+    </div>
+  </div>
+
+  <!-- 4. 제3자 서비스 -->
+  <div class="section" id="s4">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <h2>제3자 서비스</h2>
+    </div>
+    <p>ReceiptIQ는 서비스 운영을 위해 아래 외부 서비스를 이용합니다. 각 서비스의 개인정보 처리방침을 함께 확인해 주세요.</p>
+    <table class="data-table">
+      <thead>
+        <tr><th>서비스</th><th>용도</th><th>방침 링크</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Google Maps API</strong></td>
+          <td>지도 표시 및 가게 위치 검색</td>
+          <td><a href="https://policies.google.com/privacy" target="_blank" style="color:var(--green);font-weight:700;">보기 ↗</a></td>
+        </tr>
+        <tr>
+          <td><strong>Google Fonts</strong></td>
+          <td>폰트 로딩</td>
+          <td><a href="https://policies.google.com/privacy" target="_blank" style="color:var(--green);font-weight:700;">보기 ↗</a></td>
+        </tr>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>데이터베이스 및 인증</td>
+          <td><a href="https://supabase.com/privacy" target="_blank" style="color:var(--green);font-weight:700;">보기 ↗</a></td>
+        </tr>
+        <tr>
+          <td><strong>OpenAI API</strong></td>
+          <td>영수증 AI 분석 (OCR)</td>
+          <td><a href="https://openai.com/privacy" target="_blank" style="color:var(--green);font-weight:700;">보기 ↗</a></td>
+        </tr>
+        <tr>
+          <td><strong>Google AdSense</strong><br><small style="color:var(--text-3);">도입 예정</small></td>
+          <td>광고 표시</td>
+          <td><a href="https://policies.google.com/technologies/ads" target="_blank" style="color:var(--green);font-weight:700;">보기 ↗</a></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 5. 카메라 권한 -->
+  <div class="section" id="s5">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <h2>카메라 및 기기 권한</h2>
+    </div>
+    <p>ReceiptIQ는 영수증 촬영을 위해 카메라 접근 권한을 요청합니다.</p>
+    <ul>
+      <li><strong>카메라</strong>: 영수증 촬영 시에만 사용. 촬영된 이미지는 AI 분석 후 즉시 삭제되며 갤러리에 저장되지 않습니다.</li>
+      <li><strong>위치 정보</strong>: 지도 기능 사용 시 요청. 거부해도 수동 입력으로 앱 이용 가능합니다.</li>
+      <li><strong>저장소</strong>: 갤러리에서 영수증 이미지를 선택할 때만 사용합니다.</li>
+    </ul>
+    <div class="highlight-box">
+      <p>✅ 모든 권한은 해당 기능 사용 시에만 요청하며, 이용자가 언제든지 기기 설정에서 철회할 수 있습니다.</p>
+    </div>
+  </div>
+
+  <!-- 6. 쿠키 및 광고 -->
+  <div class="section" id="s6">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <h2>쿠키 및 광고</h2>
+    </div>
+    <p>ReceiptIQ는 앱 기능 유지를 위해 브라우저의 <strong>LocalStorage</strong>를 사용합니다 (쿠키와 유사한 역할).</p>
+    <p>향후 <strong>Google AdSense</strong> 광고 서비스 도입 시, Google은 맞춤형 광고 제공을 위해 쿠키를 사용할 수 있습니다. 이 경우 다음이 적용됩니다:</p>
+    <ul>
+      <li>광고 쿠키는 방문 기록, 관심사 기반으로 광고를 최적화합니다.</li>
+      <li>이용자는 <a href="https://adssettings.google.com" target="_blank" style="color:var(--green);font-weight:700;">Google 광고 설정</a>에서 맞춤형 광고를 비활성화할 수 있습니다.</li>
+      <li>광고 도입 전 별도로 고지 및 동의를 받겠습니다.</li>
+    </ul>
+  </div>
+
+  <!-- 7. 이용자 권리 -->
+  <div class="section" id="s7">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <h2>이용자의 권리</h2>
+    </div>
+    <p>이용자는 언제든지 아래 권리를 행사할 수 있습니다.</p>
+    <ul>
+      <li>📋 <strong>열람권</strong> — 본인의 저장된 데이터 확인 요청</li>
+      <li>✏️ <strong>수정권</strong> — 잘못된 정보 수정 요청</li>
+      <li>🗑️ <strong>삭제권</strong> — 개인 데이터 삭제 요청 (회원 탈퇴 시 자동 처리)</li>
+      <li>📤 <strong>이동권</strong> — 데이터를 다른 서비스로 이전 요청</li>
+      <li>🚫 <strong>처리 정지권</strong> — 특정 목적의 데이터 처리 중단 요청</li>
+    </ul>
+    <p>권리 행사는 아래 연락처로 문의해 주세요. 요청 후 <strong>30일 이내</strong>에 처리합니다.</p>
+  </div>
+
+  <!-- 8. 아동 보호 -->
+  <div class="section" id="s8">
+    <div class="section-header">
+      <div class="section-num">8</div>
+      <h2>아동 개인정보 보호</h2>
+    </div>
+    <p>ReceiptIQ는 <strong>만 13세 미만 아동</strong>을 대상으로 서비스를 제공하지 않으며, 고의로 아동의 개인정보를 수집하지 않습니다.</p>
+    <p>만 13세 미만 아동이 서비스를 이용하고 있다고 판단될 경우, 즉시 해당 계정의 데이터를 삭제하겠습니다.</p>
+  </div>
+
+  <!-- 9. 방침 변경 -->
+  <div class="section" id="s9">
+    <div class="section-header">
+      <div class="section-num">9</div>
+      <h2>방침 변경 안내</h2>
+    </div>
+    <p>본 개인정보 처리방침은 법령 변경 또는 서비스 변화에 따라 업데이트될 수 있습니다.</p>
+    <ul>
+      <li>변경 시 앱 내 공지 또는 이 페이지 상단에 최종 업데이트 날짜로 안내합니다.</li>
+      <li>중요한 변경사항은 이메일 또는 앱 알림으로 사전 고지합니다.</li>
+      <li>변경 후 계속 서비스를 이용하시면 변경된 방침에 동의한 것으로 간주됩니다.</li>
+    </ul>
+  </div>
+
+  <!-- 10. 문의하기 -->
+  <div class="section" id="s10">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <h2>문의하기</h2>
+    </div>
+    <p>개인정보 처리에 관한 문의, 열람·수정·삭제 요청은 아래로 연락해 주세요.</p>
+    <div class="contact-card">
+      <p>📧 <strong>이메일</strong>: <a href="mailto:privacy@receiptiq.app">privacy@receiptiq.app</a></p>
+      <p style="margin-top:8px;">🌐 <strong>서비스</strong>: <a href="./index.html">ReceiptIQ</a></p>
+      <p style="margin-top:8px;font-size:12px;color:var(--text-3);">문의 접수 후 영업일 기준 7일 이내 답변드립니다.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── 푸터 ── -->
+<div class="footer">
+  <p>© 2025 ReceiptIQ · <a href="./index.html">앱으로 돌아가기</a></p>
+  <p style="margin-top:6px;">본 방침은 한국어를 기준으로 작성되었습니다.</p>
+</div>
+
+</body>
+</html>

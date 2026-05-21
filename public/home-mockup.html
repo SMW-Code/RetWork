@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>홈 디자인 아이디어</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1a1a2e;font-family:'DM Sans','Noto Sans KR',sans-serif;padding:24px 16px 60px;min-height:100vh;}
+
+:root{
+  --green:#16A87A;--green-dark:#0C6B52;--green-light:#E0F5EE;
+  --orange:#F07340;--blue:#3B82F6;--purple:#8B5CF6;
+  --bg:#EEECEA;--surface:#fff;--text-1:#0C1815;--text-2:#3D5A50;--text-3:#8BA49A;
+  --border:rgba(0,0,0,.07);--shadow:0 2px 12px rgba(0,0,0,.10);
+}
+
+h2{color:#fff;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;opacity:.5;margin:32px 0 12px;padding-left:4px;}
+h2 span{font-size:16px;margin-right:6px;opacity:1;}
+
+/* 폰 프레임 */
+.phone{width:340px;background:var(--bg);border-radius:36px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.5);margin:0 auto;}
+.sbar{height:38px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;padding:0 20px;font-size:12px;font-weight:700;color:var(--text-1);}
+.sbar-r{display:flex;gap:4px;align-items:center;font-size:10px;color:var(--text-2);}
+.hdr{background:var(--surface);padding:10px 18px;border-bottom:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.hdr-title{font-size:19px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;}
+.hdr-date{font-size:10px;color:var(--text-3);font-weight:500;margin-left:7px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--green-light);border:1.5px solid rgba(22,168,122,.2);display:flex;align-items:center;justify-content:center;font-size:17px;}
+.scroll{padding-bottom:16px;}
+
+/* 현재 카드 */
+.card-current{margin:12px 14px;background:linear-gradient(140deg,#1BBF8A 0%,#0D7A5F 55%,#085C47 100%);border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(12,107,82,.35);}
+.card-current::before{content:'';position:absolute;right:-30px;top:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.07);}
+.c-lbl{font-size:10px;opacity:.7;font-weight:600;letter-spacing:.4px;text-transform:uppercase;margin-bottom:4px;}
+.c-amt{font-size:34px;font-weight:800;letter-spacing:-2px;line-height:1;}
+.c-sub{font-size:11px;opacity:.6;margin-top:5px;font-weight:500;}
+.c-row{display:flex;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14);}
+.c-mini{text-align:center;}
+.c-mini-lbl{font-size:9px;opacity:.65;font-weight:500;margin-bottom:3px;}
+.c-mini-val{font-size:13px;font-weight:700;letter-spacing:-.3px;}
+
+/* 공통 */
+.sec-lbl{font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;padding:10px 16px 6px;}
+.receipt-row{background:var(--surface);margin:0 14px 7px;border-radius:16px;padding:11px 13px;border:.5px solid var(--border);display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);}
+.r-icon{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.r-name{font-size:13px;font-weight:700;color:var(--text-1);}
+.r-sub{font-size:10px;color:var(--text-3);margin-top:2px;font-weight:500;}
+.r-amt{font-size:13px;font-weight:800;color:var(--text-1);margin-left:auto;}
+
+/* ───── 아이디어 1: 인사말 ───── */
+.greet-band{margin:10px 14px 0;background:var(--surface);border-radius:16px;padding:12px 14px;border:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.greet-text{font-size:13px;font-weight:700;color:var(--text-1);}
+.greet-sub{font-size:11px;color:var(--text-3);margin-top:2px;font-weight:500;}
+.today-chip{background:var(--green-light);border-radius:20px;padding:6px 12px;text-align:right;}
+.today-chip-lbl{font-size:9px;color:var(--green-dark);font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+.today-chip-val{font-size:14px;font-weight:800;color:var(--green-dark);letter-spacing:-.5px;}
+
+/* ───── 아이디어 2: 스파크라인 ───── */
+.spark-row{display:flex;align-items:flex-end;gap:3px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14);height:32px;}
+.spark-bar{flex:1;background:rgba(255,255,255,.25);border-radius:3px 3px 0 0;transition:height .3s;}
+.spark-bar.today{background:rgba(255,255,255,.9);}
+
+/* ───── 아이디어 3: 예산 바 ───── */
+.budget-card{margin:10px 14px 0;background:var(--surface);border-radius:16px;padding:13px 14px;border:.5px solid var(--border);box-shadow:var(--shadow);}
+.budget-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.budget-title{font-size:12px;font-weight:700;color:var(--text-2);}
+.budget-pct{font-size:11px;font-weight:800;color:var(--green);}
+.budget-track{height:8px;background:#E8E6E3;border-radius:20px;overflow:hidden;margin-bottom:6px;}
+.budget-fill{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--green),#1BBF8A);}
+.budget-fill.warn{background:linear-gradient(90deg,#F07340,#E8894A);}
+.budget-nums{display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-weight:600;}
+
+/* ───── 아이디어 4: 카테고리 퀵링크 ───── */
+.cat-scroll{display:flex;gap:8px;padding:8px 14px 0;overflow-x:auto;}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-q{flex-shrink:0;background:var(--surface);border-radius:14px;padding:10px 12px;border:.5px solid var(--border);text-align:center;min-width:68px;box-shadow:var(--shadow);}
+.cat-q-icon{font-size:20px;margin-bottom:3px;}
+.cat-q-lbl{font-size:9px;color:var(--text-3);font-weight:600;}
+.cat-q-amt{font-size:12px;font-weight:800;color:var(--text-1);letter-spacing:-.3px;}
+
+/* ───── 아이디어 5: 날짜 그룹 ───── */
+.date-group{padding:0 14px;}
+.date-badge{display:inline-flex;align-items:center;gap:5px;background:var(--surface);border:.5px solid var(--border);border-radius:20px;padding:4px 10px;margin:8px 0 6px;font-size:10px;font-weight:700;color:var(--text-2);}
+.date-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);}
+.dg-entry{background:var(--surface);border-radius:14px;padding:10px 12px;border:.5px solid var(--border);display:flex;align-items:center;gap:9px;margin-bottom:6px;box-shadow:var(--shadow);}
+
+/* 선택 버튼 */
+.vote-row{display:flex;gap:8px;justify-content:center;margin:10px 0;}
+.vote-btn{padding:6px 16px;border-radius:20px;border:1.5px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:rgba(255,255,255,.7);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;}
+.vote-btn:hover,.vote-btn.picked{background:var(--green);border-color:var(--green);color:#fff;}
+
+/* 라벨 배지 */
+.idea-badge{display:inline-block;background:rgba(22,168,122,.2);color:#4DFFB8;font-size:10px;font-weight:800;padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:.3px;}
+.current-badge{display:inline-block;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5);font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;margin-bottom:8px;letter-spacing:.3px;}
+
+/* 그리드 레이아웃 */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:0 auto;}
+.grid-full{max-width:380px;margin:0 auto;}
+</style>
+</head>
+<body>
+
+<!-- ───── 현재 디자인 ───── -->
+<h2><span>📌</span>현재 홈 화면</h2>
+<div class="grid-full">
+<div class="phone">
+  <div class="sbar"><span>9:41</span><div class="sbar-r">●●● WiFi 🔋</div></div>
+  <div class="hdr">
+    <div style="display:flex;align-items:baseline;gap:0;">
+      <div class="hdr-title">RetWork</div>
+      <div class="hdr-date">2026年 5月 19日 (火)</div>
+    </div>
+    <div class="avatar">😊</div>
+  </div>
+  <div class="scroll">
+    <div class="card-current">
+      <div class="c-lbl">5月 합계 지출 · 6건</div>
+      <div class="c-amt">¥48,555</div>
+      <div class="c-sub">전월 대비 ▼ ¥3,200 절약 중 🎉</div>
+      <div class="c-row">
+        <div class="c-mini"><div class="c-mini-lbl">식료품</div><div class="c-mini-val">¥18,200</div></div>
+        <div class="c-mini"><div class="c-mini-lbl">식사</div><div class="c-mini-val">¥8,400</div></div>
+        <div class="c-mini"><div class="c-mini-lbl">기타</div><div class="c-mini-val">¥21,955</div></div>
+      </div>
+    </div>
+    <div class="sec-lbl">최근 영수증</div>
+    <div class="receipt-row">
+      <div class="r-icon" style="background:#E1F5EE;">🛒</div>
+      <div><div class="r-name">イオン 四日市店</div><div class="r-sub">식료품 · 8품목</div></div>
+      <div class="r-amt">¥3,240</div>
+    </div>
+    <div class="receipt-row">
+      <div class="r-icon" style="background:#FFF0E8;">🍜</div>
+      <div><div class="r-name">スガキヤ 近鉄店</div><div class="r-sub">식사 · 2품목</div></div>
+      <div class="r-amt">¥1,000</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ───── 아이디어 그리드 ───── -->
+<h2><span>✨</span>디자인 아이디어</h2>
+<div class="grid">
+
+<!-- 아이디어 1 -->
+<div>
+  <div class="idea-badge">IDEA 1 · 인사말 + 오늘 지출</div>
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><div class="sbar-r">●●● WiFi 🔋</div></div>
+    <div class="hdr">
+      <div style="display:flex;align-items:baseline;gap:0;"><div class="hdr-title">RetWork</div><div class="hdr-date">5月 19日</div></div>
+      <div class="avatar">😊</div>
+    </div>
+    <div class="scroll">
+      <!-- 인사말 -->
+      <div class="greet-band">
+        <div>
+          <div class="greet-text">좋은 아침이에요, 민우님 👋</div>
+          <div class="greet-sub">이번 달도 절약 잘 하고 있어요!</div>
+        </div>
+        <div class="today-chip">
+          <div class="today-chip-lbl">오늘</div>
+          <div class="today-chip-val">¥3,240</div>
+        </div>
+      </div>
+      <div class="card-current" style="margin-top:10px;">
+        <div class="c-lbl">5月 합계 지출 · 6건</div>
+        <div class="c-amt">¥48,555</div>
+        <div class="c-sub">전월 대비 ▼ ¥3,200 절약 중 🎉</div>
+        <div class="c-row">
+          <div class="c-mini"><div class="c-mini-lbl">식료품</div><div class="c-mini-val">¥18,200</div></div>
+          <div class="c-mini"><div class="c-mini-lbl">식사</div><div class="c-mini-val">¥8,400</div></div>
+          <div class="c-mini"><div class="c-mini-lbl">기타</div><div class="c-mini-val">¥21,955</div></div>
+        </div>
+      </div>
+      <div class="sec-lbl">최근 영수증</div>
+      <div class="receipt-row">
+        <div class="r-icon" style="background:#E1F5EE;">🛒</div>
+        <div><div class="r-name">イオン 四日市店</div><div class="r-sub">식료품 · 오늘</div></div>
+        <div class="r-amt">¥3,240</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 아이디어 2 -->
+<div>
+  <div class="idea-badge">IDEA 2 · 카드 내 주간 그래프</div>
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><div class="sbar-r">●●● WiFi 🔋</div></div>
+    <div class="hdr">
+      <div style="display:flex;align-items:baseline;gap:0;"><div class="hdr-title">RetWork</div><div class="hdr-date">5月 19日</div></div>
+      <div class="avatar">😊</div>
+    </div>
+    <div class="scroll">
+      <div class="card-current">
+        <div class="c-lbl">5月 합계 지출 · 6건</div>
+        <div class="c-amt">¥48,555</div>
+        <div class="c-sub">전월 대비 ▼ ¥3,200 절약 중 🎉</div>
+        <!-- 스파크라인 -->
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.14);">
+          <div style="font-size:9px;opacity:.6;font-weight:600;letter-spacing:.3px;margin-bottom:6px;">이번 주 일별 지출</div>
+          <div style="display:flex;align-items:flex-end;gap:4px;height:36px;">
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:12px;background:rgba(255,255,255,.2);border-radius:3px 3px 0 0;"></div>
+              <div style="font-size:8px;opacity:.55;">월</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:22px;background:rgba(255,255,255,.2);border-radius:3px 3px 0 0;"></div>
+              <div style="font-size:8px;opacity:.55;">화</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:8px;background:rgba(255,255,255,.2);border-radius:3px 3px 0 0;"></div>
+              <div style="font-size:8px;opacity:.55;">수</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:28px;background:rgba(255,255,255,.2);border-radius:3px 3px 0 0;"></div>
+              <div style="font-size:8px;opacity:.55;">목</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:15px;background:rgba(255,255,255,.2);border-radius:3px 3px 0 0;"></div>
+              <div style="font-size:8px;opacity:.55;">금</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:20px;background:rgba(255,255,255,.95);border-radius:3px 3px 0 0;box-shadow:0 0 8px rgba(255,255,255,.4);"></div>
+              <div style="font-size:8px;opacity:.9;font-weight:700;">토</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;">
+              <div style="width:100%;height:4px;background:rgba(255,255,255,.15);border-radius:3px 3px 0 0;border:1px dashed rgba(255,255,255,.3);"></div>
+              <div style="font-size:8px;opacity:.4;">일</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sec-lbl">최근 영수증</div>
+      <div class="receipt-row">
+        <div class="r-icon" style="background:#E1F5EE;">🛒</div>
+        <div><div class="r-name">イオン 四日市店</div><div class="r-sub">식료품 · 8품목</div></div>
+        <div class="r-amt">¥3,240</div>
+      </div>
+      <div class="receipt-row">
+        <div class="r-icon" style="background:#FFF0E8;">🍜</div>
+        <div><div class="r-name">スガキヤ 近鉄店</div><div class="r-sub">식사 · 2품목</div></div>
+        <div class="r-amt">¥1,000</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 아이디어 3 -->
+<div>
+  <div class="idea-badge">IDEA 3 · 예산 프로그레스 바</div>
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><div class="sbar-r">●●● WiFi 🔋</div></div>
+    <div class="hdr">
+      <div style="display:flex;align-items:baseline;gap:0;"><div class="hdr-title">RetWork</div><div class="hdr-date">5月 19日</div></div>
+      <div class="avatar">😊</div>
+    </div>
+    <div class="scroll">
+      <div class="card-current">
+        <div class="c-lbl">5月 합계 지출 · 6건</div>
+        <div class="c-amt">¥48,555</div>
+        <div class="c-sub">전월 대비 ▼ ¥3,200 절약 중 🎉</div>
+        <div class="c-row">
+          <div class="c-mini"><div class="c-mini-lbl">식료품</div><div class="c-mini-val">¥18,200</div></div>
+          <div class="c-mini"><div class="c-mini-lbl">식사</div><div class="c-mini-val">¥8,400</div></div>
+          <div class="c-mini"><div class="c-mini-lbl">기타</div><div class="c-mini-val">¥21,955</div></div>
+        </div>
+      </div>
+      <!-- 예산 카드 -->
+      <div class="budget-card" style="margin:10px 14px 0;">
+        <div class="budget-top">
+          <div>
+            <div class="budget-title">이달 예산</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:1px;">¥31,445 남음</div>
+          </div>
+          <div class="budget-pct">61% 사용</div>
+        </div>
+        <div class="budget-track">
+          <div class="budget-fill" style="width:61%;"></div>
+        </div>
+        <div class="budget-nums">
+          <span>¥48,555 지출</span>
+          <span>목표 ¥80,000</span>
+        </div>
+      </div>
+      <div class="sec-lbl">최근 영수증</div>
+      <div class="receipt-row">
+        <div class="r-icon" style="background:#E1F5EE;">🛒</div>
+        <div><div class="r-name">イオン 四日市店</div><div class="r-sub">식료품 · 8품목</div></div>
+        <div class="r-amt">¥3,240</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 아이디어 4 -->
+<div>
+  <div class="idea-badge">IDEA 4 · 카테고리 퀵링크</div>
+  <div class="phone">
+    <div class="sbar"><span>9:41</span><div class="sbar-r">●●● WiFi 🔋</div></div>
+    <div class="hdr">
+      <div style="display:flex;align-items:baseline;gap:0;"><div class="hdr-title">RetWork</div><div class="hdr-date">5月 19日</div></div>
+      <div class="avatar">😊</div>
+    </div>
+    <div class="scroll">
+      <div class="card-current">
+        <div class="c-lbl">5月 합계 지출 · 6건</div>
+        <div class="c-amt">¥48,555</div>
+        <div class="c-sub">전월 대비 ▼ ¥3,200 절약 중 🎉</div>
+        <div class="c-row">
+          <div class="c-mini"><div class="c-mini-lbl">식료품</div><div class="c-mini-val">¥18,200</div></div>
+          <div class="c-mini"><div class="c-mini-lbl">식사</div><div class="c-mini-val">¥8,400</div></div>
+          <div class="c-mini"><div class="c-mini-lbl">기타</div><div class="c-mini-val">¥21,955</div></div>
+        </div>
+      </div>
+      <!-- 카테고리 퀵링크 -->
+      <div class="cat-scroll">
+        <div class="cat-q"><div class="cat-q-icon">🛒</div><div class="cat-q-lbl">식료품</div><div class="cat-q-amt">¥18,200</div></div>
+        <div class="cat-q"><div class="cat-q-icon">🍜</div><div class="cat-q-lbl">식사</div><div class="cat-q-amt">¥8,400</div></div>
+        <div class="cat-q"><div class="cat-q-icon">💊</div><div class="cat-q-lbl">의약품</div><div class="cat-q-amt">¥2,320</div></div>
+        <div class="cat-q"><div class="cat-q-icon">🏠</div><div class="cat-q-lbl">생활</div><div class="cat-q-amt">¥1,660</div></div>
+        <div class="cat-q"><div class="cat-q-icon">☕</div><div class="cat-q-lbl">카페</div><div class="cat-q-amt">¥930</div></div>
+      </div>
+      <div class="sec-lbl">최근 영수증</div>
+      <div class="receipt-row">
+        <div class="r-icon" style="background:#E1F5EE;">🛒</div>
+        <div><div class="r-name">イオン 四日市店</div><div class="r-sub">식료품 · 8품목</div></div>
+        <div class="r-amt">¥3,240</div>
+      </div>
+      <div class="receipt-row">
+        <div class="r-icon" style="background:#FFF0E8;">🍜</div>
+        <div><div class="r-name">スガキヤ 近鉄店</div><div class="r-sub">식사 · 2품목</div></div>
+        <div class="r-amt">¥1,000</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /grid -->
+
+<!-- 아이디어 5 (풀 폭) -->
+<h2><span>✨</span>IDEA 5 · 날짜별 그룹 + 오늘 하이라이트</h2>
+<div class="grid-full">
+<div class="phone">
+  <div class="sbar"><span>9:41</span><div class="sbar-r">●●● WiFi 🔋</div></div>
+  <div class="hdr">
+    <div style="display:flex;align-items:baseline;gap:0;"><div class="hdr-title">RetWork</div><div class="hdr-date">5月 19日</div></div>
+    <div class="avatar">😊</div>
+  </div>
+  <div class="scroll">
+    <div class="card-current">
+      <div class="c-lbl">5月 합계 지출 · 6건</div>
+      <div class="c-amt">¥48,555</div>
+      <div class="c-sub">전월 대비 ▼ ¥3,200 절약 중 🎉</div>
+      <div class="c-row">
+        <div class="c-mini"><div class="c-mini-lbl">식료품</div><div class="c-mini-val">¥18,200</div></div>
+        <div class="c-mini"><div class="c-mini-lbl">식사</div><div class="c-mini-val">¥8,400</div></div>
+        <div class="c-mini"><div class="c-mini-lbl">기타</div><div class="c-mini-val">¥21,955</div></div>
+      </div>
+    </div>
+    <!-- 날짜 그룹 -->
+    <div class="date-group">
+      <div class="date-badge"><div class="dot" style="background:var(--green);"></div>오늘 · 5/19 · ¥3,240</div>
+      <div class="dg-entry">
+        <div class="r-icon" style="background:#E1F5EE;width:36px;height:36px;border-radius:10px;">🛒</div>
+        <div><div class="r-name">イオン 四日市店</div><div class="r-sub">식료품 · 💳 신용카드</div></div>
+        <div class="r-amt">¥3,240</div>
+      </div>
+
+      <div class="date-badge"><div class="dot" style="background:#8BA49A;"></div>어제 · 5/18 · ¥1,000</div>
+      <div class="dg-entry">
+        <div class="r-icon" style="background:#FFF0E8;width:36px;height:36px;border-radius:10px;">🍜</div>
+        <div><div class="r-name">スガキヤ 近鉄店</div><div class="r-sub">식사 · 📱 QR결제</div></div>
+        <div class="r-amt">¥1,000</div>
+      </div>
+
+      <div class="date-badge"><div class="dot" style="background:#8BA49A;"></div>5/17 · ¥1,890</div>
+      <div class="dg-entry">
+        <div class="r-icon" style="background:#E1F5EE;width:36px;height:36px;border-radius:10px;">🛒</div>
+        <div><div class="r-name">業務スーパー</div><div class="r-sub">식료품 · 💴 현금</div></div>
+        <div class="r-amt">¥1,890</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div style="text-align:center;margin-top:32px;color:rgba(255,255,255,.3);font-size:11px;">
+  마음에 드는 아이디어를 골라주세요 · 복수 선택 가능
+</div>
+
+</body>
+</html>

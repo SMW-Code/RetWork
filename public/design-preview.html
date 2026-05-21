@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ReceiptIQ — 디자인 프리뷰</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans','Noto Sans KR',sans-serif;background:#0F1117;min-height:100vh;padding:32px 24px 60px;}
+h1{color:#fff;font-size:22px;font-weight:800;margin-bottom:6px;text-align:center;}
+.subtitle{color:#666;font-size:13px;text-align:center;margin-bottom:36px;}
+.themes{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;}
+.theme-col{display:flex;flex-direction:column;align-items:center;gap:12px;}
+.theme-label{color:#aaa;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.phone{width:200px;border-radius:32px;overflow:hidden;border:1.5px solid rgba(255,255,255,0.08);box-shadow:0 20px 60px rgba(0,0,0,0.5);cursor:pointer;transition:transform .2s,box-shadow .2s;}
+.phone:hover{transform:translateY(-6px);box-shadow:0 32px 80px rgba(0,0,0,0.6);}
+.phone.selected{border-color:rgba(255,255,255,0.4);transform:translateY(-6px);box-shadow:0 32px 80px rgba(0,0,0,0.6);}
+.select-btn{padding:8px 20px;border-radius:20px;border:1.5px solid rgba(255,255,255,0.15);background:transparent;color:#aaa;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.select-btn:hover,.select-btn.active{background:#fff;color:#111;border-color:#fff;}
+.chosen-label{color:#4ade80;font-size:11px;font-weight:700;height:16px;}
+
+/* ── THEME 1: 현재 (에메랄드) ── */
+.t1{background:#F5F4F0;}
+.t1 .sbar{background:#fff;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#0F1A17;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.t1 .card{background:linear-gradient(135deg,#1D9E75,#0F6E56);margin:8px;border-radius:14px;padding:14px;color:#fff;}
+.t1 .card-amt{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.t1 .card-lbl{font-size:8px;opacity:.8;margin-bottom:3px;}
+.t1 .row{display:flex;gap:6px;margin:8px;}
+.t1 .rcard{flex:1;background:#fff;border-radius:10px;padding:8px 10px;border:0.5px solid rgba(0,0,0,0.07);}
+.t1 .rcard-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;}
+.t1 .rcard-store{font-size:9px;font-weight:700;color:#0F1A17;}
+.t1 .rcard-amt{font-size:10px;font-weight:800;color:#1D9E75;}
+.t1 .tabbar{background:#fff;display:flex;padding:6px 4px 10px;border-top:0.5px solid rgba(0,0,0,0.07);}
+.t1 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.t1 .tab-dot{width:16px;height:3px;border-radius:2px;}
+.t1 .tab-lbl{font-size:7px;font-weight:600;color:#8FA89E;}
+.t1 .tab-lbl.on{color:#1D9E75;font-weight:800;}
+.t1 .scan-btn{flex:1;display:flex;align-items:center;justify-content:center;}
+.t1 .scan-c{width:32px;height:32px;background:#1D9E75;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:-14px;border:3px solid #F5F4F0;}
+
+/* ── THEME 2: 다크모드 ── */
+.t2{background:#0D1117;}
+.t2 .sbar{background:#161B22;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#E6EDF3;border-bottom:0.5px solid rgba(255,255,255,0.06);}
+.t2 .card{background:linear-gradient(135deg,#238636,#1a6e2e);margin:8px;border-radius:14px;padding:14px;color:#fff;}
+.t2 .card-amt{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.t2 .card-lbl{font-size:8px;opacity:.8;margin-bottom:3px;}
+.t2 .row{display:flex;gap:6px;margin:8px;}
+.t2 .rcard{flex:1;background:#161B22;border-radius:10px;padding:8px 10px;border:0.5px solid rgba(255,255,255,0.06);}
+.t2 .rcard-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;}
+.t2 .rcard-store{font-size:9px;font-weight:700;color:#E6EDF3;}
+.t2 .rcard-amt{font-size:10px;font-weight:800;color:#3FB950;}
+.t2 .tabbar{background:#161B22;display:flex;padding:6px 4px 10px;border-top:0.5px solid rgba(255,255,255,0.06);}
+.t2 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.t2 .tab-lbl{font-size:7px;font-weight:600;color:#484F58;}
+.t2 .tab-lbl.on{color:#3FB950;font-weight:800;}
+.t2 .scan-btn{flex:1;display:flex;align-items:center;justify-content:center;}
+.t2 .scan-c{width:32px;height:32px;background:#238636;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:-14px;border:3px solid #0D1117;}
+
+/* ── THEME 3: 오션 블루 ── */
+.t3{background:#F0F4FA;}
+.t3 .sbar{background:#fff;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#0A1628;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.t3 .card{background:linear-gradient(135deg,#2563EB,#1e40af);margin:8px;border-radius:14px;padding:14px;color:#fff;}
+.t3 .card-amt{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.t3 .card-lbl{font-size:8px;opacity:.8;margin-bottom:3px;}
+.t3 .row{display:flex;gap:6px;margin:8px;}
+.t3 .rcard{flex:1;background:#fff;border-radius:10px;padding:8px 10px;border:0.5px solid rgba(0,0,0,0.07);}
+.t3 .rcard-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;}
+.t3 .rcard-store{font-size:9px;font-weight:700;color:#0A1628;}
+.t3 .rcard-amt{font-size:10px;font-weight:800;color:#2563EB;}
+.t3 .tabbar{background:#fff;display:flex;padding:6px 4px 10px;border-top:0.5px solid rgba(0,0,0,0.07);}
+.t3 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.t3 .tab-lbl{font-size:7px;font-weight:600;color:#94A3B8;}
+.t3 .tab-lbl.on{color:#2563EB;font-weight:800;}
+.t3 .scan-btn{flex:1;display:flex;align-items:center;justify-content:center;}
+.t3 .scan-c{width:32px;height:32px;background:#2563EB;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:-14px;border:3px solid #F0F4FA;}
+
+/* ── THEME 4: 퍼플 프리미엄 ── */
+.t4{background:#F5F3FF;}
+.t4 .sbar{background:#fff;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#1A1033;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.t4 .card{background:linear-gradient(135deg,#7C3AED,#5B21B6);margin:8px;border-radius:14px;padding:14px;color:#fff;}
+.t4 .card-amt{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.t4 .card-lbl{font-size:8px;opacity:.8;margin-bottom:3px;}
+.t4 .row{display:flex;gap:6px;margin:8px;}
+.t4 .rcard{flex:1;background:#fff;border-radius:10px;padding:8px 10px;border:0.5px solid rgba(0,0,0,0.07);}
+.t4 .rcard-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;}
+.t4 .rcard-store{font-size:9px;font-weight:700;color:#1A1033;}
+.t4 .rcard-amt{font-size:10px;font-weight:800;color:#7C3AED;}
+.t4 .tabbar{background:#fff;display:flex;padding:6px 4px 10px;border-top:0.5px solid rgba(0,0,0,0.07);}
+.t4 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.t4 .tab-lbl{font-size:7px;font-weight:600;color:#A78BFA;}
+.t4 .tab-lbl.on{color:#7C3AED;font-weight:800;}
+.t4 .scan-btn{flex:1;display:flex;align-items:center;justify-content:center;}
+.t4 .scan-c{width:32px;height:32px;background:#7C3AED;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:-14px;border:3px solid #F5F3FF;}
+
+/* ── THEME 5: 웜 코랄 ── */
+.t5{background:#FFF8F5;}
+.t5 .sbar{background:#fff;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#1A0A08;border-bottom:0.5px solid rgba(0,0,0,0.07);}
+.t5 .card{background:linear-gradient(135deg,#F97316,#C2410C);margin:8px;border-radius:14px;padding:14px;color:#fff;}
+.t5 .card-amt{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.t5 .card-lbl{font-size:8px;opacity:.8;margin-bottom:3px;}
+.t5 .row{display:flex;gap:6px;margin:8px;}
+.t5 .rcard{flex:1;background:#fff;border-radius:10px;padding:8px 10px;border:0.5px solid rgba(0,0,0,0.07);}
+.t5 .rcard-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;}
+.t5 .rcard-store{font-size:9px;font-weight:700;color:#1A0A08;}
+.t5 .rcard-amt{font-size:10px;font-weight:800;color:#F97316;}
+.t5 .tabbar{background:#fff;display:flex;padding:6px 4px 10px;border-top:0.5px solid rgba(0,0,0,0.07);}
+.t5 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.t5 .tab-lbl{font-size:7px;font-weight:600;color:#D1A78A;}
+.t5 .tab-lbl.on{color:#F97316;font-weight:800;}
+.t5 .scan-btn{flex:1;display:flex;align-items:center;justify-content:center;}
+.t5 .scan-c{width:32px;height:32px;background:#F97316;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:-14px;border:3px solid #FFF8F5;}
+
+/* ── THEME 6: 다크 네이비 (프리미엄) ── */
+.t6{background:#0A0E1A;}
+.t6 .sbar{background:#0F1528;padding:8px 14px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;color:#E2E8F0;border-bottom:0.5px solid rgba(255,255,255,0.05);}
+.t6 .card{background:linear-gradient(135deg,#D4A017,#B8860B);margin:8px;border-radius:14px;padding:14px;color:#fff;}
+.t6 .card-amt{font-size:22px;font-weight:800;letter-spacing:-1px;}
+.t6 .card-lbl{font-size:8px;opacity:.8;margin-bottom:3px;}
+.t6 .row{display:flex;gap:6px;margin:8px;}
+.t6 .rcard{flex:1;background:#0F1528;border-radius:10px;padding:8px 10px;border:0.5px solid rgba(255,255,255,0.06);}
+.t6 .rcard-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;margin-bottom:4px;}
+.t6 .rcard-store{font-size:9px;font-weight:700;color:#E2E8F0;}
+.t6 .rcard-amt{font-size:10px;font-weight:800;color:#D4A017;}
+.t6 .tabbar{background:#0F1528;display:flex;padding:6px 4px 10px;border-top:0.5px solid rgba(255,255,255,0.05);}
+.t6 .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.t6 .tab-lbl{font-size:7px;font-weight:600;color:#3D4F6B;}
+.t6 .tab-lbl.on{color:#D4A017;font-weight:800;}
+.t6 .scan-btn{flex:1;display:flex;align-items:center;justify-content:center;}
+.t6 .scan-c{width:32px;height:32px;background:#D4A017;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:-14px;border:3px solid #0A0E1A;}
+</style>
+</head>
+<body>
+<h1>ReceiptIQ 디자인 프리뷰</h1>
+<p class="subtitle">마음에 드는 테마를 선택하면 prototype.html에 적용해드려요</p>
+
+<div class="themes">
+
+  <!-- Theme 1: 현재 에메랄드 -->
+  <div class="theme-col">
+    <span class="theme-label">① 현재 (에메랄드)</span>
+    <div class="phone t1" id="ph1" onclick="select(1)">
+      <div class="t1 sbar"><span>9:41</span><span>●●● 🔋</span></div>
+      <div class="t1 card">
+        <div class="card-lbl">5月 합계 지출</div>
+        <div class="card-amt">¥ 42,380</div>
+        <div style="font-size:8px;opacity:.7;margin-top:6px;">전월 대비 ▼ 3,200엔 절약 중 🎉</div>
+      </div>
+      <div style="font-size:8px;font-weight:700;color:#8FA89E;padding:4px 10px 4px;">최근 영수증</div>
+      <div class="t1 row">
+        <div class="t1 rcard">
+          <div class="rcard-icon" style="background:#E1F5EE;">🛒</div>
+          <div class="rcard-store">イオン</div>
+          <div class="rcard-amt">¥3,420</div>
+        </div>
+        <div class="t1 rcard">
+          <div class="rcard-icon" style="background:#FFF8E8;">🍜</div>
+          <div class="rcard-store">松屋</div>
+          <div class="rcard-amt">¥580</div>
+        </div>
+        <div class="t1 rcard">
+          <div class="rcard-icon" style="background:#E6F1FB;">☕</div>
+          <div class="rcard-store">スタバ</div>
+          <div class="rcard-amt">¥620</div>
+        </div>
+      </div>
+      <div style="height:30px;background:#F5F4F0;"></div>
+      <div class="t1 tabbar">
+        <div class="t1 tab"><div class="tab-dot" style="background:#1D9E75;"></div><span class="tab-lbl on">홈</span></div>
+        <div class="t1 tab"><div class="tab-dot" style="background:transparent;"></div><span class="tab-lbl">내역</span></div>
+        <div class="t1 scan-btn"><div class="t1 scan-c">📷</div></div>
+        <div class="t1 tab"><div class="tab-dot" style="background:transparent;"></div><span class="tab-lbl">달력</span></div>
+        <div class="t1 tab"><div class="tab-dot" style="background:transparent;"></div><span class="tab-lbl">맵</span></div>
+      </div>
+    </div>
+    <div class="chosen-label" id="cl1"></div>
+    <button class="select-btn" id="btn1" onclick="select(1)">현재 유지</button>
+  </div>
+
+  <!-- Theme 2: 다크모드 -->
+  <div class="theme-col">
+    <span class="theme-label">② 다크모드</span>
+    <div class="phone t2" id="ph2" onclick="select(2)">
+      <div class="t2 sbar"><span>9:41</span><span>●●● 🔋</span></div>
+      <div class="t2 card">
+        <div class="card-lbl">5月 합계 지출</div>
+        <div class="card-amt">¥ 42,380</div>
+        <div style="font-size:8px;opacity:.7;margin-top:6px;">전월 대비 ▼ 3,200엔 절약 중 🎉</div>
+      </div>
+      <div style="font-size:8px;font-weight:700;color:#484F58;padding:4px 10px 4px;">최근 영수증</div>
+      <div class="t2 row">
+        <div class="t2 rcard">
+          <div class="rcard-icon" style="background:#1C3A2A;">🛒</div>
+          <div class="rcard-store">イオン</div>
+          <div class="rcard-amt">¥3,420</div>
+        </div>
+        <div class="t2 rcard">
+          <div class="rcard-icon" style="background:#2A2010;">🍜</div>
+          <div class="rcard-store">松屋</div>
+          <div class="rcard-amt">¥3FB950</div>
+        </div>
+        <div class="t2 rcard">
+          <div class="rcard-icon" style="background:#12233A;">☕</div>
+          <div class="rcard-store">スタバ</div>
+          <div class="rcard-amt">¥620</div>
+        </div>
+      </div>
+      <div style="height:30px;background:#0D1117;"></div>
+      <div class="t2 tabbar">
+        <div class="t2 tab"><div style="width:16px;height:3px;border-radius:2px;background:#3FB950;"></div><span class="tab-lbl on">홈</span></div>
+        <div class="t2 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">내역</span></div>
+        <div class="t2 scan-btn"><div class="t2 scan-c">📷</div></div>
+        <div class="t2 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">달력</span></div>
+        <div class="t2 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">맵</span></div>
+      </div>
+    </div>
+    <div class="chosen-label" id="cl2"></div>
+    <button class="select-btn" id="btn2" onclick="select(2)">이걸로 적용</button>
+  </div>
+
+  <!-- Theme 3: 오션 블루 -->
+  <div class="theme-col">
+    <span class="theme-label">③ 오션 블루</span>
+    <div class="phone t3" id="ph3" onclick="select(3)">
+      <div class="t3 sbar"><span>9:41</span><span>●●● 🔋</span></div>
+      <div class="t3 card">
+        <div class="card-lbl">5月 합계 지출</div>
+        <div class="card-amt">¥ 42,380</div>
+        <div style="font-size:8px;opacity:.7;margin-top:6px;">전월 대비 ▼ 3,200엔 절약 중 🎉</div>
+      </div>
+      <div style="font-size:8px;font-weight:700;color:#94A3B8;padding:4px 10px 4px;">최근 영수증</div>
+      <div class="t3 row">
+        <div class="t3 rcard">
+          <div class="rcard-icon" style="background:#DBEAFE;">🛒</div>
+          <div class="rcard-store">イオン</div>
+          <div class="rcard-amt">¥3,420</div>
+        </div>
+        <div class="t3 rcard">
+          <div class="rcard-icon" style="background:#FEF3C7;">🍜</div>
+          <div class="rcard-store">松屋</div>
+          <div class="rcard-amt">¥580</div>
+        </div>
+        <div class="t3 rcard">
+          <div class="rcard-icon" style="background:#EDE9FE;">☕</div>
+          <div class="rcard-store">スタバ</div>
+          <div class="rcard-amt">¥620</div>
+        </div>
+      </div>
+      <div style="height:30px;background:#F0F4FA;"></div>
+      <div class="t3 tabbar">
+        <div class="t3 tab"><div style="width:16px;height:3px;border-radius:2px;background:#2563EB;"></div><span class="tab-lbl on">홈</span></div>
+        <div class="t3 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">내역</span></div>
+        <div class="t3 scan-btn"><div class="t3 scan-c">📷</div></div>
+        <div class="t3 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">달력</span></div>
+        <div class="t3 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">맵</span></div>
+      </div>
+    </div>
+    <div class="chosen-label" id="cl3"></div>
+    <button class="select-btn" id="btn3" onclick="select(3)">이걸로 적용</button>
+  </div>
+
+  <!-- Theme 4: 퍼플 -->
+  <div class="theme-col">
+    <span class="theme-label">④ 퍼플 프리미엄</span>
+    <div class="phone t4" id="ph4" onclick="select(4)">
+      <div class="t4 sbar"><span>9:41</span><span>●●● 🔋</span></div>
+      <div class="t4 card">
+        <div class="card-lbl">5月 합계 지출</div>
+        <div class="card-amt">¥ 42,380</div>
+        <div style="font-size:8px;opacity:.7;margin-top:6px;">전월 대비 ▼ 3,200엔 절약 중 🎉</div>
+      </div>
+      <div style="font-size:8px;font-weight:700;color:#A78BFA;padding:4px 10px 4px;">최근 영수증</div>
+      <div class="t4 row">
+        <div class="t4 rcard">
+          <div class="rcard-icon" style="background:#EDE9FE;">🛒</div>
+          <div class="rcard-store">イオン</div>
+          <div class="rcard-amt">¥3,420</div>
+        </div>
+        <div class="t4 rcard">
+          <div class="rcard-icon" style="background:#FEF3C7;">🍜</div>
+          <div class="rcard-store">松屋</div>
+          <div class="rcard-amt">¥580</div>
+        </div>
+        <div class="t4 rcard">
+          <div class="rcard-icon" style="background:#FCE7F3;">☕</div>
+          <div class="rcard-store">スタバ</div>
+          <div class="rcard-amt">¥620</div>
+        </div>
+      </div>
+      <div style="height:30px;background:#F5F3FF;"></div>
+      <div class="t4 tabbar">
+        <div class="t4 tab"><div style="width:16px;height:3px;border-radius:2px;background:#7C3AED;"></div><span class="tab-lbl on">홈</span></div>
+        <div class="t4 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">내역</span></div>
+        <div class="t4 scan-btn"><div class="t4 scan-c">📷</div></div>
+        <div class="t4 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">달력</span></div>
+        <div class="t4 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">맵</span></div>
+      </div>
+    </div>
+    <div class="chosen-label" id="cl4"></div>
+    <button class="select-btn" id="btn4" onclick="select(4)">이걸로 적용</button>
+  </div>
+
+  <!-- Theme 5: 코랄 오렌지 -->
+  <div class="theme-col">
+    <span class="theme-label">⑤ 코랄 오렌지</span>
+    <div class="phone t5" id="ph5" onclick="select(5)">
+      <div class="t5 sbar"><span>9:41</span><span>●●● 🔋</span></div>
+      <div class="t5 card">
+        <div class="card-lbl">5月 합계 지출</div>
+        <div class="card-amt">¥ 42,380</div>
+        <div style="font-size:8px;opacity:.7;margin-top:6px;">전월 대비 ▼ 3,200엔 절약 중 🎉</div>
+      </div>
+      <div style="font-size:8px;font-weight:700;color:#D1A78A;padding:4px 10px 4px;">최근 영수증</div>
+      <div class="t5 row">
+        <div class="t5 rcard">
+          <div class="rcard-icon" style="background:#FEF3C7;">🛒</div>
+          <div class="rcard-store">イオン</div>
+          <div class="rcard-amt">¥3,420</div>
+        </div>
+        <div class="t5 rcard">
+          <div class="rcard-icon" style="background:#FFF7ED;">🍜</div>
+          <div class="rcard-store">松屋</div>
+          <div class="rcard-amt">¥580</div>
+        </div>
+        <div class="t5 rcard">
+          <div class="rcard-icon" style="background:#FEE2E2;">☕</div>
+          <div class="rcard-store">スタバ</div>
+          <div class="rcard-amt">¥620</div>
+        </div>
+      </div>
+      <div style="height:30px;background:#FFF8F5;"></div>
+      <div class="t5 tabbar">
+        <div class="t5 tab"><div style="width:16px;height:3px;border-radius:2px;background:#F97316;"></div><span class="tab-lbl on">홈</span></div>
+        <div class="t5 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">내역</span></div>
+        <div class="t5 scan-btn"><div class="t5 scan-c">📷</div></div>
+        <div class="t5 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">달력</span></div>
+        <div class="t5 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">맵</span></div>
+      </div>
+    </div>
+    <div class="chosen-label" id="cl5"></div>
+    <button class="select-btn" id="btn5" onclick="select(5)">이걸로 적용</button>
+  </div>
+
+  <!-- Theme 6: 다크 골드 -->
+  <div class="theme-col">
+    <span class="theme-label">⑥ 다크 골드 (프리미엄)</span>
+    <div class="phone t6" id="ph6" onclick="select(6)">
+      <div class="t6 sbar"><span>9:41</span><span>●●● 🔋</span></div>
+      <div class="t6 card">
+        <div class="card-lbl">5月 합계 지출</div>
+        <div class="card-amt">¥ 42,380</div>
+        <div style="font-size:8px;opacity:.7;margin-top:6px;">전월 대비 ▼ 3,200엔 절약 중 🎉</div>
+      </div>
+      <div style="font-size:8px;font-weight:700;color:#3D4F6B;padding:4px 10px 4px;">최근 영수증</div>
+      <div class="t6 row">
+        <div class="t6 rcard">
+          <div class="rcard-icon" style="background:#1A2535;">🛒</div>
+          <div class="rcard-store">イオン</div>
+          <div class="rcard-amt">¥3,420</div>
+        </div>
+        <div class="t6 rcard">
+          <div class="rcard-icon" style="background:#1A1A0A;">🍜</div>
+          <div class="rcard-store">松屋</div>
+          <div class="rcard-amt">¥580</div>
+        </div>
+        <div class="t6 rcard">
+          <div class="rcard-icon" style="background:#1A1525;">☕</div>
+          <div class="rcard-store">スタバ</div>
+          <div class="rcard-amt">¥620</div>
+        </div>
+      </div>
+      <div style="height:30px;background:#0A0E1A;"></div>
+      <div class="t6 tabbar">
+        <div class="t6 tab"><div style="width:16px;height:3px;border-radius:2px;background:#D4A017;"></div><span class="tab-lbl on">홈</span></div>
+        <div class="t6 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">내역</span></div>
+        <div class="t6 scan-btn"><div class="t6 scan-c">📷</div></div>
+        <div class="t6 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">달력</span></div>
+        <div class="t6 tab"><div style="width:16px;height:3px;border-radius:2px;"></div><span class="tab-lbl">맵</span></div>
+      </div>
+    </div>
+    <div class="chosen-label" id="cl6"></div>
+    <button class="select-btn" id="btn6" onclick="select(6)">이걸로 적용</button>
+  </div>
+
+</div>
+
+<script>
+var _selected = 0;
+function select(n) {
+  for (var i = 1; i <= 6; i++) {
+    document.getElementById('ph'+i).classList.remove('selected');
+    document.getElementById('btn'+i).classList.remove('active');
+    document.getElementById('cl'+i).textContent = '';
+  }
+  _selected = n;
+  document.getElementById('ph'+n).classList.add('selected');
+  document.getElementById('btn'+n).classList.add('active');
+  document.getElementById('cl'+n).textContent = '← 선택됨';
+}
+</script>
+</body>
+</html>
