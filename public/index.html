@@ -2083,24 +2083,9 @@ var PAY_LABEL = { cash:'현금', credit:'신용카드', ic:'IC카드', qr:'QR결
 var PAY_COLOR = { cash:'#8BA49A', credit:'#3B82F6', ic:'#16A87A', qr:'#F07340', debit:'#8B5CF6' };
 var PAY_BG    = { cash:'#F5F5F5', credit:'#EBF3FF', ic:'#E0F5EE', qr:'#FEF0E8', debit:'#F0EDFF' };
 
-// 영수증 DB (초기 더미 데이터)
-var DB = [
-  { id:1,  date:'2026-05-18', store:'イオン 四日市店',  cat:'food', pay:'credit', items:[{name:'牛乳 1L',qty:1,price:198},{name:'食パン 6枚切',qty:1,price:168},{name:'卵 M 10個',qty:1,price:228},{name:'鶏もも肉 300g',qty:1,price:398},{name:'キャベツ',qty:1,price:148},{name:'トマト 3個',qty:1,price:298},{name:'ヨーグルト',qty:2,price:318},{name:'マヨネーズ',qty:1,price:198}], total:3240 },
-  { id:2,  date:'2026-05-17', store:'スガキヤ 近鉄店',  cat:'eat',  pay:'qr',     items:[{name:'ラーメン セット',qty:1,price:680},{name:'餃子',qty:1,price:320}], total:1000 },
-  { id:3,  date:'2026-05-15', store:'業務スーパー',      cat:'food', pay:'cash',   items:[{name:'牛乳 1L',qty:1,price:158},{name:'食パン 6枚切',qty:1,price:128},{name:'卵 M 10個',qty:1,price:198},{name:'鶏もも肉 300g',qty:1,price:368},{name:'キャベツ',qty:1,price:128},{name:'トマト 3個',qty:1,price:248}], total:1890 },
-  { id:4,  date:'2026-05-14', store:'ドラッグストア',    cat:'life', pay:'ic',     items:[{name:'シャンプー',qty:1,price:680},{name:'歯磨き粉',qty:1,price:320},{name:'洗剤',qty:1,price:280},{name:'ティッシュ 5P',qty:1,price:380}], total:1660 },
-  { id:5,  date:'2026-05-13', store:'コンビニ セブン',   cat:'eat',  pay:'qr',     items:[{name:'弁当',qty:1,price:380},{name:'お茶 500ml',qty:1,price:140},{name:'ヨーグルト',qty:1,price:128}], total:648 },
-  { id:6,  date:'2026-05-10', store:'スガキヤ 近鉄店',  cat:'eat',  pay:'qr',     items:[{name:'ラーメン セット',qty:1,price:680},{name:'チャーハン',qty:1,price:450}], total:1130 },
-  { id:7,  date:'2026-05-08', store:'西友スーパー',      cat:'food', pay:'credit', items:[{name:'牛乳 1L',qty:1,price:198},{name:'卵 M 10個',qty:1,price:228},{name:'豚バラ肉 400g',qty:1,price:498},{name:'キャベツ',qty:1,price:148},{name:'豆腐',qty:2,price:198},{name:'納豆 3P',qty:1,price:168}], total:2230 },
-  { id:8,  date:'2026-05-07', store:'スタバ 名古屋店',  cat:'cafe', pay:'credit', items:[{name:'ラテ',qty:1,price:550},{name:'マフィン',qty:1,price:380}], total:930 },
-  { id:9,  date:'2026-05-06', store:'マツモトキヨシ',    cat:'med',  pay:'cash',   items:[{name:'ビタミンC サプリ',qty:1,price:1280},{name:'マスク 30枚',qty:1,price:560},{name:'目薬',qty:1,price:480}], total:2320 },
-  { id:10, date:'2026-05-03', store:'コンビニ セブン',   cat:'eat',  pay:'qr',     items:[{name:'弁当',qty:1,price:420},{name:'お茶 500ml',qty:1,price:140},{name:'サラダ',qty:1,price:250}], total:810 },
-  { id:11, date:'2026-04-28', store:'業務スーパー',      cat:'food', pay:'credit', items:[{name:'牛乳 1L',qty:1,price:158},{name:'食パン 6枚切',qty:1,price:128},{name:'卵 M 10個',qty:1,price:198},{name:'鶏もも肉 300g',qty:1,price:368}], total:1380 },
-  { id:12, date:'2026-04-25', store:'スガキヤ 近鉄店',  cat:'eat',  pay:'qr',     items:[{name:'ラーメン セット',qty:1,price:680},{name:'餃子',qty:1,price:320}], total:1000 },
-  { id:13, date:'2026-04-22', store:'スタバ 名古屋店',  cat:'cafe', pay:'debit',  items:[{name:'ラテ',qty:1,price:550},{name:'スコーン',qty:1,price:420}], total:970 },
-  { id:14, date:'2026-04-20', store:'ドラッグストア',    cat:'life', pay:'ic',     items:[{name:'シャンプー',qty:1,price:680},{name:'洗剤',qty:1,price:280},{name:'歯磨き粉',qty:1,price:320}], total:1280 },
-];
-var nextId = 15;
+// 영수증 DB (로그인 후 Supabase에서 불러옴)
+var DB = [];
+var nextId = 1;
 var apiKey = 'AIzaSyCNMJkKN0UgF9Kq_azoFuQFFhKZbP1rGcE';   // Google Vision API 키
 var gptKey  = '';  // OpenAI API 키 — 앱 설정에서 입력 (코드에 직접 넣지 마세요)
 
@@ -2306,27 +2291,12 @@ async function ctLoadPricePins(lat, lng) {
     .limit(80);
 
   if (res.error || !res.data || res.data.length === 0) {
-    ctRenderDummyPins();
+    _ctPins = _ctPendingPins.slice();
+    ctRenderPricePins();
     return;
   }
   var loaded = res.data.filter(function(p) { return p.stores && p.stores.lat; });
-  _ctPins = _ctPendingPins.concat(loaded); // 공개된 핀 앞에 유지
-  if (_ctPins.length === 0) { ctRenderDummyPins(); return; }
-  ctRenderPricePins();
-}
-
-/* 더미 핀 (개발/테스트용) */
-function ctRenderDummyPins() {
-  var base = _ctUserPos || { lat: 34.9700, lng: 136.6220 };
-  var dummies = [
-    { item_name:'牛丼並盛り', price:430, stores:{ name:'すき家', lat:base.lat+0.002, lng:base.lng+0.003, category:'teishoku', receipt_count:12 } },
-    { item_name:'ラーメン',   price:780, stores:{ name:'一蘭',    lat:base.lat-0.001, lng:base.lng+0.005, category:'ramen',    receipt_count:8  } },
-    { item_name:'かけうどん', price:320, stores:{ name:'丸亀製麺', lat:base.lat+0.003, lng:base.lng-0.002, category:'soba',    receipt_count:15 } },
-    { item_name:'コーヒー',   price:550, stores:{ name:'ドトール', lat:base.lat-0.002, lng:base.lng-0.003, category:'cafe',    receipt_count:6  } },
-    { item_name:'ロースカツ', price:890, stores:{ name:'かつや',   lat:base.lat+0.001, lng:base.lng+0.006, category:'tonkatsu',receipt_count:9  } },
-    { item_name:'から揚げ弁当',price:498, stores:{ name:'ローソン', lat:base.lat-0.003, lng:base.lng+0.001, category:'konbini', receipt_count:22 } },
-  ];
-  _ctPins = _ctPendingPins.concat(dummies); // 공개 직후 핀은 항상 앞에
+  _ctPins = _ctPendingPins.concat(loaded);
   ctRenderPricePins();
 }
 
@@ -2614,32 +2584,10 @@ var CT_POST_CATS = [
   { key:'suggestion', label:'建議・要望', color:'#E53935', bg:'#FEECEC' },
 ];
 
-var _ctDummyPosts = [
-  { id:1,  cat:'humor',      title:'スーパーの閉店前割引を狙いすぎて怒られた話😂',       user:'値下げハンター',    comments:45, likes:120, date:'5/19', img:'🛒', content:'閉店30分前にスーパーに突撃するのが日課になって3ヶ月。今日ついに店員さんに「また来ましたね」って言われてしまいました😂\n半額シールを求めてウロウロしすぎたのが原因みたいです。でもお肉が半額で買えた時の達成感、やめられないんですよね。今月の食費は先月より4,000円下がりました！' },
-  { id:2,  cat:'free',       title:'一人暮らし3年、食費節約のコツをまとめてみた',         user:'自炊マスター',      comments:33, likes:89,  date:'5/19', img:'🥘', content:'3年間一人暮らしをして気づいた節約術をまとめました。\n①週1回まとめ買いで衝動買いを防ぐ\n②冷凍ご飯を常にストック\n③豆腐・卵・もやしは最強食材\n④調味料にだけはお金をかける\n⑤レシートアプリで支出を可視化\nこれだけで月の食費が8万→2.8万になりました。質問があれば気軽にどうぞ！' },
-  { id:3,  cat:'review',     title:'業務スーパーの冷凍餃子はコスパ最強だった',            user:'業務スーパーファン', comments:17, likes:67,  date:'5/18', img:'🥟', content:'業務スーパーの冷凍餃子(50個入り)を買ってみました。値段は税込み598円。1個約12円という驚異のコスパ！\n焼き方も簡単で、フライパンに並べて水を入れてフタをするだけ。皮がもちもちで中の具もしっかり入ってて大満足。一人暮らしだと多すぎるかなと思ったけど、3日で完食しました笑' },
-  { id:4,  cat:'humor',      title:'冷蔵庫に謎の食材が増殖してる件について',             user:'冷蔵庫警察',        comments:8,  likes:56,  date:'5/18', img:null, content:'節約のためにまとめ買いをしているはずなのに、冷蔵庫を開けるたびに謎の食材が増えています。\n「これいつ買ったっけ？」な豆腐、賞味期限が3日前のヨーグルト、使いかけのめんつゆ2本…\nみなさんの冷蔵庫の中身どうなってますか？整理術があれば教えてください！' },
-  { id:5,  cat:'free',       title:'今月の食費2万円以下にできた！レシート公開',           user:'節約チャレンジ',    comments:12, likes:34,  date:'5/17', img:'🧾', content:'先月から始めた食費節約チャレンジ、今月はついに19,840円達成！\n内訳：スーパー12,000円 / コンビニ3,200円 / 外食4,640円\nポイントはコンビニを週2回以内に制限したこと。ついで買いが一番の敵でした。来月は外食費をもう少し削れるか挑戦します！' },
-  { id:6,  cat:'question',   title:'コンビニのホットスナックって節約になる？',            user:'コンビニ民',        comments:20, likes:15,  date:'5/17', img:null, content:'昼食をコンビニで済ますとき、ホットスナック+おにぎりで350円くらいになります。これって節約になってるんでしょうか？\n弁当を作ると材料費で200円くらいかかるし、時間もかかる…。みなさんはどう判断していますか？コスパ的にどっちがお得か教えてください！' },
-  { id:7,  cat:'review',     title:'すき家の牛丼、今月3回目でも全然飽きない理由',        user:'牛丼愛好家',        comments:5,  likes:22,  date:'5/16', img:null, content:'近所のすき家の牛丼並盛り430円、今月だけで3回食べましたが飽きる気配がゼロです。\n理由を考えてみると、①ご飯の量が多い②味変ができる（紅生姜/七味/卵）③立地がいい、の3点。\nチリつものマップを見てたら近くに複数のすき家があるのを発見して、気づいたら通ってました笑' },
-  { id:8,  cat:'suggestion', title:'マップに「月替わりセール」情報を追加してほしい',       user:'要望ユーザー',      comments:3,  likes:8,   date:'5/16', img:null, content:'チリつもはすごく便利なのですが、一つ提案があります。各お店の「今月のセール情報」や「クーポン情報」をマップ上に表示できる機能があれば最高です！\n例えばマクドナルドが月見バーガーセールしてるとか、業務スーパーが特定商品割引してるとか。ユーザーが情報を投稿して共有できる形でもいいと思います。ご検討ください！' },
-  { id:9,  cat:'free',       title:'冷凍ストック術で週末まとめ買いが最高すぎる',          user:'まとめ買い派',      comments:28, likes:41,  date:'5/15', img:'❄️', content:'毎週土曜日にスーパーでまとめ買い → 即冷凍する習慣をつけてから、食費が激減しました。\nストックの定番：鶏もも肉、豚こま、サーモン、むきえび、ブロッコリー、ほうれん草\n冷凍するときはラップで小分けにして、ジップロックにまとめるのがポイント。平日は解凍するだけなので時短にもなります。最初は面倒でも慣れると楽しくなりますよ！' },
-  { id:10, cat:'question',   title:'一人暮らしで自炊するメリット教えてください',          user:'新社会人',          comments:15, likes:19,  date:'5/15', img:null, content:'4月から一人暮らしを始めた新社会人です。今は毎日外食かコンビニなのですが、自炊を始めようか迷っています。\n料理はほぼ未経験で、仕事が忙しくて帰りが遅いこともあります。自炊って本当に節約になりますか？時間とお金どっちが大事なのかも含めてアドバイスほしいです！' },
-  { id:11, cat:'humor',      title:'節約のために自転車通勤したら雨に降られた件',          user:'雨男',              comments:31, likes:88,  date:'5/14', img:null, content:'交通費月8,000円を節約しようと自転車通勤を決意して3日目、見事にゲリラ豪雨に遭遇しました。\nずぶ濡れになったのでコインランドリー使って800円。傘を買って1,200円。結果的にその日だけで2,000円の出費に…\n節約しようとするほど出費が増えるこの現象、みなさん経験ありますか？😭' },
-  { id:12, cat:'review',     title:'ローソン100の新作コロッケが神コスパすぎる',           user:'コロッケ評論家',    comments:9,  likes:33,  date:'5/14', img:'🍞', content:'ローソン100で売っている新作のコロッケ（108円）を食べてみました。\nサクサクの衣の中にじゃがいもがぎっしり。量もしっかりあって108円は正直反則レベル。ローソン100はコスパ最強のコンビニだと改めて確信しました。\n他にもおすすめ商品があれば教えてください！毎週リポートします。' },
-];
+var _ctDummyPosts = [];
 
-var _ctNotifMessages = [
-  { icon:'💬', text:'値下げハンターさんがあなたの投稿にコメントしました' },
-  { icon:'🎁', text:'チリつも×スタバ 春のプロモーション開催中！' },
-  { icon:'📢', text:'v1.2.0 アップデートのお知らせ — 新機能が追加されました' },
-];
-
-var _ctNotifications = [
-  { icon:'💬', text:'<b>値下げハンター</b>さんがあなたの投稿にコメントしました', time:'2分前',  read:false },
-  { icon:'🎁', text:'チリつも×スタバ 春のプロモーション開催中！',               time:'1時間前', read:false },
-  { icon:'📢', text:'v1.2.0 アップデート — 新機能が追加されました',             time:'昨日',    read:true  },
-];
+var _ctNotifMessages = [];
+var _ctNotifications = [];
 
 var _ctPostCat = 'all';
 var _ctPostPage = 1;
@@ -3216,14 +3164,7 @@ function switchSubtab(name) {
 ══════════════════════════════ */
 var _radarFilter = 'up';
 var _radarSort   = 'desc'; // 'desc' = 변동 큰 순, 'asc' = 변동 작은 순
-var _radarDummyData = [
-  { name: '卵 10個入り',        icon: '🥚', old: 198, now: 229, months: 3, store: 'イトーヨーカドー' },
-  { name: '食パン 6枚切り',     icon: '🍞', old: 138, now: 168, months: 2, store: 'まいばすけっと'   },
-  { name: 'オレンジジュース 1L', icon: '🧃', old: 148, now: 178, months: 4, store: 'マルエツ'         },
-  { name: 'バター 200g',        icon: '🧈', old: 498, now: 568, months: 6, store: 'イトーヨーカドー' },
-  { name: '豆腐',               icon: '🫘', old: 88,  now: 68,  months: 1, store: 'ライフ'           },
-  { name: 'もやし',             icon: '🌱', old: 48,  now: 28,  months: 2, store: 'まいばすけっと'   },
-];
+var _radarDummyData = [];
 
 function switchRadar(type) {
   _radarFilter = type;
