@@ -97,6 +97,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .ct-hdr{background:var(--gold);padding:12px 20px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
 .ct-hdr-title{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.6px;}
 .ct-hdr-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:1px;font-weight:500;}
+/* ct-hdr 아바타 — 골드 배경 위에 흰색 반투명 */
+.ct-hdr .avatar{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.35);color:#fff;}
 .ct-coin{display:flex;align-items:center;gap:5px;background:rgba(255,255,255,.1);border-radius:20px;padding:6px 12px;}
 .ct-coin-val{font-size:13px;font-weight:800;color:#fff;}
 
@@ -894,7 +896,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="ct-hdr-title">📍 チリつも</div>
       <div class="ct-hdr-sub" id="ct-map-sub">レシートでつながる、街のおトク地図</div>
     </div>
-    <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance">0</span></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance">0</span></div>
+      <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
+    </div>
   </div>
 
   <!-- 지도 영역 -->
@@ -1038,6 +1043,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div id="ct-notif-dot" style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:#E53935;border-radius:50%;border:1.5px solid var(--navy);"></div>
       </div>
       <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance2">0</span></div>
+      <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
     </div>
   </div>
 
@@ -1088,7 +1094,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="ct-hdr-title">🎁 チリつもリワード</div>
       <div class="ct-hdr-sub">코인 적립 & 드로우</div>
     </div>
-    <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance3">0</span></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance3">0</span></div>
+      <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
+    </div>
   </div>
   <div class="scroll" style="padding:16px;">
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
@@ -1253,51 +1262,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 </div>
 
 <!-- チリつも 설정 화면 -->
-<div class="ct-screen" id="ct-screen-settings" style="display:none;">
-  <div class="ct-hdr">
-    <div><div class="ct-hdr-title">⚙️ 設定</div></div>
-    <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance4">0</span></div>
-  </div>
-  <div class="scroll" style="padding:16px;">
-    <!-- 프로필 카드 -->
-    <div style="background:var(--surface);border-radius:16px;padding:16px 18px;margin-bottom:12px;border:0.5px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="openOv('ov-settings')">
-      <div style="width:48px;height:48px;border-radius:50%;background:var(--gold-light);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:22px;" id="ct-settings-avatar">😊</div>
-      <div style="flex:1;">
-        <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="ct-settings-nickname">ゲスト</div>
-        <div style="font-size:11px;color:var(--gold);font-weight:700;margin-top:2px;">✨ <span id="ct-settings-coin">0</span> コイン</div>
-      </div>
-      <span style="color:var(--text-3);font-size:18px;">›</span>
-    </div>
-
-    <!-- 모드 전환 -->
-    <div style="background:var(--surface);border-radius:16px;padding:18px;margin-bottom:12px;border:0.5px solid var(--border);">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;margin-bottom:12px;">モード切替</div>
-      <div style="display:flex;gap:8px;">
-        <button onclick="switchMode('receipt')" style="flex:1;padding:13px 8px;border-radius:12px;font-size:12px;font-weight:700;border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;font-family:var(--font);line-height:1.6;">🧾 ReceiptIQ<br><span style="font-size:10px;font-weight:500;color:var(--text-3);">家計簿モード</span></button>
-        <button style="flex:1;padding:13px 8px;border-radius:12px;font-size:12px;font-weight:700;border:2px solid var(--gold);background:var(--gold-light);color:var(--gold-dark);font-family:var(--font);line-height:1.6;cursor:default;">📍 チリつも<br><span style="font-size:10px;font-weight:500;color:var(--gold);">現在のモード ✓</span></button>
-      </div>
-    </div>
-
-    <!-- 기타 설정 링크 -->
-    <div style="background:var(--surface);border-radius:16px;overflow:hidden;border:0.5px solid var(--border);margin-bottom:12px;">
-      <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:0.5px solid var(--border);">
-        <span style="font-size:16px;">🌙</span><span style="flex:1;font-size:14px;font-weight:600;color:var(--text-1);">ダークモード</span>
-        <div class="toggle off" id="ct-dark-toggle" onclick="toggleDarkMode()"></div>
-      </div>
-      <div onclick="openOv('ov-settings')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-bottom:0.5px solid var(--border);">
-        <span style="font-size:16px;">🔔</span><span style="flex:1;font-size:14px;font-weight:600;color:var(--text-1);">通知設定</span><span style="color:var(--text-3);">›</span>
-      </div>
-      <div onclick="openOv('ov-settings')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-bottom:0.5px solid var(--border);">
-        <span style="font-size:16px;">🎨</span><span style="flex:1;font-size:14px;font-weight:600;color:var(--text-1);">テーマカラー</span><span style="color:var(--text-3);">›</span>
-      </div>
-      <div onclick="openOv('ov-settings')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;">
-        <span style="font-size:16px;">🛡️</span><span style="flex:1;font-size:14px;font-weight:600;color:var(--text-1);">プライバシー</span><span style="color:var(--text-3);">›</span>
-      </div>
-    </div>
-
-    <div style="text-align:center;font-size:11px;color:var(--text-3);padding:16px;line-height:1.8;">チリつも v0.1.0 · © 2025</div>
-  </div>
-</div>
 
 <!-- チリつも 글쓰기 오버레이 -->
 <div id="ct-write-ov" style="display:none;position:absolute;inset:0;z-index:350;flex-direction:column;background:var(--bg);">
@@ -1342,10 +1306,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="ct-tab" id="ct-tab-reward" onclick="ctSwitchTab('reward')">
     <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9"/><path d="M12 8a4 4 0 0 0-4-4 2 2 0 0 0 0 4h4zM12 8a4 4 0 0 1 4-4 2 2 0 0 1 0 4h-4z"/></svg></span>
     <span class="ct-tab-lbl">リワード</span>
-  </div>
-  <div class="ct-tab" id="ct-tab-settings" onclick="ctSwitchTab('settings')">
-    <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
-    <span class="ct-tab-lbl">設定</span>
   </div>
 </div>
 
@@ -2178,17 +2138,10 @@ function ctSwitchTab(name) {
 
 function ctUpdateCoinDisplay() {
   var bal = _ctCoinBalance;
-  ['ct-coin-balance','ct-coin-balance2','ct-coin-balance3','ct-coin-balance4','ct-settings-coin','sp-coin-balance','ct-store-coin'].forEach(function(id) {
+  ['ct-coin-balance','ct-coin-balance2','ct-coin-balance3','sp-coin-balance','ct-store-coin'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
-  // 설정 화면 프로필 동기화
-  var nik = document.getElementById('sp-nickname-display');
-  var ctNik = document.getElementById('ct-settings-nickname');
-  if (nik && ctNik) ctNik.textContent = nik.textContent;
-  var av = document.getElementById('sp-avatar-display');
-  var ctAv = document.getElementById('ct-settings-avatar');
-  if (av && ctAv) ctAv.textContent = av.textContent;
 }
 
 var _ctCoinBalance = 0;
@@ -7075,10 +7028,8 @@ function applyDarkMode(isDark, silent) {
   var html = document.documentElement;
   html.setAttribute('data-dark', _isDark ? '1' : '0');
   // 토글 UI 동기화 (양쪽 설정 패널)
-  ['dark-toggle','ct-dark-toggle'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.classList.toggle('off', !_isDark);
-  });
+  var dtEl = document.getElementById('dark-toggle');
+  if (dtEl) dtEl.classList.toggle('off', !_isDark);
   // 바깥 배경 전환
   document.body.style.background = _isDark
     ? 'radial-gradient(ellipse at 30% 20%,#1a1a38 0%,#0e0e20 60%,#080812 100%)'
