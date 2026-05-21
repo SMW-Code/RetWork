@@ -56,18 +56,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   }
 }
 
-.sbar{height:44px;background:var(--surface);display:flex;align-items:center;justify-content:space-between;padding:0 26px;flex-shrink:0;border-bottom:0.5px solid var(--border);}
-/* 아이폰 노치 대응: 상단 Safe Area만큼 sbar 높이 늘림 */
-@supports (padding-top:env(safe-area-inset-top)){
-  @media screen and (max-width:500px){
-    .sbar{
-      height:calc(44px + env(safe-area-inset-top));
-      padding-top:env(safe-area-inset-top);
-    }
-  }
-}
-.sbar-time{font-size:13px;font-weight:700;color:var(--text-1);letter-spacing:-.2px;}
-.sbar-r{display:flex;gap:5px;align-items:center;font-size:11px;color:var(--text-2);}
+/* 상단 상태바 제거 — iOS Safe Area만큼만 높이 확보 */
+.sbar{height:0;height:env(safe-area-inset-top,0px);background:var(--surface);flex-shrink:0;}
+.sbar-time,.sbar-r{display:none;}
 
 .screen{flex:1;display:none;flex-direction:column;background:var(--bg);min-height:0;overflow:hidden;}
 .screen.active{display:flex;}
@@ -635,8 +626,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 <div id="screen-main" style="display:none;flex-direction:column;height:100%;">
 <div class="sbar">
-  <span class="sbar-time">9:41</span>
-  <div class="sbar-r"><span>●●●</span><span>WiFi</span><span>🔋</span></div>
 </div>
 
 <!-- ══ HOME ══ -->
