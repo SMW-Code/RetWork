@@ -2223,6 +2223,7 @@ function ctSwitchTab(name) {
   if (tab) tab.classList.add('active');
 
   if (name === 'map') {
+    ctStopNotifTimer();
     setTimeout(function() {
       if (!_ctMapInit) {
         ctInitMap();
@@ -2233,6 +2234,7 @@ function ctSwitchTab(name) {
     }, 100);
   }
   if (name === 'community') ctInitCommunity();
+  if (name === 'reward') ctStopNotifTimer();
 }
 
 function ctUpdateCoinDisplay() {
@@ -2373,24 +2375,43 @@ function ctInitMap() {
   });
 }
 
-/* Supabase에서 가격 핀 로드 */
+/* Supabase에서 가격 핀 로드
+   ※ PostgREST는 외래 테이블 컬럼(stores.lat)으로 서버 필터 불가
+      → 전체 로드 후 클라이언트에서 거리 필터링 */
 async function ctLoadPricePins(lat, lng) {
   var delta = 0.05;
+  if (!_sb) { _ctPins = _ctPendingPins.slice(); ctRenderPricePins(); return; }
+
   var res = await _sb.from('price_pins')
     .select('*, stores(id, name, lat, lng, category, avg_price, receipt_count)')
-    .gte('stores.lat', lat - delta)
-    .lte('stores.lat', lat + delta)
-    .gte('stores.lng', lng - delta)
-    .lte('stores.lng', lng + delta)
-    .limit(80);
+    .not('store_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(200);
 
-  if (res.error || !res.data || res.data.length === 0) {
+  if (res.error) {
+    console.warn('ctLoadPricePins:', res.error.message);
     _ctPins = _ctPendingPins.slice();
     ctRenderPricePins();
     return;
   }
-  var loaded = res.data.filter(function(p) { return p.stores && p.stores.lat; });
-  _ctPins = _ctPendingPins.concat(loaded);
+
+  // 클라이언트 측 거리 필터 (±0.05도 ≈ 약 5km)
+  var loaded = (res.data || []).filter(function(p) {
+    if (!p.stores || p.stores.lat == null || p.stores.lng == null) return false;
+    return Math.abs(p.stores.lat - lat) <= delta &&
+           Math.abs(p.stores.lng - lng) <= delta;
+  });
+
+  // 중복 제거: _ctPendingPins에 이미 있는 store+item은 DB 결과에서 제외
+  var pendingKeys = _ctPendingPins.map(function(p) {
+    return (p.stores && p.stores.name || '') + '|' + (p.item_name || '');
+  });
+  var deduped = loaded.filter(function(p) {
+    var key = (p.stores && p.stores.name || '') + '|' + (p.item_name || '');
+    return pendingKeys.indexOf(key) < 0;
+  });
+
+  _ctPins = _ctPendingPins.concat(deduped);
   ctRenderPricePins();
 }
 
@@ -2751,6 +2772,7 @@ var _ctWriteImgs = [];
 var _ctNoticeIdx = 0;
 var _ctNoticeTimer = null;
 var _ctCommunityInited = false;
+var _ctNotifTimer = null;
 
 async function ctLoadPosts() {
   var list = document.getElementById('ct-post-list');
@@ -2800,6 +2822,13 @@ function ctInitCommunity() {
   ctLoadPosts();
   ctStartBanner();
   ctLoadNotifications();
+  // 알림 30초마다 자동 갱신 (탭 이동 시 초기화)
+  if (_ctNotifTimer) clearInterval(_ctNotifTimer);
+  _ctNotifTimer = setInterval(ctLoadNotifications, 30000);
+}
+
+function ctStopNotifTimer() {
+  if (_ctNotifTimer) { clearInterval(_ctNotifTimer); _ctNotifTimer = null; }
 }
 
 function ctRenderCatBar() {
@@ -2978,11 +3007,12 @@ async function ctLikePost(id) {
   if (p.user_id && p.user_id !== _currentUser.id) {
     var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
     var myAvatar = localStorage.getItem('riq_avatar') || '😊';
-    await _sb.from('ct_notifications').insert({
+    var nRes = await _sb.from('ct_notifications').insert({
       recipient_id: p.user_id, type: 'like',
       post_id: id, post_title: p.title,
       from_user_name: myName, from_user_avatar: myAvatar, content: null
     });
+    if (nRes.error) console.warn('like notif error:', nRes.error.message);
   }
 }
 
@@ -3023,11 +3053,12 @@ async function ctAddComment(id) {
     // 게시글 작성자에게 댓글 알림 (본인 글 제외)
     if (p.user_id && p.user_id !== _currentUser.id) {
       var preview = text.length > 30 ? text.slice(0, 30) + '…' : text;
-      await _sb.from('ct_notifications').insert({
+      var nRes = await _sb.from('ct_notifications').insert({
         recipient_id: p.user_id, type: 'comment',
         post_id: id, post_title: p.title,
         from_user_name: myName, from_user_avatar: myAvatar, content: preview
       });
+      if (nRes.error) console.warn('notif insert error:', nRes.error.message);
     }
   }
 
@@ -7530,26 +7561,35 @@ function openChiriFromMapCard(storeName, cardId) {
 
 /* 치리츠모 핀 → Supabase 저장 */
 async function _persistPinToSupabase(pin) {
-  if (!_sb || !_currentUser) return;
+  if (!_sb || !_currentUser) { console.warn('_persist: sb or user missing'); return; }
   try {
+    var storeData = pin.stores || pin.store || {};
     var storeRes = await _sb.from('stores').upsert({
-      name: pin.stores.name,
-      lat: pin.stores.lat,
-      lng: pin.stores.lng,
-      category: pin.stores.category,
-      avg_price: pin.price,
+      name:          storeData.name,
+      lat:           storeData.lat,
+      lng:           storeData.lng,
+      category:      storeData.category || 'other',
+      avg_price:     pin.price,
       receipt_count: 1
     }, { onConflict: 'name' }).select('id').single();
-    if (storeRes.error) { console.warn('store upsert:', storeRes.error.message); return; }
+    if (storeRes.error) {
+      console.warn('store upsert error:', storeRes.error.message, storeRes.error);
+      return;
+    }
     var pinRes = await _sb.from('price_pins').insert({
-      store_id: storeRes.data.id,
+      store_id:  storeRes.data.id,
       item_name: pin.item_name,
-      price: pin.price,
-      comment: pin.comment || '',
-      user_id: _currentUser.id
+      price:     pin.price,
+      comment:   pin.comment || '',
+      user_id:   _currentUser.id
     });
-    if (pinRes.error) console.warn('pin insert:', pinRes.error.message);
-  } catch(e) { console.warn('_persistPinToSupabase:', e.message); }
+    if (pinRes.error) {
+      console.warn('pin insert error:', pinRes.error.message, pinRes.error);
+    } else {
+      // 저장 성공 → 로컬 핀에 store_id 반영 (재로드 없이 즉시 표시 유지)
+      pin._persisted = true;
+    }
+  } catch(e) { console.warn('_persistPinToSupabase exception:', e.message); }
 }
 
 var _mapFullscreen = false;
