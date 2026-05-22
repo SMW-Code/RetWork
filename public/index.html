@@ -904,9 +904,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="ct-hdr-sub" id="ct-map-sub">レシートでつながる、街のおトク地図</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance">0</span></div>
+      <div class="ct-coin" onclick="ctToggleCoinHistory()" style="cursor:pointer;"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance">0</span></div>
       <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
     </div>
+  </div>
+  <!-- 포인트 내역 아코디언 패널 -->
+  <div id="ct-coin-panel-map" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
+    <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);">✨ ポイント履歴</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:11px;color:var(--gold-dark);font-weight:700;">残高 <span id="ct-coin-panel-balance-map">0</span>pt</div>
+        <div onclick="ctToggleCoinHistory()" style="font-size:16px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 4px;">✕</div>
+      </div>
+    </div>
+    <div id="ct-coin-panel-list-map" style="max-height:260px;overflow-y:auto;"></div>
   </div>
 
   <!-- 지도 영역 -->
@@ -1085,9 +1096,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <div id="ct-notif-dot" style="position:absolute;top:-2px;right:-2px;width:8px;height:8px;background:#E53935;border-radius:50%;border:1.5px solid var(--navy);"></div>
       </div>
-      <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance2">0</span></div>
+      <div class="ct-coin" onclick="ctToggleCoinHistory()" style="cursor:pointer;"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance2">0</span></div>
       <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
     </div>
+  </div>
+  <!-- 포인트 내역 아코디언 패널 -->
+  <div id="ct-coin-panel-community" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
+    <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);">✨ ポイント履歴</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:11px;color:var(--gold-dark);font-weight:700;">残高 <span id="ct-coin-panel-balance-community">0</span>pt</div>
+        <div onclick="ctToggleCoinHistory()" style="font-size:16px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 4px;">✕</div>
+      </div>
+    </div>
+    <div id="ct-coin-panel-list-community" style="max-height:260px;overflow-y:auto;"></div>
   </div>
 
   <!-- 알림 패널 (아코디언) -->
@@ -1138,9 +1160,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="ct-hdr-sub">코인 적립 & 드로우</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
-      <div class="ct-coin"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance3">0</span></div>
+      <div class="ct-coin" onclick="ctToggleCoinHistory()" style="cursor:pointer;"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance3">0</span></div>
       <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
     </div>
+  </div>
+  <!-- 포인트 내역 아코디언 패널 -->
+  <div id="ct-coin-panel-reward" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
+    <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);">✨ ポイント履歴</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div style="font-size:11px;color:var(--gold-dark);font-weight:700;">残高 <span id="ct-coin-panel-balance-reward">0</span>pt</div>
+        <div onclick="ctToggleCoinHistory()" style="font-size:16px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 4px;">✕</div>
+      </div>
+    </div>
+    <div id="ct-coin-panel-list-reward" style="max-height:260px;overflow-y:auto;"></div>
   </div>
   <div class="scroll" style="padding:16px;">
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
@@ -2263,6 +2296,12 @@ function switchMode(mode) {
 }
 
 function ctSwitchTab(name) {
+  // 탭 전환 시 포인트 패널 닫기
+  _ctCoinHistoryOpen = false;
+  ['ct-coin-panel-map','ct-coin-panel-community','ct-coin-panel-reward'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.maxHeight = '0';
+  });
   document.querySelectorAll('.ct-screen').forEach(function(s) {
     s.classList.remove('active');
     s.style.display = 'none';
@@ -2301,19 +2340,69 @@ function ctUpdateCoinDisplay() {
 }
 
 var _ctCoinBalance = 0;
+var _ctCoinHistory = [];          // { desc, amount, date }
+var _ctCoinHistoryOpen = false;
+
+/* ── 포인트 추가/차감 헬퍼 ── */
+function ctAddCoin(amount, desc) {
+  _ctCoinBalance += amount;
+  var now = new Date();
+  var dateStr = (now.getMonth()+1) + '/' + now.getDate()
+    + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  _ctCoinHistory.unshift({ desc: desc, amount: amount, date: dateStr });
+  if (_ctCoinHistory.length > 100) _ctCoinHistory.pop();
+  ctUpdateCoinDisplay();
+  if (_ctCoinHistoryOpen) ctRenderCoinHistory();
+}
+
+/* ── 포인트 내역 패널 토글 ── */
+function ctToggleCoinHistory() {
+  _ctCoinHistoryOpen = !_ctCoinHistoryOpen;
+  ['ct-coin-panel-map','ct-coin-panel-community','ct-coin-panel-reward'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.maxHeight = _ctCoinHistoryOpen ? '320px' : '0';
+  });
+  if (_ctCoinHistoryOpen) ctRenderCoinHistory();
+}
+
+/* ── 포인트 내역 렌더링 ── */
+function ctRenderCoinHistory() {
+  var bal = _ctCoinBalance;
+  ['ct-coin-panel-balance-map','ct-coin-panel-balance-community','ct-coin-panel-balance-reward'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = bal;
+  });
+  var html;
+  if (_ctCoinHistory.length === 0) {
+    html = '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:20px 0;">ポイント履歴がありません</div>';
+  } else {
+    html = _ctCoinHistory.map(function(h) {
+      var isPos = h.amount >= 0;
+      var col  = isPos ? '#2E7D32' : '#C62828';
+      var sign = isPos ? '+' : '';
+      return '<div style="display:flex;align-items:center;padding:9px 16px;border-bottom:0.5px solid var(--border);">'
+        + '<div style="flex:1;font-size:13px;color:var(--text-1);">' + h.desc + '</div>'
+        + '<div style="font-size:11px;color:var(--text-3);margin-right:10px;white-space:nowrap;">' + h.date + '</div>'
+        + '<div style="font-size:13px;font-weight:800;color:'+col+';white-space:nowrap;">' + sign + h.amount + 'pt</div>'
+        + '</div>';
+    }).join('');
+  }
+  ['ct-coin-panel-list-map','ct-coin-panel-list-community','ct-coin-panel-list-reward'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = html;
+  });
+}
 
 function ctAttendance() {
-  _ctCoinBalance += 5;
-  ctUpdateCoinDisplay();
-  alert('📅 出席チェック完了！ +5コイン');
+  ctAddCoin(5, '📅 出席チェック');
+  alert('📅 出席チェック完了！ +5pt');
 }
 
 function ctWatchAd() {
   // 광고 모달 표시 → 시청 완료 후 코인 지급
   showAdModal(function() {
-    _ctCoinBalance += 200;
-    ctUpdateCoinDisplay();
-    showToast('🎉 +200コイン 獲得！広告視聴ありがとうございます！');
+    ctAddCoin(200, '📺 広告視聴');
+    showToast('🎉 +200pt 獲得！広告視聴ありがとうございます！');
   });
 }
 
@@ -2322,9 +2411,8 @@ function ctStoreExchange(id, name, cost) {
     showToast('コインが足りません。あと' + (cost - _ctCoinBalance) + 'コイン必要です');
     return;
   }
-  if (!confirm('「' + name + '」と交換しますか？\n' + cost + 'コイン消費します。')) return;
-  _ctCoinBalance -= cost;
-  ctUpdateCoinDisplay();
+  if (!confirm('「' + name + '」と交換しますか？\n' + cost + 'pt消費します。')) return;
+  ctAddCoin(-cost, '🎁 「' + name + '」交換');
   showToast('✅ ' + name + 'と交換しました！');
 }
 
@@ -3510,9 +3598,8 @@ async function ctSubmitPost() {
   _ctPostPage = 1;
   ctRenderCatBar();
   ctRenderPosts();
-  showToast('✅ 投稿しました！ +5コイン');
-  _ctCoinBalance += 5;
-  ctUpdateCoinDisplay();
+  showToast('✅ 投稿しました！ +5pt');
+  ctAddCoin(5, '💬 チリトーク投稿');
 }
 
 function ctCloseStoreSheet() {
@@ -3547,10 +3634,9 @@ function ctOpenGoogleMaps() {
 }
 
 function ctEarnCoin(type, amount) {
-  _ctCoinBalance += amount;
-  ctUpdateCoinDisplay();
-  var msg = type === 'location' ? '📍 現地認証完了！' : '📝 情報更新完了！';
-  alert(msg + ' +' + amount + 'コイン獲得！');
+  var desc = type === 'location' ? '📍 現地認証' : '📝 情報更新';
+  ctAddCoin(amount, desc);
+  alert(desc + '完了！ +' + amount + 'pt獲得！');
 }
 
 /* ── コスパ 1인 1票 ── */
@@ -3599,7 +3685,7 @@ async function ctVoteKospaOnce(dir) {
   _ctUserKospaVote[storeName] = newVote;
   ctUpdateVoteBar(storeName);
   ctUpdateKospaButtons(storeName);
-  if (!prev && newVote) { _ctCoinBalance += 10; ctUpdateCoinDisplay(); }
+  if (!prev && newVote) { ctAddCoin(10, '📊 コスパ評価'); }
   if (_sb) {
     if (newVote) {
       await _sb.from('kospa_votes').upsert({ store_name: storeName, user_id: _currentUser.id, vote: newVote }, { onConflict: 'store_name,user_id' });
@@ -3782,8 +3868,8 @@ async function ctSubmitMenuComment(safeId, storeName, menuName) {
   }
   var res = await _sb.from('store_comments').insert({store_name:storeName,menu_name:menuName,user_id:_currentUser.id,user_name:_userNickname||'節約ユーザー',content:text,rating:rating||null,has_receipt:hasReceipt});
   if (res.error) { showToast('⚠️ 保存エラー: '+res.error.message); return; }
-  _ctCoinBalance += 5; ctUpdateCoinDisplay();
-  showToast('✅ レビューを投稿しました！ +5コイン');
+  ctAddCoin(5, '⭐ メニューレビュー');
+  showToast('✅ レビューを投稿しました！ +5pt');
   ctLoadMenuReviews(storeName, menuName, safeId);
 }
 
@@ -3889,8 +3975,7 @@ async function ctSubmitComment() {
   if (!_ctComments[key]) _ctComments[key] = [];
   _ctComments[key].unshift({ user: userName, date: 'たった今', text: text, likes: 0, rating: inlineRating, menuName: menuName, hasReceipt: hasReceipt });
   ctRenderStoreComments(key);
-  _ctCoinBalance += 5;
-  ctUpdateCoinDisplay();
+  ctAddCoin(5, '💬 コメント投稿');
 
   // 별점 UI 초기화
   if (inlineRating > 0) {
@@ -7190,9 +7275,8 @@ function submitChiriPublish() {
     _ctPendingPins.unshift(p);
   });
 
-  // 코인 지급 (+10 고정, 품목 수 무관)
-  _ctCoinBalance += 10;
-  ctUpdateCoinDisplay();
+  // 포인트 지급 (+10 고정, 품목 수 무관)
+  ctAddCoin(10, '🧾 チリつも共有');
 
   // 별점 저장 (선택한 경우, 영수증 공유이므로 has_receipt: true)
   if (_cpStarRating > 0 && _currentUser) {
@@ -8217,8 +8301,7 @@ async function submitManualPin() {
   newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
   if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
 
-  _ctCoinBalance += 10;
-  ctUpdateCoinDisplay();
+  ctAddCoin(10, '📌 手動ピン登録');
 
   // 별점 저장 (선택한 경우, 수동 핀이므로 has_receipt: false)
   if (_mpStarRating > 0 && _currentUser) {
