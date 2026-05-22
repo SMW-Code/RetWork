@@ -3683,7 +3683,7 @@ function ctToggleMenuCard(safeId) {
 async function ctLoadMenuReviews(storeName, menuName, safeId) {
   if (!_sb) { ctRenderMenuBody(safeId, menuName, storeName, [], [], null, null); return; }
   var results = await Promise.all([
-    _sb.from('pin_ratings').select('rating,has_receipt,user_id,user_name')
+    _sb.from('pin_ratings').select('rating,has_receipt,user_id')
        .eq('store_name', storeName).eq('menu_name', menuName),
     _sb.from('store_comments').select('id,user_name,content,rating,has_receipt,user_id,created_at')
        .eq('store_name', storeName).eq('menu_name', menuName)
