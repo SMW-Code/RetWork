@@ -970,35 +970,46 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </button>
     </div>
 
-    <!-- 핀 위치 선택 힌트 오버레이 -->
-    <div id="ct-pin-hint" style="display:none;position:absolute;inset:0;z-index:25;background:rgba(0,0,0,.45);align-items:center;justify-content:center;flex-direction:column;gap:14px;">
-      <div style="background:#fff;border-radius:18px;padding:20px 24px;text-align:center;max-width:80%;box-shadow:0 8px 32px rgba(0,0,0,.2);">
-        <div style="font-size:32px;margin-bottom:8px;">📍</div>
-        <div style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:4px;">場所をタップして選択</div>
-        <div style="font-size:12px;color:var(--text-3);">ピンを追加したい場所をタップ</div>
+    <!-- 📌 핀 모드: 중앙 크로스헤어 -->
+    <div id="ct-pin-crosshair" style="display:none;position:absolute;inset:0;z-index:20;pointer-events:none;align-items:center;justify-content:center;">
+      <!-- 반투명 배경 -->
+      <div style="position:absolute;inset:0;background:rgba(0,0,0,.12);"></div>
+      <!-- 핀 아이콘 (중앙 포인트가 정중앙에 오도록 -22px 오프셋) -->
+      <div style="position:relative;z-index:1;transform:translateY(-22px);display:flex;flex-direction:column;align-items:center;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="44" height="54" viewBox="0 0 44 54" style="filter:drop-shadow(0 3px 8px rgba(0,0,0,.4));">
+          <path d="M22 0C10 0 0 10 0 22c0 16 22 32 22 32S44 38 44 22C44 10 34 0 22 0z" fill="var(--gold)"/>
+          <circle cx="22" cy="21" r="13" fill="white" fill-opacity=".95"/>
+          <text x="22" y="27" text-anchor="middle" font-size="16" font-family="Apple Color Emoji,sans-serif">✏️</text>
+        </svg>
+        <div style="width:2px;height:18px;background:var(--gold);opacity:.9;margin-top:-2px;"></div>
       </div>
-      <button onclick="cancelPinHint()" style="background:rgba(255,255,255,.2);border:1.5px solid rgba(255,255,255,.5);border-radius:20px;padding:9px 22px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">キャンセル</button>
+      <!-- 안내 토스트 (상단) -->
+      <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:700;white-space:nowrap;backdrop-filter:blur(4px);">
+        地図をドラッグして位置を合わせてください
+      </div>
     </div>
 
     <!-- 핀 위치 확정 액션바 -->
-    <div id="ct-pin-action-bar" style="display:none;position:absolute;bottom:80px;left:14px;right:14px;z-index:20;">
-      <div style="background:#fff;border-radius:16px;padding:12px 14px;box-shadow:0 4px 20px rgba(0,0,0,.22);display:flex;align-items:center;gap:10px;">
+    <div id="ct-pin-action-bar" style="display:none;position:absolute;bottom:80px;left:14px;right:14px;z-index:21;">
+      <div style="background:#fff;border-radius:18px;padding:13px 14px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:800;color:var(--green);">📍 ピン位置を選択中</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">ドラッグして位置を調整できます</div>
+          <div style="font-size:12px;font-weight:800;color:var(--green);">📍 중앙에 핀을 등록합니다</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">ドラッグして位置を微調整できます</div>
         </div>
-        <button onclick="cancelTempPin()" style="padding:7px 12px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);flex-shrink:0;">✕</button>
-        <button onclick="openManualPinModal()" style="padding:7px 14px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;white-space:nowrap;">この場所に登録 →</button>
+        <button onclick="cancelTempPin()" style="padding:8px 13px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);flex-shrink:0;">キャンセル</button>
+        <button onclick="openManualPinModal()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;white-space:nowrap;">ここに登録 →</button>
       </div>
     </div>
 
     <!-- 수동 핀 추가 FAB -->
     <div style="position:absolute;bottom:132px;right:14px;z-index:10;">
       <button onclick="openManualPin()"
-        title="手動でピンを追加"
-        style="background:var(--green);color:#fff;border:none;border-radius:50%;width:44px;height:44px;
-               display:flex;align-items:center;justify-content:center;
-               box-shadow:0 4px 14px rgba(22,168,122,.45);cursor:pointer;font-size:20px;">✏️</button>
+        title="ピンを追加"
+        style="background:var(--green);color:#fff;border:none;border-radius:14px;height:44px;padding:0 14px;
+               display:flex;align-items:center;gap:6px;
+               box-shadow:0 4px 14px rgba(22,168,122,.45);cursor:pointer;font-size:13px;font-weight:800;font-family:var(--font);">
+        <span style="font-size:18px;">📌</span><span>ピン追加</span>
+      </button>
     </div>
 
     <!-- 랭킹/목록 버튼 -->
@@ -2728,43 +2739,6 @@ function ctInitMap() {
     ctRenderPricePins();
   });
 
-  /* 롱프레스 → 임시 핀 */
-  var _mpLongTimer  = null;
-  var _mpLongLatLng = null;
-  var _mpMultiTouch = false;  // 두 손가락 터치 중 플래그
-
-  /* ── 네이티브 터치 이벤트로 핀치 감지 ──
-     Google Maps는 터치를 mousedown으로 변환하므로
-     지도 div에 직접 touch 리스너를 달아 두 손가락 여부를 추적 */
-  var _ctMapDiv = document.getElementById('ct-google-map');
-  _ctMapDiv.addEventListener('touchstart', function(e) {
-    if (e.touches.length >= 2) {
-      _mpMultiTouch = true;
-      if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
-    }
-  }, { passive: true });
-  _ctMapDiv.addEventListener('touchend', function(e) {
-    if (e.touches.length === 0) _mpMultiTouch = false;
-  }, { passive: true });
-  _ctMapDiv.addEventListener('touchcancel', function() {
-    _mpMultiTouch = false;
-    if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
-  }, { passive: true });
-
-  _ctMap.addListener('mousedown', function(e) {
-    if (!e.latLng || _mpMultiTouch) return;  // 핀치 중이면 무시
-    _mpLongLatLng = e.latLng;
-    _mpLongTimer = setTimeout(function() {
-      if (_mpLongLatLng && !_mpMultiTouch) _onMapLongPress(_mpLongLatLng);
-      _mpLongTimer = null;
-    }, 1000);
-  });
-  _ctMap.addListener('mouseup', function() {
-    if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
-  });
-  _ctMap.addListener('dragstart', function() {
-    if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
-  });
 }
 
 /* Supabase에서 가격 핀 로드
@@ -8380,67 +8354,40 @@ var _mpManualLat = null;
 var _mpManualLng = null;
 var _mpPinHintListener = null;
 
-/* 지도 롱프레스 → 임시 핀 배치 */
-function _onMapLongPress(latLng) {
-  _mpManualLat = latLng.lat();
-  _mpManualLng = latLng.lng();
-
-  if (_tempManualPin) {
-    _tempManualPin.setPosition(latLng);
-  } else {
-    var pinSvg = '<svg xmlns="http://www.w3.org/2000/svg" width="36" height="44" viewBox="0 0 36 44">'
-      + '<filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00000030"/></filter>'
-      + '<path filter="url(#sh)" d="M18 0C8 0 0 8 0 18c0 13 18 26 18 26S36 31 36 18C36 8 28 0 18 0z" fill="#E8A020"/>'
-      + '<circle cx="18" cy="17" r="11" fill="white" fill-opacity=".95"/>'
-      + '<text x="18" y="23" text-anchor="middle" font-size="14" font-family="Apple Color Emoji,sans-serif">✏️</text>'
-      + '</svg>';
-    _tempManualPin = new google.maps.Marker({
-      position: latLng,
-      map: _ctMap,
-      draggable: true,
-      zIndex: 1000,
-      animation: google.maps.Animation.DROP,
-      icon: {
-        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(pinSvg),
-        scaledSize: new google.maps.Size(36, 44),
-        anchor: new google.maps.Point(18, 44)
-      }
-    });
-    _tempManualPin.addListener('dragend', function(e) {
-      _mpManualLat = e.latLng.lat();
-      _mpManualLng = e.latLng.lng();
-    });
-  }
-  document.getElementById('ct-pin-action-bar').style.display = 'block';
-}
-
-function cancelTempPin() {
-  if (_tempManualPin) { _tempManualPin.setMap(null); _tempManualPin = null; }
-  _mpManualLat = null; _mpManualLng = null;
-  document.getElementById('ct-pin-action-bar').style.display = 'none';
-}
-
-function cancelPinHint() {
-  if (_mpPinHintListener) { google.maps.event.removeListener(_mpPinHintListener); _mpPinHintListener = null; }
-  document.getElementById('ct-pin-hint').style.display = 'none';
-}
-
-/* FAB → 탭해서 위치 선택 모드 */
+/* 📌 ピン追加 버튼 → 크로스헤어 + 액션바 표시 */
 function openManualPin() {
   if (!_ctMap) { showToast('地図を開いてください'); return; }
-  var hint = document.getElementById('ct-pin-hint');
-  hint.style.display = 'flex';
-  _mpPinHintListener = _ctMap.addListener('click', function(e) {
-    google.maps.event.removeListener(_mpPinHintListener);
-    _mpPinHintListener = null;
-    hint.style.display = 'none';
-    _onMapLongPress(e.latLng);
-  });
+  var crosshair = document.getElementById('ct-pin-crosshair');
+  var actionBar = document.getElementById('ct-pin-action-bar');
+  if (crosshair) crosshair.style.display = 'flex';
+  if (actionBar) actionBar.style.display = 'block';
 }
 
-/* 액션바 "この場所に登録" → 모달 오픈 */
+/* キャンセル → 크로스헤어 + 액션바 숨김 */
+function cancelTempPin() {
+  var crosshair = document.getElementById('ct-pin-crosshair');
+  var actionBar = document.getElementById('ct-pin-action-bar');
+  if (crosshair) crosshair.style.display = 'none';
+  if (actionBar) actionBar.style.display = 'none';
+  if (_tempManualPin) { _tempManualPin.setMap(null); _tempManualPin = null; }
+  _mpManualLat = null;
+  _mpManualLng = null;
+}
+
+/* 액션바 "ここに登録 →" → 지도 중심 좌표 취득 후 모달 오픈 */
 function openManualPinModal() {
-  document.getElementById('ct-pin-action-bar').style.display = 'none';
+  /* 크로스헤어 + 액션바 숨김 */
+  var crosshair = document.getElementById('ct-pin-crosshair');
+  var actionBar = document.getElementById('ct-pin-action-bar');
+  if (crosshair) crosshair.style.display = 'none';
+  if (actionBar) actionBar.style.display = 'none';
+
+  /* 지도 중심을 핀 위치로 사용 */
+  if (_ctMap) {
+    var center = _ctMap.getCenter();
+    _mpManualLat = typeof center.lat === 'function' ? center.lat() : center.lat;
+    _mpManualLng = typeof center.lng === 'function' ? center.lng() : center.lng;
+  }
 
   _mpCategory = 'other';
   _mpItems = [{ name: '', price: '' }];
