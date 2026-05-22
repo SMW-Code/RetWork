@@ -1225,29 +1225,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <div style="font-size:12px;color:var(--text-3);">200チリ · 残り<span id="ct-rad-remain">3</span>回/日</div>
           </div>
           <!-- 광고 시작 버튼 -->
-          <div style="padding:0 18px 16px;">
+          <div style="padding:0 18px 18px;">
             <button id="ct-rad-btn" onclick="ctStartRewardAd()"
               style="width:100%;padding:16px;background:var(--navy);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);letter-spacing:.3px;">
               광고 보고 チリ 받기
             </button>
-          </div>
-          <!-- 광고 재생 영역 (버튼 누른 후 나타남) -->
-          <div id="ct-rad-slot-wrap" style="display:none;">
-            <!-- 광고 슬롯 -->
-            <div id="ct-rad-slot" style="width:100%;min-height:250px;background:#111;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;">
-              <div id="ad-placeholder-reward" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
-                <div style="font-size:36px;">▶️</div>
-                <div style="font-size:12px;color:rgba(255,255,255,.5);">広告を読み込み中...</div>
-              </div>
-            </div>
-            <!-- 카운트다운 + 받기 버튼 -->
-            <div style="padding:12px 18px 18px;">
-              <div id="ct-rad-countdown" style="font-size:12px;color:var(--text-3);text-align:center;margin-bottom:10px;min-height:18px;"></div>
-              <button id="ct-rad-claim-btn" onclick="ctClaimRewardAd()"
-                style="display:none;width:100%;padding:15px;background:var(--gold);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);">
-                ✨ 200チリ 受け取る
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -1475,6 +1457,28 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--green);">자세히 ›</div>
     </div>
+  </div>
+</div>
+
+<!-- ══ チリワード 전체화면 광고 ══ -->
+<div id="ov-reward-ad" style="display:none;position:fixed;inset:0;z-index:9999;background:#000;flex-direction:column;align-items:stretch;">
+  <!-- 상단 바: 광고 라벨 + 카운트다운 -->
+  <div style="position:absolute;top:0;left:0;right:0;z-index:2;padding:env(safe-area-inset-top,12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);">
+    <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.5px;">広告</div>
+    <div id="rv-countdown-badge" style="background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:800;">15</div>
+  </div>
+  <!-- 광고 슬롯 (전체 화면 차지) -->
+  <div id="rv-ad-slot" style="flex:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+    <div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);">
+      <div style="font-size:52px;margin-bottom:14px;">▶️</div>
+      <div style="font-size:13px;">広告を読み込み中...</div>
+    </div>
+  </div>
+  <!-- 완료 오버레이 (카운트다운 끝 후 자동 표시) -->
+  <div id="rv-complete-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.82);flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+    <div style="font-size:60px;animation:pulse 1s infinite;">✨</div>
+    <div style="font-size:26px;font-weight:900;color:#fff;">+200チリ 獲得！</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.55);">自動で閉じます…</div>
   </div>
 </div>
 
@@ -2516,62 +2520,55 @@ function ctStartRewardAd() {
   var used  = parseInt(localStorage.getItem('ct_rad_' + today) || '0');
   if (used >= 3) { showToast('今日の視聴上限（3回）に達しました'); return; }
 
-  // 광고 슬롯 영역 표시
-  var wrap = document.getElementById('ct-rad-slot-wrap');
-  if (wrap) wrap.style.display = 'block';
+  // 전체화면 오버레이 열기
+  var ov = document.getElementById('ov-reward-ad');
+  if (ov) ov.style.display = 'flex';
 
   // 광고 주입 (AdSense 승인 전에는 placeholder 유지)
-  _injectAd('ct-rad-slot', 'reward');
+  _injectAd('rv-ad-slot', 'reward');
 
-  // 버튼 비활성화 (중복 클릭 방지)
-  var btn = document.getElementById('ct-rad-btn');
-  if (btn) { btn.style.opacity = '0.4'; btn.style.cursor = 'not-allowed'; btn.onclick = null; }
-
-  // 카운트다운 15초
+  // 카운트다운 15초 → 완료 후 자동 적립
   var seconds = 15;
-  var cdEl    = document.getElementById('ct-rad-countdown');
-  var claimEl = document.getElementById('ct-rad-claim-btn');
-  if (cdEl)    cdEl.textContent = seconds + '秒間広告を見てください…';
-  if (claimEl) claimEl.style.display = 'none';
-
-  // 패널 크기 확장 (광고 영역 포함)
-  var panel = document.getElementById('ct-rad-panel');
-  if (panel) panel.style.maxHeight = '900px';
+  var badge = document.getElementById('rv-countdown-badge');
+  if (badge) badge.textContent = seconds;
 
   if (_ctRadTimer) clearInterval(_ctRadTimer);
   _ctRadTimer = setInterval(function() {
     seconds--;
+    if (badge) badge.textContent = Math.max(0, seconds);
     if (seconds <= 0) {
       clearInterval(_ctRadTimer); _ctRadTimer = null;
-      if (cdEl)    cdEl.textContent = '✅ チリを受け取れます！';
-      if (claimEl) claimEl.style.display = 'block';
-    } else {
-      if (cdEl) cdEl.textContent = seconds + '秒間広告を見てください…';
+      // 자동 200チリ 적립
+      var today2 = new Date().toDateString();
+      var key    = 'ct_rad_' + today2;
+      var used2  = parseInt(localStorage.getItem(key) || '0');
+      localStorage.setItem(key, String(used2 + 1));
+      ctAddCoin(200, '📺 広告視聴');
+      // 완료 오버레이 표시
+      var comp = document.getElementById('rv-complete-overlay');
+      if (comp) comp.style.display = 'flex';
+      // 2초 후 자동 닫기
+      setTimeout(function() {
+        ctCloseRewardAd();
+        showToast('🎉 +200チリ 獲得！ありがとうございます！');
+        ctUpdateRewardAdRemain();
+      }, 2000);
     }
   }, 1000);
 }
 
-function ctClaimRewardAd() {
-  var today = new Date().toDateString();
-  var key   = 'ct_rad_' + today;
-  var used  = parseInt(localStorage.getItem(key) || '0');
-  localStorage.setItem(key, String(used + 1));
-  ctAddCoin(200, '📺 広告視聴');
-  showToast('🎉 +200チリ 獲得！ありがとうございます！');
-  ctResetRewardAd();
-  ctUpdateRewardAdRemain();
+function ctCloseRewardAd() {
+  var ov   = document.getElementById('ov-reward-ad');
+  var comp = document.getElementById('rv-complete-overlay');
+  var slot = document.getElementById('rv-ad-slot');
+  if (ov)   ov.style.display = 'none';
+  if (comp) comp.style.display = 'none';
+  if (slot) slot.innerHTML = '<div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);"><div style="font-size:52px;margin-bottom:14px;">▶️</div><div style="font-size:13px;">広告を読み込み中...</div></div>';
+  if (_ctRadTimer) { clearInterval(_ctRadTimer); _ctRadTimer = null; }
 }
 
 function ctResetRewardAd() {
-  if (_ctRadTimer) { clearInterval(_ctRadTimer); _ctRadTimer = null; }
-  var wrap  = document.getElementById('ct-rad-slot-wrap');
-  var slot  = document.getElementById('ct-rad-slot');
-  var cdEl  = document.getElementById('ct-rad-countdown');
-  var claim = document.getElementById('ct-rad-claim-btn');
-  if (wrap)  wrap.style.display = 'none';
-  if (slot)  slot.innerHTML = '<div id="ad-placeholder-reward" style="display:flex;flex-direction:column;align-items:center;gap:10px;"><div style="font-size:36px;">▶️</div><div style="font-size:12px;color:rgba(255,255,255,.5);">広告を読み込み中...</div></div>';
-  if (cdEl)  cdEl.textContent = '';
-  if (claim) claim.style.display = 'none';
+  ctCloseRewardAd();
 }
 
 function ctStoreExchange(id, name, cost) {
