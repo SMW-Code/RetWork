@@ -1718,8 +1718,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div id="mp-items-list"></div>
       <button onclick="addMpItem()" style="width:100%;padding:9px;border-radius:10px;border:1.5px dashed var(--border-mid);background:transparent;color:var(--text-3);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:6px;">＋ メニューを追加</button>
     </div>
-    <!-- 코멘트 -->
-    <textarea id="mp-comment" placeholder="一言コメント（任意）" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--surface);resize:none;height:60px;box-sizing:border-box;margin-bottom:14px;outline:none;"></textarea>
+    <!-- 별점 + 코멘트 -->
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;">
+      <div style="padding:10px 14px 8px;border-bottom:0.5px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">評価（任意）</div>
+        <div id="mp-star-row" style="display:flex;gap:4px;">
+          <span onclick="mpSelectStar(1)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="mpSelectStar(2)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="mpSelectStar(3)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="mpSelectStar(4)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="mpSelectStar(5)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+        </div>
+      </div>
+      <textarea id="mp-comment" placeholder="一言コメント（任意）" style="width:100%;border:none;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:60px;box-sizing:border-box;outline:none;display:block;"></textarea>
+    </div>
     <!-- 공개 버튼 -->
     <button onclick="submitManualPin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span>📍 地図に公開する</span>
@@ -1770,8 +1782,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div id="cp-cat-accordion" style="display:none;flex-wrap:wrap;gap:5px;padding:8px 2px 2px;"></div>
       </div>
     </div>
-    <!-- 코멘트 -->
-    <textarea id="cp-comment" placeholder="一言コメント（任意）例: ランチタイムのみ、テイクアウト価格" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--surface);resize:none;height:72px;box-sizing:border-box;margin-bottom:14px;outline:none;"></textarea>
+    <!-- 별점 + 코멘트 -->
+    <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;">
+      <div style="padding:10px 14px 8px;border-bottom:0.5px solid var(--border);">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">このメニューを評価（任意）</div>
+        <div id="cp-star-row" style="display:flex;gap:4px;">
+          <span onclick="cpSelectStar(1)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="cpSelectStar(2)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="cpSelectStar(3)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="cpSelectStar(4)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+          <span onclick="cpSelectStar(5)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
+        </div>
+      </div>
+      <textarea id="cp-comment" placeholder="一言コメント（任意）例: ランチタイムのみ、テイクアウト価格" style="width:100%;border:none;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:72px;box-sizing:border-box;outline:none;display:block;"></textarea>
+    </div>
     <!-- 공개 버튼 -->
     <button onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span>📍 地図に公開する</span>
@@ -2058,18 +2082,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="font-size:13px;font-weight:800;color:#1A1A2E;">評価</div>
         <div id="ct-s-rating-summary" style="font-size:12px;color:#999;">まだ評価なし</div>
       </div>
-      <div id="ct-s-avg-stars" style="font-size:22px;letter-spacing:3px;color:#ddd;margin-bottom:6px;">☆☆☆☆☆</div>
-      <div id="ct-s-rating-info" style="font-size:11px;color:#999;margin-bottom:12px;display:none;">
+      <div id="ct-s-avg-stars" style="font-size:22px;letter-spacing:3px;color:#ddd;margin-bottom:4px;">☆☆☆☆☆</div>
+      <div id="ct-s-rating-info" style="font-size:11px;color:#999;margin-bottom:4px;display:none;">
         <span id="ct-s-receipt-star-count" style="color:#E8A020;font-weight:700;">📄 0件</span> 領収証あり &nbsp;
         <span id="ct-s-nonreceipt-star-count" style="color:#aaa;">☆ 0件</span> 領収証なし
-      </div>
-      <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px;">あなたの評価</div>
-      <div id="ct-s-my-stars" style="display:flex;gap:8px;">
-        <span onclick="ctSelectStar(1)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
-        <span onclick="ctSelectStar(2)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
-        <span onclick="ctSelectStar(3)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
-        <span onclick="ctSelectStar(4)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
-        <span onclick="ctSelectStar(5)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
       </div>
     </div>
 
@@ -2087,15 +2103,24 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div id="ct-s-comments" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;"></div>
     </div>
 
-    <!-- 댓글 입력 -->
-    <div style="display:flex;align-items:center;gap:8px;background:#f5f5f5;border-radius:14px;padding:10px 12px;">
-      <input id="ct-s-comment-input" placeholder="コメントを入力..."
-        style="flex:1;border:none;background:transparent;font-size:13px;
-               font-family:var(--font);outline:none;color:#1A1A2E;">
-      <button onclick="ctSubmitComment()"
-        style="background:var(--gold);color:#fff;border:none;border-radius:10px;
-               padding:0 14px;height:36px;cursor:pointer;font-size:13px;font-weight:700;
-               flex-shrink:0;font-family:var(--font);white-space:nowrap;">登録</button>
+    <!-- 댓글 + 별점 통합 입력 -->
+    <div style="background:#f5f5f5;border-radius:14px;padding:10px 12px;">
+      <div id="ct-s-my-stars" style="display:flex;gap:6px;margin-bottom:8px;">
+        <span onclick="ctSelectInlineStar(1)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
+        <span onclick="ctSelectInlineStar(2)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
+        <span onclick="ctSelectInlineStar(3)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
+        <span onclick="ctSelectInlineStar(4)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
+        <span onclick="ctSelectInlineStar(5)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input id="ct-s-comment-input" placeholder="コメントを入力..."
+          style="flex:1;border:none;background:transparent;font-size:13px;
+                 font-family:var(--font);outline:none;color:#1A1A2E;">
+        <button onclick="ctSubmitComment()"
+          style="background:var(--gold);color:#fff;border:none;border-radius:10px;
+                 padding:0 14px;height:36px;cursor:pointer;font-size:13px;font-weight:700;
+                 flex-shrink:0;font-family:var(--font);white-space:nowrap;">登録</button>
+      </div>
     </div>
 
   </div>
@@ -3620,10 +3645,24 @@ async function ctSubmitComment() {
   // 즉시 UI 반영 (낙관적 업데이트)
   input.value = '';
   if (!_ctComments[key]) _ctComments[key] = [];
-  _ctComments[key].unshift({ user: userName, date: 'たった今', text: text, likes: 0 });
+  var starPrefix = _ctMyInlineRating > 0 ? '★'.repeat(_ctMyInlineRating) + '☆'.repeat(5 - _ctMyInlineRating) + '  ' : '';
+  _ctComments[key].unshift({ user: userName, date: 'たった今', text: starPrefix + text, likes: 0 });
   ctRenderStoreComments(key);
   _ctCoinBalance += 5;
   ctUpdateCoinDisplay();
+
+  // 인라인 별점 별도 저장 (silent)
+  var inlineRating = _ctMyInlineRating;
+  if (inlineRating > 0) {
+    _ctMyInlineRating = 0;
+    var el = document.getElementById('ct-s-my-stars');
+    if (el) {
+      el.querySelectorAll('span').forEach(function(s) {
+        s.textContent = '☆'; s.style.color = '#ddd';
+      });
+    }
+    if (_currentUser) ctSubmitRating(inlineRating, false, key, true);
+  }
 
   // DB 백그라운드 저장
   if (_sb) {
@@ -3657,7 +3696,10 @@ async function ctLoadStoreComments(storeName) {
 /* ══════════════════════════════
    별점 시스템
 ══════════════════════════════ */
-var _ctMyRating    = {}; // { storeName: { rating, has_receipt } }
+var _ctMyRating       = {}; // { storeName: { rating, has_receipt } }
+var _ctMyInlineRating = 0; // 가게 상세 코멘트 프레임 내 별점 (0=미선택)
+var _cpStarRating     = 0; // チリつも 공개 모달 별점
+var _mpStarRating     = 0; // 수동 핀 모달 별점
 var _ctStoreRatings = {}; // { storeName: [{rating, has_receipt, user_id}, ...] }
 
 async function ctLoadRatings(storeName) {
@@ -3750,7 +3792,7 @@ function ctSelectStar(n) {
   ctSubmitRating(n, hasReceipt, storeName);
 }
 
-async function ctSubmitRating(star, hasReceipt, storeName) {
+async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (!_currentUser || !_sb) return;
   var list     = _ctStoreRatings[storeName] || [];
   var existing = list.find(function(r) { return r.user_id === _currentUser.id; });
@@ -3772,7 +3814,47 @@ async function ctSubmitRating(star, hasReceipt, storeName) {
   if (idx >= 0) list[idx] = newEntry; else list.push(newEntry);
   _ctStoreRatings[storeName] = list;
   ctRenderRatings(storeName);
-  showToast('⭐ 評価しました！');
+  if (!silent) showToast('⭐ 評価しました！');
+}
+
+/* ── 가게 상세 코멘트 프레임 인라인 별점 ── */
+function ctSelectInlineStar(n) {
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  _ctMyInlineRating = n;
+  var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+  var el = document.getElementById('ct-s-my-stars');
+  if (el) {
+    el.querySelectorAll('span').forEach(function(s, i) {
+      s.textContent = (i + 1) <= n ? '★' : '☆';
+      s.style.color = (i + 1) <= n ? themeColor : '#ddd';
+    });
+  }
+}
+
+/* ── チリつも 공개 모달 별점 ── */
+function cpSelectStar(n) {
+  _cpStarRating = n;
+  var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+  var el = document.getElementById('cp-star-row');
+  if (el) {
+    el.querySelectorAll('span').forEach(function(s, i) {
+      s.textContent = (i + 1) <= n ? '★' : '☆';
+      s.style.color = (i + 1) <= n ? themeColor : '#ddd';
+    });
+  }
+}
+
+/* ── 수동 핀 모달 별점 ── */
+function mpSelectStar(n) {
+  _mpStarRating = n;
+  var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+  var el = document.getElementById('mp-star-row');
+  if (el) {
+    el.querySelectorAll('span').forEach(function(s, i) {
+      s.textContent = (i + 1) <= n ? '★' : '☆';
+      s.style.color = (i + 1) <= n ? themeColor : '#ddd';
+    });
+  }
 }
 
 /* 기타 */
@@ -6811,6 +6893,14 @@ function submitChiriPublish() {
   _ctCoinBalance += 10;
   ctUpdateCoinDisplay();
 
+  // 별점 저장 (선택한 경우, 영수증 공유이므로 has_receipt: true)
+  if (_cpStarRating > 0 && _currentUser) {
+    ctSubmitRating(_cpStarRating, true, store, true);
+  }
+  _cpStarRating = 0;
+  var cpRow = document.getElementById('cp-star-row');
+  if (cpRow) cpRow.querySelectorAll('span').forEach(function(s) { s.textContent = '☆'; s.style.color = '#ddd'; });
+
   closeOv('ov-chiri-publish');
 
   if (!_isPremium) {
@@ -7828,6 +7918,15 @@ async function submitManualPin() {
 
   _ctCoinBalance += 10;
   ctUpdateCoinDisplay();
+
+  // 별점 저장 (선택한 경우, 수동 핀이므로 has_receipt: false)
+  if (_mpStarRating > 0 && _currentUser) {
+    ctSubmitRating(_mpStarRating, false, storeName, true);
+  }
+  _mpStarRating = 0;
+  var mpRow = document.getElementById('mp-star-row');
+  if (mpRow) mpRow.querySelectorAll('span').forEach(function(s) { s.textContent = '☆'; s.style.color = '#ddd'; });
+
   // 임시 핀 제거
   if (_tempManualPin) { _tempManualPin.setMap(null); _tempManualPin = null; }
   _mpManualLat = null; _mpManualLng = null;
