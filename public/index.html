@@ -2112,8 +2112,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- ══════════════════════════════
      チリつも 가게 상세 바텀시트
 ══════════════════════════════ -->
-<div id="ct-store-dim2" onclick="ctCloseStoreSheet()"
-  style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:300;"></div>
+<div id="ct-store-dim2"
+  style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:300;pointer-events:none;"></div>
 
 <div id="ct-store-sheet"
   style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:301;
@@ -2737,6 +2737,14 @@ function ctInitMap() {
   /* 줌 변경 시 클러스터 ↔ 개별 핀 전환 */
   _ctMap.addListener('zoom_changed', function() {
     ctRenderPricePins();
+  });
+
+  /* 빈 지도 클릭 → 열려 있는 가게 시트 닫기
+     ※ 마커 클릭은 map 'click'으로 전파되지 않으므로 마커와 충돌 없음 */
+  _ctMap.addListener('click', function() {
+    if (document.getElementById('ct-store-sheet').style.display !== 'none') {
+      ctCloseStoreSheet();
+    }
   });
 
 }
