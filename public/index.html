@@ -5165,10 +5165,10 @@ function parseWithGPTMulti(combinedText, pageCount) {
     return (num < 10 ? '0' + num : String(num)) + ': ' + line;
   }).join('\n');
 
-  // 금액 정규화 함수 (parseWithGPT와 동일)
+  // 금액 정규화 함수 (트레일링 하이픈 처리 포함: 2790- → 2790)
   function toNum(s) {
     if (!s && s !== 0) return 0;
-    var str = String(s).replace(/[¥￥\\*＊#\s]/g, '');
+    var str = String(s).replace(/[¥￥\\*＊#\s]/g, '').replace(/-$/, '');
     if (/^\d+\.\d{3}$/.test(str)) str = str.replace('.', '');
     else str = str.replace(/[,.]/g, '');
     return parseInt(str) || 0;
@@ -5179,6 +5179,14 @@ function parseWithGPTMulti(combinedText, pageCount) {
     '"=== 영수증 N번째 장 ===" 구분선은 장 구분용이야. 내용이 아니야.',
     '전체를 하나의 영수증으로 보고 상품명과 가격을 정확히 연결해서 JSON으로만 응답해.',
     '절대로 JSON 외의 텍스트를 출력하지 마.',
+    '',
+    '=== 領収証（수기）특별 규칙 ===',
+    '텍스트에 "領収証" 또는 "領収書"가 보이면:',
+    '- "2790-" "¥2790-" 처럼 끝에 하이픈(-) 붙은 금액 → 하이픈 제거 후 숫자 사용 (2790)',
+    '- "¥" 단독 행 + 몇 줄 후 숫자 → 그 숫자가 합계 (사이 "内訳" 등 무시)',
+    '- 품목 없으면 items=[{"name":"お食事代","qty":1,"price":합계}]',
+    '- 店名은 하단에 위치할 수 있음. 유한회사/주식회사 법인명을 store로',
+    '- Alt/Ctrl/Shift 같은 키보드 문자, "様", 登録番号, TEL, URL은 무시',
     '',
     '=== 상품 인식 규칙 ===',
     '1. 실제 구매 상품만 추출. 다음은 제외:',
@@ -5365,22 +5373,43 @@ function parseWithGPTHybrid(rawText, base64Image) {
     return (num < 10 ? '0' + num : String(num)) + ': ' + line;
   }).join('\n');
 
-  // 금액 정규화
+  // 금액 정규화 (트레일링 하이픈 처리 포함: 2790- → 2790)
   function toNum(s) {
     if (!s && s !== 0) return 0;
-    var str = String(s).replace(/[¥￥\\*＊#\s]/g, '');
+    var str = String(s).replace(/[¥￥\\*＊#\s]/g, '').replace(/-$/, '');
     if (/^\d+\.\d{3}$/.test(str)) str = str.replace('.', '');
     else str = str.replace(/[,.]/g, '');
     return parseInt(str) || 0;
   }
 
-  // ── v1.3 시스템 프롬프트 (코스트코 전용 규칙 포함) ──
+  // ── v1.4 시스템 프롬프트 (領収証 수기 대응 + 코스트코 전용 규칙) ──
   var systemPrompt = `あなたは日本のレシート・領収書・請求書・インボイスを解析するAIです。
 以下のルールに厳密に従い、JSONのみを出力してください。
 説明・前置き・マークダウン・コードブロックは一切不要です。
 
 ## 出力フォーマット
 {"store":"店名","date":"YYYY-MM-DD","address":"店舗住所 or null","total":0,"items":[{"name":"商品名","qty":1,"price":0,"discount":0}]}
+
+## ★領収証（手書き）専用ルール★
+OCRテキストまたは画像に「領収証」「領収書」が含まれる場合:
+
+R-1. 金額表記の特殊パターンを正確に処理:
+  - "¥2790-" "2790-" "¥ 2,790-" → 末尾の"-"は無視 → 2790円
+  - "¥"だけの行 + 数行後の数字行 → その数字が金額 (間にある"内訳"等は無視)
+  - 例: 行10"¥" 行11"内訳" 行12"2790-" → total:2790
+
+R-2. 内訳（品目）が空欄の場合:
+  - items=[{"name":"お食事代","qty":1,"price":total}] として返す
+  - 品目名が読み取れる場合はそれを使用
+
+R-3. 店名が下部に記載されていても正しく抽出する
+  - 「有限会社」「株式会社」「合同会社」等の法人格を含む名称を店名とする
+  - TEL/FAX/住所/登録番号/URLは店名に含めない
+
+R-4. ノイズ除去:
+  - キーボードキー文字(Alt, Ctrl, Shift, Fn等)はOCRノイズとして無視
+  - "様"だけの行、"収入印紙"は無視
+  - 登録番号(T始まり)、電話番号、URLは金額・店名として使用しない
 
 ## ★コストコ専用ルール（最優先）★
 店名にCOSTCO/コストコを含む場合、以下を最優先で適用:
@@ -5403,7 +5432,6 @@ C-3. CPN(クーポン割引)
 C-4. 同一品目の複数行
   同じ品目名が何度登場しても全て別品目として処理
   絶対に重複削除しない
-  例: ブルーベリー4行→items 4個, アボカドオイル2行→items 2個
 
 C-5. コストコ除外行
   >>> BEGIN/BOTTOM OF BASKET <<< / BIZ GOLD会員 / 売上 / MR/PR OVR
@@ -5416,12 +5444,12 @@ C-6. G-MBR(P) RENEWAL は会員更新料としてitemsに含める
 1. 実際の購入品目のみ。小計/合計/税/支払/割引/ヘッダー/フッター除外
 2. 数量: (NコX単M) / @MxN / N● → qty:N, unit_price:M
 3. 분류기호 제거: 3類/◆指/※/▽/★ 등
-4. 가격: ¥/\\/*/#/円/JP¥ 엔화. 점(.)은 천단위 (¥21.911=21911)
+4. 가격: ¥/\\/*/#/円/JP¥/末尾- 엔화. 점(.)은 천단위 (¥21.911=21911)
 5. 할인줄은 discount에 음수, 독립할인은 discount_total에 합산
 6. 합계는 마지막 合計. 現金/クレジット行은 합계 아님
 7. 和暦: 令和N→2018+N, 平成N→1988+N
 8. 주유소: 연료종류 품목명 / 주차장: "駐車料金"
-9. 손글씨/금액만: "お食事代"
+9. 손글씨/금액만 있고 품목 없으면: items=[{"name":"お食事代","qty":1,"price":total}]
 
 JSONのみ出力。説明不要。`;
 
@@ -5515,9 +5543,10 @@ function parseWithGPT(rawText) {
 
   // ── 금액 정규화 ──
   // ¥, \, *, # → 숫자만 / 점이 천단위 구분자인 경우 처리
+  // 트레일링 하이픈(2790-) → 2790 (일본 수기 영수증 관행)
   function toNum(s) {
     if (!s && s !== 0) return 0;
-    var str = String(s).replace(/[¥￥\\*＊#\s]/g, '');
+    var str = String(s).replace(/[¥￥\\*＊#\s]/g, '').replace(/-$/, '');
     if (/^\d+\.\d{3}$/.test(str)) str = str.replace('.', ''); // 1.911 → 1911
     else str = str.replace(/[,\.]/g, '');
     return parseInt(str) || 0;
