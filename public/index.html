@@ -1489,30 +1489,73 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 <!-- ══ 광고 모달 (비구독 유저) ══ -->
 <div class="ad-overlay" id="ov-ad">
-  <div class="ad-sheet">
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
-      <div class="ad-timer" id="ad-timer">5</div>
-      <div>
-        <div style="font-size:14px;font-weight:800;color:var(--text-1);">광고를 시청해주세요</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">무료로 계속 이용하려면 광고 시청이 필요해요</div>
+  <div class="ad-sheet" style="padding:0;overflow:hidden;">
+
+    <!-- 자동재생 광고 미리보기 -->
+    <div id="ad-slot-modal" style="overflow:hidden;border-bottom:0.5px solid var(--border);">
+      <!-- AdSense 미승인 시 플레이스홀더 -->
+      <div id="ad-placeholder-modal" style="display:flex;height:160px;">
+        <!-- 왼쪽: 동영상 시뮬레이션 -->
+        <div style="width:46%;position:relative;overflow:hidden;background:#0d0d22;">
+          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0d0d22,#1a2a6e,#0d1f44);animation:ct-ad-bg 3s ease-in-out infinite alternate;"></div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+            <div style="text-align:center;">
+              <div style="font-size:30px;animation:ct-ad-pulse 1.2s ease-in-out infinite;">🏰</div>
+              <div style="font-size:16px;margin-top:4px;animation:ct-ad-pulse 1.2s ease-in-out infinite .3s;">⚔️</div>
+            </div>
+          </div>
+          <div style="position:absolute;top:6px;left:6px;right:6px;display:flex;justify-content:space-between;">
+            <div style="display:flex;gap:4px;">
+              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">👍</div>
+              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">👎</div>
+            </div>
+            <div style="display:flex;gap:4px;">
+              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">🔇</div>
+              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">⏸</div>
+            </div>
+          </div>
+          <div style="position:absolute;bottom:7px;left:7px;background:rgba(255,200,0,.9);border-radius:10px;padding:2px 7px;font-size:10px;font-weight:800;color:#5a3000;">💰 500</div>
+          <div style="position:absolute;bottom:7px;right:7px;background:rgba(0,0,0,.45);border-radius:4px;padding:1px 5px;font-size:9px;color:rgba(255,255,255,.7);">広告</div>
+        </div>
+        <!-- 오른쪽: 앱 정보 -->
+        <div style="flex:1;padding:10px 10px 10px 12px;display:flex;flex-direction:column;justify-content:space-between;background:#fff;">
+          <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:4px;">
+            <span style="font-size:14px;color:#bbb;">ℹ️</span>
+            <span style="font-size:14px;color:#bbb;">⋮</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#1e3a8a,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🌍</div>
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#111;">Strategy Game</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
+                <span style="font-size:11px;color:#555;font-weight:700;">4.5 ★</span>
+                <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 1.6L13.2 12 3.6 22.4"/><path fill="#FBBC04" d="M3.6 22.4l13.9-8-3.3-2.4z"/><path fill="#4285F4" d="M3.6 1.6l10.6 10.8-3.3-2.4z" transform="scale(1,-1) translate(0,-24)"/><path fill="#EA4335" d="M17.5 14.4l2.9-1.7a1 1 0 000-1.4L17.5 9.6l-3.3 2.4z"/></svg>
+                <span style="font-size:10px;color:#888;">Google Play</span>
+              </div>
+            </div>
+          </div>
+          <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">설치하기</button>
+        </div>
       </div>
     </div>
 
-    <!-- 광고 슬롯 (승인 후 _injectAd 로 자동 주입) -->
-    <div class="ad-banner" id="ad-slot-modal">
-      <div id="ad-placeholder-modal" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-3);">
-        <div style="font-size:22px;">📢</div>
-        <div style="font-size:11px;font-weight:600;">広告</div>
+    <!-- 하단 버튼 영역 -->
+    <div style="padding:16px 20px 32px;">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:900;color:var(--text-1);margin-bottom:3px;">광고 보고 저장하기</div>
+        <div style="font-size:11px;color:var(--text-3);">広告を見て無料で가계부に保存できます</div>
       </div>
-    </div>
-
-    <button class="ad-save-btn" id="ad-save-btn" onclick="adComplete()">⏳ 5초 후 저장 가능</button>
-    <div style="margin-top:14px;padding:12px 14px;background:var(--green-light);border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="openPremium()">
-      <div>
-        <div style="font-size:13px;font-weight:800;color:var(--green);">✨ 프리미엄 구독</div>
-        <div style="font-size:11px;color:var(--text-2);margin-top:2px;">광고 없이 무제한 사용</div>
+      <button id="ad-save-btn" onclick="adStartFullscreen()"
+        style="width:100%;padding:15px;background:var(--navy);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:12px;">
+        광고 보고 저장하기
+      </button>
+      <div style="padding:11px 14px;background:var(--green-light);border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;" onclick="openPremium()">
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--green);">✨ 프리미엄 구독</div>
+          <div style="font-size:11px;color:var(--text-2);margin-top:1px;">광고 없이 무제한 사용</div>
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--green);">자세히 ›</div>
       </div>
-      <div style="font-size:12px;font-weight:700;color:var(--green);">자세히 ›</div>
     </div>
   </div>
 </div>
@@ -1533,8 +1576,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
   <!-- 완료 오버레이 (카운트다운 끝 후 자동 표시) -->
   <div id="rv-complete-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.82);flex-direction:column;align-items:center;justify-content:center;gap:18px;">
-    <div style="font-size:60px;animation:pulse 1s infinite;">✨</div>
-    <div style="font-size:26px;font-weight:900;color:#fff;">+200チリ 獲得！</div>
+    <div id="rv-complete-icon" style="font-size:60px;">✨</div>
+    <div id="rv-complete-title" style="font-size:26px;font-weight:900;color:#fff;">+200チリ 獲得！</div>
     <div style="font-size:13px;color:rgba(255,255,255,.55);">自動で閉じます…</div>
   </div>
 </div>
@@ -2581,57 +2624,11 @@ function ctStartRewardAd() {
   var today = new Date().toDateString();
   var used  = parseInt(localStorage.getItem('ct_rad_' + today) || '0');
   if (used >= 3) { showToast('今日の視聴上限（3回）に達しました'); return; }
-
-  // 전체화면 오버레이 열기
-  var ov = document.getElementById('ov-reward-ad');
-  if (ov) ov.style.display = 'flex';
-
-  // 광고 주입 (AdSense 승인 전에는 placeholder 유지)
-  _injectAd('rv-ad-slot', 'reward');
-
-  // 카운트다운 15초 → 완료 후 자동 적립
-  var seconds = 15;
-  var badge = document.getElementById('rv-countdown-badge');
-  if (badge) badge.textContent = seconds;
-
-  if (_ctRadTimer) clearInterval(_ctRadTimer);
-  _ctRadTimer = setInterval(function() {
-    seconds--;
-    if (badge) badge.textContent = Math.max(0, seconds);
-    if (seconds <= 0) {
-      clearInterval(_ctRadTimer); _ctRadTimer = null;
-      // 자동 200チリ 적립
-      var today2 = new Date().toDateString();
-      var key    = 'ct_rad_' + today2;
-      var used2  = parseInt(localStorage.getItem(key) || '0');
-      localStorage.setItem(key, String(used2 + 1));
-      ctAddCoin(200, '📺 広告視聴');
-      // 완료 오버레이 표시
-      var comp = document.getElementById('rv-complete-overlay');
-      if (comp) comp.style.display = 'flex';
-      // 2초 후 자동 닫기
-      setTimeout(function() {
-        ctCloseRewardAd();
-        showToast('🎉 +200チリ 獲得！ありがとうございます！');
-        ctUpdateRewardAdRemain();
-      }, 2000);
-    }
-  }, 1000);
+  ctOpenFullscreenAd('reward', null);
 }
 
-function ctCloseRewardAd() {
-  var ov   = document.getElementById('ov-reward-ad');
-  var comp = document.getElementById('rv-complete-overlay');
-  var slot = document.getElementById('rv-ad-slot');
-  if (ov)   ov.style.display = 'none';
-  if (comp) comp.style.display = 'none';
-  if (slot) slot.innerHTML = '<div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);"><div style="font-size:52px;margin-bottom:14px;">▶️</div><div style="font-size:13px;">広告を読み込み中...</div></div>';
-  if (_ctRadTimer) { clearInterval(_ctRadTimer); _ctRadTimer = null; }
-}
-
-function ctResetRewardAd() {
-  ctCloseRewardAd();
-}
+function ctCloseRewardAd() { ctCloseFullscreenAd(); }
+function ctResetRewardAd()  { ctCloseFullscreenAd(); }
 
 function ctStoreExchange(id, name, cost) {
   if (_ctCoinBalance < cost) {
@@ -9395,41 +9392,108 @@ function onbSkipToAuth() {
 }
 
 /* ── 광고 모달 ── */
-var _adCallback = null;
-var _adCountdown = null;
+var _adCallback  = null;
+var _rvAdTimer   = null;   // 전체화면 광고 타이머
+var _rvAdMode    = 'save'; // 'save' | 'reward'
 
+/* 바텀시트 열기 (영수증 저장 시) */
 function showAdModal(callback) {
   _adCallback = callback;
   document.getElementById('ov-ad').classList.add('open');
-  _injectAd('ad-slot-modal', 'modal');
-  var seconds = 5;
-  var timerEl = document.getElementById('ad-timer');
-  var btnEl = document.getElementById('ad-save-btn');
-  timerEl.textContent = seconds;
-  timerEl.classList.remove('done');
-  btnEl.classList.remove('ready');
-  btnEl.textContent = '⏳ ' + seconds + '초 후 저장 가능';
-  if (_adCountdown) clearInterval(_adCountdown);
-  _adCountdown = setInterval(function() {
+  // AdSense 승인 후 실제 광고 주입 (플레이스홀더 대체)
+  setTimeout(function() {
+    if (_injectAd('ad-slot-modal', 'modal')) {
+      var ph = document.getElementById('ad-placeholder-modal');
+      if (ph) ph.style.display = 'none';
+    }
+  }, 200);
+}
+
+/* "광고 보고 저장하기" 버튼 클릭 → 전체화면 광고로 전환 */
+function adStartFullscreen() {
+  document.getElementById('ov-ad').classList.remove('open');
+  ctOpenFullscreenAd('save', function() {
+    if (_adCallback) { _adCallback(); _adCallback = null; }
+  });
+}
+
+/* 하위 호환용 (기존 코드에서 adComplete() 호출 시) */
+function adComplete() {
+  document.getElementById('ov-ad').classList.remove('open');
+  if (_adCallback) { _adCallback(); _adCallback = null; }
+}
+
+/* ────────────────────────────────────────
+   공용 전체화면 광고
+   mode: 'save'   → 가계부 저장, 완료 후 callback 실행
+         'reward' → チリ 지급
+   ──────────────────────────────────────── */
+function ctOpenFullscreenAd(mode, callback) {
+  _rvAdMode = mode;
+
+  var ov = document.getElementById('ov-reward-ad');
+  if (ov) ov.style.display = 'flex';
+
+  // 광고 슬롯 초기화 후 주입
+  var slot = document.getElementById('rv-ad-slot');
+  if (slot) slot.innerHTML = '<div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);"><div style="font-size:52px;margin-bottom:14px;">▶️</div><div style="font-size:13px;">広告を読み込み中...</div></div>';
+  _injectAd('rv-ad-slot', mode === 'reward' ? 'reward' : 'modal');
+
+  // 완료 오버레이 숨기기
+  var comp = document.getElementById('rv-complete-overlay');
+  if (comp) comp.style.display = 'none';
+
+  // 카운트다운 15초
+  var seconds = 15;
+  var badge = document.getElementById('rv-countdown-badge');
+  if (badge) badge.textContent = seconds;
+
+  if (_rvAdTimer) clearInterval(_rvAdTimer);
+  _rvAdTimer = setInterval(function() {
     seconds--;
+    if (badge) badge.textContent = Math.max(0, seconds);
     if (seconds <= 0) {
-      clearInterval(_adCountdown);
-      _adCountdown = null;
-      timerEl.textContent = '✓';
-      timerEl.classList.add('done');
-      btnEl.classList.add('ready');
-      btnEl.textContent = '💾 가계부에 저장하기';
-    } else {
-      timerEl.textContent = seconds;
-      btnEl.textContent = '⏳ ' + seconds + '초 후 저장 가능';
+      clearInterval(_rvAdTimer); _rvAdTimer = null;
+
+      // 모드별 처리
+      if (mode === 'reward') {
+        var today = new Date().toDateString();
+        var key   = 'ct_rad_' + today;
+        var used  = parseInt(localStorage.getItem(key) || '0');
+        localStorage.setItem(key, String(used + 1));
+        ctAddCoin(200, '📺 広告視聴');
+      } else if (typeof callback === 'function') {
+        callback(); // 가계부 저장 실행
+      }
+
+      // 완료 화면
+      var iconEl  = document.getElementById('rv-complete-icon');
+      var titleEl = document.getElementById('rv-complete-title');
+      if (iconEl)  iconEl.textContent  = mode === 'reward' ? '✨' : '✅';
+      if (titleEl) titleEl.textContent = mode === 'reward' ? '+200チリ 獲得！' : '가계부에 저장했습니다！';
+      if (comp) comp.style.display = 'flex';
+
+      setTimeout(function() {
+        ctCloseFullscreenAd();
+        if (mode === 'reward') {
+          showToast('🎉 +200チリ 獲得！ありがとうございます！');
+          ctUpdateRewardAdRemain();
+        } else {
+          showToast('✅ 가계부에 저장했습니다！');
+        }
+      }, 2000);
     }
   }, 1000);
 }
 
-function adComplete() {
-  if (_adCountdown) { clearInterval(_adCountdown); _adCountdown = null; }
-  document.getElementById('ov-ad').classList.remove('open');
-  if (_adCallback) { _adCallback(); _adCallback = null; }
+function ctCloseFullscreenAd() {
+  if (_rvAdTimer) { clearInterval(_rvAdTimer); _rvAdTimer = null; }
+  var ov   = document.getElementById('ov-reward-ad');
+  var comp = document.getElementById('rv-complete-overlay');
+  var slot = document.getElementById('rv-ad-slot');
+  if (ov)   ov.style.display = 'none';
+  if (comp) comp.style.display = 'none';
+  if (slot) slot.innerHTML = '<div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);"><div style="font-size:52px;margin-bottom:14px;">▶️</div><div style="font-size:13px;">広告を読み込み中...</div></div>';
 }
 
 function openPremium() {
