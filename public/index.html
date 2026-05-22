@@ -2729,13 +2729,33 @@ function ctInitMap() {
   });
 
   /* 롱프레스 → 임시 핀 */
-  var _mpLongTimer = null;
+  var _mpLongTimer  = null;
   var _mpLongLatLng = null;
+  var _mpMultiTouch = false;  // 두 손가락 터치 중 플래그
+
+  /* ── 네이티브 터치 이벤트로 핀치 감지 ──
+     Google Maps는 터치를 mousedown으로 변환하므로
+     지도 div에 직접 touch 리스너를 달아 두 손가락 여부를 추적 */
+  var _ctMapDiv = document.getElementById('ct-google-map');
+  _ctMapDiv.addEventListener('touchstart', function(e) {
+    if (e.touches.length >= 2) {
+      _mpMultiTouch = true;
+      if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
+    }
+  }, { passive: true });
+  _ctMapDiv.addEventListener('touchend', function(e) {
+    if (e.touches.length === 0) _mpMultiTouch = false;
+  }, { passive: true });
+  _ctMapDiv.addEventListener('touchcancel', function() {
+    _mpMultiTouch = false;
+    if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
+  }, { passive: true });
+
   _ctMap.addListener('mousedown', function(e) {
-    if (!e.latLng) return;
+    if (!e.latLng || _mpMultiTouch) return;  // 핀치 중이면 무시
     _mpLongLatLng = e.latLng;
     _mpLongTimer = setTimeout(function() {
-      if (_mpLongLatLng) _onMapLongPress(_mpLongLatLng);
+      if (_mpLongLatLng && !_mpMultiTouch) _onMapLongPress(_mpLongLatLng);
       _mpLongTimer = null;
     }, 1000);
   });
