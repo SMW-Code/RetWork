@@ -2989,31 +2989,22 @@ function ctRenderRanking(type) {
   document.getElementById('ct-ranking-list').innerHTML = html;
 }
 
-/* 랭킹 → 지도 이동 + 가게 상세 열기 */
+/* 랭킹 → 지도 이동 (풍선만 표시, 상세는 직접 탭) */
 function ctGoToRankPin(idx) {
   var p = _ctLastRanking[idx];
   if (!p || !p.stores) return;
 
-  ctCloseSheets();
+  ctCloseSheets(); // 랭킹 시트 닫기
 
   var lat = parseFloat(p.stores.lat);
   var lng = parseFloat(p.stores.lng);
   if (isNaN(lat) || isNaN(lng)) { showToast('位置情報がありません'); return; }
 
-  /* 같은 가게의 모든 아이템을 모아 그룹으로 구성 */
-  var storeKey = p.stores.name;
-  var allItems = _ctPins
-    .filter(function(pin) { return pin.stores && pin.stores.name === storeKey; })
-    .map(function(pin) { return { name: pin.item_name || '', price: pin.price, comment: pin.comment || '' }; });
-  var group = { store: p.stores, items: allItems.length ? allItems : [{ name: p.item_name || '', price: p.price }] };
-
-  /* 지도 이동 후 가게 카드 오픈 */
   if (_ctMap) {
     _ctMap.panTo({ lat: lat, lng: lng });
     if ((_ctMap.getZoom() || 15) < CT_CLUSTER_ZOOM) _ctMap.setZoom(CT_CLUSTER_ZOOM);
   }
-  /* 살짝 딜레이 후 열어야 지도 이동 애니메이션이 자연스러움 */
-  setTimeout(function() { ctShowStoreCard(group); }, 200);
+  showToast('📍 ' + p.stores.name);
 }
 
 /* ══════════════════════════════
@@ -3136,6 +3127,15 @@ function ctShowStoreCard(group) {
 
   _ctCurrentStore = { store: store, items: items };
   _ctSelectedMenu = ''; // 메뉴 탭 초기화
+
+  // ── 댓글 입력창 · 인라인 별점 초기화 (이전 가게 데이터 잔류 방지) ──
+  var _ciEl = document.getElementById('ct-s-comment-input');
+  if (_ciEl) _ciEl.value = '';
+  _ctMyInlineRating = 0;
+  var _siEl = document.getElementById('ct-s-my-stars');
+  if (_siEl) _siEl.querySelectorAll('span').forEach(function(s) {
+    s.style.color = 'transparent'; s.style.webkitTextStroke = '2px #ccc';
+  });
 
   // ── 헤더 ──
   document.getElementById('ct-s-name').textContent    = store.name || '不明';
@@ -4131,6 +4131,7 @@ async function ctSubmitMenuComment(safeId, storeName, menuName) {
   var input = document.getElementById('ct-mc-input-' + safeId);
   var text  = input ? input.value.trim() : '';
   if (!text) return;
+  if (input) input.value = ''; // 즉시 클리어 (비동기 완료 전에도 빈 상태로)
   var rating     = _ctMenuRatingState[safeId] || 0;
   var hasReceipt = !!((_ctMyRating[storeName] || {}).has_receipt);
   if (!_sb) return;
@@ -7552,12 +7553,26 @@ function submitChiriPublish() {
   ctAddCoin(10, '🧾 チリつも共有');
 
   // 별점 저장 (선택한 경우, 영수증 공유이므로 has_receipt: true)
+  var _savedStarRating = _cpStarRating; // 리셋 전에 저장
   if (_cpStarRating > 0 && _currentUser) {
     ctSubmitRating(_cpStarRating, true, store, true);
   }
   _cpStarRating = 0;
   var cpRow = document.getElementById('cp-star-row');
   if (cpRow) cpRow.querySelectorAll('span').forEach(function(s) { s.textContent = '☆'; s.style.color = '#ddd'; });
+
+  // 코멘트가 있으면 store_comments 테이블에도 저장 (가게 상세 페이지에 표시됨)
+  if (commentText && _currentUser && _sb) {
+    _sb.from('store_comments').insert({
+      store_name:  store,
+      user_id:     _currentUser.id,
+      user_name:   _userNickname || '節約ユーザー',
+      content:     commentText,
+      menu_name:   null,
+      rating:      _savedStarRating > 0 ? _savedStarRating : null,
+      has_receipt: true
+    }).then(function(){});
+  }
 
   closeOv('ov-chiri-publish');
 
