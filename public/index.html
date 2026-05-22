@@ -2226,6 +2226,7 @@ function switchMode(mode) {
       } else if (_ctMap) {
         google.maps.event.trigger(_ctMap, 'resize');
         if (_ctUserPos) _ctMap.setCenter(_ctUserPos);
+        if (typeof ctRenderPricePins === 'function') ctRenderPricePins();
       }
     }, 150);
   }
@@ -2243,7 +2244,16 @@ function ctSwitchTab(name) {
   var tab = document.getElementById('ct-tab-' + name);
   if (tab) tab.classList.add('active');
 
-  if (name === 'map') setTimeout(ctInitMap, 100);
+  if (name === 'map') {
+    setTimeout(function() {
+      if (!_ctMapInit) {
+        ctInitMap();
+      } else if (_ctMap && typeof ctRenderPricePins === 'function') {
+        google.maps.event.trigger(_ctMap, 'resize');
+        ctRenderPricePins();
+      }
+    }, 100);
+  }
   if (name === 'community') ctInitCommunity();
 }
 
@@ -2335,6 +2345,9 @@ function ctInitMap() {
     ]
   });
 
+  /* 즉시 기본 위치로 핀 로드 (위치 권한 대기 없이 바로 표시) */
+  ctLoadPricePins(defaultPos.lat, defaultPos.lng);
+
   /* 내 위치 */
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(pos) {
@@ -2352,9 +2365,7 @@ function ctInitMap() {
       document.getElementById('ct-map-sub').textContent = '現在地周辺のおトク情報';
       document.getElementById('ct-area-btn').style.display = '';
       ctLoadPricePins(_ctUserPos.lat, _ctUserPos.lng);
-    }, function() {
-      ctLoadPricePins(defaultPos.lat, defaultPos.lng);
-    });
+    }, function() {});
   }
 
   /* 지도 이동 시 "이 지역 더 보기" 버튼 표시 */
@@ -2371,7 +2382,7 @@ function ctInitMap() {
     _mpLongTimer = setTimeout(function() {
       if (_mpLongLatLng) _onMapLongPress(_mpLongLatLng);
       _mpLongTimer = null;
-    }, 550);
+    }, 1000);
   });
   _ctMap.addListener('mouseup', function() {
     if (_mpLongTimer) { clearTimeout(_mpLongTimer); _mpLongTimer = null; }
@@ -6329,18 +6340,18 @@ function submitChiriPublish() {
     _afterChiriPublish();
   }
 
-  // geocoding — 백그라운드 좌표 확정 후 Supabase 저장
+  // 즉시 fallback 좌표로 Supabase 저장 → 본인 및 제3자에게 바로 핀 표시
+  if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
+
+  // geocoding — 백그라운드로 가게 정확 좌표 갱신 (핀 중복 삽입 없음)
   searchAndPinStore(store, storeAddress, function(lat, lng) {
-    newPins.forEach(function(p) {
-      if (lat) { p.stores.lat = lat; p.stores.lng = lng; }
-      if (_currentUser) _persistPinToSupabase(p);
-    });
+    if (!lat) return;
+    newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
     if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
+    if (_currentUser && _sb) {
+      _sb.from('stores').update({ lat: lat, lng: lng }).eq('name', store).then(function(){});
+    }
   });
-  // geocoding 불가 시에도 fallback 좌표로 저장
-  if (!storeAddress && typeof google === 'undefined') {
-    if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
-  }
 }
 
 function _afterChiriPublish() {
