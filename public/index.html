@@ -1100,7 +1100,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="ct-screen" id="ct-screen-reward" style="display:none;">
   <div class="ct-hdr">
     <div>
-      <div class="ct-hdr-title">🎁 チリつもリワード</div>
+      <div class="ct-hdr-title">🎁 チリワード</div>
       <div class="ct-hdr-sub">코인 적립 & 드로우</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
@@ -1653,6 +1653,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <div id="mdet-content"></div>
   </div>
+</div>
+
+<!-- ══ 이미지 전체화면 뷰어 ══ -->
+<div id="ov-img-viewer" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.95);align-items:center;justify-content:center;flex-direction:column;" onclick="closeImgViewer()">
+  <button onclick="event.stopPropagation();closeImgViewer()" style="position:absolute;top:max(16px,env(safe-area-inset-top,16px));right:16px;width:40px;height:40px;border-radius:50%;border:none;background:rgba(255,255,255,.18);color:#fff;font-size:20px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);">✕</button>
+  <img id="img-viewer-src" src="" style="max-width:94vw;max-height:88vh;border-radius:12px;object-fit:contain;" onclick="event.stopPropagation()">
 </div>
 
 <!-- ══ チリつもに公開 모달 ══ -->
@@ -2610,6 +2616,7 @@ async function ctLoadPosts() {
 
   _ctDummyPosts = (res.data || []).map(function(p) {
     var d = new Date(p.created_at);
+    var imgs = Array.isArray(p.images) ? p.images : [];
     return {
       id: p.id,
       cat: p.cat,
@@ -2620,8 +2627,8 @@ async function ctLoadPosts() {
       likes: p.likes || 0,
       date: (d.getMonth() + 1) + '/' + d.getDate(),
       comments: 0,
-      img: null,
-      allImgs: [],
+      img: imgs.length ? imgs[0] : null,
+      allImgs: imgs,
       user_id: p.user_id,
     };
   });
@@ -2689,12 +2696,10 @@ function ctRenderPosts() {
   } else {
     list.innerHTML = page.map(function(p) {
       var cat = ctGetPostCat(p.cat);
-      // 썸네일: data URL이면 img태그, 이모지면 텍스트
+      // 썸네일
       var thumb = '';
       if (p.img) {
-        thumb = p.img.indexOf('data:') === 0
-          ? '<div style="width:54px;height:54px;border-radius:10px;overflow:hidden;flex-shrink:0;border:0.5px solid var(--border);"><img src="' + p.img + '" style="width:100%;height:100%;object-fit:cover;"></div>'
-          : '<div style="width:54px;height:54px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;border:0.5px solid var(--border);">' + p.img + '</div>';
+        thumb = '<div style="width:54px;height:54px;border-radius:10px;overflow:hidden;flex-shrink:0;border:0.5px solid var(--border);cursor:pointer;" onclick="event.stopPropagation();openImgViewer(\'' + encodeURIComponent(p.img) + '\')"><img src="' + p.img + '" style="width:100%;height:100%;object-fit:cover;"></div>';
       }
       var contentLines = (p.content || '').replace(/\n/g, '<br>');
       // 첨부 이미지 갤러리 (allImgs)
@@ -2702,7 +2707,7 @@ function ctRenderPosts() {
       if (p.allImgs && p.allImgs.length) {
         imgGallery = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">' +
           p.allImgs.map(function(src) {
-            return '<img src="' + src + '" style="width:76px;height:76px;border-radius:10px;object-fit:cover;border:0.5px solid var(--border);">';
+            return '<img src="' + src + '" onclick="openImgViewer(\'' + encodeURIComponent(src) + '\')" style="width:76px;height:76px;border-radius:10px;object-fit:cover;border:0.5px solid var(--border);cursor:pointer;">';
           }).join('') +
         '</div>';
       }
@@ -3031,6 +3036,26 @@ function ctWritePickImg(input) {
   input.value = '';
 }
 
+/* base64 → Blob 변환 */
+function _base64ToBlob(base64, mime) {
+  var byteStr = atob(base64.split(',')[1]);
+  var arr = new Uint8Array(byteStr.length);
+  for (var i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i);
+  return new Blob([arr], { type: mime || 'image/jpeg' });
+}
+
+/* 이미지 1장 Supabase Storage 업로드 → 공개 URL 반환 */
+async function _uploadCtImg(base64, idx) {
+  var mime = base64.split(';')[0].split(':')[1] || 'image/jpeg';
+  var ext  = mime === 'image/png' ? 'png' : 'jpg';
+  var path = _currentUser.id + '/' + Date.now() + '_' + idx + '.' + ext;
+  var blob = _base64ToBlob(base64, mime);
+  var up   = await _sb.storage.from('ct-post-images').upload(path, blob, { contentType: mime, upsert: false });
+  if (up.error) { console.warn('img upload:', up.error.message); return null; }
+  var urlRes = _sb.storage.from('ct-post-images').getPublicUrl(path);
+  return urlRes.data.publicUrl || null;
+}
+
 async function ctSubmitPost() {
   var title   = (document.getElementById('ct-write-title').value || '').trim();
   var content = (document.getElementById('ct-write-content').value || '').trim();
@@ -3041,6 +3066,16 @@ async function ctSubmitPost() {
   var nickname = _userNickname || '節約ユーザー';
   var avatar   = _userAvatar   || '😊';
 
+  // 이미지 Storage 업로드
+  var imageUrls = [];
+  if (_ctWriteImgs.length > 0) {
+    showToast('📤 画像をアップロード中...');
+    for (var i = 0; i < _ctWriteImgs.length; i++) {
+      var url = await _uploadCtImg(_ctWriteImgs[i], i);
+      if (url) imageUrls.push(url);
+    }
+  }
+
   var res = await _sb.from('ct_posts').insert({
     user_id:    _currentUser.id,
     user_name:  nickname,
@@ -3048,6 +3083,7 @@ async function ctSubmitPost() {
     cat:        _ctWriteCat,
     title:      title,
     content:    content,
+    images:     imageUrls,
   }).select().single();
 
   if (res.error) {
@@ -3067,8 +3103,8 @@ async function ctSubmitPost() {
     likes:       0,
     date:        (now.getMonth() + 1) + '/' + now.getDate(),
     comments:    0,
-    img:         _ctWriteImgs.length ? _ctWriteImgs[0] : null,
-    allImgs:     _ctWriteImgs.slice(),
+    img:         imageUrls.length ? imageUrls[0] : null,
+    allImgs:     imageUrls.slice(),
     user_id:     _currentUser.id,
   });
 
@@ -6039,6 +6075,22 @@ function updateCpPreview() {
       + '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
       + '</div>';
   }).join('');
+}
+
+/* 이미지 전체화면 뷰어 */
+function openImgViewer(encodedSrc) {
+  var src = decodeURIComponent(encodedSrc);
+  var ov  = document.getElementById('ov-img-viewer');
+  var img = document.getElementById('img-viewer-src');
+  if (!ov || !img) return;
+  img.src = src;
+  ov.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeImgViewer() {
+  var ov = document.getElementById('ov-img-viewer');
+  if (ov) ov.style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 function toggleCpCatAccordion() {
