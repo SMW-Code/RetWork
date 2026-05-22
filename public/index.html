@@ -2118,7 +2118,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div id="ct-store-sheet"
   style="display:none;position:absolute;bottom:0;left:0;right:0;z-index:301;
          background:#fff;border-radius:22px 22px 0 0;
-         max-height:92%;overflow-y:auto;
+         max-height:65%;overflow-y:auto;
          box-shadow:0 -6px 40px rgba(0,0,0,.18);
          scrollbar-width:none;-ms-overflow-style:none;">
 
@@ -2694,6 +2694,20 @@ function ctInitMap() {
   if (_ctMapInit) return;
   _ctMapInit = true;
 
+  /* ── ct-store-dim2 / ct-store-sheet를 지도 컨테이너 안으로 이동 ──
+     기본 위치가 앱 전체 컨테이너 기준(position:absolute)이라서
+     시트가 지도 전체를 덮어 마커 클릭을 막는 문제 수정.
+     지도 컨테이너(position:relative;overflow:hidden) 기준으로 옮기면
+     시트 높이도 지도 높이 대비로 계산되어 지도 상단이 인터랙션 가능해짐. */
+  var _mapCont = document.getElementById('ct-google-map') &&
+                 document.getElementById('ct-google-map').parentNode;
+  if (_mapCont) {
+    ['ct-store-dim2', 'ct-store-sheet'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el && el.parentNode !== _mapCont) _mapCont.appendChild(el);
+    });
+  }
+
   var defaultPos = { lat: 34.9700, lng: 136.6220 };
 
   _ctMap = new google.maps.Map(document.getElementById('ct-google-map'), {
@@ -2882,7 +2896,7 @@ function ctRenderPricePins() {
       });
       marker.addListener('click', function() {
         _ctMarkerJustClicked = true;
-        setTimeout(function() { _ctMarkerJustClicked = false; }, 200);
+        setTimeout(function() { _ctMarkerJustClicked = false; }, 400);
         ctShowStoreCard(group);
       });
       _ctMarkers.push(marker);
