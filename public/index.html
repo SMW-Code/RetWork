@@ -2091,26 +2091,28 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- 댓글 -->
     <div style="margin-bottom:10px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:13px;font-weight:800;color:#1A1A2E;">
-          コメント <span id="ct-s-comment-count" style="color:#E8A020;">0</span>
+          コメント <span id="ct-s-comment-count" style="color:var(--gold);">0</span>
         </div>
-        <div style="display:flex;gap:8px;">
-          <span style="font-size:12px;font-weight:700;color:#1A1A2E;">✓ 最新</span>
-          <span style="font-size:12px;color:#999;">いいね</span>
-        </div>
+        <span style="font-size:12px;font-weight:700;color:#1A1A2E;">✓ 最新</span>
       </div>
-      <div id="ct-s-comments" style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;"></div>
+      <!-- 메뉴 탭 (복수 메뉴일 때 표시) -->
+      <div id="ct-s-menu-tabs" style="display:none;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+      <div id="ct-s-comments" style="display:flex;flex-direction:column;gap:2px;margin-bottom:14px;"></div>
     </div>
 
     <!-- 댓글 + 별점 통합 입력 -->
     <div style="background:#f5f5f5;border-radius:14px;padding:10px 12px;">
-      <div id="ct-s-my-stars" style="display:flex;gap:6px;margin-bottom:8px;">
-        <span onclick="ctSelectInlineStar(1)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
-        <span onclick="ctSelectInlineStar(2)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
-        <span onclick="ctSelectInlineStar(3)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
-        <span onclick="ctSelectInlineStar(4)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
-        <span onclick="ctSelectInlineStar(5)" style="font-size:22px;cursor:pointer;color:#ddd;line-height:1;transition:color .15s;">☆</span>
+      <!-- 선택된 메뉴 태그 -->
+      <div id="ct-s-selected-menu-tag" style="display:none;margin-bottom:6px;"></div>
+      <!-- 별점 (굵은 프레임 스타일) -->
+      <div id="ct-s-my-stars" style="display:flex;gap:4px;margin-bottom:8px;">
+        <span onclick="ctSelectInlineStar(1)" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:2px #ccc;line-height:1;transition:all .15s;">★</span>
+        <span onclick="ctSelectInlineStar(2)" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:2px #ccc;line-height:1;transition:all .15s;">★</span>
+        <span onclick="ctSelectInlineStar(3)" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:2px #ccc;line-height:1;transition:all .15s;">★</span>
+        <span onclick="ctSelectInlineStar(4)" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:2px #ccc;line-height:1;transition:all .15s;">★</span>
+        <span onclick="ctSelectInlineStar(5)" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:2px #ccc;line-height:1;transition:all .15s;">★</span>
       </div>
       <div style="display:flex;align-items:center;gap:8px;">
         <input id="ct-s-comment-input" placeholder="コメントを入力..."
@@ -2778,6 +2780,7 @@ function ctShowStoreCard(group) {
   }
 
   _ctCurrentStore = { store: store, items: items };
+  _ctSelectedMenu = ''; // 메뉴 탭 초기화
 
   // ── 헤더 ──
   document.getElementById('ct-s-name').textContent    = store.name || '不明';
@@ -2862,6 +2865,7 @@ function ctShowStoreCard(group) {
 
   // ── 댓글 ──
   _ctComments[key] = [];
+  ctRenderCommentMenuTabs();   // 메뉴 탭 렌더
   ctRenderStoreComments(key);
   ctLoadStoreComments(key);
 
@@ -3614,21 +3618,51 @@ function ctUpdateVoteBar(key) {
 }
 
 function ctRenderStoreComments(key) {
-  var list = _ctComments[key] || [];
-  var el = document.getElementById('ct-s-comments');
-  document.getElementById('ct-s-comment-count').textContent = list.length;
+  var all  = _ctComments[key] || [];
+  var el   = document.getElementById('ct-s-comments');
+  var cntEl = document.getElementById('ct-s-comment-count');
+  if (cntEl) cntEl.textContent = all.length;
+
+  // 메뉴 필터
+  var list = _ctSelectedMenu
+    ? all.filter(function(c) { return (c.menuName || '') === _ctSelectedMenu; })
+    : all;
+
   if (!list.length) {
-    el.innerHTML = '<div style="text-align:center;padding:16px;color:#bbb;font-size:13px;">まだコメントがありません</div>';
+    el.innerHTML = '<div style="text-align:center;padding:16px;color:#bbb;font-size:13px;">'
+      + (_ctSelectedMenu ? 'このメニューへのコメントはまだありません' : 'まだコメントがありません')
+      + '</div>';
     return;
   }
+
+  var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+
   el.innerHTML = list.map(function(c) {
-    return '<div style="border-bottom:0.5px solid #f5f5f5;padding-bottom:10px;">'
-      + '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">'
+    // 별점 렌더 (굵은 프레임 스타일)
+    var starHtml = '';
+    if (c.rating && c.rating > 0) {
+      for (var i = 1; i <= 5; i++) {
+        starHtml += (i <= c.rating)
+          ? '<span style="font-size:15px;color:' + themeColor + ';-webkit-text-stroke:0px;">★</span>'
+          : '<span style="font-size:15px;color:transparent;-webkit-text-stroke:1.5px #ccc;">★</span>';
+      }
+    }
+    // 메뉴 태그 (전체 보기일 때만)
+    var menuTag = (!_ctSelectedMenu && c.menuName)
+      ? '<span style="font-size:10px;padding:2px 7px;background:' + themeColor + '18;'
+        + 'border-radius:20px;color:' + themeColor + ';font-weight:700;margin-left:4px;flex-shrink:0;">🍽 ' + c.menuName + '</span>'
+      : '';
+    return '<div style="border-bottom:0.5px solid #f0f0f0;padding:10px 0;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
+      + '<div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">'
       + '<span style="font-size:12px;font-weight:700;color:#1A1A2E;">' + c.user + '</span>'
-      + '<span style="font-size:11px;color:#bbb;">' + c.date + '</span>'
+      + menuTag
       + '</div>'
+      + '<span style="font-size:11px;color:#bbb;flex-shrink:0;">' + c.date + '</span>'
+      + '</div>'
+      + (starHtml ? '<div style="margin-bottom:4px;line-height:1;">' + starHtml + '</div>' : '')
       + '<div style="font-size:13px;color:var(--text-1);line-height:1.5;">' + c.text + '</div>'
-      + '<div style="margin-top:6px;font-size:11px;color:#bbb;">♡ ' + c.likes + '　💬 0</div>'
+      + '<div style="margin-top:6px;font-size:11px;color:#bbb;">♡ ' + c.likes + '</div>'
       + '</div>';
   }).join('');
 }
@@ -3642,23 +3676,24 @@ async function ctSubmitComment() {
   if (!key) return;
   var userName = _currentUser ? (_userNickname || '節約ユーザー') : 'ゲスト';
 
+  var inlineRating = _ctMyInlineRating;
+  var menuName     = _ctSelectedMenu;
+
   // 즉시 UI 반영 (낙관적 업데이트)
   input.value = '';
   if (!_ctComments[key]) _ctComments[key] = [];
-  var starPrefix = _ctMyInlineRating > 0 ? '★'.repeat(_ctMyInlineRating) + '☆'.repeat(5 - _ctMyInlineRating) + '  ' : '';
-  _ctComments[key].unshift({ user: userName, date: 'たった今', text: starPrefix + text, likes: 0 });
+  _ctComments[key].unshift({ user: userName, date: 'たった今', text: text, likes: 0, rating: inlineRating, menuName: menuName });
   ctRenderStoreComments(key);
   _ctCoinBalance += 5;
   ctUpdateCoinDisplay();
 
-  // 인라인 별점 별도 저장 (silent)
-  var inlineRating = _ctMyInlineRating;
+  // 별점 UI 초기화
   if (inlineRating > 0) {
     _ctMyInlineRating = 0;
-    var el = document.getElementById('ct-s-my-stars');
-    if (el) {
-      el.querySelectorAll('span').forEach(function(s) {
-        s.textContent = '☆'; s.style.color = '#ddd';
+    var starsEl = document.getElementById('ct-s-my-stars');
+    if (starsEl) {
+      starsEl.querySelectorAll('span').forEach(function(s) {
+        s.style.color = 'transparent'; s.style.webkitTextStroke = '2px #ccc';
       });
     }
     if (_currentUser) ctSubmitRating(inlineRating, false, key, true);
@@ -3670,7 +3705,9 @@ async function ctSubmitComment() {
       store_name: key,
       user_id:    _currentUser ? _currentUser.id : null,
       user_name:  userName,
-      content:    text
+      content:    text,
+      menu_name:  menuName || null,
+      rating:     inlineRating || null
     });
     if (res.error) { showToast('⚠️ コメント保存エラー: ' + res.error.message); }
   }
@@ -3679,7 +3716,7 @@ async function ctSubmitComment() {
 async function ctLoadStoreComments(storeName) {
   if (!_sb) return;
   var res = await _sb.from('store_comments')
-    .select('user_name, content, created_at')
+    .select('user_name, content, created_at, menu_name, rating')
     .eq('store_name', storeName)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -3688,7 +3725,7 @@ async function ctLoadStoreComments(storeName) {
   var cur = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name;
   if (cur !== storeName) return;
   _ctComments[storeName] = (res.data || []).map(function(r) {
-    return { user: r.user_name || 'ゲスト', date: _timeAgo(r.created_at), text: r.content, likes: 0 };
+    return { user: r.user_name || 'ゲスト', date: _timeAgo(r.created_at), text: r.content, likes: 0, rating: r.rating || 0, menuName: r.menu_name || '' };
   });
   ctRenderStoreComments(storeName);
 }
@@ -3698,6 +3735,7 @@ async function ctLoadStoreComments(storeName) {
 ══════════════════════════════ */
 var _ctMyRating       = {}; // { storeName: { rating, has_receipt } }
 var _ctMyInlineRating = 0; // 가게 상세 코멘트 프레임 내 별점 (0=미선택)
+var _ctSelectedMenu   = ''; // 코멘트 입력 시 선택된 메뉴 (''=전체)
 var _cpStarRating     = 0; // チリつも 공개 모달 별점
 var _mpStarRating     = 0; // 수동 핀 모달 별점
 var _ctStoreRatings = {}; // { storeName: [{rating, has_receipt, user_id}, ...] }
@@ -3817,6 +3855,62 @@ async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (!silent) showToast('⭐ 評価しました！');
 }
 
+/* ── 메뉴 탭 렌더 ── */
+function ctRenderCommentMenuTabs() {
+  var el = document.getElementById('ct-s-menu-tabs');
+  if (!el) return;
+  if (!_ctCurrentStore) { el.style.display = 'none'; return; }
+
+  // 메뉴명 수집 (중복 제거)
+  var seen = {}, menus = [];
+  (_ctCurrentStore.items || []).forEach(function(it) {
+    var k = (it.name || '').trim();
+    if (k && k !== '—' && !seen[k]) { seen[k] = true; menus.push(k); }
+  });
+
+  if (menus.length < 2) { el.style.display = 'none'; return; }
+
+  var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+  el.style.display = 'flex';
+
+  var chips = [{ label: 'すべて', value: '' }].concat(menus.map(function(m) { return { label: m, value: m }; }));
+  el.innerHTML = chips.map(function(chip) {
+    var active = chip.value === _ctSelectedMenu;
+    return '<span onclick="ctSelectCommentMenu(\'' + chip.value.replace(/'/g, "\\'") + '\')"'
+      + ' style="display:inline-flex;align-items:center;white-space:nowrap;padding:5px 12px;'
+      + 'border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;'
+      + 'border:1.5px solid ' + (active ? themeColor : '#e0e0e0') + ';'
+      + 'background:' + (active ? themeColor : 'var(--surface)') + ';'
+      + 'color:' + (active ? '#fff' : 'var(--text-2)') + ';'
+      + 'transition:all .15s;">' + chip.label + '</span>';
+  }).join('');
+}
+
+function ctSelectCommentMenu(menuName) {
+  _ctSelectedMenu = menuName;
+  ctRenderCommentMenuTabs();
+  ctRenderCommentMenuTag();
+  var key = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name || '';
+  if (key) ctRenderStoreComments(key);
+}
+
+function ctRenderCommentMenuTag() {
+  var el = document.getElementById('ct-s-selected-menu-tag');
+  if (!el) return;
+  var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+  if (_ctSelectedMenu) {
+    el.style.display = 'block';
+    el.innerHTML = '<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 10px;'
+      + 'background:' + themeColor + '18;border:1.5px solid ' + themeColor + '55;'
+      + 'border-radius:20px;font-size:11px;font-weight:700;color:' + themeColor + ';">'
+      + '🍽 ' + _ctSelectedMenu
+      + '<span onclick="ctSelectCommentMenu(\'\')" style="cursor:pointer;margin-left:2px;font-size:13px;font-weight:900;line-height:1;">×</span>'
+      + '</span>';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
 /* ── 가게 상세 코멘트 프레임 인라인 별점 ── */
 function ctSelectInlineStar(n) {
   if (!_currentUser) { showToast('ログインが必要です'); return; }
@@ -3825,8 +3919,13 @@ function ctSelectInlineStar(n) {
   var el = document.getElementById('ct-s-my-stars');
   if (el) {
     el.querySelectorAll('span').forEach(function(s, i) {
-      s.textContent = (i + 1) <= n ? '★' : '☆';
-      s.style.color = (i + 1) <= n ? themeColor : '#ddd';
+      if ((i + 1) <= n) {
+        s.style.color = themeColor;
+        s.style.webkitTextStroke = '0px';
+      } else {
+        s.style.color = 'transparent';
+        s.style.webkitTextStroke = '2px #ccc';
+      }
     });
   }
 }
