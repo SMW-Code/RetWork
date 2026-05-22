@@ -3887,7 +3887,10 @@ function ctCloseStoreSheet() {
   // 지도·탭바 복원 후 Maps resize → 마커 클릭 정상화
   document.getElementById('ct-screen-map').style.display = 'flex';
   document.getElementById('ct-tabbar').style.display = '';
-  if (_ctMap) setTimeout(function() { google.maps.event.trigger(_ctMap, 'resize'); }, 50);
+  if (_ctMap) setTimeout(function() {
+    google.maps.event.trigger(_ctMap, 'resize');
+    ctRenderPricePins();
+  }, 250);
 }
 
 function ctCatLabel(cat) {
@@ -4163,7 +4166,7 @@ async function ctUpdateMenuComment(safeId, storeName, menuName, commentId) {
   if (!text) { showToast('コメントを入力してください'); return; }
   if (input) input.value = ''; // 즉시 클리어
   var rating = _ctMenuRatingState[safeId] || 0;
-  var res = await _sb.from('store_comments').update({content:text,rating:rating||null}).eq('id',commentId).eq('user_id',_currentUser.id);
+  var res = await _sb.from('store_comments').update({content:text,rating:rating||null}).eq('store_name',storeName).eq('menu_name',menuName).eq('user_id',_currentUser.id);
   if (res.error) { showToast('⚠️ 更新エラー: '+res.error.message); return; }
   if (rating > 0) {
     var hasReceipt = !!((_ctMyRating[storeName] || {}).has_receipt);
