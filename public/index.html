@@ -2407,11 +2407,12 @@ var _appMode = 'receipt';
 
 function switchMode(mode) {
   _appMode = mode;
-  // 가게 상세 시트가 열려 있으면 닫기
+  // 가게 상세 시트가 열려 있으면 닫기 (탭바·지도 복원)
   var _sm_sheet = document.getElementById('ct-store-sheet');
   if (_sm_sheet && _sm_sheet.style.display !== 'none') {
     _sm_sheet.style.display = 'none';
     document.getElementById('ct-screen-map').style.display = 'flex';
+    document.getElementById('ct-tabbar').style.display = '';
     _ctCurrentStore = null;
   }
 
@@ -2452,11 +2453,12 @@ function switchMode(mode) {
 }
 
 function ctSwitchTab(name) {
-  // 가게 상세 시트가 열려 있으면 먼저 닫기 (지도 복원)
+  // 가게 상세 시트가 열려 있으면 먼저 닫기 (탭바·지도 복원)
   var _storeSheet = document.getElementById('ct-store-sheet');
   if (_storeSheet && _storeSheet.style.display !== 'none') {
     _storeSheet.style.display = 'none';
     _ctCurrentStore = null;
+    document.getElementById('ct-tabbar').style.display = '';
   }
   // 탭 전환 시 포인트 패널 닫기
   _ctCoinHistoryOpen = false;
@@ -3194,8 +3196,9 @@ function ctShowStoreCard(group) {
   var heartEl = document.getElementById('ct-s-heart');
   if (heartEl) heartEl.textContent = '🤍';
 
-  // ── 지도 화면 숨기고 상세 화면으로 전환 ──
+  // ── 지도 화면·탭바 숨기고 상세 화면으로 전환 ──
   document.getElementById('ct-screen-map').style.display = 'none';
+  document.getElementById('ct-tabbar').style.display = 'none';
   var _sheet = document.getElementById('ct-store-sheet');
   _sheet.style.display = 'flex';
   _sheet.scrollTop = 0;
@@ -3875,8 +3878,9 @@ function ctCloseStoreSheet() {
   document.getElementById('ct-store-sheet').style.display = 'none';
   document.getElementById('ct-store-dim2').style.display  = 'none';
   _ctCurrentStore = null;
-  // 지도 화면 복원
+  // 지도 화면 + 탭바 복원
   document.getElementById('ct-screen-map').style.display = 'flex';
+  document.getElementById('ct-tabbar').style.display = '';
   // Google Maps 히트테스트 재계산 (마커 클릭 복원)
   if (_ctMap) setTimeout(function() { google.maps.event.trigger(_ctMap, 'resize'); }, 50);
 }
@@ -4101,9 +4105,8 @@ function ctRenderMenuBody(safeId, menuName, storeName, ratings, comments, myRati
   for (var k=1;k<=5;k++) starsIn += '<span onclick="ctSelectMenuStar(\''+safeId+'\','+k+')" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:'+(k<=myR?'2.5px '+themeCol:'2px #ccc')+';line-height:1;transition:all .15s;">★</span>';
   var sS = storeName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
   var sM = menuName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-  var _prevContent = myComment ? (myComment.content||'').replace(/"/g,'&quot;').substring(0,40) : '';
   var inputLine = myComment
-    ? '<input id="ct-mc-input-'+safeId+'" placeholder="'+(_prevContent||'レビューを編集...')+'" style="flex:1;border:none;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">'
+    ? '<input id="ct-mc-input-'+safeId+'" placeholder="レビューを変更する場合は入力..." style="flex:1;border:none;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">'
       +'<button onclick="ctUpdateMenuComment(\''+safeId+'\',\''+sS+'\',\''+sM+'\',\''+myComment.id+'\')" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:0 12px;height:36px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">更新</button>'
     : '<input id="ct-mc-input-'+safeId+'" placeholder="このメニューへのコメント（1回のみ）" style="flex:1;border:none;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">'
       +'<button onclick="ctSubmitMenuComment(\''+safeId+'\',\''+sS+'\',\''+sM+'\')" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:0 12px;height:36px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">登録</button>';
