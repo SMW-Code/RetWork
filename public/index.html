@@ -2400,15 +2400,9 @@ function saveGptKey() {
 }
 
 /* ══════════════════════════════
-   탭 전환
-══════════════════════════════ */
-/* ══════════════════════════════
    モード切替 (ReceiptIQ ↔ チリつも)
 ══════════════════════════════ */
-var _appMode = 'receipt';
-
 function switchMode(mode) {
-  _appMode = mode;
   // 가게 상세 시트가 열려 있으면 닫기 (지도·탭바 복원)
   var _sm_sheet = document.getElementById('ct-store-sheet');
   if (_sm_sheet && _sm_sheet.style.display !== 'none') {
@@ -2653,7 +2647,6 @@ function ctStartRewardAd() {
   ctOpenFullscreenAd('reward', null);
 }
 
-function ctCloseRewardAd() { ctCloseFullscreenAd(); }
 function ctResetRewardAd()  { ctCloseFullscreenAd(); }
 
 function ctStoreExchange(id, name, cost) {
@@ -6764,32 +6757,6 @@ function parseWithGPT(rawText) {
       gptParsed:  true
     };
   });
-}
-// 디버그 화면: API 원본 텍스트 + 파싱 결과 동시 표시
-function showOcrDebug(previewSrc, rawText) {
-  // GPT 키가 있으면 GPT 파싱 우선 시도, 없으면 룰 기반 파싱
-  if (gptKey && gptKey.startsWith('sk-') && gptKey.length > 20) {
-    parseWithGPT(rawText).then(function(gptResult) {
-      window._rawOcrText   = rawText;
-      window._parsedResult = gptResult;
-      window._previewSrc   = previewSrc;
-      _showDebugUI(previewSrc, rawText, gptResult, true);
-    }).catch(function(err) {
-      console.warn('GPT 파싱 실패, 룰 기반으로 전환:', err.message);
-      var fallback = parseReceiptText(rawText);
-      window._rawOcrText   = rawText;
-      window._parsedResult = fallback;
-      window._previewSrc   = previewSrc;
-      _showDebugUI(previewSrc, rawText, fallback, false);
-    });
-    return;
-  }
-  // GPT 키 없음 → 기존 룰 기반 파싱
-  var parsed = parseReceiptText(rawText);
-  window._rawOcrText   = rawText;
-  window._parsedResult = parsed;
-  window._previewSrc   = previewSrc;
-  _showDebugUI(previewSrc, rawText, parsed, false);
 }
 
 // 디버그 UI 렌더링 (GPT/룰기반 공통)
