@@ -345,6 +345,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 #screen-auth::-webkit-scrollbar{display:none;}
 #screen-auth *::-webkit-scrollbar{display:none;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes ct-ad-bg{0%{opacity:1}100%{opacity:.6}}
+@keyframes ct-ad-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
 .sheet-handle{width:36px;height:4px;background:var(--border-mid);border-radius:2px;margin:0 auto 18px;opacity:.5;}
 .sheet-title{font-size:17px;font-weight:800;color:var(--text-1);margin-bottom:4px;letter-spacing:-.4px;}
 .sheet-sub{font-size:12px;color:var(--text-3);margin-bottom:16px;font-weight:500;}
@@ -1219,17 +1221,72 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
         <!-- 아코디언 본문 -->
         <div id="ct-rad-panel" style="overflow:hidden;max-height:0;transition:max-height .4s cubic-bezier(0.4,0,0.2,1);">
-          <!-- 상단 타이틀 영역 -->
-          <div style="padding:18px 18px 14px;border-top:0.5px solid var(--border);">
-            <div style="font-size:20px;font-weight:900;color:var(--text-1);margin-bottom:5px;">광고 보고 チリ 받기</div>
-            <div style="font-size:12px;color:var(--text-3);">200チリ · 残り<span id="ct-rad-remain">3</span>回/日</div>
-          </div>
-          <!-- 광고 시작 버튼 -->
-          <div style="padding:0 18px 18px;">
-            <button id="ct-rad-btn" onclick="ctStartRewardAd()"
-              style="width:100%;padding:16px;background:var(--navy);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);letter-spacing:.3px;">
-              광고 보고 チリ 받기
-            </button>
+          <div style="border-top:0.5px solid var(--border);">
+            <!-- 타이틀 + 버튼 -->
+            <div style="padding:16px 18px 12px;">
+              <div style="font-size:20px;font-weight:900;color:var(--text-1);margin-bottom:4px;">광고 보고 チリ 받기</div>
+              <div style="font-size:12px;color:var(--text-3);margin-bottom:14px;">200チリ · 残り<span id="ct-rad-remain">3</span>回/日</div>
+              <button id="ct-rad-btn" onclick="ctStartRewardAd()"
+                style="width:100%;padding:15px;background:var(--navy);color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);letter-spacing:.3px;">
+                광고 보고 チリ 받기
+              </button>
+            </div>
+
+            <!-- ── 광고 프리뷰 영역 (아코디언 열릴 때 자동 노출) ── -->
+            <div id="ct-rad-preview-slot" style="border-top:0.5px solid var(--border);background:#fff;overflow:hidden;min-height:170px;">
+              <!-- AdSense 미승인 시 플레이스홀더 (승인 후 _injectAd 로 대체됨) -->
+              <div id="ct-rad-ph" style="display:flex;height:170px;">
+                <!-- 왼쪽: 자동재생 동영상 시뮬레이션 -->
+                <div style="width:46%;position:relative;overflow:hidden;background:#0d0d22;">
+                  <!-- 배경 그라디언트 애니메이션 -->
+                  <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0d0d22,#1a2a6e,#0d1f44);animation:ct-ad-bg 3s ease-in-out infinite alternate;"></div>
+                  <!-- 게임 씬 시뮬레이션 -->
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
+                    <div style="text-align:center;">
+                      <div style="font-size:30px;animation:ct-ad-pulse 1.2s ease-in-out infinite;">🏰</div>
+                      <div style="font-size:16px;margin-top:4px;animation:ct-ad-pulse 1.2s ease-in-out infinite .3s;">⚔️</div>
+                    </div>
+                  </div>
+                  <!-- 상단 컨트롤 (참고 이미지 스타일) -->
+                  <div style="position:absolute;top:6px;left:6px;right:6px;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;gap:5px;">
+                      <div style="background:rgba(255,255,255,.18);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;">👍</div>
+                      <div style="background:rgba(255,255,255,.18);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;">👎</div>
+                    </div>
+                    <div style="display:flex;gap:5px;">
+                      <div style="background:rgba(255,255,255,.18);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;">🔇</div>
+                      <div style="background:rgba(255,255,255,.18);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:10px;">⏸</div>
+                    </div>
+                  </div>
+                  <!-- 하단 코인 표시 -->
+                  <div style="position:absolute;bottom:7px;left:7px;background:rgba(255,200,0,.9);border-radius:10px;padding:2px 8px;font-size:10px;font-weight:800;color:#5a3000;">💰 500</div>
+                  <!-- 광고 라벨 -->
+                  <div style="position:absolute;bottom:7px;right:7px;background:rgba(0,0,0,.45);border-radius:4px;padding:1px 5px;font-size:9px;color:rgba(255,255,255,.7);">広告</div>
+                </div>
+                <!-- 오른쪽: 앱 정보 -->
+                <div style="flex:1;padding:10px 10px 10px 12px;display:flex;flex-direction:column;justify-content:space-between;background:#fff;">
+                  <!-- 상단 ℹ️ ⋮ -->
+                  <div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:4px;">
+                    <span style="font-size:15px;color:#bbb;">ℹ️</span>
+                    <span style="font-size:15px;color:#bbb;">⋮</span>
+                  </div>
+                  <!-- 앱 아이콘 + 이름 + 평점 -->
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <div style="width:46px;height:46px;border-radius:11px;background:linear-gradient(135deg,#1e3a8a,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;">🌍</div>
+                    <div style="min-width:0;">
+                      <div style="font-size:13px;font-weight:800;color:#111;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Strategy Game</div>
+                      <div style="display:flex;align-items:center;gap:4px;margin-top:3px;">
+                        <span style="font-size:11px;color:#555;font-weight:700;">4.5 ★</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 1.6L13.2 12 3.6 22.4"/><path fill="#FBBC04" d="M3.6 22.4l13.9-8-3.3-2.4z"/><path fill="#4285F4" d="M3.6 1.6l10.6 10.8-3.3-2.4z" transform="scale(1,-1) translate(0,-24)"/><path fill="#EA4335" d="M17.5 14.4l2.9-1.7a1 1 0 000-1.4L17.5 9.6l-3.3 2.4z"/></svg>
+                        <span style="font-size:10px;color:#888;">Google Play</span>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- 설치하기 버튼 -->
+                  <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">설치하기</button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -2487,6 +2544,11 @@ function ctToggleRewardAdPanel() {
   if (arrow) arrow.textContent = _ctRadOpen ? '▲' : '▼';
   if (_ctRadOpen) {
     ctUpdateRewardAdRemain();
+    // 광고 배너 주입 (AdSense 승인 후 플레이스홀더 대체)
+    setTimeout(function() {
+      var ph = document.getElementById('ct-rad-ph');
+      if (_injectAd('ct-rad-preview-slot', 'reward') !== false && ph) ph.style.display = 'none';
+    }, 200);
   } else {
     ctResetRewardAd();
   }
