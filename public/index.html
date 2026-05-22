@@ -2052,6 +2052,27 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
     </div>
 
+    <!-- 별점 -->
+    <div style="background:#fff;border:1px solid #f0f0f0;border-radius:14px;padding:14px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div style="font-size:13px;font-weight:800;color:#1A1A2E;">評価</div>
+        <div id="ct-s-rating-summary" style="font-size:12px;color:#999;">まだ評価なし</div>
+      </div>
+      <div id="ct-s-avg-stars" style="font-size:22px;letter-spacing:3px;color:#ddd;margin-bottom:6px;">☆☆☆☆☆</div>
+      <div id="ct-s-rating-info" style="font-size:11px;color:#999;margin-bottom:12px;display:none;">
+        <span id="ct-s-receipt-star-count" style="color:#E8A020;font-weight:700;">📄 0件</span> 領収証あり &nbsp;
+        <span id="ct-s-nonreceipt-star-count" style="color:#aaa;">☆ 0件</span> 領収証なし
+      </div>
+      <div style="font-size:11px;color:#666;font-weight:600;margin-bottom:8px;">あなたの評価</div>
+      <div id="ct-s-my-stars" style="display:flex;gap:8px;">
+        <span onclick="ctSelectStar(1)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
+        <span onclick="ctSelectStar(2)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
+        <span onclick="ctSelectStar(3)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
+        <span onclick="ctSelectStar(4)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
+        <span onclick="ctSelectStar(5)" style="font-size:30px;cursor:pointer;color:#ddd;-webkit-text-stroke:1px #ccc;">☆</span>
+      </div>
+    </div>
+
     <!-- 댓글 -->
     <div style="margin-bottom:10px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
@@ -2073,7 +2094,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
                font-family:var(--font);outline:none;color:#1A1A2E;">
       <button onclick="ctSubmitComment()"
         style="background:var(--gold);color:#fff;border:none;border-radius:10px;
-               width:36px;height:36px;cursor:pointer;font-size:16px;flex-shrink:0;">›</button>
+               padding:0 14px;height:36px;cursor:pointer;font-size:13px;font-weight:700;
+               flex-shrink:0;font-family:var(--font);white-space:nowrap;">登録</button>
     </div>
 
   </div>
@@ -2204,7 +2226,10 @@ function switchMode(mode) {
       } else if (_ctMap) {
         google.maps.event.trigger(_ctMap, 'resize');
         if (_ctUserPos) _ctMap.setCenter(_ctUserPos);
-        if (typeof ctRenderPricePins === 'function') ctRenderPricePins();
+        var _c1 = _ctUserPos || _ctMap.getCenter();
+        var _lat1 = typeof _c1.lat === 'function' ? _c1.lat() : _c1.lat;
+        var _lng1 = typeof _c1.lng === 'function' ? _c1.lng() : _c1.lng;
+        ctLoadPricePins(_lat1, _lng1);
       }
     }, 150);
   }
@@ -2227,9 +2252,12 @@ function ctSwitchTab(name) {
     setTimeout(function() {
       if (!_ctMapInit) {
         ctInitMap();
-      } else if (_ctMap && typeof ctRenderPricePins === 'function') {
+      } else if (_ctMap) {
         google.maps.event.trigger(_ctMap, 'resize');
-        ctRenderPricePins();
+        var _c2 = _ctUserPos || _ctMap.getCenter();
+        var _lat2 = typeof _c2.lat === 'function' ? _c2.lat() : _c2.lat;
+        var _lng2 = typeof _c2.lng === 'function' ? _c2.lng() : _c2.lng;
+        ctLoadPricePins(_lat2, _lng2);
       }
     }, 100);
   }
@@ -2356,6 +2384,11 @@ function ctInitMap() {
     document.getElementById('ct-area-btn').style.display = '';
   });
 
+  /* 줌 변경 시 클러스터 ↔ 개별 핀 전환 */
+  _ctMap.addListener('zoom_changed', function() {
+    ctRenderPricePins();
+  });
+
   /* 롱프레스 → 임시 핀 */
   var _mpLongTimer = null;
   var _mpLongLatLng = null;
@@ -2379,14 +2412,13 @@ function ctInitMap() {
    ※ PostgREST는 외래 테이블 컬럼(stores.lat)으로 서버 필터 불가
       → 전체 로드 후 클라이언트에서 거리 필터링 */
 async function ctLoadPricePins(lat, lng) {
-  var delta = 0.05;
   if (!_sb) { _ctPins = _ctPendingPins.slice(); ctRenderPricePins(); return; }
 
   var res = await _sb.from('price_pins')
     .select('*, stores(id, name, lat, lng, category, avg_price, receipt_count)')
     .not('store_id', 'is', null)
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(300);
 
   if (res.error) {
     console.warn('ctLoadPricePins:', res.error.message);
@@ -2395,11 +2427,9 @@ async function ctLoadPricePins(lat, lng) {
     return;
   }
 
-  // 클라이언트 측 거리 필터 (±0.05도 ≈ 약 5km)
+  // stores 정보가 있는 핀만 사용
   var loaded = (res.data || []).filter(function(p) {
-    if (!p.stores || p.stores.lat == null || p.stores.lng == null) return false;
-    return Math.abs(p.stores.lat - lat) <= delta &&
-           Math.abs(p.stores.lng - lng) <= delta;
+    return p.stores && p.stores.lat != null && p.stores.lng != null;
   });
 
   // 중복 제거: _ctPendingPins에 이미 있는 store+item은 DB 결과에서 제외
@@ -2415,48 +2445,101 @@ async function ctLoadPricePins(lat, lng) {
   ctRenderPricePins();
 }
 
-/* 지도에 가격 핀 렌더링 */
+/* 클러스터 원 SVG */
+function ctMakeClusterSVG(count) {
+  var r = Math.min(16 + count, 28);
+  var w = r * 2;
+  var fs = count > 99 ? 9 : count > 9 ? 11 : 13;
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + w + '">'
+    + '<circle cx="' + r + '" cy="' + r + '" r="' + (r - 2) + '" fill="#E8A020" stroke="#fff" stroke-width="2.5" opacity="0.93"/>'
+    + '<text x="' + r + '" y="' + r + '" text-anchor="middle" dominant-baseline="central" font-size="' + fs + '" font-weight="800" fill="#fff" font-family="sans-serif">' + count + '</text>'
+    + '</svg>';
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
+}
+
+/* 지도에 가격 핀 렌더링 (줌 기반 클러스터 ↔ 개별) */
+var CT_CLUSTER_ZOOM = 17; // 이 줌 미만이면 클러스터, 이상이면 개별 핀
+
 function ctRenderPricePins() {
-  /* 기존 마커 제거 */
   _ctMarkers.forEach(function(m) { m.setMap(null); });
   _ctMarkers = [];
+  if (!_ctMap) return;
 
   var filtered = _ctPins.filter(function(p) {
-    if (_ctPendingPins.indexOf(p) >= 0) return true; // 공개 직후 핀은 필터 무시
+    if (!p.stores) return false;
+    if (_ctPendingPins.indexOf(p) >= 0) return true;
     if (p.price > _ctPriceMax) return false;
     if (_ctCatFilter !== 'all' && p.stores.category !== _ctCatFilter) return false;
     return true;
   });
 
-  /* 가게별 집계 — 같은 가게의 모든 품목을 배열로 묶기 */
-  var storeGroups = {};
-  filtered.forEach(function(p) {
-    var sid = p.stores.name;
-    if (!storeGroups[sid]) {
-      storeGroups[sid] = { store: p.stores, items: [] };
-    }
-    storeGroups[sid].items.push({ name: p.item_name || '', price: p.price });
-  });
+  var zoom = _ctMap.getZoom() || 15;
 
-  Object.values(storeGroups).forEach(function(group, idx) {
-    var icon     = CT_CAT_ICON[group.store.category] || '🍽️';
-    var minPrice = Math.min.apply(null, group.items.map(function(i) { return i.price; }));
-    var multi    = group.items.length > 1;
-    var isTop    = idx < 3;
-    var marker   = new google.maps.Marker({
-      position: { lat: parseFloat(group.store.lat), lng: parseFloat(group.store.lng) },
-      map: _ctMap,
-      icon: {
-        url: ctMakePinSVG(icon, minPrice, isTop, multi),
-        scaledSize: new google.maps.Size(isTop ? 110 : 100, 36),
-        anchor: new google.maps.Point(isTop ? 55 : 50, 36)
-      },
-      title: group.store.name,
-      zIndex: isTop ? 10 : 1
+  if (zoom < CT_CLUSTER_ZOOM) {
+    /* ── 클러스터 모드 ── */
+    var gridSize = 0.0012 * Math.pow(2, 16 - zoom);
+    var cells = {};
+    filtered.forEach(function(p) {
+      var s = p.stores;
+      if (!s || s.lat == null || s.lng == null) return;
+      var clat = Math.floor(parseFloat(s.lat) / gridSize);
+      var clng = Math.floor(parseFloat(s.lng) / gridSize);
+      var ck   = clat + ',' + clng;
+      if (!cells[ck]) cells[ck] = { pins: [], lat: (clat + 0.5) * gridSize, lng: (clng + 0.5) * gridSize };
+      cells[ck].pins.push(p);
     });
-    marker.addListener('click', function() { ctShowStoreCard(group); });
-    _ctMarkers.push(marker);
-  });
+
+    Object.values(cells).forEach(function(cell) {
+      var cnt = cell.pins.length;
+      var w   = Math.min(32 + cnt * 2, 56);
+      var r   = w / 2;
+      var marker = new google.maps.Marker({
+        position: { lat: cell.lat, lng: cell.lng },
+        map: _ctMap,
+        icon: {
+          url: ctMakeClusterSVG(cnt),
+          scaledSize: new google.maps.Size(w, w),
+          anchor: new google.maps.Point(r, r)
+        },
+        zIndex: 5
+      });
+      var center = { lat: cell.lat, lng: cell.lng };
+      marker.addListener('click', function() {
+        _ctMap.setCenter(center);
+        _ctMap.setZoom(CT_CLUSTER_ZOOM);
+      });
+      _ctMarkers.push(marker);
+    });
+
+  } else {
+    /* ── 개별 핀 모드 ── */
+    var storeGroups = {};
+    filtered.forEach(function(p) {
+      var sid = p.stores.name;
+      if (!storeGroups[sid]) storeGroups[sid] = { store: p.stores, items: [] };
+      storeGroups[sid].items.push({ name: p.item_name || '', price: p.price, comment: p.comment || '' });
+    });
+
+    Object.values(storeGroups).forEach(function(group, idx) {
+      var icon     = CT_CAT_ICON[group.store.category] || '🍽️';
+      var minPrice = Math.min.apply(null, group.items.map(function(i) { return i.price; }));
+      var multi    = group.items.length > 1;
+      var isTop    = idx < 3;
+      var marker   = new google.maps.Marker({
+        position: { lat: parseFloat(group.store.lat), lng: parseFloat(group.store.lng) },
+        map: _ctMap,
+        icon: {
+          url: ctMakePinSVG(icon, minPrice, isTop, multi),
+          scaledSize: new google.maps.Size(isTop ? 110 : 100, 36),
+          anchor: new google.maps.Point(isTop ? 55 : 50, 36)
+        },
+        title: group.store.name,
+        zIndex: isTop ? 10 : 1
+      });
+      marker.addListener('click', function() { ctShowStoreCard(group); });
+      _ctMarkers.push(marker);
+    });
+  }
 }
 
 /* 가격 핀 SVG 생성 */
@@ -2558,17 +2641,55 @@ var _ctVotes = {}; // { storeName: { up: N, down: N } }
 var _ctComments = {}; // { storeName: [] }
 var _ctStorePhotos = {}; // { storeName: [dataURL, ...] }
 
-function ctAddPhoto(input) {
+async function ctAddPhoto(input) {
   if (!input.files || !input.files[0]) return;
   var key = _ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}).name || 'unknown' : 'unknown';
-  var reader = new FileReader();
-  reader.onload = function(e) {
-    if (!_ctStorePhotos[key]) _ctStorePhotos[key] = [];
-    _ctStorePhotos[key].push(e.target.result);
-    ctRenderStorePhotos(key);
-  };
-  reader.readAsDataURL(input.files[0]);
+  var file = input.files[0];
   input.value = '';
+
+  if (!_currentUser || !_sb) {
+    // 비로그인: 메모리에만 임시 표시
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      if (!_ctStorePhotos[key]) _ctStorePhotos[key] = [];
+      _ctStorePhotos[key].push(e.target.result);
+      ctRenderStorePhotos(key);
+    };
+    reader.readAsDataURL(file);
+    return;
+  }
+
+  showToast('📤 写真をアップロード中...');
+  var mime = file.type || 'image/jpeg';
+  var ext  = mime === 'image/png' ? 'png' : 'jpg';
+  var path = 'store-photos/' + _currentUser.id + '/' + Date.now() + '.' + ext;
+
+  var up = await _sb.storage.from('ct-post-images').upload(path, file, { contentType: mime, upsert: false });
+  if (up.error) { showToast('⚠️ アップロード失敗: ' + up.error.message); return; }
+
+  var photoUrl = _sb.storage.from('ct-post-images').getPublicUrl(path).data.publicUrl;
+
+  var dbRes = await _sb.from('store_photos').insert({ store_name: key, photo_url: photoUrl, user_id: _currentUser.id });
+  if (dbRes.error) { showToast('⚠️ 写真DB保存エラー: ' + dbRes.error.message); return; }
+
+  if (!_ctStorePhotos[key]) _ctStorePhotos[key] = [];
+  _ctStorePhotos[key].unshift(photoUrl);
+  ctRenderStorePhotos(key);
+  showToast('✅ 写真を追加しました');
+}
+
+async function ctLoadStorePhotos(storeName) {
+  if (!_sb) return;
+  var res = await _sb.from('store_photos')
+    .select('photo_url')
+    .eq('store_name', storeName)
+    .order('created_at', { ascending: false });
+  if (res.error) { console.warn('ctLoadStorePhotos:', res.error.message); showToast('⚠️ 写真読み込みエラー: ' + res.error.message); return; }
+  // 이미 다른 가게로 전환됐으면 무시
+  var cur = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name;
+  if (cur !== storeName) return;
+  _ctStorePhotos[storeName] = (res.data || []).map(function(r) { return r.photo_url; });
+  ctRenderStorePhotos(storeName);
 }
 
 function ctRenderStorePhotos(key) {
@@ -2589,11 +2710,18 @@ function ctRenderStorePhotos(key) {
   photos.forEach(function(src, i) {
     var slide = document.createElement('div');
     slide.className = 'ct-photo-slide';
-    slide.style.cssText = 'min-width:100%;height:100%;scroll-snap-align:start;flex-shrink:0;';
+    slide.style.cssText = 'min-width:100%;height:100%;scroll-snap-align:start;flex-shrink:0;position:relative;';
     var img = document.createElement('img');
     img.src = src;
     img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:14px;';
+    var dlBtn = document.createElement('a');
+    dlBtn.href = src;
+    dlBtn.download = 'chiri-photo-' + (i + 1) + '.jpg';
+    dlBtn.style.cssText = 'position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.55);color:#fff;border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:17px;text-decoration:none;z-index:3;';
+    dlBtn.title = '保存';
+    dlBtn.textContent = '⬇';
     slide.appendChild(img);
+    slide.appendChild(dlBtn);
     scroll.appendChild(slide);
   });
 
@@ -2636,15 +2764,16 @@ function ctShowStoreCard(group) {
   var itemMap = {};
   items.forEach(function(it) {
     var k = it.name || '—';
-    if (!itemMap[k]) itemMap[k] = { prices: [], count: 0 };
+    if (!itemMap[k]) itemMap[k] = { prices: [], count: 0, comments: [] };
     itemMap[k].prices.push(it.price || 0);
     itemMap[k].count++;
+    if (it.comment) itemMap[k].comments.push(it.comment);
   });
   var groupedItems = Object.entries(itemMap)
     .map(function(pair) {
       var prices = pair[1].prices;
       var avg = Math.round(prices.reduce(function(s,p){return s+p;},0) / prices.length);
-      return { name: pair[0], price: avg, count: pair[1].count };
+      return { name: pair[0], price: avg, count: pair[1].count, comment: pair[1].comments[0] || '' };
     })
     .sort(function(a,b) { return b.count - a.count; });
 
@@ -2653,6 +2782,13 @@ function ctShowStoreCard(group) {
     // 단일 품목 단일 리뷰: 기존 레이아웃
     document.getElementById('ct-s-item').textContent  = groupedItems[0].name;
     document.getElementById('ct-s-price').textContent = '¥' + groupedItems[0].price.toLocaleString();
+    // 코멘트 표시
+    var tagsEl = document.getElementById('ct-s-tags');
+    if (tagsEl && groupedItems[0].comment) {
+      tagsEl.innerHTML = '<div style="width:100%;margin-top:6px;padding:8px 10px;background:#fffbe6;border-radius:10px;font-size:12px;color:#7a5c00;line-height:1.5;">💬 ' + groupedItems[0].comment + '</div>';
+    } else if (tagsEl) {
+      tagsEl.innerHTML = '';
+    }
   } else {
     // 복수 or 집계: 리스트로 교체 (인기순, 리뷰 수 뱃지)
     var listHtml = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:8px;">メニュー一覧 ('+ groupedItems.length +'品目) · 人気順</div>'
@@ -2662,13 +2798,18 @@ function ctShowStoreCard(group) {
             ? '<span style="background:var(--green-light);color:var(--green);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;">×' + it.count + '件</span>'
             : '';
           var crown = i === 0 && it.count > 1 ? '👑 ' : '';
-          return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;'
-            + (isLast ? '' : 'border-bottom:0.5px solid #f0f0f0;') + '">'
+          var commentRow = it.comment
+            ? '<div style="font-size:11px;color:#7a5c00;background:#fffbe6;border-radius:8px;padding:4px 8px;margin-top:4px;">💬 ' + it.comment + '</div>'
+            : '';
+          return '<div style="padding:7px 0;' + (isLast ? '' : 'border-bottom:0.5px solid #f0f0f0;') + '">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;">'
             + '<div style="flex:1;margin-right:8px;display:flex;align-items:center;gap:6px;min-width:0;">'
             +   '<span style="font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + crown + it.name + '</span>'
             +   badge
             + '</div>'
             + '<span style="font-size:15px;font-weight:800;color:var(--gold);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
+            + '</div>'
+            + commentRow
             + '</div>';
         }).join('');
     menuCard.innerHTML = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:6px;">メニュー</div>'
@@ -2694,11 +2835,17 @@ function ctShowStoreCard(group) {
   ctUpdateVoteBar(key);
 
   // ── 댓글 ──
-  if (!_ctComments[key]) _ctComments[key] = [];
+  _ctComments[key] = [];
   ctRenderStoreComments(key);
+  ctLoadStoreComments(key);
 
   // ── 사진 ──
   ctRenderStorePhotos(key);
+  ctLoadStorePhotos(key);
+
+  // ── 별점 초기화 + 로드 ──
+  ctRenderRatings(key);
+  ctLoadRatings(key);
 
   // ── 찜 ──
   var heartEl = document.getElementById('ct-s-heart');
@@ -3420,7 +3567,7 @@ function ctEarnCoin(type, amount) {
 
 function ctVoteKospa(dir) {
   if (!_ctCurrentStore) return;
-  var key = _ctCurrentStore.stores.name;
+  var key = (_ctCurrentStore.store || _ctCurrentStore.stores || {}).name || '';
   if (!_ctVotes[key]) _ctVotes[key] = { up: 0, down: 0 };
   _ctVotes[key][dir]++;
   ctUpdateVoteBar(key);
@@ -3460,18 +3607,171 @@ function ctRenderStoreComments(key) {
   }).join('');
 }
 
-function ctSubmitComment() {
+async function ctSubmitComment() {
   if (!_ctCurrentStore) return;
   var input = document.getElementById('ct-s-comment-input');
   var text = input.value.trim();
   if (!text) return;
-  var key = _ctCurrentStore.stores.name;
-  if (!_ctComments[key]) _ctComments[key] = [];
-  _ctComments[key].unshift({ user: 'ゲスト', date: 'たった今', text: text, likes: 0 });
+  var key      = (_ctCurrentStore.store || _ctCurrentStore.stores || {}).name || '';
+  if (!key) return;
+  var userName = _currentUser ? (_userNickname || '節約ユーザー') : 'ゲスト';
+
+  // 즉시 UI 반영 (낙관적 업데이트)
   input.value = '';
+  if (!_ctComments[key]) _ctComments[key] = [];
+  _ctComments[key].unshift({ user: userName, date: 'たった今', text: text, likes: 0 });
   ctRenderStoreComments(key);
   _ctCoinBalance += 5;
   ctUpdateCoinDisplay();
+
+  // DB 백그라운드 저장
+  if (_sb) {
+    var res = await _sb.from('store_comments').insert({
+      store_name: key,
+      user_id:    _currentUser ? _currentUser.id : null,
+      user_name:  userName,
+      content:    text
+    });
+    if (res.error) { showToast('⚠️ コメント保存エラー: ' + res.error.message); }
+  }
+}
+
+async function ctLoadStoreComments(storeName) {
+  if (!_sb) return;
+  var res = await _sb.from('store_comments')
+    .select('user_name, content, created_at')
+    .eq('store_name', storeName)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (res.error) { console.warn('ctLoadStoreComments:', res.error.message); return; }
+  // 이미 다른 가게로 전환됐으면 무시
+  var cur = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name;
+  if (cur !== storeName) return;
+  _ctComments[storeName] = (res.data || []).map(function(r) {
+    return { user: r.user_name || 'ゲスト', date: _timeAgo(r.created_at), text: r.content, likes: 0 };
+  });
+  ctRenderStoreComments(storeName);
+}
+
+/* ══════════════════════════════
+   별점 시스템
+══════════════════════════════ */
+var _ctMyRating    = {}; // { storeName: { rating, has_receipt } }
+var _ctStoreRatings = {}; // { storeName: [{rating, has_receipt, user_id}, ...] }
+
+async function ctLoadRatings(storeName) {
+  if (!_sb) return;
+  var res = await _sb.from('pin_ratings')
+    .select('rating, has_receipt, user_id')
+    .eq('store_name', storeName);
+  if (res.error) return;
+  // 이미 다른 가게로 전환됐으면 무시
+  var cur = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name;
+  if (cur !== storeName) return;
+  _ctStoreRatings[storeName] = res.data || [];
+  if (_currentUser) {
+    var mine = (_ctStoreRatings[storeName] || []).find(function(r) { return r.user_id === _currentUser.id; });
+    if (mine) _ctMyRating[storeName] = mine;
+  }
+  ctRenderRatings(storeName);
+}
+
+function ctRenderRatings(storeName) {
+  var ratings = _ctStoreRatings[storeName] || [];
+  var mine    = _ctMyRating[storeName];
+
+  var avgEl       = document.getElementById('ct-s-avg-stars');
+  var summaryEl   = document.getElementById('ct-s-rating-summary');
+  var infoEl      = document.getElementById('ct-s-rating-info');
+  var myStarsEl   = document.getElementById('ct-s-my-stars');
+  if (!avgEl) return;
+
+  if (ratings.length > 0) {
+    var avg  = ratings.reduce(function(s, r) { return s + r.rating; }, 0) / ratings.length;
+    var full = Math.round(avg);
+    var stars = '';
+    for (var i = 1; i <= 5; i++) stars += i <= full ? '★' : '☆';
+    avgEl.textContent = stars;
+    avgEl.style.color = '#E8A020';
+    summaryEl.textContent = avg.toFixed(1) + ' (' + ratings.length + '件)';
+    var withR    = ratings.filter(function(r) { return r.has_receipt; }).length;
+    var withoutR = ratings.length - withR;
+    document.getElementById('ct-s-receipt-star-count').textContent    = '📄 ' + withR + '件';
+    document.getElementById('ct-s-nonreceipt-star-count').textContent = '☆ ' + withoutR + '件';
+    infoEl.style.display = '';
+  } else {
+    avgEl.textContent = '☆☆☆☆☆';
+    avgEl.style.color = '#ddd';
+    summaryEl.textContent = 'まだ評価なし';
+    infoEl.style.display = 'none';
+  }
+
+  if (myStarsEl) {
+    var myR  = mine ? mine.rating : 0;
+    var hasR = mine ? mine.has_receipt : false;
+    var spans = myStarsEl.querySelectorAll('span');
+    spans.forEach(function(s, i) {
+      var n = i + 1;
+      if (n <= myR) {
+        s.textContent = '★';
+        if (hasR) {
+          s.style.color = '#E8A020';
+          s.style.webkitTextStroke = '0px';
+        } else {
+          s.style.color = 'transparent';
+          s.style.webkitTextStroke = '1.5px #aaa';
+        }
+      } else {
+        s.textContent = '☆';
+        s.style.color = '#ddd';
+        s.style.webkitTextStroke = '1px #ccc';
+      }
+    });
+  }
+}
+
+function ctSelectStar(n) {
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  // 즉시 호버 효과
+  var myStarsEl = document.getElementById('ct-s-my-stars');
+  if (myStarsEl) {
+    myStarsEl.querySelectorAll('span').forEach(function(s, i) {
+      s.textContent = (i + 1) <= n ? '★' : '☆';
+      s.style.color = (i + 1) <= n ? '#E8A020' : '#ddd';
+      s.style.webkitTextStroke = (i + 1) <= n ? '0px' : '1px #ccc';
+    });
+  }
+  var storeName = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name || '';
+  if (!storeName) return;
+
+  // 영수증 제공 여부 선택 (confirm → 나중에 모달로 교체 가능)
+  var hasReceipt = confirm(n + 'つ星で評価します。\n\nOK → 領収証あり（色付き★）\nキャンセル → 領収証なし（枠だけ★）');
+  ctSubmitRating(n, hasReceipt, storeName);
+}
+
+async function ctSubmitRating(star, hasReceipt, storeName) {
+  if (!_currentUser || !_sb) return;
+  var list     = _ctStoreRatings[storeName] || [];
+  var existing = list.find(function(r) { return r.user_id === _currentUser.id; });
+  var res;
+  if (existing) {
+    res = await _sb.from('pin_ratings')
+      .update({ rating: star, has_receipt: hasReceipt })
+      .eq('store_name', storeName)
+      .eq('user_id', _currentUser.id);
+  } else {
+    res = await _sb.from('pin_ratings')
+      .insert({ store_name: storeName, user_id: _currentUser.id, rating: star, has_receipt: hasReceipt });
+  }
+  if (res && res.error) { showToast('評価の保存に失敗しました'); ctRenderRatings(storeName); return; }
+
+  var newEntry = { rating: star, has_receipt: hasReceipt, user_id: _currentUser.id };
+  _ctMyRating[storeName] = newEntry;
+  var idx = list.findIndex(function(r) { return r.user_id === _currentUser.id; });
+  if (idx >= 0) list[idx] = newEntry; else list.push(newEntry);
+  _ctStoreRatings[storeName] = list;
+  ctRenderRatings(storeName);
+  showToast('⭐ 評価しました！');
 }
 
 /* 기타 */
@@ -5212,12 +5512,17 @@ function parseWithGPTMulti(combinedText, pageCount) {
     '절대로 JSON 외의 텍스트를 출력하지 마.',
     '',
     '=== 領収証（수기）특별 규칙 ===',
-    '텍스트에 "領収証" 또는 "領収書"가 보이면:',
+    '다음 중 하나라도 해당하면 이 규칙을 적용:',
+    '① 텍스트에 "領収証" "領収書" "領取証" "領取書"(OCR오독 포함) 중 하나가 있음',
+    '② "収入印紙" 또는 "様" + 품목 리스트 없음 (수기 領収証 구조)',
+    '③ "¥" 단독 행 + 수행 후 "숫자-" 패턴 존재',
+    '위 조건 해당 시:',
     '- "2790-" "¥2790-" 처럼 끝에 하이픈(-) 붙은 금액 → 하이픈 제거 후 숫자 사용 (2790)',
     '- "¥" 단독 행 + 몇 줄 후 숫자 → 그 숫자가 합계 (사이 "内訳" 등 무시)',
     '- 품목 없으면 items=[{"name":"お食事代","qty":1,"price":합계}]',
     '- 店名은 하단에 위치할 수 있음. 유한회사/주식회사 법인명을 store로',
     '- Alt/Ctrl/Shift 같은 키보드 문자, "様", 登録番号, TEL, URL은 무시',
+    '- 가게명이 OCR로 분리되어도 (이자/사카리/구다 등) 합쳐서 인식',
     '',
     '=== 상품 인식 규칙 ===',
     '1. 실제 구매 상품만 추출. 다음은 제외:',
@@ -5422,12 +5727,16 @@ function parseWithGPTHybrid(rawText, base64Image) {
 {"store":"店名","date":"YYYY-MM-DD","address":"店舗住所 or null","total":0,"items":[{"name":"商品名","qty":1,"price":0,"discount":0}]}
 
 ## ★領収証（手書き）専用ルール★
-OCRテキストまたは画像に「領収証」「領収書」が含まれる場合:
+以下のいずれかに該当する場合このルールを適用する（OCR誤読も含む）:
+- テキストまたは画像に「領収証」「領収書」「領取証」「領収証」「領取書」のいずれかが含まれる
+- 「収入印紙」または「様」が含まれ、かつ品目リストがない（手書き領収証の構造）
+- 「¥」だけの行があり、その数行後に「数字＋ハイフン」パターン（例: 2790-）がある
 
 R-1. 金額表記の特殊パターンを正確に処理:
   - "¥2790-" "2790-" "¥ 2,790-" → 末尾の"-"は無視 → 2790円
   - "¥"だけの行 + 数行後の数字行 → その数字が金額 (間にある"内訳"等は無視)
   - 例: 行10"¥" 行11"内訳" 行12"2790-" → total:2790
+  - 数字行が複数ある場合: 最大値を合計金額とする
 
 R-2. 内訳（品目）が空欄の場合:
   - items=[{"name":"お食事代","qty":1,"price":total}] として返す
@@ -5436,11 +5745,13 @@ R-2. 内訳（品目）が空欄の場合:
 R-3. 店名が下部に記載されていても正しく抽出する
   - 「有限会社」「株式会社」「合同会社」等の法人格を含む名称を店名とする
   - TEL/FAX/住所/登録番号/URLは店名に含めない
+  - 例: "有限会社サカリダイニング" → store:"有限会社サカリダイニング"
 
 R-4. ノイズ除去:
   - キーボードキー文字(Alt, Ctrl, Shift, Fn等)はOCRノイズとして無視
   - "様"だけの行、"収入印紙"は無視
   - 登録番号(T始まり)、電話番号、URLは金額・店名として使用しない
+  - OCRノイズ文字列(イザ, サカリ, グダ等の断片)は無視して店名はまとめて読む
 
 ## ★コストコ専用ルール（最優先）★
 店名にCOSTCO/コストコを含む場合、以下を最優先で適用:
@@ -5611,6 +5922,18 @@ function parseWithGPT(rawText) {
     '4. 수량:',
     '   - (N個 X 単M) 또는 NコX単M 형태만 수량으로 인식',
     '   - 예: (2個 X 単1,100) → qty:2',
+    '',
+    '=== 領収証（수기）특별 규칙 ===',
+    '다음 중 하나라도 해당하면 이 규칙을 적용:',
+    '① "領収証" "領収書" "領取証" "領取書"(OCR오독 포함) 중 하나가 있음',
+    '② "収入印紙" 또는 "様" + 품목 리스트 없음',
+    '③ "¥" 단독 행 + 수행 후 "숫자-" 패턴 존재',
+    '위 조건 해당 시:',
+    '- 끝에 하이픈(-) 붙은 금액 → 하이픈 제거 (2790- → 2790)',
+    '- "¥" 단독 행 + 몇 줄 후 숫자 → 그 숫자가 합계',
+    '- 품목 없으면 items=[{"name":"お食事代","qty":1,"price":합계}]',
+    '- 店名은 하단에 있을 수 있음. 유한회사/주식회사 법인명을 store로',
+    '- Alt/Ctrl/Shift/키보드문자, "様", 登録番号, TEL, URL은 무시',
     '',
     '=== 금액 표기 특이사항 ===',
     '- \\ * # 는 ¥ 와 같음',
@@ -7574,6 +7897,7 @@ async function _persistPinToSupabase(pin) {
     }, { onConflict: 'name' }).select('id').single();
     if (storeRes.error) {
       console.warn('store upsert error:', storeRes.error.message, storeRes.error);
+      showToast('⚠️ 店舗保存エラー: ' + storeRes.error.message);
       return;
     }
     var pinRes = await _sb.from('price_pins').insert({
@@ -7585,11 +7909,14 @@ async function _persistPinToSupabase(pin) {
     });
     if (pinRes.error) {
       console.warn('pin insert error:', pinRes.error.message, pinRes.error);
+      showToast('⚠️ ピン保存エラー: ' + pinRes.error.message);
     } else {
-      // 저장 성공 → 로컬 핀에 store_id 반영 (재로드 없이 즉시 표시 유지)
       pin._persisted = true;
     }
-  } catch(e) { console.warn('_persistPinToSupabase exception:', e.message); }
+  } catch(e) {
+    console.warn('_persistPinToSupabase exception:', e.message);
+    showToast('⚠️ 保存例外: ' + e.message);
+  }
 }
 
 var _mapFullscreen = false;
