@@ -6184,17 +6184,18 @@ function submitChiriPublish() {
     _afterChiriPublish();
   }
 
-  // geocoding — 백그라운드에서 좌표 갱신 (지도 이동 없음)
+  // geocoding — 백그라운드 좌표 확정 후 Supabase 저장
   searchAndPinStore(store, storeAddress, function(lat, lng) {
     newPins.forEach(function(p) {
-      p.stores.lat = lat;
-      p.stores.lng = lng;
+      if (lat) { p.stores.lat = lat; p.stores.lng = lng; }
+      if (_currentUser) _persistPinToSupabase(p);
     });
-    if (_ctMap && typeof ctRenderPricePins === 'function') {
-      ctRenderPricePins();
-      // 지도 이동 없이 핀만 업데이트
-    }
+    if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
   });
+  // geocoding 불가 시에도 fallback 좌표로 저장
+  if (!storeAddress && typeof google === 'undefined') {
+    if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
+  }
 }
 
 function _afterChiriPublish() {
@@ -6861,6 +6862,11 @@ function renderMapPins() {
       +'</div>'
       +'<div style="font-size:10px;font-weight:700;color:var(--text-2);margin-bottom:5px;">🛒 자주 산 품목</div>'
       +sItemsHtml
+      +'<button onclick="event.stopPropagation();openChiriFromMapCard(\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')" '
+      +'style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--gold-shadow);">'
+      +'<span>📍 チリつもに公開する</span>'
+      +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10コイン</span>'
+      +'</button>'
       +'</div>';
 
     var cardOnclick = hasPin
@@ -6978,31 +6984,98 @@ function flyToStore(lat, lng, name) {
 }
 
 function flyToStoreAndExpand(lat, lng, name, cardId) {
-  // 지도 이동
-  flyToStore(lat, lng, name);
-
-  // 모든 카드 닫기
-  document.querySelectorAll('[id$="-detail"]').forEach(function(el) {
-    if (el.id.startsWith('sc-')) {
-      el.style.display = 'none';
-      var chev = document.getElementById(el.id.replace('-detail', '-chev'));
-      if (chev) chev.textContent = '▼';
-    }
-  });
-
-  // 클릭한 카드 토글
   var detail = document.getElementById(cardId + '-detail');
   var chev   = document.getElementById(cardId + '-chev');
   if (!detail) return;
+
   var isOpen = detail.style.display !== 'none';
-  if (!isOpen) {
-    detail.style.display = 'block';
-    if (chev) chev.textContent = '▲';
-    // 패널에서 해당 카드로 스크롤
-    setTimeout(function() {
-      detail.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
+
+  // 이미 열려 있으면 닫기
+  if (isOpen) {
+    detail.style.display = 'none';
+    if (chev) chev.textContent = '▼';
+    return;
   }
+
+  // 다른 카드 모두 닫기
+  document.querySelectorAll('[id$="-detail"]').forEach(function(el) {
+    if (el.id.startsWith('sc-')) {
+      el.style.display = 'none';
+      var c = document.getElementById(el.id.replace('-detail', '-chev'));
+      if (c) c.textContent = '▼';
+    }
+  });
+
+  // 지도 이동
+  flyToStore(lat, lng, name);
+
+  // 열기
+  detail.style.display = 'block';
+  if (chev) chev.textContent = '▲';
+  setTimeout(function() {
+    detail.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+/* 가성비 맵 가게 카드 → 치리츠모 공개 */
+function openChiriFromMapCard(storeName, cardId) {
+  var sRecs = DB.filter(function(r){ return r.store === storeName; });
+  var sItemMap = {};
+  sRecs.forEach(function(r) {
+    (r.items||[]).forEach(function(it) {
+      if (!it.name || !it.price) return;
+      if (!sItemMap[it.name]) sItemMap[it.name] = { count:0, total:0 };
+      sItemMap[it.name].count++;
+      sItemMap[it.name].total += Math.round((it.price||0) / (it.qty||1));
+    });
+  });
+  var topItems = Object.entries(sItemMap)
+    .sort(function(a,b){ return b[1].count - a[1].count; })
+    .slice(0, 5)
+    .map(function(pair) {
+      return { name: pair[0], price: Math.round(pair[1].total / pair[1].count), qty: 1 };
+    });
+  var storeRec = sRecs.find(function(r){ return r.lat && r.lng; });
+  if (!topItems.length) {
+    var avg = sRecs.length ? Math.round(sRecs.reduce(function(s,r){return s+r.total;},0)/sRecs.length) : 0;
+    topItems = [{ name: storeName, price: avg, qty: 1 }];
+  }
+  window._ocrResult = {
+    store: storeName,
+    items: topItems,
+    total: sRecs.length ? Math.round(sRecs.reduce(function(s,r){return s+r.total;},0)/sRecs.length) : 0,
+    cat: (sRecs[0] && sRecs[0].cat) || 'other',
+    address: (storeRec && storeRec.address) || null
+  };
+  window._ocrItems = window._ocrResult.items;
+  if (storeRec && storeRec.lat && storeRec.lng) {
+    _ctUserPos = { lat: parseFloat(storeRec.lat), lng: parseFloat(storeRec.lng) };
+  }
+  openChiriPublish();
+}
+
+/* 치리츠모 핀 → Supabase 저장 */
+async function _persistPinToSupabase(pin) {
+  if (!_sb || !_currentUser) return;
+  try {
+    var storeRes = await _sb.from('stores').upsert({
+      name: pin.stores.name,
+      lat: pin.stores.lat,
+      lng: pin.stores.lng,
+      category: pin.stores.category,
+      avg_price: pin.price,
+      receipt_count: 1
+    }, { onConflict: 'name' }).select('id').single();
+    if (storeRes.error) { console.warn('store upsert:', storeRes.error.message); return; }
+    var pinRes = await _sb.from('price_pins').insert({
+      store_id: storeRes.data.id,
+      item_name: pin.item_name,
+      price: pin.price,
+      comment: pin.comment || '',
+      user_id: _currentUser.id
+    });
+    if (pinRes.error) console.warn('pin insert:', pinRes.error.message);
+  } catch(e) { console.warn('_persistPinToSupabase:', e.message); }
 }
 
 var _mapFullscreen = false;
