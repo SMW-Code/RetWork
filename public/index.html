@@ -1766,9 +1766,19 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div id="cp-sel-count" style="font-size:11px;font-weight:800;color:var(--gold);"></div>
     </div>
     <div id="cp-item-chips" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
-    <!-- 선택 품목 프리뷰 -->
-    <div style="background:var(--green-light);border-radius:12px;padding:10px 16px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);min-height:44px;">
+    <!-- 선택 품목 프리뷰 + 카테고리 선택 -->
+    <div style="background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);min-height:44px;">
+      <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;">公開する品目</div>
       <div id="cp-preview-list"></div>
+      <!-- 카테고리 (선택된 품목 있을 때만 표시) -->
+      <div id="cp-cat-section" style="display:none;border-top:1px solid rgba(29,158,117,.2);margin-top:10px;padding-top:10px;">
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;">カテゴリ</div>
+        <div id="cp-cat-display" onclick="toggleCpCatAccordion()" style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.7);border:1.5px solid rgba(29,158,117,.25);border-radius:10px;padding:8px 12px;cursor:pointer;user-select:none;">
+          <span id="cp-cat-label" style="font-size:12px;font-weight:700;color:var(--text-1);">🍽️ その他</span>
+          <span id="cp-cat-arrow" style="font-size:11px;color:var(--text-3);">▼</span>
+        </div>
+        <div id="cp-cat-accordion" style="display:none;flex-wrap:wrap;gap:5px;padding:8px 2px 2px;"></div>
+      </div>
     </div>
     <!-- 코멘트 -->
     <textarea id="cp-comment" placeholder="一言コメント（任意）例: ランチタイムのみ、テイクアウト価格" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--surface);resize:none;height:72px;box-sizing:border-box;margin-bottom:14px;outline:none;"></textarea>
@@ -6110,11 +6120,29 @@ function openChiriPublish() {
   if (commentEl) commentEl.value = '';
 
   var items = (window._ocrItems || r.items || []).filter(function(it){ return it.price > 0; });
-  // 단가 기준으로 변환 (합계 ÷ 수량) + 카테고리 초기값
+  // 단가 기준으로 변환 (합계 ÷ 수량)
   var defaultCat = (r.cat && CT_CAT_ICON[r.cat]) ? r.cat : 'other';
+  _cpCategory = defaultCat;
   _cpItems = items.map(function(it) {
-    return { name: it.name, price: Math.round(it.price / (it.qty || 1)), qty: it.qty || 1, category: defaultCat };
+    return { name: it.name, price: Math.round(it.price / (it.qty || 1)), qty: it.qty || 1 };
   });
+
+  // 카테고리 아코디언 초기화 (프리뷰 카드 내부)
+  var initCat = CT_PUB_CATS.find(function(c){ return c.key === _cpCategory; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
+  var cpLabelEl = document.getElementById('cp-cat-label');
+  var cpArrowEl = document.getElementById('cp-cat-arrow');
+  var cpAccEl   = document.getElementById('cp-cat-accordion');
+  var cpCatSec  = document.getElementById('cp-cat-section');
+  if (cpLabelEl) cpLabelEl.textContent = initCat.icon + ' ' + initCat.label;
+  if (cpArrowEl) cpArrowEl.textContent = '▼';
+  if (cpCatSec)  cpCatSec.style.display = 'none';
+  if (cpAccEl) {
+    cpAccEl.style.display = 'none';
+    cpAccEl.innerHTML = CT_PUB_CATS.map(function(cat) {
+      var active = cat.key === _cpCategory;
+      return '<button data-cat="' + cat.key + '" onclick="selectCpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(active?'var(--gold)':'var(--border-mid)')+';background:'+(active?'var(--gold)':'var(--surface)')+';color:'+(active?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + cat.label + '</button>';
+    }).join('');
+  }
   window._cpStore = store;
   window._cpReceiptData = r;
   _cpSelectedItems = [];
@@ -6154,12 +6182,14 @@ function toggleCpItem(el, idx) {
 }
 
 function updateCpPreview() {
-  var listEl   = document.getElementById('cp-preview-list');
-  var countEl  = document.getElementById('cp-sel-count');
+  var listEl    = document.getElementById('cp-preview-list');
+  var countEl   = document.getElementById('cp-sel-count');
+  var catSec    = document.getElementById('cp-cat-section');
   if (countEl) countEl.textContent = _cpSelectedItems.length > 0 ? _cpSelectedItems.length + '品目選択中' : '';
   if (!listEl) return;
   if (_cpSelectedItems.length === 0) {
     listEl.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:4px 0;">品目を選んでください</div>';
+    if (catSec) catSec.style.display = 'none';
     return;
   }
   listEl.innerHTML = _cpSelectedItems.map(function(it) {
@@ -6168,82 +6198,74 @@ function updateCpPreview() {
       + '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
       + '</div>';
   }).join('');
+  if (catSec) catSec.style.display = 'block';
 }
 
-/* ── 치리츠모 공개 칩 빌더 ── */
+/* ── 치리츠모 공개 칩 빌더 (선택만, 카테고리 없음) ── */
+var _cpCategory = 'other';
+
 function _buildCpChip(it, i, selected) {
-  var cat = CT_PUB_CATS.find(function(c){ return c.key === (it.category||'other'); }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
   var priceLabel = it.qty > 1 ? '@¥'+it.price.toLocaleString() : '¥'+it.price.toLocaleString();
-  var selStyle = selected
-    ? 'border:1.5px solid var(--gold);background:var(--gold-light);'
-    : 'border:1.5px solid var(--border-mid);background:var(--surface);';
-  var catBtns = CT_PUB_CATS.map(function(c) {
-    var a = c.key === (it.category||'other');
-    return '<button onclick="selectCpItemCat('+i+',\''+c.key+'\')" style="padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(a?'var(--gold)':'var(--border-mid)')+';background:'+(a?'var(--gold)':'var(--surface)')+';color:'+(a?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">'+c.icon+' '+c.label+'</button>';
-  }).join('');
-  return '<div style="border-radius:12px;overflow:hidden;'+selStyle+'">'
-    + '<div onclick="toggleCpItemChip('+i+')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;user-select:none;">'
-    +   '<span id="cp-chip-icon-'+i+'" style="font-size:16px;flex-shrink:0;">'+cat.icon+'</span>'
-    +   '<span style="flex:1;font-size:12px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+it.name+'</span>'
-    +   '<span style="font-size:12px;font-weight:800;color:var(--green);flex-shrink:0;">'+priceLabel+'</span>'
-    +   '<span id="cp-chip-cat-'+i+'" style="font-size:10px;font-weight:700;background:var(--bg);color:var(--text-3);border-radius:8px;padding:2px 7px;flex-shrink:0;margin-left:4px;">'+cat.label+'</span>'
-    +   '<span id="cp-chip-arrow-'+i+'" style="font-size:10px;color:var(--text-3);flex-shrink:0;margin-left:2px;">▼</span>'
-    + '</div>'
-    + '<div id="cp-chip-acc-'+i+'" style="display:none;flex-wrap:wrap;gap:5px;padding:0 10px 10px;">'+catBtns+'</div>'
+  return '<div id="cp-chip-wrap-'+i+'" onclick="toggleCpItemChip('+i+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;user-select:none;border:1.5px solid '+(selected?'var(--green)':'var(--border-mid)')+';background:'+(selected?'var(--green-light)':'var(--surface)')+';">'
+    + '<span id="cp-chip-check-'+i+'" style="width:20px;height:20px;border-radius:50%;border:2px solid '+(selected?'var(--green)':'var(--border-mid)')+';background:'+(selected?'var(--green)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;font-weight:900;">'+(selected?'✓':'')+'</span>'
+    + '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+it.name+'</span>'
+    + '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">'+priceLabel+'</span>'
     + '</div>';
 }
 
 function toggleCpItemChip(idx) {
   var it = _cpItems[idx];
   if (!it) return;
-  // 선택 토글
   var pos = _cpSelectedItems.indexOf(it);
-  if (pos < 0) _cpSelectedItems.push(it);
-  // 다른 아코디언 닫기
-  _cpItems.forEach(function(_, i) {
-    if (i !== idx) {
-      var a = document.getElementById('cp-chip-acc-'+i);
-      var ar = document.getElementById('cp-chip-arrow-'+i);
-      if (a) a.style.display = 'none';
-      if (ar) ar.textContent = '▼';
-    }
-  });
-  // 자신 아코디언 토글
-  var acc = document.getElementById('cp-chip-acc-'+idx);
-  var arrow = document.getElementById('cp-chip-arrow-'+idx);
-  if (acc) {
-    var open = acc.style.display !== 'none';
-    acc.style.display = open ? 'none' : 'flex';
-    if (arrow) arrow.textContent = open ? '▼' : '▲';
+  if (pos >= 0) {
+    if (_cpSelectedItems.length <= 1) { showToast('最低1品目は選んでください'); return; }
+    _cpSelectedItems.splice(pos, 1);
+  } else {
+    _cpSelectedItems.push(it);
+  }
+  // 칩 스타일 업데이트
+  var selected = _cpSelectedItems.indexOf(it) >= 0;
+  var wrap  = document.getElementById('cp-chip-wrap-'+idx);
+  var check = document.getElementById('cp-chip-check-'+idx);
+  if (wrap) {
+    wrap.style.border = selected ? '1.5px solid var(--green)' : '1.5px solid var(--border-mid)';
+    wrap.style.background = selected ? 'var(--green-light)' : 'var(--surface)';
+  }
+  if (check) {
+    check.style.background = selected ? 'var(--green)' : 'transparent';
+    check.style.borderColor = selected ? 'var(--green)' : 'var(--border-mid)';
+    check.textContent = selected ? '✓' : '';
   }
   updateCpPreview();
 }
 
-function selectCpItemCat(idx, key) {
-  var it = _cpItems[idx];
-  if (!it) return;
-  it.category = key;
+/* 하늘색 카드 내 카테고리 아코디언 */
+function toggleCpCatAccordion() {
+  var acc   = document.getElementById('cp-cat-accordion');
+  var arrow = document.getElementById('cp-cat-arrow');
+  if (!acc) return;
+  var open = acc.style.display !== 'none';
+  acc.style.display = open ? 'none' : 'flex';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+}
+
+function selectCpCat(key) {
+  _cpCategory = key;
   var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
-  // 아이콘·라벨 업데이트
-  var iconEl = document.getElementById('cp-chip-icon-'+idx);
-  var catEl  = document.getElementById('cp-chip-cat-'+idx);
-  if (iconEl) iconEl.textContent = cat.icon;
-  if (catEl)  catEl.textContent  = cat.label;
-  // 아코디언 버튼 스타일 업데이트
-  var acc = document.getElementById('cp-chip-acc-'+idx);
+  var label = document.getElementById('cp-cat-label');
+  if (label) label.textContent = cat.icon + ' ' + cat.label;
+  var acc = document.getElementById('cp-cat-accordion');
   if (acc) {
     acc.querySelectorAll('button').forEach(function(btn) {
-      var txt = btn.textContent.trim();
-      var isActive = CT_PUB_CATS.some(function(c){ return c.key === key && (c.icon+' '+c.label) === txt; });
-      btn.style.background = isActive ? 'var(--gold)' : 'var(--surface)';
-      btn.style.color = isActive ? '#fff' : 'var(--text-2)';
-      btn.style.borderColor = isActive ? 'var(--gold)' : 'var(--border-mid)';
+      var active = btn.dataset.cat === key;
+      btn.style.background   = active ? 'var(--gold)' : 'var(--surface)';
+      btn.style.color        = active ? '#fff' : 'var(--text-2)';
+      btn.style.borderColor  = active ? 'var(--gold)' : 'var(--border-mid)';
     });
-    // 닫기
     acc.style.display = 'none';
-    var arrow = document.getElementById('cp-chip-arrow-'+idx);
-    if (arrow) arrow.textContent = '▼';
   }
+  var arrow = document.getElementById('cp-cat-arrow');
+  if (arrow) arrow.textContent = '▼';
 }
 
 /* 이미지 전체화면 뷰어 */
@@ -6284,7 +6306,7 @@ function submitChiriPublish() {
         name: store,
         lat: fallback.lat,
         lng: fallback.lng,
-        category: item.category || r.cat || 'other',
+        category: _cpCategory || r.cat || 'other',
         receipt_count: 1
       }
     };
