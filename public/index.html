@@ -2063,14 +2063,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <span style="font-size:11px;color:#FF5252;font-weight:600;" id="ct-s-down-pct">悪い 50%</span>
       </div>
       <div style="display:flex;gap:8px;">
-        <button onclick="ctVoteKospa('up')"
+        <button id="ct-s-kospa-up" onclick="ctVoteKospaOnce('up')"
           style="flex:1;padding:12px;border-radius:12px;border:none;background:#E8F5E9;
-                 color:#2E7D32;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">
+                 color:#2E7D32;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s;">
           ↗ コスパ良い
         </button>
-        <button onclick="ctVoteKospa('down')"
+        <button id="ct-s-kospa-down" onclick="ctVoteKospaOnce('down')"
           style="flex:1;padding:12px;border-radius:12px;border:none;background:#FFEBEE;
-                 color:#C62828;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">
+                 color:#C62828;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);transition:all .2s;">
           ↘ コスパ悪い
         </button>
       </div>
@@ -2806,51 +2806,9 @@ function ctShowStoreCard(group) {
     })
     .sort(function(a,b) { return b.count - a.count; });
 
-  var menuCard = document.getElementById('ct-s-menu-card');
-  if (groupedItems.length === 1 && groupedItems[0].count === 1) {
-    // 단일 품목 단일 리뷰: 기존 레이아웃
-    document.getElementById('ct-s-item').textContent  = groupedItems[0].name;
-    document.getElementById('ct-s-price').textContent = '¥' + groupedItems[0].price.toLocaleString();
-    // 코멘트 표시
-    var tagsEl = document.getElementById('ct-s-tags');
-    if (tagsEl && groupedItems[0].comment) {
-      tagsEl.innerHTML = '<div style="width:100%;margin-top:6px;padding:8px 10px;background:#fffbe6;border-radius:10px;font-size:12px;color:#7a5c00;line-height:1.5;">💬 ' + groupedItems[0].comment + '</div>';
-    } else if (tagsEl) {
-      tagsEl.innerHTML = '';
-    }
-  } else {
-    // 복수 or 집계: 리스트로 교체 (인기순, 리뷰 수 뱃지)
-    var listHtml = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:8px;">メニュー一覧 ('+ groupedItems.length +'品目) · 人気順</div>'
-      + groupedItems.map(function(it, i) {
-          var isLast = i === groupedItems.length - 1;
-          var badge = it.count > 1
-            ? '<span style="background:var(--green-light);color:var(--green);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;">×' + it.count + '件</span>'
-            : '';
-          var crown = i === 0 && it.count > 1 ? '👑 ' : '';
-          var commentRow = it.comment
-            ? '<div style="font-size:11px;color:#7a5c00;background:#fffbe6;border-radius:8px;padding:4px 8px;margin-top:4px;">💬 ' + it.comment + '</div>'
-            : '';
-          return '<div style="padding:7px 0;' + (isLast ? '' : 'border-bottom:0.5px solid #f0f0f0;') + '">'
-            + '<div style="display:flex;justify-content:space-between;align-items:center;">'
-            + '<div style="flex:1;margin-right:8px;display:flex;align-items:center;gap:6px;min-width:0;">'
-            +   '<span style="font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + crown + it.name + '</span>'
-            +   badge
-            + '</div>'
-            + '<span style="font-size:15px;font-weight:800;color:var(--gold);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
-            + '</div>'
-            + commentRow
-            + '</div>';
-        }).join('');
-    menuCard.innerHTML = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:6px;">メニュー</div>'
-      + listHtml
-      + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;">'
-      + '<span style="background:#fff;border:1px solid #e0e0e0;border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--text-2);" id="ct-s-cat">'
-        + (CT_CAT_ICON[store.category] || '🍽️') + ' ' + ctCatLabel(store.category)
-      + '</span>'
-      + '<span id="ct-s-date" style="font-size:11px;color:#999;padding:4px 4px;"></span>'
-      + '</div>'
-      + '<div id="ct-s-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;"></div>';
-  }
+  // ── 메뉴 카드 아코디언 렌더 ──
+  _ctExpandedMenuId = null;
+  ctRenderMenuCards(groupedItems, store.name);
 
   // ── Google Maps 버튼 ──
   var mapBtn = document.getElementById('ct-s-map-btn');
@@ -2858,10 +2816,10 @@ function ctShowStoreCard(group) {
   mapBtn.dataset.lng  = store.lng;
   mapBtn.dataset.name = store.name;
 
-  // ── コスパ 투표 ──
+  // ── コスパ 투표 (DB에서 실제 카운트 로드) ──
   var key = store.name;
-  if (!_ctVotes[key]) _ctVotes[key] = { up: Math.floor(Math.random()*8)+2, down: Math.floor(Math.random()*4)+1 };
-  ctUpdateVoteBar(key);
+  if (!_ctVotes[key]) _ctVotes[key] = { up: 1, down: 1 };
+  ctLoadKospaVotes(key);
 
   // ── 댓글 ──
   _ctComments[key] = [];
@@ -3595,14 +3553,256 @@ function ctEarnCoin(type, amount) {
   alert(msg + ' +' + amount + 'コイン獲得！');
 }
 
-function ctVoteKospa(dir) {
-  if (!_ctCurrentStore) return;
-  var key = (_ctCurrentStore.store || _ctCurrentStore.stores || {}).name || '';
-  if (!_ctVotes[key]) _ctVotes[key] = { up: 0, down: 0 };
-  _ctVotes[key][dir]++;
-  ctUpdateVoteBar(key);
-  _ctCoinBalance += 10;
-  ctUpdateCoinDisplay();
+/* ── コスパ 1인 1票 ── */
+var _ctUserKospaVote = {}; // { storeName: 'up'|'down'|null }
+
+async function ctLoadKospaVotes(storeName) {
+  ctUpdateVoteBar(storeName);
+  ctUpdateKospaButtons(storeName);
+  if (!_sb) return;
+  var res = await _sb.from('kospa_votes').select('vote, user_id').eq('store_name', storeName);
+  if (res.error) return;
+  var data = res.data || [];
+  var up   = data.filter(function(r){ return r.vote === 'up';   }).length;
+  var down = data.filter(function(r){ return r.vote === 'down'; }).length;
+  if (up || down) _ctVotes[storeName] = { up: Math.max(up,1), down: Math.max(down,1) };
+  if (_currentUser) {
+    var mine = data.find(function(r){ return r.user_id === _currentUser.id; });
+    _ctUserKospaVote[storeName] = mine ? mine.vote : null;
+  }
+  var cur = (_ctCurrentStore ? (_ctCurrentStore.store || {}) : {}).name;
+  if (cur !== storeName) return;
+  ctUpdateVoteBar(storeName);
+  ctUpdateKospaButtons(storeName);
+}
+
+function ctUpdateKospaButtons(storeName) {
+  var v     = _ctUserKospaVote[storeName] || null;
+  var upBtn = document.getElementById('ct-s-kospa-up');
+  var dnBtn = document.getElementById('ct-s-kospa-down');
+  if (!upBtn || !dnBtn) return;
+  upBtn.style.background = v === 'up'   ? '#4CAF50' : '#E8F5E9';
+  upBtn.style.color      = v === 'up'   ? '#fff'    : '#2E7D32';
+  dnBtn.style.background = v === 'down' ? '#FF5252' : '#FFEBEE';
+  dnBtn.style.color      = v === 'down' ? '#fff'    : '#C62828';
+}
+
+async function ctVoteKospaOnce(dir) {
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  var storeName = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name || '';
+  if (!storeName) return;
+  var prev    = _ctUserKospaVote[storeName] || null;
+  var newVote = (prev === dir) ? null : dir;  // 같은 버튼이면 취소
+  if (!_ctVotes[storeName]) _ctVotes[storeName] = { up: 1, down: 1 };
+  if (prev)    _ctVotes[storeName][prev]    = Math.max(0, (_ctVotes[storeName][prev]    || 0) - 1);
+  if (newVote) _ctVotes[storeName][newVote] = (_ctVotes[storeName][newVote] || 0) + 1;
+  _ctUserKospaVote[storeName] = newVote;
+  ctUpdateVoteBar(storeName);
+  ctUpdateKospaButtons(storeName);
+  if (!prev && newVote) { _ctCoinBalance += 10; ctUpdateCoinDisplay(); }
+  if (_sb) {
+    if (newVote) {
+      await _sb.from('kospa_votes').upsert({ store_name: storeName, user_id: _currentUser.id, vote: newVote }, { onConflict: 'store_name,user_id' });
+    } else {
+      await _sb.from('kospa_votes').delete().eq('store_name', storeName).eq('user_id', _currentUser.id);
+    }
+  }
+}
+
+/* ── メニューカード アコーディオン ── */
+var _ctMenuIdMap      = {};   // { 'mi0': menuName, ... }
+var _ctExpandedMenuId = null;
+var _ctMenuRatingState = {};  // { safeId: selectedRating }
+
+var CT_CAT_GRAD = {
+  food:'linear-gradient(135deg,#FF6B35,#FF8C61)', cafe:'linear-gradient(135deg,#8B5CF6,#A78BFA)',
+  grocery:'linear-gradient(135deg,#10B981,#34D399)', convenience:'linear-gradient(135deg,#F59E0B,#FCD34D)',
+  izakaya:'linear-gradient(135deg,#E11D6A,#F9A8D4)', ramen:'linear-gradient(135deg,#DC2626,#FCA5A5)',
+  other:'linear-gradient(135deg,#6B7280,#9CA3AF)'
+};
+
+function ctRenderMenuCards(groupedItems, storeName) {
+  _ctMenuIdMap = {};
+  var cat       = (_ctCurrentStore && _ctCurrentStore.store) ? (_ctCurrentStore.store.category || 'other') : 'other';
+  var grad      = CT_CAT_GRAD[cat] || CT_CAT_GRAD.other;
+  var catIcon   = CT_CAT_ICON[cat] || '🍽️';
+  var themeCol  = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+
+  var html = '';
+  groupedItems.forEach(function(item, idx) {
+    var safeId = 'mi' + idx;
+    _ctMenuIdMap[safeId] = item.name;
+    var badge = item.count > 1
+      ? '<span style="background:' + themeCol + '18;color:' + themeCol + ';border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;">×' + item.count + '件</span>'
+      : '';
+    html += '<div style="border-radius:14px;border:1px solid #f0f0f0;overflow:hidden;margin-bottom:8px;background:var(--surface);">'
+      + '<div onclick="ctToggleMenuCard(\'' + safeId + '\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;">'
+      + '<div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">'
+      + '<div style="width:44px;height:44px;border-radius:10px;background:' + grad + ';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">' + catIcon + '</div>'
+      + '<div style="min-width:0;">'
+      + '<div style="font-size:14px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + item.name + '</div>'
+      + '<div style="display:flex;align-items:center;gap:5px;margin-top:2px;"><span style="font-size:11px;color:var(--text-3);">' + ctCatLabel(cat) + '</span>' + badge + '</div>'
+      + '</div></div>'
+      + '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:8px;">'
+      + '<span style="font-size:16px;font-weight:900;color:' + themeCol + ';">¥' + item.price.toLocaleString() + '</span>'
+      + '<span id="ct-menu-arrow-' + safeId + '" style="font-size:10px;color:var(--text-3);">▼</span>'
+      + '</div></div>'
+      + '<div id="ct-menu-body-' + safeId + '" style="display:none;border-top:0.5px solid #f0f0f0;">'
+      + '<div style="padding:16px;text-align:center;color:#bbb;font-size:13px;">読み込み中...</div>'
+      + '</div></div>';
+  });
+  var menuCard = document.getElementById('ct-s-menu-card');
+  if (menuCard) menuCard.innerHTML = html || '<div style="color:#bbb;font-size:13px;text-align:center;padding:12px;">メニュー情報なし</div>';
+}
+
+function ctToggleMenuCard(safeId) {
+  var bodyEl  = document.getElementById('ct-menu-body-'  + safeId);
+  var arrowEl = document.getElementById('ct-menu-arrow-' + safeId);
+  if (!bodyEl) return;
+  var isOpen = bodyEl.style.display !== 'none';
+  if (_ctExpandedMenuId && _ctExpandedMenuId !== safeId) {
+    var pb = document.getElementById('ct-menu-body-'  + _ctExpandedMenuId);
+    var pa = document.getElementById('ct-menu-arrow-' + _ctExpandedMenuId);
+    if (pb) pb.style.display = 'none';
+    if (pa) pa.textContent = '▼';
+  }
+  if (isOpen) {
+    bodyEl.style.display = 'none';
+    if (arrowEl) arrowEl.textContent = '▼';
+    _ctExpandedMenuId = null;
+  } else {
+    bodyEl.style.display = 'block';
+    if (arrowEl) arrowEl.textContent = '▲';
+    _ctExpandedMenuId = safeId;
+    var menuName  = _ctMenuIdMap[safeId] || '';
+    var storeName = (_ctCurrentStore ? (_ctCurrentStore.store || {}) : {}).name || '';
+    if (menuName && storeName) ctLoadMenuReviews(storeName, menuName, safeId);
+  }
+}
+
+async function ctLoadMenuReviews(storeName, menuName, safeId) {
+  if (!_sb) { ctRenderMenuBody(safeId, menuName, storeName, [], [], null, null); return; }
+  var results = await Promise.all([
+    _sb.from('pin_ratings').select('rating,has_receipt,user_id,user_name')
+       .eq('store_name', storeName).eq('menu_name', menuName),
+    _sb.from('store_comments').select('id,user_name,content,rating,has_receipt,user_id,created_at')
+       .eq('store_name', storeName).eq('menu_name', menuName)
+       .order('created_at', { ascending: false }).limit(30)
+  ]);
+  var cur = (_ctCurrentStore ? (_ctCurrentStore.store || {}) : {}).name;
+  if (cur !== storeName) return;
+  var bodyEl = document.getElementById('ct-menu-body-' + safeId);
+  if (!bodyEl || bodyEl.style.display === 'none') return;
+  var ratings  = results[0].error ? [] : (results[0].data || []);
+  var comments = results[1].error ? [] : (results[1].data || []);
+  var myRating  = _currentUser ? ratings.find(function(r){ return r.user_id === _currentUser.id; })  : null;
+  var myComment = _currentUser ? comments.find(function(c){ return c.user_id === _currentUser.id; }) : null;
+  ctRenderMenuBody(safeId, menuName, storeName, ratings, comments, myRating, myComment);
+}
+
+function ctRenderMenuBody(safeId, menuName, storeName, ratings, comments, myRating, myComment) {
+  var bodyEl = document.getElementById('ct-menu-body-' + safeId);
+  if (!bodyEl) return;
+  var themeCol = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+
+  // 평균 별점
+  var avgHtml = '';
+  if (ratings.length > 0) {
+    var avg  = ratings.reduce(function(s,r){ return s+r.rating; },0) / ratings.length;
+    var full = Math.round(avg);
+    var withR = ratings.filter(function(r){ return r.has_receipt; }).length;
+    var sRow = '';
+    for (var i=1;i<=5;i++) sRow += '<span style="font-size:18px;color:transparent;-webkit-text-stroke:'+(i<=full?'2.5px #E8A020':'1.5px #ddd')+';line-height:1;">★</span>';
+    avgHtml = '<div style="display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:0.5px solid #f0f0f0;">'
+      +'<span style="font-size:22px;font-weight:900;color:#E8A020;">'+avg.toFixed(1)+'</span>'
+      +'<div>'+sRow+'</div>'
+      +'<div style="font-size:11px;color:#999;">'+ratings.length+'件'+(withR?' · <span style="color:#E8A020;">📄'+withR+'</span>':'')+'</div></div>';
+  }
+
+  // 코멘트 목록
+  var cHtml = comments.length ? comments.map(function(c) {
+    var sH = '';
+    if (c.rating>0) {
+      var sk = c.has_receipt ? '2px #E8A020' : '2px #aaa';
+      for (var j=1;j<=5;j++) sH += '<span style="font-size:13px;color:transparent;-webkit-text-stroke:'+(j<=c.rating?sk:'1.5px #eee')+';line-height:1;">★</span>';
+    }
+    return '<div style="padding:10px 14px;border-bottom:0.5px solid #f8f8f8;">'
+      +'<div style="display:flex;justify-content:space-between;margin-bottom:3px;">'
+      +'<span style="font-size:12px;font-weight:700;color:var(--text-1);">'+(c.user_name||'ゲスト')+(c.has_receipt?' <span style="font-size:10px;color:#E8A020;">📄</span>':'')+' </span>'
+      +'<span style="font-size:10px;color:#bbb;">'+_timeAgo(c.created_at)+'</span></div>'
+      +(sH?'<div style="margin-bottom:3px;">'+sH+'</div>':'')
+      +'<div style="font-size:13px;color:var(--text-1);line-height:1.5;">'+c.content+'</div></div>';
+  }).join('')
+  : '<div style="padding:12px 14px;text-align:center;color:#bbb;font-size:12px;">まだレビューがありません。最初のレビューを書きましょう！</div>';
+
+  // 입력 폼
+  var myR = myRating ? myRating.rating : 0;
+  _ctMenuRatingState[safeId] = myR;
+  var starsIn = '';
+  for (var k=1;k<=5;k++) starsIn += '<span onclick="ctSelectMenuStar(\''+safeId+'\','+k+')" style="font-size:24px;cursor:pointer;color:transparent;-webkit-text-stroke:'+(k<=myR?'2.5px '+themeCol:'2px #ccc')+';line-height:1;transition:all .15s;">★</span>';
+  var sS = storeName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var sM = menuName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+  var inputLine = myComment
+    ? '<input id="ct-mc-input-'+safeId+'" value="'+(myComment.content||'').replace(/"/g,'&quot;')+'" style="flex:1;border:none;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">'
+      +'<button onclick="ctUpdateMenuComment(\''+safeId+'\',\''+sS+'\',\''+sM+'\',\''+myComment.id+'\')" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:0 12px;height:36px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">更新</button>'
+    : '<input id="ct-mc-input-'+safeId+'" placeholder="このメニューへのコメント（1回のみ）" style="flex:1;border:none;background:#fff;border-radius:10px;padding:8px 12px;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">'
+      +'<button onclick="ctSubmitMenuComment(\''+safeId+'\',\''+sS+'\',\''+sM+'\')" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:0 12px;height:36px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">登録</button>';
+  var editNote = myComment ? '<div style="font-size:10px;color:#bbb;margin-top:4px;text-align:right;">✏️ あなたのレビュー — 編集できます</div>' : '';
+
+  var formHtml = '<div style="padding:10px 14px;background:#f8f8f8;">'
+    +'<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:6px;">'+(myRating?'あなたの評価を変更':'このメニューを評価（1回のみ）')+'</div>'
+    +'<div id="ct-menu-stars-'+safeId+'" style="display:flex;gap:4px;margin-bottom:8px;">'+starsIn+'</div>'
+    +'<div style="display:flex;align-items:center;gap:6px;">'+inputLine+'</div>'+editNote+'</div>';
+
+  bodyEl.innerHTML = avgHtml
+    +'<div style="max-height:220px;overflow-y:auto;">'+cHtml+'</div>'
+    +formHtml;
+}
+
+function ctSelectMenuStar(safeId, n) {
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  _ctMenuRatingState[safeId] = n;
+  var themeCol = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
+  var el = document.getElementById('ct-menu-stars-' + safeId);
+  if (el) el.querySelectorAll('span').forEach(function(s,i){ s.style.webkitTextStroke = (i+1)<=n?'2.5px '+themeCol:'2px #ccc'; });
+}
+
+async function ctSubmitMenuComment(safeId, storeName, menuName) {
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  var input = document.getElementById('ct-mc-input-' + safeId);
+  var text  = input ? input.value.trim() : '';
+  if (!text) return;
+  var rating     = _ctMenuRatingState[safeId] || 0;
+  var hasReceipt = !!((_ctMyRating[storeName] || {}).has_receipt);
+  if (!_sb) return;
+  if (rating > 0) {
+    var ex = await _sb.from('pin_ratings').select('id').eq('store_name',storeName).eq('menu_name',menuName).eq('user_id',_currentUser.id).maybeSingle();
+    if (ex.data) { await _sb.from('pin_ratings').update({rating:rating,has_receipt:hasReceipt}).eq('store_name',storeName).eq('menu_name',menuName).eq('user_id',_currentUser.id); }
+    else         { await _sb.from('pin_ratings').insert({store_name:storeName,menu_name:menuName,user_id:_currentUser.id,rating:rating,has_receipt:hasReceipt}); }
+  }
+  var res = await _sb.from('store_comments').insert({store_name:storeName,menu_name:menuName,user_id:_currentUser.id,user_name:_userNickname||'節約ユーザー',content:text,rating:rating||null,has_receipt:hasReceipt});
+  if (res.error) { showToast('⚠️ 保存エラー: '+res.error.message); return; }
+  _ctCoinBalance += 5; ctUpdateCoinDisplay();
+  showToast('✅ レビューを投稿しました！ +5コイン');
+  ctLoadMenuReviews(storeName, menuName, safeId);
+}
+
+async function ctUpdateMenuComment(safeId, storeName, menuName, commentId) {
+  if (!_currentUser || !_sb) return;
+  var input = document.getElementById('ct-mc-input-' + safeId);
+  var text  = input ? input.value.trim() : '';
+  if (!text) return;
+  var rating = _ctMenuRatingState[safeId] || 0;
+  var res = await _sb.from('store_comments').update({content:text,rating:rating||null}).eq('id',commentId).eq('user_id',_currentUser.id);
+  if (res.error) { showToast('⚠️ 更新エラー: '+res.error.message); return; }
+  if (rating > 0) {
+    var hasReceipt = !!((_ctMyRating[storeName] || {}).has_receipt);
+    var ex = await _sb.from('pin_ratings').select('id').eq('store_name',storeName).eq('menu_name',menuName).eq('user_id',_currentUser.id).maybeSingle();
+    if (ex.data) { await _sb.from('pin_ratings').update({rating:rating,has_receipt:hasReceipt}).eq('store_name',storeName).eq('menu_name',menuName).eq('user_id',_currentUser.id); }
+    else         { await _sb.from('pin_ratings').insert({store_name:storeName,menu_name:menuName,user_id:_currentUser.id,rating:rating,has_receipt:hasReceipt}); }
+  }
+  showToast('✅ レビューを更新しました！');
+  ctLoadMenuReviews(storeName, menuName, safeId);
 }
 
 function ctUpdateVoteBar(key) {
