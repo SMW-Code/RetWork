@@ -3638,13 +3638,16 @@ function ctRenderStoreComments(key) {
   var themeColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
 
   el.innerHTML = list.map(function(c) {
-    // 별점 렌더 (굵은 프레임 스타일)
+    // 별점 렌더 — 항상 굵은 프레임(outline) 스타일
+    // 영수증 제공자: 골드 프레임 / 미제공자: 실버 프레임
     var starHtml = '';
     if (c.rating && c.rating > 0) {
+      var activeStroke = c.hasReceipt ? '2px #E8A020' : '2px #aaa';
+      var inactiveStroke = '1.5px #ddd';
       for (var i = 1; i <= 5; i++) {
         starHtml += (i <= c.rating)
-          ? '<span style="font-size:15px;color:' + themeColor + ';-webkit-text-stroke:0px;">★</span>'
-          : '<span style="font-size:15px;color:transparent;-webkit-text-stroke:1.5px #ccc;">★</span>';
+          ? '<span style="font-size:15px;color:transparent;-webkit-text-stroke:' + activeStroke + ';line-height:1;">★</span>'
+          : '<span style="font-size:15px;color:transparent;-webkit-text-stroke:' + inactiveStroke + ';line-height:1;">★</span>';
       }
     }
     // 메뉴 태그 (전체 보기일 때만)
@@ -3678,11 +3681,13 @@ async function ctSubmitComment() {
 
   var inlineRating = _ctMyInlineRating;
   var menuName     = _ctSelectedMenu;
+  // 영수증 제공 여부: pin_ratings에 has_receipt:true 기록이 있으면 true
+  var hasReceipt   = !!((_ctMyRating[key] || {}).has_receipt);
 
   // 즉시 UI 반영 (낙관적 업데이트)
   input.value = '';
   if (!_ctComments[key]) _ctComments[key] = [];
-  _ctComments[key].unshift({ user: userName, date: 'たった今', text: text, likes: 0, rating: inlineRating, menuName: menuName });
+  _ctComments[key].unshift({ user: userName, date: 'たった今', text: text, likes: 0, rating: inlineRating, menuName: menuName, hasReceipt: hasReceipt });
   ctRenderStoreComments(key);
   _ctCoinBalance += 5;
   ctUpdateCoinDisplay();
@@ -3705,9 +3710,10 @@ async function ctSubmitComment() {
       store_name: key,
       user_id:    _currentUser ? _currentUser.id : null,
       user_name:  userName,
-      content:    text,
-      menu_name:  menuName || null,
-      rating:     inlineRating || null
+      content:     text,
+      menu_name:   menuName    || null,
+      rating:      inlineRating || null,
+      has_receipt: hasReceipt
     });
     if (res.error) { showToast('⚠️ コメント保存エラー: ' + res.error.message); }
   }
@@ -3716,7 +3722,7 @@ async function ctSubmitComment() {
 async function ctLoadStoreComments(storeName) {
   if (!_sb) return;
   var res = await _sb.from('store_comments')
-    .select('user_name, content, created_at, menu_name, rating')
+    .select('user_name, content, created_at, menu_name, rating, has_receipt')
     .eq('store_name', storeName)
     .order('created_at', { ascending: false })
     .limit(50);
@@ -3725,7 +3731,7 @@ async function ctLoadStoreComments(storeName) {
   var cur = (_ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}) : {}).name;
   if (cur !== storeName) return;
   _ctComments[storeName] = (res.data || []).map(function(r) {
-    return { user: r.user_name || 'ゲスト', date: _timeAgo(r.created_at), text: r.content, likes: 0, rating: r.rating || 0, menuName: r.menu_name || '' };
+    return { user: r.user_name || 'ゲスト', date: _timeAgo(r.created_at), text: r.content, likes: 0, rating: r.rating || 0, menuName: r.menu_name || '', hasReceipt: !!r.has_receipt };
   });
   ctRenderStoreComments(storeName);
 }
@@ -3770,19 +3776,24 @@ function ctRenderRatings(storeName) {
   if (ratings.length > 0) {
     var avg  = ratings.reduce(function(s, r) { return s + r.rating; }, 0) / ratings.length;
     var full = Math.round(avg);
-    var stars = '';
-    for (var i = 1; i <= 5; i++) stars += i <= full ? '★' : '☆';
-    avgEl.textContent = stars;
-    avgEl.style.color = '#E8A020';
+    // 평균 별: 골드 굵은 프레임 스타일
+    var avgStarHtml = '';
+    for (var i = 1; i <= 5; i++) {
+      avgStarHtml += (i <= full)
+        ? '<span style="font-size:22px;color:transparent;-webkit-text-stroke:2.5px #E8A020;line-height:1;">★</span>'
+        : '<span style="font-size:22px;color:transparent;-webkit-text-stroke:1.5px #ddd;line-height:1;">★</span>';
+    }
+    avgEl.innerHTML = avgStarHtml;
     summaryEl.textContent = avg.toFixed(1) + ' (' + ratings.length + '件)';
     var withR    = ratings.filter(function(r) { return r.has_receipt; }).length;
     var withoutR = ratings.length - withR;
     document.getElementById('ct-s-receipt-star-count').textContent    = '📄 ' + withR + '件';
-    document.getElementById('ct-s-nonreceipt-star-count').textContent = '☆ ' + withoutR + '件';
+    document.getElementById('ct-s-nonreceipt-star-count').textContent = '★ ' + withoutR + '件';
     infoEl.style.display = '';
   } else {
-    avgEl.textContent = '☆☆☆☆☆';
-    avgEl.style.color = '#ddd';
+    var emptyHtml = '';
+    for (var j = 0; j < 5; j++) emptyHtml += '<span style="font-size:22px;color:transparent;-webkit-text-stroke:1.5px #ddd;line-height:1;">★</span>';
+    avgEl.innerHTML = emptyHtml;
     summaryEl.textContent = 'まだ評価なし';
     infoEl.style.display = 'none';
   }
@@ -3794,18 +3805,13 @@ function ctRenderRatings(storeName) {
     spans.forEach(function(s, i) {
       var n = i + 1;
       if (n <= myR) {
-        s.textContent = '★';
-        if (hasR) {
-          s.style.color = '#E8A020';
-          s.style.webkitTextStroke = '0px';
-        } else {
-          s.style.color = 'transparent';
-          s.style.webkitTextStroke = '1.5px #aaa';
-        }
+        // 평가한 별: 영수증 있음→골드 프레임, 없음→실버 프레임
+        s.style.color = 'transparent';
+        s.style.webkitTextStroke = hasR ? '2.5px #E8A020' : '2px #aaa';
       } else {
-        s.textContent = '☆';
-        s.style.color = '#ddd';
-        s.style.webkitTextStroke = '1px #ccc';
+        // 평가 안 한 별: 회색 프레임
+        s.style.color = 'transparent';
+        s.style.webkitTextStroke = '2px #ddd';
       }
     });
   }
@@ -3919,13 +3925,9 @@ function ctSelectInlineStar(n) {
   var el = document.getElementById('ct-s-my-stars');
   if (el) {
     el.querySelectorAll('span').forEach(function(s, i) {
-      if ((i + 1) <= n) {
-        s.style.color = themeColor;
-        s.style.webkitTextStroke = '0px';
-      } else {
-        s.style.color = 'transparent';
-        s.style.webkitTextStroke = '2px #ccc';
-      }
+      // 항상 프레임(outline) 스타일 — 선택 시 골드 프레임, 미선택 시 회색 프레임
+      s.style.color = 'transparent';
+      s.style.webkitTextStroke = (i + 1) <= n ? '2.5px ' + themeColor : '2px #ccc';
     });
   }
 }
