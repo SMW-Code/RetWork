@@ -1682,21 +1682,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.5px;margin-bottom:3px;">お店</div>
       <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="cp-store-name">-</div>
     </div>
-    <!-- 카테고리 아코디언 -->
-    <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">カテゴリ <span style="font-weight:500;">（タップして選択）</span></div>
-      <div id="cp-cat-display" onclick="toggleCpCatAccordion()" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;cursor:pointer;user-select:none;">
-        <span id="cp-cat-label" style="font-size:13px;font-weight:700;color:var(--text-1);">🍽️ その他</span>
-        <span id="cp-cat-arrow" style="font-size:11px;color:var(--text-3);transition:transform .2s;">▼</span>
-      </div>
-      <div id="cp-cat-accordion" style="display:none;flex-wrap:wrap;gap:6px;padding:10px 2px 2px;"></div>
-    </div>
-    <!-- 품목 선택 -->
+    <!-- 품목 선택 (카테고리 아코디언 인라인 포함) -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;">公開する品目を選んでください <span style="font-weight:500;">（複数可）</span></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;">品目をタップしてカテゴリを選択 <span style="font-weight:500;">（複数可）</span></div>
       <div id="cp-sel-count" style="font-size:11px;font-weight:800;color:var(--gold);"></div>
     </div>
-    <div id="cp-item-chips" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;"></div>
+    <div id="cp-item-chips" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
     <!-- 선택 품목 프리뷰 -->
     <div style="background:var(--green-light);border-radius:12px;padding:10px 16px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);min-height:44px;">
       <div id="cp-preview-list"></div>
@@ -5976,7 +5967,6 @@ function showOcrError(previewSrc, msg) {
 ══════════════════════════════ */
 var _cpSelectedItems = [];  // 복수 선택
 var _cpItems = [];
-var _cpCategory = 'other';
 
 function saveAndPublishChiri() {
   syncOcrItems();
@@ -5996,26 +5986,11 @@ function openChiriPublish() {
   var commentEl = document.getElementById('cp-comment');
   if (commentEl) commentEl.value = '';
 
-  // 카테고리 초기화 — OCR 결과 카테고리 or 'other'
-  _cpCategory = (r.cat && CT_CAT_ICON[r.cat]) ? r.cat : 'other';
-  var initCat = CT_PUB_CATS.find(function(c) { return c.key === _cpCategory; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
-  var cpLabelEl = document.getElementById('cp-cat-label');
-  if (cpLabelEl) cpLabelEl.textContent = initCat.icon + ' ' + initCat.label;
-  var cpArrowEl = document.getElementById('cp-cat-arrow');
-  if (cpArrowEl) cpArrowEl.textContent = '▼';
-  var cpAccEl = document.getElementById('cp-cat-accordion');
-  if (cpAccEl) {
-    cpAccEl.style.display = 'none';
-    cpAccEl.innerHTML = CT_PUB_CATS.map(function(cat) {
-      var active = cat.key === _cpCategory;
-      return '<button class="cp-cat-btn" data-cat="' + cat.key + '" onclick="selectCpCat(\'' + cat.key + '\')" style="padding:7px 12px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid ' + (active ? 'var(--gold)' : 'var(--border-mid)') + ';background:' + (active ? 'var(--gold)' : 'var(--surface)') + ';color:' + (active ? '#fff' : 'var(--text-2)') + ';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + cat.label + '</button>';
-    }).join('');
-  }
-
   var items = (window._ocrItems || r.items || []).filter(function(it){ return it.price > 0; });
-  // 단가 기준으로 변환 (합계 ÷ 수량)
+  // 단가 기준으로 변환 (합계 ÷ 수량) + 카테고리 초기값
+  var defaultCat = (r.cat && CT_CAT_ICON[r.cat]) ? r.cat : 'other';
   _cpItems = items.map(function(it) {
-    return { name: it.name, price: Math.round(it.price / (it.qty || 1)), qty: it.qty || 1 };
+    return { name: it.name, price: Math.round(it.price / (it.qty || 1)), qty: it.qty || 1, category: defaultCat };
   });
   window._cpStore = store;
   window._cpReceiptData = r;
@@ -6024,18 +5999,13 @@ function openChiriPublish() {
   var chipsEl = document.getElementById('cp-item-chips');
   if (chipsEl) {
     if (_cpItems.length === 0) {
-      var fallbackItem = { name: store, price: r.total || 0, qty: 1 };
+      var fallbackItem = { name: store, price: r.total || 0, qty: 1, category: defaultCat };
       _cpItems = [fallbackItem];
-      chipsEl.innerHTML = '<div class="cp-item-chip sel" onclick="toggleCpItem(this,0)">合計 ¥' + (r.total || 0).toLocaleString() + '</div>';
       _cpSelectedItems = [fallbackItem];
+      chipsEl.innerHTML = _buildCpChip(fallbackItem, 0, true);
     } else {
-      chipsEl.innerHTML = _cpItems.map(function(it, i) {
-        var label = it.qty > 1 ? '@¥' + it.price.toLocaleString() : '¥' + it.price.toLocaleString();
-        return '<div class="cp-item-chip" onclick="toggleCpItem(this,' + i + ')">' + it.name + ' ' + label + '</div>';
-      }).join('');
-      // 첫 번째 칩 자동 선택
-      var first = chipsEl.querySelector('.cp-item-chip');
-      if (first) toggleCpItem(first, 0);
+      chipsEl.innerHTML = _cpItems.map(function(it, i) { return _buildCpChip(it, i, i === 0); }).join('');
+      _cpSelectedItems = [_cpItems[0]];
     }
   }
   updateCpPreview();
@@ -6077,6 +6047,82 @@ function updateCpPreview() {
   }).join('');
 }
 
+/* ── 치리츠모 공개 칩 빌더 ── */
+function _buildCpChip(it, i, selected) {
+  var cat = CT_PUB_CATS.find(function(c){ return c.key === (it.category||'other'); }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
+  var priceLabel = it.qty > 1 ? '@¥'+it.price.toLocaleString() : '¥'+it.price.toLocaleString();
+  var selStyle = selected
+    ? 'border:1.5px solid var(--gold);background:var(--gold-light);'
+    : 'border:1.5px solid var(--border-mid);background:var(--surface);';
+  var catBtns = CT_PUB_CATS.map(function(c) {
+    var a = c.key === (it.category||'other');
+    return '<button onclick="selectCpItemCat('+i+',\''+c.key+'\')" style="padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(a?'var(--gold)':'var(--border-mid)')+';background:'+(a?'var(--gold)':'var(--surface)')+';color:'+(a?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">'+c.icon+' '+c.label+'</button>';
+  }).join('');
+  return '<div style="border-radius:12px;overflow:hidden;'+selStyle+'">'
+    + '<div onclick="toggleCpItemChip('+i+')" style="display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;user-select:none;">'
+    +   '<span id="cp-chip-icon-'+i+'" style="font-size:16px;flex-shrink:0;">'+cat.icon+'</span>'
+    +   '<span style="flex:1;font-size:12px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+it.name+'</span>'
+    +   '<span style="font-size:12px;font-weight:800;color:var(--green);flex-shrink:0;">'+priceLabel+'</span>'
+    +   '<span id="cp-chip-cat-'+i+'" style="font-size:10px;font-weight:700;background:var(--bg);color:var(--text-3);border-radius:8px;padding:2px 7px;flex-shrink:0;margin-left:4px;">'+cat.label+'</span>'
+    +   '<span id="cp-chip-arrow-'+i+'" style="font-size:10px;color:var(--text-3);flex-shrink:0;margin-left:2px;">▼</span>'
+    + '</div>'
+    + '<div id="cp-chip-acc-'+i+'" style="display:none;flex-wrap:wrap;gap:5px;padding:0 10px 10px;">'+catBtns+'</div>'
+    + '</div>';
+}
+
+function toggleCpItemChip(idx) {
+  var it = _cpItems[idx];
+  if (!it) return;
+  // 선택 토글
+  var pos = _cpSelectedItems.indexOf(it);
+  if (pos < 0) _cpSelectedItems.push(it);
+  // 다른 아코디언 닫기
+  _cpItems.forEach(function(_, i) {
+    if (i !== idx) {
+      var a = document.getElementById('cp-chip-acc-'+i);
+      var ar = document.getElementById('cp-chip-arrow-'+i);
+      if (a) a.style.display = 'none';
+      if (ar) ar.textContent = '▼';
+    }
+  });
+  // 자신 아코디언 토글
+  var acc = document.getElementById('cp-chip-acc-'+idx);
+  var arrow = document.getElementById('cp-chip-arrow-'+idx);
+  if (acc) {
+    var open = acc.style.display !== 'none';
+    acc.style.display = open ? 'none' : 'flex';
+    if (arrow) arrow.textContent = open ? '▼' : '▲';
+  }
+  updateCpPreview();
+}
+
+function selectCpItemCat(idx, key) {
+  var it = _cpItems[idx];
+  if (!it) return;
+  it.category = key;
+  var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
+  // 아이콘·라벨 업데이트
+  var iconEl = document.getElementById('cp-chip-icon-'+idx);
+  var catEl  = document.getElementById('cp-chip-cat-'+idx);
+  if (iconEl) iconEl.textContent = cat.icon;
+  if (catEl)  catEl.textContent  = cat.label;
+  // 아코디언 버튼 스타일 업데이트
+  var acc = document.getElementById('cp-chip-acc-'+idx);
+  if (acc) {
+    acc.querySelectorAll('button').forEach(function(btn) {
+      var txt = btn.textContent.trim();
+      var isActive = CT_PUB_CATS.some(function(c){ return c.key === key && (c.icon+' '+c.label) === txt; });
+      btn.style.background = isActive ? 'var(--gold)' : 'var(--surface)';
+      btn.style.color = isActive ? '#fff' : 'var(--text-2)';
+      btn.style.borderColor = isActive ? 'var(--gold)' : 'var(--border-mid)';
+    });
+    // 닫기
+    acc.style.display = 'none';
+    var arrow = document.getElementById('cp-chip-arrow-'+idx);
+    if (arrow) arrow.textContent = '▼';
+  }
+}
+
 /* 이미지 전체화면 뷰어 */
 function openImgViewer(encodedSrc) {
   var src = decodeURIComponent(encodedSrc);
@@ -6093,31 +6139,6 @@ function closeImgViewer() {
   document.body.style.overflow = '';
 }
 
-function toggleCpCatAccordion() {
-  var acc = document.getElementById('cp-cat-accordion');
-  var arrow = document.getElementById('cp-cat-arrow');
-  if (!acc) return;
-  var isOpen = acc.style.display !== 'none';
-  acc.style.display = isOpen ? 'none' : 'flex';
-  if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
-}
-
-function selectCpCat(key) {
-  _cpCategory = key;
-  var cat = CT_PUB_CATS.find(function(c) { return c.key === key; });
-  var label = document.getElementById('cp-cat-label');
-  if (label && cat) label.textContent = cat.icon + ' ' + cat.label;
-  document.querySelectorAll('.cp-cat-btn').forEach(function(btn) {
-    var active = btn.dataset.cat === key;
-    btn.style.background = active ? 'var(--gold)' : 'var(--surface)';
-    btn.style.color = active ? '#fff' : 'var(--text-2)';
-    btn.style.borderColor = active ? 'var(--gold)' : 'var(--border-mid)';
-  });
-  var acc = document.getElementById('cp-cat-accordion');
-  var arrow = document.getElementById('cp-cat-arrow');
-  if (acc) acc.style.display = 'none';
-  if (arrow) arrow.textContent = '▼';
-}
 
 function submitChiriPublish() {
   if (_cpSelectedItems.length === 0) { showToast('品目を選んでください'); return; }
@@ -6140,7 +6161,7 @@ function submitChiriPublish() {
         name: store,
         lat: fallback.lat,
         lng: fallback.lng,
-        category: _cpCategory || r.cat || 'other',
+        category: item.category || r.cat || 'other',
         receipt_count: 1
       }
     };
