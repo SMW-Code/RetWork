@@ -1178,7 +1178,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="scroll" style="padding:16px;">
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
       <!-- 出席チェック -->
-      <div style="background:var(--navy);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;" onclick="ctAttendance()">
+      <div id="ct-attendance-card" style="background:var(--navy);border-radius:16px;padding:16px 18px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:opacity .2s;" onclick="ctAttendance()">
         <div style="width:48px;height:48px;border-radius:13px;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4" width="18" height="18" rx="2"/>
@@ -1189,11 +1189,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:3px;">出席チェック</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.45);">毎日チェックでコインをゲット</div>
+          <div id="ct-attendance-sub" style="font-size:11px;color:rgba(255,255,255,.45);">毎日チェックでチリをゲット</div>
         </div>
-        <div style="text-align:right;flex-shrink:0;">
+        <div id="ct-attendance-reward" style="text-align:right;flex-shrink:0;">
           <div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+5</div>
-          <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;margin-top:2px;">コイン</div>
+          <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;margin-top:2px;">チリ</div>
         </div>
       </div>
       <!-- 広告を見る -->
@@ -1206,18 +1206,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </div>
         <div style="flex:1;min-width:0;">
           <div style="font-size:14px;font-weight:800;color:var(--text-1);margin-bottom:3px;">広告を見る</div>
-          <div style="font-size:11px;color:var(--text-3);">動画を見てコインをゲット</div>
+          <div style="font-size:11px;color:var(--text-3);">動画を見てチリをゲット</div>
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+200</div>
-          <div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;">コイン</div>
+          <div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;">チリ</div>
         </div>
       </div>
     </div>
     <div style="background:var(--gold-light);border:1px solid rgba(232,160,32,.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;">
       <div>
-        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">👥 友達を招待して✨コインもらう</div>
-        <div style="font-size:11px;color:var(--gold-dark);opacity:.7;margin-top:3px;">友達が登録完了で 2,000コイン</div>
+        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">👥 友達を招待して✨チリもらう</div>
+        <div style="font-size:11px;color:var(--gold-dark);opacity:.7;margin-top:3px;">友達が登録完了で 2,000チリ</div>
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--gold);">공유 ›</div>
     </div>
@@ -1226,7 +1226,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="font-size:14px;font-weight:800;color:var(--text-1);margin-bottom:4px;">🍔 マクドナルド ビッグマックセット</div>
       <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">参加85人 · 2人当選 · 残り 12:00:00</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="background:var(--gold-light);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gold-dark);">✨ 170コイン</div>
+        <div style="background:var(--gold-light);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gold-dark);">✨ 170チリ</div>
         <button style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">参加する</button>
       </div>
     </div>
@@ -1236,7 +1236,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
           <div style="font-size:13px;font-weight:800;color:var(--text-1);">チリストア</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">コインで商品に交換しよう</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">チリで商品に交換しよう</div>
         </div>
         <div style="background:var(--gold-light);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:var(--gold-dark);">✨ <span id="ct-store-coin">0</span></div>
       </div>
@@ -1451,7 +1451,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:800;color:#fff;" id="sp-nickname-display">사용자님</div>
         <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;">무료 플랜</div>
-        <div style="font-size:12px;font-weight:800;color:var(--gold);margin-top:5px;display:flex;align-items:center;gap:3px;">✨ <span id="sp-coin-balance">0</span> コイン</div>
+        <div style="font-size:12px;font-weight:800;color:var(--gold);margin-top:5px;display:flex;align-items:center;gap:3px;">✨ <span id="sp-coin-balance">0</span> チリ</div>
       </div>
       <div class="sp-close" onclick="closeOv('ov-settings')">✕</div>
     </div>
@@ -1768,7 +1768,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 공개 버튼 -->
     <button onclick="submitManualPin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span>📍 地図に公開する</span>
-      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10コイン</span>
+      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
     </button>
     <div onclick="closeOv('ov-manual-pin')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;">キャンセル</div>
   </div>
@@ -1786,7 +1786,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="background:var(--gold-light);border:1.5px solid var(--gold);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;">
       <span style="font-size:22px;">✨</span>
       <div>
-        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">+10コイン獲得！</div>
+        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">+10チリ獲得！</div>
         <div style="font-size:11px;color:var(--text-3);margin-top:2px;">節約情報を地図に公開してコミュニティに貢献</div>
       </div>
     </div>
@@ -1832,7 +1832,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 공개 버튼 -->
     <button onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span>📍 地図に公開する</span>
-      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10コイン</span>
+      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
     </button>
     <div onclick="closeOv('ov-chiri-publish')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;">キャンセル</div>
   </div>
@@ -2053,11 +2053,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       🗺️ Googleマップで見る
     </button>
 
-    <!-- コイン 받기 -->
+    <!-- チリ 받기 -->
     <div style="background:var(--gold-light);border:1px solid rgba(232,160,32,.2);border-radius:14px;
                 padding:13px 14px;margin-bottom:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">📍 このお店で✨コインをもらう</div>
+        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">📍 このお店で✨チリをもらう</div>
         <span style="font-size:16px;color:#999;cursor:pointer;">?</span>
       </div>
       <div style="display:flex;gap:8px;">
@@ -2328,7 +2328,7 @@ function ctSwitchTab(name) {
     }, 100);
   }
   if (name === 'community') ctInitCommunity();
-  if (name === 'reward') ctStopNotifTimer();
+  if (name === 'reward') { ctStopNotifTimer(); ctUpdateAttendanceCard(); }
 }
 
 function ctUpdateCoinDisplay() {
@@ -2394,8 +2394,35 @@ function ctRenderCoinHistory() {
 }
 
 function ctAttendance() {
+  var today = new Date().toDateString();
+  if (localStorage.getItem('ct_attendance_date') === today) {
+    showToast('📅 今日の出席チェックはすでに完了しています');
+    return;
+  }
+  localStorage.setItem('ct_attendance_date', today);
   ctAddCoin(5, '📅 出席チェック');
-  alert('📅 出席チェック完了！ +5pt');
+  showToast('📅 出席チェック完了！ +5チリ ✨');
+  ctUpdateAttendanceCard();
+}
+
+function ctUpdateAttendanceCard() {
+  var today = new Date().toDateString();
+  var done = localStorage.getItem('ct_attendance_date') === today;
+  var card = document.getElementById('ct-attendance-card');
+  var sub  = document.getElementById('ct-attendance-sub');
+  var rew  = document.getElementById('ct-attendance-reward');
+  if (!card) return;
+  if (done) {
+    card.style.opacity = '0.55';
+    card.style.cursor  = 'default';
+    if (sub) sub.textContent = '✅ 本日分受取済み';
+    if (rew) rew.innerHTML = '<div style="font-size:20px;line-height:1;">✅</div>';
+  } else {
+    card.style.opacity = '1';
+    card.style.cursor  = 'pointer';
+    if (sub) sub.textContent = '毎日チェックでチリをゲット';
+    if (rew) rew.innerHTML = '<div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+5</div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;margin-top:2px;">チリ</div>';
+  }
 }
 
 function ctWatchAd() {
@@ -2408,7 +2435,7 @@ function ctWatchAd() {
 
 function ctStoreExchange(id, name, cost) {
   if (_ctCoinBalance < cost) {
-    showToast('コインが足りません。あと' + (cost - _ctCoinBalance) + 'コイン必要です');
+    showToast('チリが足りません。あと' + (cost - _ctCoinBalance) + 'チリ必要です');
     return;
   }
   if (!confirm('「' + name + '」と交換しますか？\n' + cost + 'pt消費します。')) return;
@@ -3388,7 +3415,7 @@ var _ctBannerTimer = null;
 
 var _ctBannerNotices = [
   { tag:'お知らせ', tagBg:'rgba(232,160,32,.22)', tagColor:'var(--gold)', bg:'var(--navy)', color:'rgba(255,255,255,.9)', text:'v1.2.0 アップデート — 「チリつも公開」機能が追加されました 🎉' },
-  { tag:'キャンペーン', tagBg:'var(--gold)', tagColor:'#fff', bg:'var(--gold-light)', color:'var(--gold-dark)', text:'今週限定！レシート公開で +20コイン ボーナス実施中 ✨' },
+  { tag:'キャンペーン', tagBg:'var(--gold)', tagColor:'#fff', bg:'var(--gold-light)', color:'var(--gold-dark)', text:'今週限定！レシート公開で +20チリ ボーナス実施中 ✨' },
 ];
 
 function ctGetBannerItems() {
@@ -6892,7 +6919,7 @@ function showOcrResult(previewSrc, result) {
     +'<button class="save-btn" onclick="saveOcrResult()">💾 가계부에 저장하기</button>'
     +'<button onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
     +'<span>📍 チリつもに公開する</span>'
-    +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10コイン</span>'
+    +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>'
     +'</button>'
     +'<div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;" onclick="closeOv(\'ov-ocr\')">취소</div>';
 
@@ -7314,7 +7341,7 @@ function _afterChiriPublish() {
   if (_ctMap && typeof ctRenderPricePins === 'function') {
     ctRenderPricePins();
   }
-  showToast('✅ チリつも地図への保存が完了しました！ +10コイン');
+  showToast('✅ チリつも地図への保存が完了しました！ +10チリ');
 }
 
 /* ══════════════════════════════
@@ -7976,7 +8003,7 @@ function renderMapPins() {
       +'<button onclick="event.stopPropagation();openChiriFromMapCard(\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')" '
       +'style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--gold-shadow);">'
       +'<span>📍 チリつもに公開する</span>'
-      +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10コイン</span>'
+      +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10チリ</span>'
       +'</button>'
       +'</div>';
 
@@ -8315,7 +8342,7 @@ async function submitManualPin() {
   if (_tempManualPin) { _tempManualPin.setMap(null); _tempManualPin = null; }
   _mpManualLat = null; _mpManualLng = null;
   closeOv('ov-manual-pin');
-  showToast('✅ ピンを追加しました！ +10コイン');
+  showToast('✅ ピンを追加しました！ +10チリ');
 
   // Supabase 저장
   if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
