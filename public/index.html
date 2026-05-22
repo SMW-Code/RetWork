@@ -2112,8 +2112,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- ══════════════════════════════
      チリつも 가게 상세 바텀시트
 ══════════════════════════════ -->
-<div id="ct-store-dim2"
-  style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:300;pointer-events:none;"></div>
+<div id="ct-store-dim2" onclick="ctCloseStoreSheet()"
+  style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:300;"></div>
 
 <div id="ct-store-sheet"
   style="display:none;position:absolute;bottom:0;left:0;right:0;max-height:88%;
@@ -2409,10 +2409,13 @@ var _appMode = 'receipt';
 
 function switchMode(mode) {
   _appMode = mode;
-  // 가게 상세 시트가 열려 있으면 닫기
+  // 가게 상세 시트가 열려 있으면 닫기 (지도·탭바 복원)
   var _sm_sheet = document.getElementById('ct-store-sheet');
   if (_sm_sheet && _sm_sheet.style.display !== 'none') {
     _sm_sheet.style.display = 'none';
+    document.getElementById('ct-store-dim2').style.display = 'none';
+    document.getElementById('ct-screen-map').style.display = 'flex';
+    document.getElementById('ct-tabbar').style.display = '';
     _ctCurrentStore = null;
   }
 
@@ -2453,11 +2456,13 @@ function switchMode(mode) {
 }
 
 function ctSwitchTab(name) {
-  // 가게 상세 시트가 열려 있으면 먼저 닫기
+  // 가게 상세 시트가 열려 있으면 먼저 닫기 (지도·탭바 복원)
   var _storeSheet = document.getElementById('ct-store-sheet');
   if (_storeSheet && _storeSheet.style.display !== 'none') {
     _storeSheet.style.display = 'none';
+    document.getElementById('ct-store-dim2').style.display = 'none';
     _ctCurrentStore = null;
+    document.getElementById('ct-tabbar').style.display = '';
   }
   // 탭 전환 시 포인트 패널 닫기
   _ctCoinHistoryOpen = false;
@@ -3195,10 +3200,13 @@ function ctShowStoreCard(group) {
   var heartEl = document.getElementById('ct-s-heart');
   if (heartEl) heartEl.textContent = '🤍';
 
-  // ── 바텀시트 오픈 ──
+  // ── 지도·탭바 숨기고 딤 배경 + 바텀시트 오픈 ──
+  document.getElementById('ct-screen-map').style.display = 'none';
+  document.getElementById('ct-tabbar').style.display = 'none';
+  document.getElementById('ct-store-dim2').style.display = 'block';
   var _sheet = document.getElementById('ct-store-sheet');
+  _sheet.style.animation = 'slideUp .28s ease';
   _sheet.style.display = 'flex';
-  _sheet.style.animation = 'slideUp .3s var(--anim)';
   _sheet.scrollTop = 0;
 
   // ── 광고 주입 (슬롯 재사용 가능하도록 ins 제거 후 재주입) ──
@@ -3876,11 +3884,10 @@ function ctCloseStoreSheet() {
   document.getElementById('ct-store-sheet').style.display = 'none';
   document.getElementById('ct-store-dim2').style.display  = 'none';
   _ctCurrentStore = null;
-  // 마커 완전 재생성으로 클릭 핸들러 복원 (Google Maps 이벤트 버그 우회)
-  if (_ctMap) {
-    ctRenderPricePins();
-    setTimeout(function() { google.maps.event.trigger(_ctMap, 'resize'); }, 50);
-  }
+  // 지도·탭바 복원 후 Maps resize → 마커 클릭 정상화
+  document.getElementById('ct-screen-map').style.display = 'flex';
+  document.getElementById('ct-tabbar').style.display = '';
+  if (_ctMap) setTimeout(function() { google.maps.event.trigger(_ctMap, 'resize'); }, 50);
 }
 
 function ctCatLabel(cat) {
