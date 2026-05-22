@@ -665,6 +665,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 이달 예산 카드 -->
     <div id="home-budget"></div>
 
+    <!-- 홈 배너 광고 (승인 후 자동 표시) -->
+    <div id="ad-slot-home" style="display:none;margin:0 0 14px;border-radius:14px;overflow:hidden;background:var(--bg);border:0.5px solid var(--border);min-height:80px;">
+      <div id="ad-placeholder-home" style="display:flex;align-items:center;justify-content:center;gap:6px;color:var(--text-3);min-height:80px;">
+        <span style="font-size:14px;">📢</span>
+        <span style="font-size:11px;font-weight:600;">広告</span>
+      </div>
+    </div>
+
     <!-- 절약 배너 -->
     <div class="alert-banner" onclick="openOv('ov-saving')">
       <span style="font-size:18px;flex-shrink:0;">💡</span>
@@ -1385,25 +1393,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- ── AdSense 슬롯 ① : 광고 모달 배너 (320×100 또는 반응형) ──
-         승인 후 주석 해제 + data-ad-slot 값 교체
-         Slot ID 예시: data-ad-slot="1234567890"
-    -->
+    <!-- 광고 슬롯 (승인 후 _injectAd 로 자동 주입) -->
     <div class="ad-banner" id="ad-slot-modal">
-      <!-- AdSense 승인 전: 플레이스홀더 -->
       <div id="ad-placeholder-modal" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-3);">
         <div style="font-size:22px;">📢</div>
-        <div style="font-size:11px;font-weight:600;">광고 영역</div>
+        <div style="font-size:11px;font-weight:600;">広告</div>
       </div>
-      <!-- AdSense 승인 후 아래 주석 해제:
-      <ins class="adsbygoogle"
-           style="display:block;width:100%;height:100px;"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-           data-ad-slot="XXXXXXXXXX"
-           data-ad-format="banner"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      -->
     </div>
 
     <button class="ad-save-btn" id="ad-save-btn" onclick="adComplete()">⏳ 5초 후 저장 가능</button>
@@ -1970,24 +1965,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
            display:flex;gap:5px;"></div>
     </div>
 
-    <!-- ── AdSense 슬롯 ② : 가게 상세 카드 배너 (반응형)
-         승인 후 주석 해제 + data-ad-slot 값 교체
-    -->
-    <div id="ad-slot-store" style="border-radius:14px;overflow:hidden;margin-bottom:12px;min-height:100px;background:var(--bg);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;">
-      <!-- AdSense 승인 전: 플레이스홀더 -->
-      <div id="ad-placeholder-store" style="display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-3);padding:16px;">
+    <!-- 가게 상세 광고 슬롯 (승인 후 _injectAd 로 자동 주입) -->
+    <div id="ad-slot-store" style="border-radius:14px;overflow:hidden;margin-bottom:12px;min-height:0;background:var(--bg);border:0.5px solid var(--border);display:flex;align-items:center;justify-content:center;">
+      <div id="ad-placeholder-store" style="display:none;flex-direction:column;align-items:center;gap:6px;color:var(--text-3);padding:16px;">
         <div style="font-size:22px;">📢</div>
-        <div style="font-size:11px;font-weight:600;">広告スペース</div>
+        <div style="font-size:11px;font-weight:600;">広告</div>
       </div>
-      <!-- AdSense 승인 후 아래 주석 해제:
-      <ins class="adsbygoogle"
-           style="display:block;width:100%;"
-           data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-           data-ad-slot="XXXXXXXXXX"
-           data-ad-format="auto"
-           data-full-width-responsive="true"></ins>
-      <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-      -->
     </div>
 
     <!-- 메뉴 카드 -->
@@ -2274,9 +2257,12 @@ function ctAttendance() {
 }
 
 function ctWatchAd() {
-  _ctCoinBalance += 200;
-  ctUpdateCoinDisplay();
-  alert('▶️ 広告視聴完了！ +200コイン');
+  // 광고 모달 표시 → 시청 완료 후 코인 지급
+  showAdModal(function() {
+    _ctCoinBalance += 200;
+    ctUpdateCoinDisplay();
+    showToast('🎉 +200コイン 獲得！広告視聴ありがとうございます！');
+  });
 }
 
 function ctStoreExchange(id, name, cost) {
@@ -2705,6 +2691,14 @@ function ctShowStoreCard(group) {
   // ── 시트 오픈 ──
   document.getElementById('ct-store-sheet').style.display = '';
   document.getElementById('ct-store-dim2').style.display  = '';
+
+  // ── 광고 주입 (슬롯 재사용 가능하도록 ins 제거 후 재주입) ──
+  var storeAdSlot = document.getElementById('ad-slot-store');
+  if (storeAdSlot) {
+    var oldIns = storeAdSlot.querySelector('ins.adsbygoogle');
+    if (oldIns) oldIns.remove();
+  }
+  setTimeout(function() { _injectAd('ad-slot-store', 'store'); }, 200);
 }
 
 /* ══════════════════════════════
@@ -2829,6 +2823,10 @@ function ctRenderPosts() {
   if (page.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:14px;">投稿がありません</div>';
   } else {
+    // 기존 인피드 광고 슬롯 제거 (페이지 전환 시 중복 방지)
+    var prevFeedAd = document.getElementById('ad-slot-feed');
+    if (prevFeedAd) prevFeedAd.remove();
+
     list.innerHTML = page.map(function(p) {
       var cat = ctGetPostCat(p.cat);
       // 썸네일
@@ -2886,6 +2884,15 @@ function ctRenderPosts() {
         '</div>'
       );
     }).join('');
+
+    // 인피드 광고: 3번째 포스트 앞에 삽입 (AD_CONFIG.enabled 시)
+    if (AD_CONFIG.enabled && list.children.length >= 3) {
+      var adDiv = document.createElement('div');
+      adDiv.id = 'ad-slot-feed';
+      adDiv.style.cssText = 'margin-bottom:8px;border-radius:14px;overflow:hidden;background:var(--surface);border:0.5px solid var(--border);';
+      list.insertBefore(adDiv, list.children[2]);
+      _injectAd('ad-slot-feed', 'feed');
+    }
   }
 
   // 페이지네이션
@@ -7662,6 +7669,58 @@ var _currentUser = null;
 var _isPremium = localStorage.getItem('receiptiq_premium') === '1';
 
 /* ══════════════════════════════
+   광고 설정 (Google AdSense)
+   ──────────────────────────────
+   승인 완료 후 작업 순서:
+   1) <head> 내 AdSense 스크립트 주석 해제
+   2) client 에 실제 ca-pub-XXXX 입력
+   3) slots 의 각 슬롯 ID 입력
+   4) enabled → true 로 변경
+══════════════════════════════ */
+var AD_CONFIG = {
+  enabled: false,                      // ← 승인 후 true 로 변경
+  client:  'ca-pub-XXXXXXXXXXXXXXXX',  // ← Publisher ID 입력
+  slots: {
+    modal:  'XXXXXXXXXX',  // 저장/공개 모달 배너 (320×100)
+    home:   'XXXXXXXXXX',  // 홈 하단 배너     (반응형)
+    store:  'XXXXXXXXXX',  // 가게 상세 배너   (반응형)
+    feed:   'XXXXXXXXXX',  // チリトーク 인피드 (반응형)
+    reward: 'XXXXXXXXXX',  // リワード 광고시청 (반응형)
+  }
+};
+
+/* 광고 컨테이너에 AdSense ins 태그 동적 주입 */
+function _injectAd(containerId, slotKey) {
+  if (!AD_CONFIG.enabled) return;
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('ins.adsbygoogle')) return; // 중복 방지
+  var ph = c.querySelector('[id^="ad-placeholder"]');
+  if (ph) ph.style.display = 'none';
+  var ins = document.createElement('ins');
+  ins.className = 'adsbygoogle';
+  ins.style.cssText = 'display:block;width:100%;';
+  ins.setAttribute('data-ad-client', AD_CONFIG.client);
+  ins.setAttribute('data-ad-slot', AD_CONFIG.slots[slotKey] || '');
+  ins.setAttribute('data-ad-format', 'auto');
+  ins.setAttribute('data-full-width-responsive', 'true');
+  c.appendChild(ins);
+  try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+}
+
+/* 앱 진입 시 항시 광고 슬롯 초기화 */
+function _initAds() {
+  // 홈 배너: 비활성 시 영역 축소
+  var homeAd = document.getElementById('ad-slot-home');
+  if (homeAd) homeAd.style.display = AD_CONFIG.enabled ? '' : 'none';
+  // 가게 상세 플레이스홀더: 비활성 시 숨김
+  var storePh = document.getElementById('ad-placeholder-store');
+  if (storePh) storePh.style.display = AD_CONFIG.enabled ? '' : 'none';
+  var storeSlot = document.getElementById('ad-slot-store');
+  if (storeSlot) storeSlot.style.minHeight = AD_CONFIG.enabled ? '100px' : '0';
+  _injectAd('ad-slot-home', 'home');
+}
+
+/* ══════════════════════════════
    테마 색상
 ══════════════════════════════ */
 var THEMES = {
@@ -8146,6 +8205,7 @@ var _adCountdown = null;
 function showAdModal(callback) {
   _adCallback = callback;
   document.getElementById('ov-ad').classList.add('open');
+  _injectAd('ad-slot-modal', 'modal');
   var seconds = 5;
   var timerEl = document.getElementById('ad-timer');
   var btnEl = document.getElementById('ad-save-btn');
@@ -8211,6 +8271,7 @@ function showApp() {
   renderReportSummary();
   var days = ['日','月','火','水','木','金','土'];
   document.getElementById('today-label').textContent = _now.getFullYear()+'年 '+(_now.getMonth()+1)+'月 '+_now.getDate()+'日 ('+days[_now.getDay()]+')';
+  _initAds();
 }
 
 function showAuthError(msg) {
