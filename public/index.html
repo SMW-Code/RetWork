@@ -7127,7 +7127,7 @@ function applyDarkMode(isDark, silent) {
       document.documentElement.style.setProperty('--gold-light',  t.color + '22');
     }
   } else {
-    applyTheme(_currentTheme);
+    applyTheme(_currentTheme, true);
   }
   if (!silent) showToast(_isDark ? '🌙 다크모드로 전환했어요' : '☀️ 라이트모드로 전환했어요');
 }
@@ -7136,7 +7136,7 @@ function toggleDarkMode() {
   applyDarkMode(!_isDark);
 }
 
-function applyTheme(key) {
+function applyTheme(key, silent) {
   var t = THEMES[key];
   if (!t) return;
   _currentTheme = key;
@@ -7155,7 +7155,7 @@ function applyTheme(key) {
   document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = t.grad; });
   localStorage.setItem('receiptiq_theme', key);
   renderThemeSwatches();
-  showToast('🎨 테마가 변경됐어요');
+  if (!silent) showToast('🎨 테마가 변경됐어요');
 }
 
 /* ══════════════════════════════
