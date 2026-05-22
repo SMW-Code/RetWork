@@ -2713,6 +2713,35 @@ var _ctDummyPosts = [];
 var _ctNotifMessages = [];
 var _ctNotifications = [];
 
+function _timeAgo(dateStr) {
+  var diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
+  if (diff < 60)    return 'たった今';
+  if (diff < 3600)  return Math.floor(diff / 60) + '分前';
+  if (diff < 86400) return Math.floor(diff / 3600) + '時間前';
+  return Math.floor(diff / 86400) + '日前';
+}
+
+async function ctLoadNotifications() {
+  if (!_currentUser || !_sb) return;
+  var res = await _sb.from('ct_notifications')
+    .select('*')
+    .eq('recipient_id', _currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(30);
+  if (res.error || !res.data) return;
+  _ctNotifications = res.data.map(function(n) {
+    var icon = n.type === 'comment' ? '💬' : '❤️';
+    var text = n.type === 'comment'
+      ? '<b>' + (n.from_user_name||'?') + '</b>さんが「' + (n.post_title||'') + '」にコメント: ' + (n.content||'')
+      : '<b>' + (n.from_user_name||'?') + '</b>さんが「' + (n.post_title||'') + '」にいいねしました';
+    return { id: n.id, icon: n.from_user_avatar || icon, text: text, time: _timeAgo(n.created_at), read: n.is_read };
+  });
+  var unread = _ctNotifications.filter(function(n){ return !n.read; }).length;
+  var dot = document.getElementById('ct-notif-dot');
+  if (dot) dot.style.display = unread > 0 ? '' : 'none';
+  if (_ctNotifOpen) ctRenderNotifList();
+}
+
 var _ctPostCat = 'all';
 var _ctPostPage = 1;
 var _ctSearchQ = '';
@@ -2750,7 +2779,7 @@ async function ctLoadPosts() {
       user_avatar: p.user_avatar || '😊',
       likes: p.likes || 0,
       date: (d.getMonth() + 1) + '/' + d.getDate(),
-      comments: 0,
+      comments: p.comments || 0,
       img: imgs.length ? imgs[0] : null,
       allImgs: imgs,
       user_id: p.user_id,
@@ -2770,6 +2799,7 @@ function ctInitCommunity() {
   }
   ctLoadPosts();
   ctStartBanner();
+  ctLoadNotifications();
 }
 
 function ctRenderCatBar() {
@@ -2926,10 +2956,12 @@ function ctTogglePost(id) {
     body.classList.add('open');
     if (arrow) arrow.style.transform = 'rotate(180deg)';
     _ctExpandedPost = id;
+    ctLoadPostComments(id);
   }
 }
 
 async function ctLikePost(id) {
+  if (!_currentUser) return;
   var p = _ctDummyPosts.find(function(x) { return x.id === id; });
   if (!p) return;
   p.likes++;
@@ -2939,9 +2971,19 @@ async function ctLikePost(id) {
     btn.style.color = 'var(--red)';
     btn.style.background = 'var(--red-bg)';
     btn.style.borderColor = 'var(--red)';
-    btn.disabled = true; // 중복 클릭 방지
+    btn.disabled = true;
   }
   await _sb.from('ct_posts').update({ likes: p.likes }).eq('id', id);
+  // 게시글 작성자에게 좋아요 알림 (본인 글 제외)
+  if (p.user_id && p.user_id !== _currentUser.id) {
+    var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
+    var myAvatar = localStorage.getItem('riq_avatar') || '😊';
+    await _sb.from('ct_notifications').insert({
+      recipient_id: p.user_id, type: 'like',
+      post_id: id, post_title: p.title,
+      from_user_name: myName, from_user_avatar: myAvatar, content: null
+    });
+  }
 }
 
 var _ctPostComments = {};
@@ -2951,34 +2993,80 @@ function ctFocusComment(id) {
   if (input) input.focus();
 }
 
-function ctAddComment(id) {
+async function ctAddComment(id) {
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
   var input = document.getElementById('ct-comment-input-' + id);
   var text = input ? input.value.trim() : '';
   if (!text) return;
 
-  if (!_ctPostComments[id]) _ctPostComments[id] = [];
-  var nickname = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
-  _ctPostComments[id].push({ user: nickname, text: text, time: 'たった今' });
+  var myName   = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
+  var myAvatar = localStorage.getItem('riq_avatar') || '😊';
 
+  input.value = '';
+  input.disabled = true;
+
+  // Supabase에 댓글 저장
+  var res = await _sb.from('ct_comments').insert({
+    post_id: id, user_id: _currentUser.id,
+    user_name: myName, user_avatar: myAvatar, content: text
+  });
+  input.disabled = false;
+  if (res.error) { showToast('コメント送信に失敗しました'); return; }
+
+  // ct_posts.comments 카운트 증가
   var p = _ctDummyPosts.find(function(x) { return x.id === id; });
   if (p) {
     p.comments++;
+    await _sb.from('ct_posts').update({ comments: p.comments }).eq('id', id);
+    var countEl = document.getElementById('ct-comment-count-' + id);
+    if (countEl) countEl.textContent = '💬 ' + p.comments;
+    // 게시글 작성자에게 댓글 알림 (본인 글 제외)
+    if (p.user_id && p.user_id !== _currentUser.id) {
+      var preview = text.length > 30 ? text.slice(0, 30) + '…' : text;
+      await _sb.from('ct_notifications').insert({
+        recipient_id: p.user_id, type: 'comment',
+        post_id: id, post_title: p.title,
+        from_user_name: myName, from_user_avatar: myAvatar, content: preview
+      });
+    }
+  }
+
+  // 로컬 캐시에도 추가 후 즉시 표시
+  if (!_ctPostComments[id]) _ctPostComments[id] = [];
+  _ctPostComments[id].push({ user: myName, avatar: myAvatar, text: text, time: 'たった今' });
+  ctRenderPostComments(id);
+}
+
+async function ctLoadPostComments(id) {
+  if (!_sb) return;
+  var res = await _sb.from('ct_comments')
+    .select('*').eq('post_id', id).order('created_at', { ascending: true });
+  if (res.error || !res.data) return;
+  _ctPostComments[id] = res.data.map(function(c) {
+    return { user: c.user_name, avatar: c.user_avatar || '😊', text: c.content, time: _timeAgo(c.created_at) };
+  });
+  ctRenderPostComments(id);
+  // 실제 댓글 수로 배지 갱신
+  var p = _ctDummyPosts.find(function(x) { return x.id === id; });
+  if (p) {
+    p.comments = res.data.length;
     var countEl = document.getElementById('ct-comment-count-' + id);
     if (countEl) countEl.textContent = '💬 ' + p.comments;
   }
-
-  ctRenderPostComments(id);
-  input.value = '';
 }
 
 function ctRenderPostComments(id) {
   var el = document.getElementById('ct-comments-' + id);
   if (!el) return;
   var list = _ctPostComments[id] || [];
-  if (!list.length) { el.innerHTML = ''; return; }
+  if (!list.length) { el.innerHTML = '<div style="padding:12px 0;font-size:13px;color:var(--text-3);text-align:center;">まだコメントがありません</div>'; return; }
   el.innerHTML = list.map(function(c) {
+    var isEmoji = /^\p{Emoji}/u.test(c.avatar || '');
+    var avatarHtml = isEmoji
+      ? '<div style="width:28px;height:28px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">' + c.avatar + '</div>'
+      : '<img src="' + c.avatar + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">';
     return '<div style="display:flex;gap:10px;padding:10px 0;border-top:0.5px solid var(--border);">' +
-      '<div style="width:28px;height:28px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">😊</div>' +
+      avatarHtml +
       '<div style="flex:1;min-width:0;">' +
         '<div style="font-size:11px;font-weight:700;color:var(--text-2);">' + c.user + ' <span style="font-weight:400;color:var(--text-3);">· ' + c.time + '</span></div>' +
         '<div style="font-size:13px;color:var(--text-1);line-height:1.5;margin-top:3px;">' + c.text + '</div>' +
@@ -3027,11 +3115,17 @@ function ctRenderNotifList() {
   }).join('');
 }
 
-function ctMarkAllRead() {
+async function ctMarkAllRead() {
   _ctNotifications.forEach(function(n) { n.read = true; });
   var dot = document.getElementById('ct-notif-dot');
   if (dot) dot.style.display = 'none';
   ctRenderNotifList();
+  if (_currentUser && _sb) {
+    await _sb.from('ct_notifications')
+      .update({ is_read: true })
+      .eq('recipient_id', _currentUser.id)
+      .eq('is_read', false);
+  }
 }
 
 /* ── 롤링 배너 ── */
