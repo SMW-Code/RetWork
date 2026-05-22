@@ -954,6 +954,15 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </button>
     </div>
 
+    <!-- 수동 핀 추가 FAB -->
+    <div style="position:absolute;bottom:132px;right:14px;z-index:10;">
+      <button onclick="openManualPin()"
+        title="手動でピンを追加"
+        style="background:var(--green);color:#fff;border:none;border-radius:50%;width:44px;height:44px;
+               display:flex;align-items:center;justify-content:center;
+               box-shadow:0 4px 14px rgba(22,168,122,.45);cursor:pointer;font-size:20px;">✏️</button>
+    </div>
+
     <!-- 랭킹/목록 버튼 -->
     <div style="position:absolute;bottom:80px;right:14px;z-index:10;">
       <button onclick="ctShowRanking()"
@@ -1661,6 +1670,53 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <img id="img-viewer-src" src="" style="max-width:94vw;max-height:88vh;border-radius:12px;object-fit:contain;" onclick="event.stopPropagation()">
 </div>
 
+<!-- ══ 수동 핀 추가 모달 ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-manual-pin" onclick="closeOvOutside(event,'ov-manual-pin')">
+  <div class="sheet" style="max-height:92%;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div class="sheet-title">✏️ 手動でピンを追加</div>
+      <div onclick="closeOv('ov-manual-pin')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
+    </div>
+    <!-- 현재 위치 표시 -->
+    <div style="background:var(--green-light);border-radius:12px;padding:10px 14px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);display:flex;align-items:center;gap:8px;">
+      <span style="font-size:16px;">📍</span>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);">現在地を使用</div>
+        <div id="mp-location-text" style="font-size:11px;color:var(--text-2);">位置情報取得中...</div>
+      </div>
+    </div>
+    <!-- 가게명 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">お店の名前 <span style="color:var(--red);">*</span></div>
+      <input id="mp-store" type="text" placeholder="例：なか卯 四日市店" style="width:100%;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+    </div>
+    <!-- 카테고리 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">カテゴリ</div>
+      <div id="mp-cat-display" onclick="toggleMpCat()" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;cursor:pointer;user-select:none;">
+        <span id="mp-cat-label" style="font-size:13px;font-weight:700;color:var(--text-1);">🍽️ その他</span>
+        <span id="mp-cat-arrow" style="font-size:11px;color:var(--text-3);">▼</span>
+      </div>
+      <div id="mp-cat-accordion" style="display:none;flex-wrap:wrap;gap:6px;padding:8px 2px 2px;"></div>
+    </div>
+    <!-- 메뉴 + 가격 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">メニュー & 価格 <span style="color:var(--red);">*</span></div>
+      <div id="mp-items-list"></div>
+      <button onclick="addMpItem()" style="width:100%;padding:9px;border-radius:10px;border:1.5px dashed var(--border-mid);background:transparent;color:var(--text-3);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:6px;">＋ メニューを追加</button>
+    </div>
+    <!-- 코멘트 -->
+    <textarea id="mp-comment" placeholder="一言コメント（任意）" style="width:100%;border:1.5px solid var(--border);border-radius:12px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--surface);resize:none;height:60px;box-sizing:border-box;margin-bottom:14px;outline:none;"></textarea>
+    <!-- 공개 버튼 -->
+    <button onclick="submitManualPin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
+      <span>📍 地図に公開する</span>
+      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10コイン</span>
+    </button>
+    <div onclick="closeOv('ov-manual-pin')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;">キャンセル</div>
+  </div>
+</div>
+
 <!-- ══ チリつもに公開 모달 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-chiri-publish" onclick="closeOvOutside(event,'ov-chiri-publish')">
   <div class="sheet" style="max-height:88%;overflow-y:auto;">
@@ -1864,14 +1920,19 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div style="font-size:12px;font-weight:600;">写真を追加してください</div>
         </div>
       </div>
-      <!-- 사진 업로드 버튼 (우하단 오버레이) -->
-      <label style="position:absolute;right:10px;bottom:10px;width:40px;height:40px;border-radius:50%;
-                    background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.22);display:flex;
-                    align-items:center;justify-content:center;cursor:pointer;z-index:2;">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="12" cy="12" r="3"/><line x1="16.5" y1="7.5" x2="16.51" y2="7.5"/></svg>
-        <span style="position:absolute;right:-2px;bottom:-2px;width:16px;height:16px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#fff;line-height:1;">+</span>
-        <input type="file" accept="image/*" style="display:none;" onchange="ctAddPhoto(this)">
-      </label>
+      <!-- 사진 버튼: 카메라 + 갤러리 -->
+      <div style="position:absolute;right:10px;bottom:10px;display:flex;gap:6px;z-index:2;">
+        <!-- 카메라 촬영 -->
+        <label style="width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;" title="カメラで撮影">
+          <span style="font-size:18px;">📷</span>
+          <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="ctAddPhoto(this)">
+        </label>
+        <!-- 갤러리 선택 -->
+        <label style="width:40px;height:40px;border-radius:50%;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.22);display:flex;align-items:center;justify-content:center;cursor:pointer;" title="ギャラリーから選択">
+          <span style="font-size:18px;">🖼️</span>
+          <input type="file" accept="image/*" style="display:none;" onchange="ctAddPhoto(this)">
+        </label>
+      </div>
       <!-- 사진 인디케이터 -->
       <div id="ct-s-photo-dots" style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
            display:flex;gap:5px;"></div>
@@ -2436,7 +2497,7 @@ var _ctStorePhotos = {}; // { storeName: [dataURL, ...] }
 
 function ctAddPhoto(input) {
   if (!input.files || !input.files[0]) return;
-  var key = _ctCurrentStore ? _ctCurrentStore.stores.name : 'unknown';
+  var key = _ctCurrentStore ? (_ctCurrentStore.store || _ctCurrentStore.stores || {}).name || 'unknown' : 'unknown';
   var reader = new FileReader();
   reader.onload = function(e) {
     if (!_ctStorePhotos[key]) _ctStorePhotos[key] = [];
@@ -2508,21 +2569,43 @@ function ctShowStoreCard(group) {
   document.getElementById('ct-s-date').textContent    = '';
   document.getElementById('ct-s-tags').innerHTML      = '';
 
-  // ── 메뉴 카드: 다중 품목 렌더링 ──
+  // ── 메뉴 카드: 같은 메뉴 집계 + 인기순 정렬 ──
+  var itemMap = {};
+  items.forEach(function(it) {
+    var k = it.name || '—';
+    if (!itemMap[k]) itemMap[k] = { prices: [], count: 0 };
+    itemMap[k].prices.push(it.price || 0);
+    itemMap[k].count++;
+  });
+  var groupedItems = Object.entries(itemMap)
+    .map(function(pair) {
+      var prices = pair[1].prices;
+      var avg = Math.round(prices.reduce(function(s,p){return s+p;},0) / prices.length);
+      return { name: pair[0], price: avg, count: pair[1].count };
+    })
+    .sort(function(a,b) { return b.count - a.count; });
+
   var menuCard = document.getElementById('ct-s-menu-card');
-  if (items.length === 1) {
-    // 단일 품목: 기존 레이아웃 유지
-    document.getElementById('ct-s-item').textContent  = items[0].name || 'メニュー未登録';
-    document.getElementById('ct-s-price').textContent = '¥' + (items[0].price || 0).toLocaleString();
+  if (groupedItems.length === 1 && groupedItems[0].count === 1) {
+    // 단일 품목 단일 리뷰: 기존 레이아웃
+    document.getElementById('ct-s-item').textContent  = groupedItems[0].name;
+    document.getElementById('ct-s-price').textContent = '¥' + groupedItems[0].price.toLocaleString();
   } else {
-    // 복수 품목: 리스트로 교체
-    var listHtml = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:8px;">メニュー一覧 ('+ items.length +'品目)</div>'
-      + items.map(function(it, i) {
-          var isLast = i === items.length - 1;
+    // 복수 or 집계: 리스트로 교체 (인기순, 리뷰 수 뱃지)
+    var listHtml = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:8px;">メニュー一覧 ('+ groupedItems.length +'品目) · 人気順</div>'
+      + groupedItems.map(function(it, i) {
+          var isLast = i === groupedItems.length - 1;
+          var badge = it.count > 1
+            ? '<span style="background:var(--green-light);color:var(--green);border-radius:20px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;">×' + it.count + '件</span>'
+            : '';
+          var crown = i === 0 && it.count > 1 ? '👑 ' : '';
           return '<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;'
             + (isLast ? '' : 'border-bottom:0.5px solid #f0f0f0;') + '">'
-            + '<span style="font-size:13px;font-weight:600;color:var(--text-1);flex:1;margin-right:8px;">' + (it.name || '—') + '</span>'
-            + '<span style="font-size:15px;font-weight:800;color:var(--gold);flex-shrink:0;">¥' + (it.price || 0).toLocaleString() + '</span>'
+            + '<div style="flex:1;margin-right:8px;display:flex;align-items:center;gap:6px;min-width:0;">'
+            +   '<span style="font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + crown + it.name + '</span>'
+            +   badge
+            + '</div>'
+            + '<span style="font-size:15px;font-weight:800;color:var(--gold);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
             + '</div>';
         }).join('');
     menuCard.innerHTML = '<div style="font-size:11px;color:#999;font-weight:600;margin-bottom:6px;">メニュー</div>'
@@ -7015,6 +7098,141 @@ function flyToStoreAndExpand(lat, lng, name, cardId) {
   setTimeout(function() {
     detail.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, 100);
+}
+
+/* ══ 수동 핀 추가 ══ */
+var _mpCategory = 'other';
+var _mpItems = [];
+
+function openManualPin() {
+  _mpCategory = 'other';
+  _mpItems = [{ name: '', price: '' }];
+
+  // 카테고리 초기화
+  var catLabel = document.getElementById('mp-cat-label');
+  var catArrow = document.getElementById('mp-cat-arrow');
+  var catAcc   = document.getElementById('mp-cat-accordion');
+  if (catLabel) catLabel.textContent = '🍽️ その他';
+  if (catArrow) catArrow.textContent = '▼';
+  if (catAcc) {
+    catAcc.style.display = 'none';
+    catAcc.innerHTML = CT_PUB_CATS.map(function(cat) {
+      var a = cat.key === _mpCategory;
+      return '<button onclick="selectMpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(a?'var(--gold)':'var(--border-mid)')+';background:'+(a?'var(--gold)':'var(--surface)')+';color:'+(a?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + cat.label + '</button>';
+    }).join('');
+  }
+
+  // 가게명 초기화
+  var storeEl = document.getElementById('mp-store');
+  if (storeEl) storeEl.value = '';
+  var commentEl = document.getElementById('mp-comment');
+  if (commentEl) commentEl.value = '';
+
+  // 위치 표시
+  var locEl = document.getElementById('mp-location-text');
+  if (locEl) {
+    if (_ctUserPos) {
+      locEl.textContent = _ctUserPos.lat.toFixed(5) + ', ' + _ctUserPos.lng.toFixed(5);
+    } else {
+      locEl.textContent = '現在地を取得中...';
+      navigator.geolocation && navigator.geolocation.getCurrentPosition(function(pos) {
+        _ctUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        locEl.textContent = _ctUserPos.lat.toFixed(5) + ', ' + _ctUserPos.lng.toFixed(5);
+      });
+    }
+  }
+
+  renderMpItems();
+  openOv('ov-manual-pin');
+}
+
+function renderMpItems() {
+  var el = document.getElementById('mp-items-list');
+  if (!el) return;
+  el.innerHTML = _mpItems.map(function(it, i) {
+    return '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">'
+      + '<input value="' + (it.name||'') + '" oninput="_mpItems['+i+'].name=this.value" placeholder="メニュー名" style="flex:1;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
+      + '<input value="' + (it.price||'') + '" oninput="_mpItems['+i+'].price=this.value" type="number" placeholder="¥" style="width:72px;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
+      + (_mpItems.length > 1 ? '<button onclick="removeMpItem('+i+')" style="width:32px;height:32px;border:none;background:var(--bg);border-radius:8px;color:var(--text-3);font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function addMpItem() {
+  _mpItems.push({ name: '', price: '' });
+  renderMpItems();
+}
+
+function removeMpItem(idx) {
+  _mpItems.splice(idx, 1);
+  renderMpItems();
+}
+
+function toggleMpCat() {
+  var acc = document.getElementById('mp-cat-accordion');
+  var arrow = document.getElementById('mp-cat-arrow');
+  if (!acc) return;
+  var open = acc.style.display !== 'none';
+  acc.style.display = open ? 'none' : 'flex';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+}
+
+function selectMpCat(key) {
+  _mpCategory = key;
+  var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
+  var label = document.getElementById('mp-cat-label');
+  if (label) label.textContent = cat.icon + ' ' + cat.label;
+  var acc = document.getElementById('mp-cat-accordion');
+  if (acc) {
+    acc.querySelectorAll('button').forEach(function(btn) {
+      var a = btn.textContent.trim() === cat.icon + ' ' + cat.label;
+      btn.style.background = a ? 'var(--gold)' : 'var(--surface)';
+      btn.style.color = a ? '#fff' : 'var(--text-2)';
+      btn.style.borderColor = a ? 'var(--gold)' : 'var(--border-mid)';
+    });
+    acc.style.display = 'none';
+    var arrow = document.getElementById('mp-cat-arrow');
+    if (arrow) arrow.textContent = '▼';
+  }
+}
+
+async function submitManualPin() {
+  var storeName = (document.getElementById('mp-store').value || '').trim();
+  if (!storeName) { showToast('お店の名前を入力してください'); return; }
+  var validItems = _mpItems.filter(function(it){ return it.name && it.price; });
+  if (!validItems.length) { showToast('メニューと価格を入力してください'); return; }
+  if (!_currentUser) { showToast('ログインが必要です'); return; }
+
+  var comment = (document.getElementById('mp-comment').value || '').trim();
+  var pos = _ctUserPos || { lat: 35.6762, lng: 139.6503 };
+
+  var newPins = validItems.map(function(it) {
+    return {
+      item_name: it.name,
+      price: parseInt(it.price) || 0,
+      comment: comment,
+      stores: { name: storeName, lat: pos.lat, lng: pos.lng, category: _mpCategory, receipt_count: 1 }
+    };
+  });
+
+  newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
+  if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
+
+  _ctCoinBalance += 10;
+  ctUpdateCoinDisplay();
+  closeOv('ov-manual-pin');
+  showToast('✅ ピンを追加しました！ +10コイン');
+
+  // Supabase 저장
+  if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
+
+  // 가게명으로 좌표 보정 (백그라운드)
+  searchAndPinStore(storeName, null, function(lat, lng) {
+    if (lat) {
+      newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
+      if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
+    }
+  });
 }
 
 /* 가성비 맵 가게 카드 → 치리츠모 공개 */
