@@ -2447,11 +2447,12 @@ async function ctLoadPricePins(lat, lng) {
 
 /* 클러스터 원 SVG */
 function ctMakeClusterSVG(count) {
-  var r = Math.min(16 + count, 28);
-  var w = r * 2;
-  var fs = count > 99 ? 9 : count > 9 ? 11 : 13;
+  var r   = Math.min(16 + count, 28);
+  var w   = r * 2;
+  var fs  = count > 99 ? 9 : count > 9 ? 11 : 13;
+  var col = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + w + '">'
-    + '<circle cx="' + r + '" cy="' + r + '" r="' + (r - 2) + '" fill="#E8A020" stroke="#fff" stroke-width="2.5" opacity="0.93"/>'
+    + '<circle cx="' + r + '" cy="' + r + '" r="' + (r - 2) + '" fill="' + col + '" stroke="#fff" stroke-width="2.5" opacity="0.93"/>'
     + '<text x="' + r + '" y="' + r + '" text-anchor="middle" dominant-baseline="central" font-size="' + fs + '" font-weight="800" fill="#fff" font-family="sans-serif">' + count + '</text>'
     + '</svg>';
   return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
