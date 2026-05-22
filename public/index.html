@@ -1462,27 +1462,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div id="theme-swatches" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px 0;width:100%;padding-bottom:2px;"></div>
         </div>
       </div>
-      <!-- OpenAI API 키 설정 -->
-      <div class="sg">
-        <div class="si" style="flex-direction:column;align-items:flex-start;gap:10px;">
-          <div style="display:flex;align-items:center;gap:8px;width:100%;">
-            <span style="font-size:15px;width:22px;text-align:center;">🤖</span>
-            <span class="si-lbl">OpenAI API 키</span>
-          </div>
-          <div style="width:100%;">
-            <div style="position:relative;margin-bottom:6px;">
-              <input id="gpt-key-input" type="password"
-                placeholder="sk-proj-..."
-                style="width:100%;padding:9px 70px 9px 12px;border-radius:10px;border:1.5px solid var(--border-mid);background:var(--bg);font-size:12px;font-family:var(--font);color:var(--text-1);outline:none;"
-                onfocus="this.style.borderColor='var(--green)'"
-                onblur="this.style.borderColor='var(--border-mid)'"
-                onkeydown="if(event.key==='Enter')saveGptKey()">
-              <button onclick="saveGptKey()" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);background:var(--green);color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">저장</button>
-            </div>
-            <div id="gpt-status" style="font-size:11px;color:var(--text-3);"></div>
-          </div>
-        </div>
-      </div>
       <div class="sg">
         <div class="si" onclick="window.open('./privacy.html','_blank')" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">🛡️</span><span class="si-lbl">개인정보 처리방침</span><span class="si-val">›</span></div>
         <div class="si" onclick="authLogout()" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">🚪</span><span class="si-lbl" style="color:var(--red);">로그아웃</span></div>
@@ -2072,7 +2051,7 @@ var PAY_BG    = { cash:'#F5F5F5', credit:'#EBF3FF', ic:'#E0F5EE', qr:'#FEF0E8', 
 var DB = [];
 var nextId = 1;
 var apiKey = 'AIzaSyCNMJkKN0UgF9Kq_azoFuQFFhKZbP1rGcE';   // Google Vision API 키
-var gptKey  = localStorage.getItem('riq_gpt_key') || '';  // OpenAI API 키 — 앱 설정에서 입력
+var gptKey  = '';  // OpenAI API 키 — 백엔드 /api/gpt 경유 (Vercel 환경변수 OPENAI_API_KEY)
 
 /* ══════════════════════════════
    API 키
@@ -4834,12 +4813,12 @@ async function analyzeMultiReceipt() {
         + '<span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div>';
     }
 
-    // ── GPT 파싱 (합쳐진 텍스트 1번에 보내기) ──
+    // ── GPT 파싱 (백엔드 /api/gpt 경유) ──
     var result;
-    if (gptKey && gptKey.startsWith('sk-') && gptKey.length > 20) {
+    try {
       result = await parseWithGPTMulti(combinedRawText, multiPages.length);
-    } else {
-      // GPT 키 없으면 규칙 기반으로 폴백
+    } catch(e) {
+      console.warn('GPT 파싱 실패, 규칙 기반으로 폴백:', e.message);
       result = parseReceiptText(combinedRawText);
     }
 
@@ -4935,12 +4914,9 @@ function parseWithGPTMulti(combinedText, pageCount) {
     numberedText
   ].join('\n');
 
-  return fetch('https://api.openai.com/v1/chat/completions', {
+  return fetch('/api/gpt', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + gptKey
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o',  // 분할 촬영은 복잡하니 gpt-4o 사용
       max_tokens: 3000,
@@ -5049,18 +5025,12 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
         rawText = data.responses[0].fullTextAnnotation.text;
       }
 
-      // GPT 키가 있으면 → 하이브리드 모드 (텍스트 + 이미지 동시 전달)
-      if (gptKey && gptKey.startsWith('sk-') && gptKey.length > 20) {
-        var statusEl = document.querySelector('.ocr-status');
-        if (statusEl) {
-          statusEl.innerHTML = '<div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">품목을 정리하고 있어요<br><span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div>';
-        }
-        // 하이브리드: rawText + base64 이미지 함께 전달
-        showOcrDebugHybrid(previewSrc, rawText, base64Image);
-      } else {
-        // GPT 키 없으면 기존 규칙 기반 파싱
-        showOcrDebug(previewSrc, rawText);
+      // 항상 하이브리드 모드 (백엔드 /api/gpt 경유)
+      var statusEl = document.querySelector('.ocr-status');
+      if (statusEl) {
+        statusEl.innerHTML = '<div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">품목을 정리하고 있어요<br><span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div>';
       }
+      showOcrDebugHybrid(previewSrc, rawText, base64Image);
     })
     .catch(function(err) {
       showOcrError(previewSrc, err.message);
@@ -5166,12 +5136,9 @@ JSONのみ出力。説明不要。`;
     }
   ];
 
-  return fetch('https://api.openai.com/v1/chat/completions', {
+  return fetch('/api/gpt', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + gptKey
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o',        // 하이브리드는 이미지 분석 가능한 gpt-4o 사용
       max_tokens: 2500,
@@ -5308,12 +5275,9 @@ function parseWithGPT(rawText) {
     numberedText
   ].join('\n');
 
-  return fetch('https://api.openai.com/v1/chat/completions', {
+  return fetch('/api/gpt', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + gptKey
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       max_tokens: 2500,  // 줄 번호 포함으로 입력이 길어져서 넉넉하게
