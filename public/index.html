@@ -2657,6 +2657,7 @@ function ctStoreExchange(id, name, cost) {
 var _ctMap = null;
 var _ctMapInit = false;
 var _ctMarkers = [];
+var _ctMarkerJustClicked = false; // 마커 클릭 직후 map click 충돌 방지 플래그
 var _ctPriceMax = 1500;
 var _ctCatFilter = 'all';
 var _ctUserPos = null;
@@ -2740,8 +2741,9 @@ function ctInitMap() {
   });
 
   /* 빈 지도 클릭 → 열려 있는 가게 시트 닫기
-     ※ 마커 클릭은 map 'click'으로 전파되지 않으므로 마커와 충돌 없음 */
+     마커 클릭 직후 200ms 이내에는 무시 (map click 연속 발생 방지) */
   _ctMap.addListener('click', function() {
+    if (_ctMarkerJustClicked) return;
     if (document.getElementById('ct-store-sheet').style.display !== 'none') {
       ctCloseStoreSheet();
     }
@@ -2878,7 +2880,11 @@ function ctRenderPricePins() {
         title: group.store.name,
         zIndex: isTop ? 10 : 1
       });
-      marker.addListener('click', function() { ctShowStoreCard(group); });
+      marker.addListener('click', function() {
+        _ctMarkerJustClicked = true;
+        setTimeout(function() { _ctMarkerJustClicked = false; }, 200);
+        ctShowStoreCard(group);
+      });
       _ctMarkers.push(marker);
     });
   }
