@@ -3876,7 +3876,7 @@ function renderHome() {
         +'</div>';
       recs.forEach(function(r){
         var payBadge=r.pay?'<span style="font-size:10px;color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>':'';
-        html+='<div class="receipt-row" onclick="goToHistoryEntry(\''+r.cat+'\',\''+r.id+'\')">'
+        html+='<div class="receipt-row" onclick="goToHistoryEntry(\''+r.cat+'\',\''+r.id+'\')"'+(r.memo?' style="border:1.5px solid var(--green);"':'')+'>'
           +'<div class="r-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
           +'<div style="flex:1;min-width:0;">'
           +'<div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
@@ -3887,7 +3887,6 @@ function renderHome() {
           +'<div style="text-align:right;flex-shrink:0;">'
           +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
           +'<div style="font-size:10px;color:var(--text-3);">'+r.items.length+'품목</div>'
-          +(r.memo?'<div style="font-size:10px;color:#0C6B52;margin-top:4px;font-weight:700;background:#E0F5EE;padding:2px 8px;border-radius:10px;display:inline-block;border:1px solid rgba(22,168,122,.35);">📝 메모</div>':'')
           +'</div></div>';
       });
     });
@@ -3957,7 +3956,7 @@ function renderHistory(cat) {
     var label = parts[1]+'月 '+parseInt(parts[2])+'日';
     html += '<div class="hgroup"><div class="date-lbl">'+label+'</div>';
     groups[date].forEach(function(r) {
-      html += '<div class="h-entry" id="he-'+r.id+'"'+(r.memo?' style="border-left:3px solid #16A87A;"':'')+'>'
+      html += '<div class="h-entry" id="he-'+r.id+'"'+(r.memo?' style="border:1.5px solid var(--green);"':'')+'>'
         +'<div class="h-head" onclick="toggleEntry(this)">'
         +'<div class="h-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
         +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
@@ -4008,23 +4007,6 @@ function renderHistory(cat) {
     html += '</div>';
   });
   document.getElementById('hist-list').innerHTML = html || '<div style="padding:40px 20px;text-align:center;"><div style="font-size:28px;margin-bottom:10px;">📭</div><div style="font-size:13px;color:var(--text-3);font-weight:600;">'+histYear+'年 '+histMonth+'月 내역이 없어요</div></div>';
-  _injectHistMemoBadges();
-}
-
-function _injectHistMemoBadges() {
-  DB.forEach(function(r) {
-    if (!r.memo) return;
-    var entry = document.getElementById('he-' + r.id);
-    if (!entry) return;
-    var amtDiv = entry.querySelector('.h-amt');
-    if (!amtDiv) return;
-    if (amtDiv.querySelector('.memo-bdg')) return;
-    var el = document.createElement('div');
-    el.className = 'memo-bdg';
-    el.style.cssText = 'font-size:10px;font-weight:700;color:#0C6B52;margin-top:3px;background:#E0F5EE;padding:1px 7px;border-radius:8px;border:1px solid rgba(22,168,122,.35);text-align:right;';
-    el.textContent = '📝 메모';
-    amtDiv.appendChild(el);
-  });
 }
 function filterHistory(chip, cat) {
   selectWheelCat(cat);
