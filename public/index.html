@@ -3554,7 +3554,7 @@ function switchTab(name) {
   var t = document.getElementById('tab-'+name);
   if (t) t.classList.add('active');
   if (name==='home') renderHome();
-  if (name==='history') { updateHistMonthLabel(); renderHistory('all'); renderBars('week'); renderCatBreakdown(); renderReportSummary(); }
+  if (name==='history') { updateHistMonthLabel(); renderHistory(currentFilter||'all'); renderBars('week'); renderCatBreakdown(); renderReportSummary(); }
   if (name==='calendar') renderCalendar(calYear, calMonth);
   if (name==='map') setTimeout(initGoogleMap, 100);
 }
