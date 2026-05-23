@@ -4421,8 +4421,13 @@ function goToHistoryEntry(cat, id) {
       var detail = target.querySelector('.h-detail');
       var arr = target.querySelector('.arr');
       if(detail && !detail.classList.contains('open')){ detail.classList.add('open'); if(arr) arr.textContent='˅'; }
-      target.style.border='1.5px solid var(--green)';
-      setTimeout(function(){ target.style.border=''; }, 1500);
+      target.style.boxShadow='0 0 0 2px var(--green)';
+      setTimeout(function(){
+        target.style.boxShadow='';
+        // 메모 있는 카드는 테두리 복원
+        var entry = DB.find(function(x){ return String(x.id)===String(id); });
+        if (entry && entry.memo) target.style.border='1.5px solid var(--green)';
+      }, 1500);
     }
   }, 150);
 }

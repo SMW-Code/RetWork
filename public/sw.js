@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v6';
+const CACHE_NAME = 'receiptiq-v7';
 const STATIC_CACHE = ['/manifest.json', '/icons/icon.svg'];
 
 // 설치: 정적 파일만 프리캐시
@@ -30,15 +30,10 @@ self.addEventListener('fetch', event => {
   const isHTML = url.pathname === '/' || url.pathname.endsWith('.html');
 
   if (isHTML) {
-    // 네트워크 우선: 실패 시 캐시 폴백
+    // HTML은 절대 캐시하지 않음 — 항상 네트워크에서 최신 버전 가져옴
     event.respondWith(
-      fetch(event.request).then(response => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => caches.match(event.request))
+      fetch(event.request, { cache: 'no-store' })
+        .catch(() => caches.match(event.request))
     );
   } else {
     // 캐시 우선: 없으면 네트워크 후 저장
