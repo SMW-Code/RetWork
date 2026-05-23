@@ -3964,9 +3964,11 @@ function renderHistory(cat) {
         +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">'
         +'<span style="font-size:11px;color:var(--text-3);">'+CAT_LABEL[r.cat]+' · '+r.items.length+'품목</span>'
         +(r.pay ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+PAY_BG[r.pay]+';color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>' : '')
-        +(r.memo ? '<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#E0F5EE;color:#0C6B52;border:1px solid rgba(22,168,122,.35);flex-shrink:0;">📝 메모</span>' : '')
         +'</div></div>'
+        +'<div style="text-align:right;flex-shrink:0;">'
         +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
+        +(r.memo ? '<div style="font-size:10px;font-weight:700;color:#0C6B52;margin-top:3px;background:#E0F5EE;padding:1px 7px;border-radius:8px;border:1px solid rgba(22,168,122,.35);white-space:nowrap;">📝 메모</div>' : '')
+        +'</div>'
         +'<span class="arr" style="font-size:13px;color:var(--text-3);margin-left:6px;">›</span>'
         +'</div>'
         +'<div class="h-detail">';
