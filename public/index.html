@@ -3957,7 +3957,7 @@ function renderHistory(cat) {
     var label = parts[1]+'月 '+parseInt(parts[2])+'日';
     html += '<div class="hgroup"><div class="date-lbl">'+label+'</div>';
     groups[date].forEach(function(r) {
-      html += '<div class="h-entry" id="he-'+r.id+'">'
+      html += '<div class="h-entry" id="he-'+r.id+'"'+(r.memo?' style="border-left:3px solid #16A87A;"':'')+'>'
         +'<div class="h-head" onclick="toggleEntry(this)">'
         +'<div class="h-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
         +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
