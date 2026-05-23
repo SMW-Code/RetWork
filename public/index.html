@@ -3965,9 +3965,8 @@ function renderHistory(cat) {
         +'<span style="font-size:11px;color:var(--text-3);">'+CAT_LABEL[r.cat]+' · '+r.items.length+'품목</span>'
         +(r.pay ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+PAY_BG[r.pay]+';color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>' : '')
         +'</div></div>'
-        +'<div style="text-align:right;flex-shrink:0;">'
+        +'<div class="h-amt" style="text-align:right;flex-shrink:0;">'
         +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
-        +(r.memo ? '<div style="font-size:10px;font-weight:700;color:#0C6B52;margin-top:3px;background:#E0F5EE;padding:1px 7px;border-radius:8px;border:1px solid rgba(22,168,122,.35);white-space:nowrap;">📝 메모</div>' : '')
         +'</div>'
         +'<span class="arr" style="font-size:13px;color:var(--text-3);margin-left:6px;">›</span>'
         +'</div>'
@@ -4009,6 +4008,23 @@ function renderHistory(cat) {
     html += '</div>';
   });
   document.getElementById('hist-list').innerHTML = html || '<div style="padding:40px 20px;text-align:center;"><div style="font-size:28px;margin-bottom:10px;">📭</div><div style="font-size:13px;color:var(--text-3);font-weight:600;">'+histYear+'年 '+histMonth+'月 내역이 없어요</div></div>';
+  _injectHistMemoBadges();
+}
+
+function _injectHistMemoBadges() {
+  DB.forEach(function(r) {
+    if (!r.memo) return;
+    var entry = document.getElementById('he-' + r.id);
+    if (!entry) return;
+    var amtDiv = entry.querySelector('.h-amt');
+    if (!amtDiv) return;
+    if (amtDiv.querySelector('.memo-bdg')) return;
+    var el = document.createElement('div');
+    el.className = 'memo-bdg';
+    el.style.cssText = 'font-size:10px;font-weight:700;color:#0C6B52;margin-top:3px;background:#E0F5EE;padding:1px 7px;border-radius:8px;border:1px solid rgba(22,168,122,.35);text-align:right;';
+    el.textContent = '📝 메모';
+    amtDiv.appendChild(el);
+  });
 }
 function filterHistory(chip, cat) {
   selectWheelCat(cat);
