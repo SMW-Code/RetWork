@@ -1643,14 +1643,17 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <div class="sp-body">
       <div class="sg">
-        <div class="si" style="flex-direction:column;align-items:flex-start;gap:10px;">
-          <div style="display:flex;align-items:center;gap:8px;width:100%;">
-            <span style="font-size:15px;width:22px;text-align:center;">🔄</span>
-            <span class="si-lbl">モード切替</span>
-          </div>
-          <div style="display:flex;gap:8px;width:100%;">
-            <button id="mode-btn-receipt" class="mode-btn receipt active" onclick="switchMode('receipt');closeOv('ov-settings')" style="flex:1;">🧾 ReceiptIQ</button>
-            <button id="mode-btn-chiri" class="mode-btn chiri" onclick="switchMode('chiri');closeOv('ov-settings')" style="flex:1;">📍 チリつも</button>
+        <div class="si">
+          <span style="font-size:15px;width:22px;text-align:center;">🔄</span>
+          <span class="si-lbl">モード切替</span>
+          <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
+            <span id="mode-lbl-receipt" style="font-size:13px;font-weight:800;color:var(--green);transition:all .25s;white-space:nowrap;">🧾 Receipt</span>
+            <div id="mode-toggle-sw" data-mode="receipt"
+              onclick="switchMode(this.dataset.mode==='receipt'?'chiri':'receipt');closeOv('ov-settings')"
+              style="width:52px;height:28px;border-radius:14px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:0 2px 8px rgba(22,168,122,.3);">
+              <div id="mode-toggle-knob" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.18);"></div>
+            </div>
+            <span id="mode-lbl-chiri" style="font-size:13px;font-weight:700;color:var(--text-3);transition:all .25s;white-space:nowrap;">📍 チリつも</span>
           </div>
         </div>
       </div>
@@ -2207,9 +2210,15 @@ function saveGptKey() {
 function switchMode(mode) {
   var isReceipt = mode === 'receipt';
 
-  // 토글 버튼 상태
-  document.getElementById('mode-btn-receipt').classList.toggle('active', isReceipt);
-  document.getElementById('mode-btn-chiri').classList.toggle('active', !isReceipt);
+  // 모드 토글 스위치 상태 업데이트
+  var sw    = document.getElementById('mode-toggle-sw');
+  var knob  = document.getElementById('mode-toggle-knob');
+  var lblR  = document.getElementById('mode-lbl-receipt');
+  var lblC  = document.getElementById('mode-lbl-chiri');
+  if (sw)   { sw.dataset.mode = mode; sw.style.background = isReceipt ? 'var(--green)' : 'var(--gold)'; sw.style.boxShadow = isReceipt ? '0 2px 8px rgba(22,168,122,.3)' : 'var(--gold-shadow)'; }
+  if (knob) knob.style.left = isReceipt ? '3px' : '27px';
+  if (lblR) { lblR.style.color = isReceipt ? 'var(--green)' : 'var(--text-3)'; lblR.style.fontWeight = isReceipt ? '800' : '600'; }
+  if (lblC) { lblC.style.color = isReceipt ? 'var(--text-3)' : 'var(--gold)'; lblC.style.fontWeight = isReceipt ? '600' : '800'; }
 
   // ReceiptIQ 화면/탭바 표시 여부
   document.querySelectorAll('.screen').forEach(function(s) {
