@@ -2114,6 +2114,27 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet" id="shop-sheet-content"></div>
 </div>
 
+<!-- ══ 영수증 메모 모달 ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-memo" onclick="closeOvOutside(event,'ov-memo')">
+  <div class="sheet" style="max-height:75%;">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+      <div class="sheet-title">📝 メモ</div>
+      <div onclick="closeOv('ov-memo')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
+    </div>
+    <div id="ov-memo-store" style="font-size:12px;color:var(--text-3);margin-bottom:14px;"></div>
+    <textarea id="ov-memo-input"
+      placeholder="このレシートへのメモ...&#10;(🔒 自分だけが見られます)"
+      style="width:100%;min-height:130px;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:var(--font);color:var(--text-1);background:var(--surface);resize:none;outline:none;box-sizing:border-box;line-height:1.6;transition:border-color .2s;"
+      onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <button onclick="closeOv('ov-memo')" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">キャンセル</button>
+      <button onclick="saveMemo()" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">💾 保存</button>
+    </div>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-3);">🔒 このメモはあなただけが見られます</div>
+  </div>
+</div>
+
 <!-- ══════════════════════════════
      チリつも 가게 상세 바텀시트 (재구성 예정)
 ══════════════════════════════ -->
@@ -3866,6 +3887,7 @@ function renderHome() {
           +'<div style="text-align:right;flex-shrink:0;">'
           +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
           +'<div style="font-size:10px;color:var(--text-3);">'+r.items.length+'품목</div>'
+          +(r.memo?'<div style="font-size:10px;color:var(--green);margin-top:3px;font-weight:600;">📝 메모</div>':'')
           +'</div></div>';
       });
     });
@@ -3964,6 +3986,17 @@ function renderHistory(cat) {
           +'<span style="font-size:12px;font-weight:700;color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>'
           +'</div>';
       }
+      // 메모 섹션
+      var memoText = r.memo ? r.memo.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
+      html += '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+        +'<span style="font-size:11px;font-weight:700;color:var(--text-3);">📝 メモ <span style="font-size:10px;font-weight:500;">(非公開)</span></span>'
+        +'<button onclick="event.stopPropagation();openMemo(\''+r.id+'\')" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light,#E8F5E9);color:var(--green);cursor:pointer;">'+(r.memo?'✏️ 編集':'＋ 追加')+'</button>'
+        +'</div>'
+        +(r.memo
+          ? '<div style="font-size:12px;color:var(--text-1);background:var(--surface);border-radius:10px;padding:9px 12px;line-height:1.65;border:0.5px solid var(--border-mid,#e0e0e0);">'+memoText+'</div>'
+          : '<div style="font-size:12px;color:var(--text-3);font-style:italic;padding:2px 0;">まだメモがありません</div>')
+        +'</div>';
       html += '<div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">'
         +'<button onclick="event.stopPropagation();openEditReceipt(\''+r.id+'\')" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;">✏️ 수정</button>'
         +'<button onclick="event.stopPropagation();confirmDeleteReceipt(\''+r.id+'\')" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid var(--red,#FF4D4F);background:transparent;color:var(--red,#FF4D4F);cursor:pointer;">🗑 삭제</button>'
@@ -4292,6 +4325,40 @@ function saveEditReceipt() {
   renderHistory(currentFilter);
   renderHome();
   showToast('✅ 수정이 저장됐어요!');
+}
+
+/* ══════════════════════════════
+   영수증 메모
+══════════════════════════════ */
+var _memoReceiptId = null;
+
+function openMemo(id) {
+  event.stopPropagation();
+  _memoReceiptId = id;
+  var r = DB.find(function(x){ return String(x.id) === String(id); });
+  if (!r) return;
+  var storeEl = document.getElementById('ov-memo-store');
+  var input   = document.getElementById('ov-memo-input');
+  if (storeEl) storeEl.textContent = '🏪 ' + r.store + '  ·  ' + r.date;
+  if (input)   input.value = r.memo || '';
+  openOv('ov-memo');
+  setTimeout(function(){ if (input) input.focus(); }, 320);
+}
+
+async function saveMemo() {
+  var input = document.getElementById('ov-memo-input');
+  var memo  = input ? input.value.trim() : '';
+  var r     = DB.find(function(x){ return String(x.id) === String(_memoReceiptId); });
+  if (!r) { closeOv('ov-memo'); return; }
+  r.memo = memo;
+  if (_sb && _currentUser) {
+    _sb.from('receipts').update({ memo: memo || null })
+      .eq('id', r.id).eq('user_id', _currentUser.id).then(function(){});
+  }
+  closeOv('ov-memo');
+  renderHome();
+  renderHistory(currentFilter);
+  showToast(memo ? '📝 メモを保存しました' : '🗑 メモを削除しました');
 }
 
 function confirmDeleteReceipt(id) {
@@ -7832,7 +7899,8 @@ async function loadFromSupabase() {
       items: (r.items || []).map(function(it) {
         return { name: it.name, qty: it.quantity || 1, price: it.price || 0 };
       }),
-      total: r.total_amount || 0
+      total: r.total_amount || 0,
+      memo:  r.memo || ''
     };
   });
   nextId = DB.length + 1;
