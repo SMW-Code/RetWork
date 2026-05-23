@@ -3754,7 +3754,9 @@ function renderHome() {
   document.getElementById('home-eat').textContent   = '¥'+eatAmt.toLocaleString();
   document.getElementById('home-other').textContent = '¥'+(totalAmt-foodAmt-eatAmt).toLocaleString();
   var labelEl = document.getElementById('home-label');
-  if (labelEl) labelEl.textContent = m+'月 합계 지출 · '+monthReceipts.length+'건';
+  var memoCountHome = monthReceipts.filter(function(r){ return r.memo; }).length;
+  if (labelEl) labelEl.innerHTML = m+'月 합계 지출 · '+monthReceipts.length+'건'
+    +(memoCountHome>0?' <span style="font-size:10px;font-weight:700;color:var(--green);background:var(--green-light,#E8F5E9);padding:1px 8px;border-radius:10px;vertical-align:middle;">📝 '+memoCountHome+'</span>':'');
   var subEl = document.getElementById('home-sub');
   if (subEl) {
     if (prevAmt===0) { subEl.textContent=''; }
@@ -3887,7 +3889,7 @@ function renderHome() {
           +'<div style="text-align:right;flex-shrink:0;">'
           +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
           +'<div style="font-size:10px;color:var(--text-3);">'+r.items.length+'품목</div>'
-          +(r.memo?'<div style="font-size:10px;color:var(--green);margin-top:3px;font-weight:600;">📝 메모</div>':'')
+          +(r.memo?'<div style="font-size:10px;color:var(--green);margin-top:4px;font-weight:700;background:var(--green-light,#E8F5E9);padding:2px 8px;border-radius:10px;display:inline-block;">📝 메모</div>':'')
           +'</div></div>';
       });
     });
@@ -3941,8 +3943,10 @@ function renderHistory(cat) {
   });
   if (cat !== 'all') filtered = filtered.filter(function(r){ return r.cat === cat; });
   filtered = filtered.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
-  var totalAmt = filtered.reduce(function(a,r){return a+r.total;},0);
-  document.getElementById('h-total').innerHTML = '총 <strong style="color:var(--green);">¥'+totalAmt.toLocaleString()+'</strong> ('+filtered.length+'건)';
+  var totalAmt  = filtered.reduce(function(a,r){return a+r.total;},0);
+  var memoCount = filtered.filter(function(r){ return r.memo; }).length;
+  document.getElementById('h-total').innerHTML = '총 <strong style="color:var(--green);">¥'+totalAmt.toLocaleString()+'</strong> ('+filtered.length+'건)'
+    +(memoCount>0?' &nbsp;<span style="font-size:11px;font-weight:700;color:var(--green);background:var(--green-light,#E8F5E9);padding:2px 9px;border-radius:10px;vertical-align:middle;">📝 '+memoCount+'건</span>':'');
 
   // 날짜별 그룹핑
   var groups = {};
@@ -3964,6 +3968,7 @@ function renderHistory(cat) {
         +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">'
         +'<span style="font-size:11px;color:var(--text-3);">'+CAT_LABEL[r.cat]+' · '+r.items.length+'품목</span>'
         +(r.pay ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+PAY_BG[r.pay]+';color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>' : '')
+        +(r.memo ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:var(--green-light,#E8F5E9);color:var(--green);">📝 메모</span>' : '')
         +'</div></div>'
         +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
         +'<span class="arr" style="font-size:13px;color:var(--text-3);margin-left:6px;">›</span>'
