@@ -9177,7 +9177,7 @@ function _sdRenderExpandSlot(cardId,comments){
     var nick=(c.profiles&&c.profiles.nickname)||'익명';
     var isMe=_currentUser&&c.user_id===_currentUser.id;
     var starsHtml='';
-    for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--gold)':'#ddd');';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
+    for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--gold)':'#ddd')+';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
     h+='<div class="sd-comment-item">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
       +'<div style="display:flex;align-items:center;gap:6px;">'
