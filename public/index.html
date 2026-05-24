@@ -2748,6 +2748,17 @@ function ctRenderPricePins() {
         title: group.store.name,
         zIndex: isTop ? 10 : 1
       });
+      // 마커 클릭 → 가게 상세 모달
+      (function(storeObj, mk) {
+        mk.addListener('click', function() {
+          openStoreDetail({
+            name: storeObj.name,
+            lat:  parseFloat(storeObj.lat),
+            lng:  parseFloat(storeObj.lng),
+            cat:  storeObj.category || 'other'
+          });
+        });
+      })(group.store, marker);
       _ctMarkers.push(marker);
     });
   }
