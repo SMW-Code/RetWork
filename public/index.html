@@ -9030,24 +9030,37 @@ function _sdRenderPhotos(photos) {
   var gmUrl = s.lat&&s.lng
     ? 'https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng
     : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(_sdName||'');
-  // 헤더: 📸 사진 | 🗺️ Googleマップ | +
-  var h='<div style="display:flex;align-items:center;padding:0 16px 10px;gap:8px;">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);flex-shrink:0;">📸 사진</div>'
-    +'<a href="'+gmUrl+'" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 10px;border-radius:14px;background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;color:var(--text-2);font-size:11px;font-weight:700;">'
-      +'<span style="font-size:13px;">🗺️</span>'
-      +'<span>Googleマップで見る</span>'
-      +'<span style="font-size:10px;color:var(--text-3);">↗</span>'
-      +'</a>'
-    +'<div onclick="sdPhotoSheet()" style="width:30px;height:30px;border-radius:50%;background:var(--green-light);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--green);flex-shrink:0;">+</div>'
-    +'</div>';
+  var H=140; // 사진 영역 높이
+  var h='<div style="padding:0 16px 12px;display:flex;gap:8px;align-items:stretch;">';
+  // 왼쪽: 사진 영역
   if(photos.length===0){
-    h+='<div style="padding:0 16px 12px;" onclick="sdPhotoSheet()"><div style="height:76px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">'
-      +'<span style="font-size:22px;">📷</span><span style="font-size:12px;color:var(--text-3);font-weight:600;">첫 사진을 올려보세요</span></div></div>';
+    h+='<div onclick="sdPhotoSheet()" style="flex:1;height:'+H+'px;border-radius:14px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;">'
+      +'<span style="font-size:30px;">📷</span>'
+      +'<span style="font-size:11px;color:var(--text-3);font-weight:600;">첫 사진을 올려보세요</span>'
+      +'</div>';
+  } else if(photos.length===1){
+    h+='<div style="flex:1;height:'+H+'px;border-radius:14px;overflow:hidden;background:var(--bg-2);">'
+      +'<img src="'+photos[0].photo_url+'" alt="" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+      +'</div>';
   } else {
-    h+='<div class="sd-photo-scroll">';
-    photos.forEach(function(p){h+='<img class="sd-photo-thumb" src="'+p.photo_url+'" alt="" loading="lazy">';});
-    h+='</div>';
+    h+='<div class="sd-photo-scroll" style="flex:1;height:'+H+'px;border-radius:14px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--bg-2);"><div style="display:flex;gap:3px;height:'+H+'px;">';
+    photos.forEach(function(p){
+      h+='<img src="'+p.photo_url+'" alt="" loading="lazy" style="width:'+Math.round(H*1.35)+'px;height:'+H+'px;flex-shrink:0;object-fit:cover;display:block;">';
+    });
+    h+='</div></div>';
   }
+  // 오른쪽: 사진추가 / 구글맵 (위아래)
+  h+='<div style="width:84px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'
+    +'<div onclick="sdPhotoSheet()" style="flex:1;border-radius:12px;background:var(--green-light);border:1px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--green);">'
+      +'<span style="font-size:20px;">📷</span>'
+      +'<span style="font-size:10px;font-weight:700;">사진 추가</span>'
+    +'</div>'
+    +'<a href="'+gmUrl+'" target="_blank" rel="noopener" style="flex:1;border-radius:12px;background:var(--bg-2);border:.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none;color:var(--text-2);">'
+      +'<span style="font-size:20px;">🗺️</span>'
+      +'<span style="font-size:10px;font-weight:700;text-align:center;line-height:1.2;">Googleマップ</span>'
+    +'</a>'
+    +'</div>';
+  h+='</div>';
   wrap.innerHTML=h;
 }
 /* Supabase Storage는 path에 ASCII만 허용 → 한글/일본어/특수문자 제거 + 빈 경우 hash 사용 */
