@@ -1982,8 +1982,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 <!-- 파일 입력 (카메라/갤러리/메뉴이미지) -->
-<input type="file" id="sd-cam-input"   accept="image/*" capture="environment" style="display:none" onchange="sdHandlePhotoInput(this)">
-<input type="file" id="sd-gal-input"   accept="image/*"                       style="display:none" onchange="sdHandlePhotoInput(this)">
+<input type="file" id="sd-photo-input"  accept="image/*"                       style="display:none" onchange="sdHandlePhotoInput(this)">
 <input type="file" id="sd-menu-img-in" accept="image/*"                       style="display:none" onchange="sdHandleMenuImgInput(this)">
 
 <!-- ══ チリつもに公開 모달 ══ -->
@@ -8944,6 +8943,21 @@ var _sdSData     = null; // 현재 가게 객체
 var _sdExpandId  = null; // 펼쳐진 메뉴카드 ID
 var _sdCStar     = {};   // {cardId: 별점}
 var _sdNewImgFile= null; // 메뉴카드 추가용 이미지
+var _sdNewCat1   = '';   // 선택된 대분류 (예: '🍣 일식')
+var _sdNewCat2   = '';   // 선택된 소분류 (예: '스시')
+
+/* ── 메뉴 카테고리 (대분류 → 소분류) ── */
+var SD_CATS = {
+  '🍣 일식':           ['스시','회','라면','우동','소바','텐푸라','돈까스','덮밥','정식','카레','오니기리','오코노미야키','야키니쿠','야키토리','오뎅','나베','츠케멘','기타'],
+  '🌶️ 한식':           ['비빔밥','김치찌개','된장찌개','불고기','삼겹살','치킨','찜/탕','분식','한정식','족발','기타'],
+  '🥟 중식':           ['짜장면','짬뽕','탕수육','만두/딤섬','마라탕','훠궈','볶음밥','북경덕','기타'],
+  '🍝 이탈리안':       ['파스타','피자','리조또','뇨끼','안티파스토','기타'],
+  '🥐 프랑스':         ['비스트로','갈레트','코스요리','디저트','기타'],
+  '🍔 양식':           ['햄버거','샌드위치','스테이크','브런치','오므라이스','기타'],
+  '☕ 카페/베이커리': ['커피','차','빵/베이커리','케이크','디저트','아이스크림','기타'],
+  '🍺 술집':           ['이자카야','바','호프','와인바','기타'],
+  '🍱 기타':           ['도시락','패스트푸드','뷔페','푸드코트','기타']
+};
 
 /* ── 열기 ── */
 async function openStoreDetail(sData) {
@@ -9030,32 +9044,34 @@ function _sdRenderPhotos(photos) {
   }
   wrap.innerHTML=h;
 }
+/* + 버튼 → 직접 파일 피커 호출 (시트 단계 제거: iOS Safari user-gesture chain 보존)
+   브라우저 native picker가 카메라/앨범/파일 선택을 모두 제공함 */
 function sdPhotoSheet(){
-  var bg=document.createElement('div');
-  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;';
-  var sh=document.createElement('div');
-  sh.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:16px 20px 40px;z-index:1101;animation:slideUp .25s ease;';
-  sh.innerHTML='<div style="text-align:center;font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:14px;">사진 추가</div>'
-    +'<div onclick="sdDoCam()" style="padding:14px;border-radius:12px;background:var(--bg);margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;"><span style="font-size:22px;">📷</span><span style="font-size:14px;font-weight:600;color:var(--text-1);">사진 찍기</span></div>'
-    +'<div onclick="sdDoGal()" style="padding:14px;border-radius:12px;background:var(--bg);margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;"><span style="font-size:22px;">🖼️</span><span style="font-size:14px;font-weight:600;color:var(--text-1);">갤러리에서 선택</span></div>'
-    +'<div onclick="rmSheet()" style="text-align:center;color:var(--text-3);font-size:13px;padding:8px;cursor:pointer;">취소</div>';
-  function rmSheet(){sh.remove();bg.remove();}
-  bg.onclick=rmSheet;
-  document.body.appendChild(bg); document.body.appendChild(sh);
-  window._sdRmSheet=rmSheet;
+  if(!_currentUser){ alert('ログイン後にご利用ください'); return; }
+  if(!_sb){ alert('セッション情報が見つかりません。再ログインしてください'); return; }
+  document.getElementById('sd-photo-input').click();
 }
-function sdDoCam(){if(window._sdRmSheet)window._sdRmSheet();document.getElementById('sd-cam-input').click();}
-function sdDoGal(){if(window._sdRmSheet)window._sdRmSheet();document.getElementById('sd-gal-input').click();}
 async function sdHandlePhotoInput(input){
-  var file=input.files[0]; if(!file||!_sb||!_currentUser) return;
-  input.value='';
-  var ext=file.name.split('.').pop()||'jpg';
-  var path='store-photos/'+_sdName.replace(/[^a-zA-Z0-9가-힣]/g,'_')+'/'+Date.now()+'.'+ext;
-  var {data:ud,error:ue}=await _sb.storage.from('store-photos').upload(path,file,{upsert:true});
-  if(ue){alert('업로드 실패: '+ue.message);return;}
-  var {data:uu}=_sb.storage.from('store-photos').getPublicUrl(path);
-  await _sb.from('store_community_photos').insert({store_name:_sdName,photo_url:uu.publicUrl,uploaded_by:_currentUser.id});
-  await _sdLoadPhotos();
+  var file = input.files && input.files[0];
+  if(!file){ return; }
+  input.value = '';
+  if(!_sb || !_currentUser){ alert('セッションが切れました。再ログインしてください'); return; }
+  try {
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    var safe = _sdName.replace(/[^a-zA-Z0-9가-힣]/g,'_').substring(0,40);
+    var path = 'community/'+safe+'/'+Date.now()+'.'+ext;
+    var up = await _sb.storage.from('store-photos').upload(path, file, { upsert:false, contentType:file.type||'image/jpeg' });
+    if(up.error){ alert('アップロード失敗: '+up.error.message); console.error('[SD upload]', up.error); return; }
+    var pub = _sb.storage.from('store-photos').getPublicUrl(path);
+    var url = pub.data && pub.data.publicUrl;
+    if(!url){ alert('画像URL取得失敗'); return; }
+    var ins = await _sb.from('store_community_photos').insert({ store_name:_sdName, photo_url:url, uploaded_by:_currentUser.id });
+    if(ins.error){ alert('DB保存失敗: '+ins.error.message); console.error('[SD db]', ins.error); return; }
+    await _sdLoadPhotos();
+  } catch(e){
+    alert('エラー: '+(e && e.message ? e.message : e));
+    console.error('[SD photo err]', e);
+  }
 }
 
 /* ── 구글맵 링크 ── */
@@ -9297,7 +9313,7 @@ async function sdSubmitReply(cid,cardId){
 function sdOpenAddCard(){
   if(!_currentUser){alert('로그인 후 이용할 수 있어요');return;}
   var wrap=document.getElementById('sd-menus-wrap'); if(!wrap) return;
-  _sdNewImgFile=null; _sdCStar['__new']=0;
+  _sdNewImgFile=null; _sdCStar['__new']=0; _sdNewCat1=''; _sdNewCat2='';
   wrap.innerHTML='<div style="padding:0 16px 16px;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
     +'<div style="font-size:13px;font-weight:700;color:var(--text-1);">🍽️ メニューカード 추가</div>'
@@ -9305,11 +9321,9 @@ function sdOpenAddCard(){
     +'</div>'
     +'<div id="sd-nmi-preview" onclick="sdPickMenuImg()" style="width:100%;height:130px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;">'
     +'<div style="text-align:center;color:var(--text-3);"><div style="font-size:26px;margin-bottom:4px;">📷</div><div style="font-size:11px;font-weight:600;">사진 추가 (선택)</div></div></div>'
-    +'<input id="sd-nm-name" type="text" placeholder="메뉴 이름 *" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;margin-bottom:8px;">'
-    +'<div style="display:flex;gap:8px;margin-bottom:8px;">'
-    +'<input id="sd-nm-cat" type="text" placeholder="카테고리" style="flex:1;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;">'
-    +'<input id="sd-nm-price" type="number" placeholder="가격" style="width:90px;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;">'
-    +'</div>'
+    +'<input id="sd-nm-name" type="text" placeholder="메뉴 이름 *" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;margin-bottom:10px;">'
+    +'<div id="sd-cat-holder">'+_sdRenderCatPicker()+'</div>'
+    +'<input id="sd-nm-price" type="number" placeholder="가격 (¥)" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;margin-bottom:10px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">첫 평가 (선택)</div>'
     +'<div style="display:flex;gap:4px;margin-bottom:8px;">'
     +'<span class="sd-star-sel" id="cst-__new-1" onclick="sdPickStar(\'__new\',1)" style="color:#ddd;">☆</span>'
@@ -9322,7 +9336,45 @@ function sdOpenAddCard(){
     +'<button onclick="sdSubmitNewCard()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">메뉴카드 추가</button>'
     +'</div>';
 }
-function sdCloseAddCard(){_sdNewImgFile=null;_sdLoadMenuCards();}
+function sdCloseAddCard(){_sdNewImgFile=null;_sdNewCat1='';_sdNewCat2='';_sdLoadMenuCards();}
+
+/* ── 카테고리 picker (대분류 → 소분류) ── */
+function _sdRenderCatPicker(){
+  var h='<div style="margin-bottom:10px;">'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;">🏷️ 카테고리</div>'
+    +'<div style="display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:6px;">';
+  Object.keys(SD_CATS).forEach(function(k){
+    var sel=_sdNewCat1===k;
+    h+='<div onclick="sdPickCat1(\''+k.replace(/'/g,"\\'")+'\')" style="flex-shrink:0;padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid '
+      +(sel?'var(--green)':'var(--border-mid)')+';background:'+(sel?'var(--green)':'var(--surface)')
+      +';color:'+(sel?'#fff':'var(--text-2)')+';white-space:nowrap;">'+k+'</div>';
+  });
+  h+='</div>';
+  if(_sdNewCat1){
+    h+='<div style="font-size:10px;font-weight:600;color:var(--text-3);margin:6px 0 5px;">▼ 종류 선택</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:5px;">';
+    (SD_CATS[_sdNewCat1]||[]).forEach(function(s){
+      var sel=_sdNewCat2===s;
+      h+='<div onclick="sdPickCat2(\''+s.replace(/'/g,"\\'")+'\')" style="padding:5px 10px;border-radius:14px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid '
+        +(sel?'var(--green)':'var(--border-mid)')+';background:'+(sel?'var(--green-light)':'var(--surface)')
+        +';color:'+(sel?'var(--green)':'var(--text-3)')+';">'+s+'</div>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
+function sdPickCat1(k){
+  _sdNewCat1=k;
+  _sdNewCat2='';
+  var holder=document.getElementById('sd-cat-holder');
+  if(holder) holder.innerHTML=_sdRenderCatPicker();
+}
+function sdPickCat2(s){
+  _sdNewCat2=s;
+  var holder=document.getElementById('sd-cat-holder');
+  if(holder) holder.innerHTML=_sdRenderCatPicker();
+}
 function sdPickMenuImg(){document.getElementById('sd-menu-img-in').click();}
 function sdHandleMenuImgInput(input){
   var f=input.files[0]; if(!f) return;
@@ -9334,7 +9386,8 @@ function sdHandleMenuImgInput(input){
 async function sdSubmitNewCard(){
   if(!_currentUser||!_sb) return;
   var name=(document.getElementById('sd-nm-name').value||'').trim();
-  var cat=(document.getElementById('sd-nm-cat').value||'').trim();
+  // 카테고리: 대분류 + ・ + 소분류 (예: "🍣 일식・스시")
+  var cat = _sdNewCat1 ? (_sdNewCat1 + (_sdNewCat2?'・'+_sdNewCat2:'')) : '';
   var prEl=document.getElementById('sd-nm-price');
   var price=prEl?parseInt(prEl.value)||null:null;
   var cmtEl=document.getElementById('sd-nm-comment');
