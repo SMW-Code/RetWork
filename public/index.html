@@ -1974,9 +1974,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
     </div>
     <div class="sd-divider"></div>
-    <!-- 구글맵 -->
-    <div id="sd-gmaps-wrap" style="padding:12px 16px;"></div>
-    <div class="sd-divider"></div>
     <!-- 메뉴카드 -->
     <div id="sd-menus-wrap" style="padding-top:12px;"></div>
   </div>
@@ -8969,7 +8966,6 @@ async function openStoreDetail(sData) {
   openOv('ov-store-detail');
   try { _sdRenderHeader(0, 0); } catch(e) { console.error('[SD] header:', e); }
   try { _sdRenderPhotos([]); } catch(e) { console.error('[SD] photos:', e); }
-  try { _sdRenderGmaps(); } catch(e) { console.error('[SD] gmaps:', e); }
   try { _sdRenderMenus([], false); } catch(e) { console.error('[SD] menus:', e); }
   _injectAd('ad-slot-store-detail','store');
   await Promise.all([_sdLoadPhotos(), _sdLoadMenuCards()]);
@@ -9030,12 +9026,22 @@ async function _sdLoadPhotos() {
 }
 function _sdRenderPhotos(photos) {
   var wrap=document.getElementById('sd-photos-wrap'); if(!wrap) return;
-  var h='<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">📸 사진</div>'
-    +'<div onclick="sdPhotoSheet()" style="width:30px;height:30px;border-radius:50%;background:var(--green-light);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--green);">+</div>'
+  var s=_sdSData||{};
+  var gmUrl = s.lat&&s.lng
+    ? 'https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng
+    : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(_sdName||'');
+  // 헤더: 📸 사진 | 🗺️ Googleマップ | +
+  var h='<div style="display:flex;align-items:center;padding:0 16px 10px;gap:8px;">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);flex-shrink:0;">📸 사진</div>'
+    +'<a href="'+gmUrl+'" target="_blank" rel="noopener" style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 10px;border-radius:14px;background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;color:var(--text-2);font-size:11px;font-weight:700;">'
+      +'<span style="font-size:13px;">🗺️</span>'
+      +'<span>Googleマップで見る</span>'
+      +'<span style="font-size:10px;color:var(--text-3);">↗</span>'
+      +'</a>'
+    +'<div onclick="sdPhotoSheet()" style="width:30px;height:30px;border-radius:50%;background:var(--green-light);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--green);flex-shrink:0;">+</div>'
     +'</div>';
   if(photos.length===0){
-    h+='<div style="padding:0 16px 12px;"><div style="height:76px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;gap:8px;">'
+    h+='<div style="padding:0 16px 12px;" onclick="sdPhotoSheet()"><div style="height:76px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;">'
       +'<span style="font-size:22px;">📷</span><span style="font-size:12px;color:var(--text-3);font-weight:600;">첫 사진을 올려보세요</span></div></div>';
   } else {
     h+='<div class="sd-photo-scroll">';
@@ -9044,6 +9050,17 @@ function _sdRenderPhotos(photos) {
   }
   wrap.innerHTML=h;
 }
+/* Supabase Storage는 path에 ASCII만 허용 → 한글/일본어/특수문자 제거 + 빈 경우 hash 사용 */
+function _sdAsciiName(s){
+  if(!s) return 'store';
+  var t = String(s).replace(/[^a-zA-Z0-9_-]/g,'');
+  if(t.length < 2){
+    var h = 0; for(var i=0;i<s.length;i++){ h=((h<<5)-h)+s.charCodeAt(i); h|=0; }
+    t = 's' + Math.abs(h).toString(36);
+  }
+  return t.substring(0,40);
+}
+
 /* + 버튼 → 직접 파일 피커 호출 (시트 단계 제거: iOS Safari user-gesture chain 보존)
    브라우저 native picker가 카메라/앨범/파일 선택을 모두 제공함 */
 function sdPhotoSheet(){
@@ -9057,9 +9074,8 @@ async function sdHandlePhotoInput(input){
   input.value = '';
   if(!_sb || !_currentUser){ alert('セッションが切れました。再ログインしてください'); return; }
   try {
-    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-    var safe = _sdName.replace(/[^a-zA-Z0-9가-힣]/g,'_').substring(0,40);
-    var path = 'community/'+safe+'/'+Date.now()+'.'+ext;
+    var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+    var path = 'community/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
     var up = await _sb.storage.from('store-photos').upload(path, file, { upsert:false, contentType:file.type||'image/jpeg' });
     if(up.error){ alert('アップロード失敗: '+up.error.message); console.error('[SD upload]', up.error); return; }
     var pub = _sb.storage.from('store-photos').getPublicUrl(path);
@@ -9338,20 +9354,20 @@ function sdOpenAddCard(){
 }
 function sdCloseAddCard(){_sdNewImgFile=null;_sdNewCat1='';_sdNewCat2='';_sdLoadMenuCards();}
 
-/* ── 카테고리 picker (대분류 → 소분류) ── */
+/* ── 카테고리 picker (대분류 → 소분류, 둘 다 flex-wrap으로 한 눈에 보임) ── */
 function _sdRenderCatPicker(){
   var h='<div style="margin-bottom:10px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;">🏷️ 카테고리</div>'
-    +'<div style="display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:6px;">';
+    +'<div style="display:flex;flex-wrap:wrap;gap:5px;">';
   Object.keys(SD_CATS).forEach(function(k){
     var sel=_sdNewCat1===k;
-    h+='<div onclick="sdPickCat1(\''+k.replace(/'/g,"\\'")+'\')" style="flex-shrink:0;padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid '
+    h+='<div onclick="sdPickCat1(\''+k.replace(/'/g,"\\'")+'\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid '
       +(sel?'var(--green)':'var(--border-mid)')+';background:'+(sel?'var(--green)':'var(--surface)')
       +';color:'+(sel?'#fff':'var(--text-2)')+';white-space:nowrap;">'+k+'</div>';
   });
   h+='</div>';
   if(_sdNewCat1){
-    h+='<div style="font-size:10px;font-weight:600;color:var(--text-3);margin:6px 0 5px;">▼ 종류 선택</div>'
+    h+='<div style="font-size:10px;font-weight:600;color:var(--text-3);margin:8px 0 5px;">▼ 종류 선택</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:5px;">';
     (SD_CATS[_sdNewCat1]||[]).forEach(function(s){
       var sel=_sdNewCat2===s;
@@ -9396,10 +9412,21 @@ async function sdSubmitNewCard(){
   if(!name){alert('메뉴 이름을 입력해주세요');return;}
   var imgUrl=null;
   if(_sdNewImgFile){
-    var ext=_sdNewImgFile.name.split('.').pop()||'jpg';
-    var path='menu-cards/'+_sdName.replace(/[^a-zA-Z0-9가-힣]/g,'_')+'/'+Date.now()+'.'+ext;
-    var {data:ud,error:ue}=await _sb.storage.from('store-photos').upload(path,_sdNewImgFile,{upsert:true});
-    if(!ue){var {data:uu}=_sb.storage.from('store-photos').getPublicUrl(path);imgUrl=uu.publicUrl;}
+    try {
+      var ext=(_sdNewImgFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      var path='menu-cards/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
+      var up=await _sb.storage.from('store-photos').upload(path,_sdNewImgFile,{upsert:false,contentType:_sdNewImgFile.type||'image/jpeg'});
+      if(up.error){
+        alert('画像アップロード失敗: '+up.error.message);
+        console.error('[menu upload]', up.error);
+      } else {
+        var pub=_sb.storage.from('store-photos').getPublicUrl(path);
+        imgUrl=pub.data&&pub.data.publicUrl;
+      }
+    } catch(e){
+      alert('画像エラー: '+(e&&e.message?e.message:e));
+      console.error('[menu img err]', e);
+    }
   }
   var ins=await _sb.from('store_menu_cards').insert({
     store_name:_sdName,menu_name:name,category:cat||null,price:price,
