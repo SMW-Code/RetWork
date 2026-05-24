@@ -355,12 +355,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-photo-thumb{flex-shrink:0;width:88px;height:88px;border-radius:12px;object-fit:cover;background:var(--bg-2);display:block;}
 .sd-menu-scroll{display:flex;gap:10px;padding:12px 16px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:flex-start;}
 .sd-menu-scroll::-webkit-scrollbar{display:none;}
-.sd-menu-card{flex-shrink:0;width:130px;height:198px;border-radius:14px;border:.5px solid var(--border);overflow:hidden;background:var(--surface);cursor:pointer;transition:transform .12s;display:flex;flex-direction:column;}
-.sd-menu-card:active{transform:scale(.97);}
-.sd-menu-card.sd-expanded{border-color:var(--green);border-width:1.5px;}
-.sd-menu-card-img{width:100%;height:98px;object-fit:cover;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;}
-.sd-menu-card-info{padding:7px 8px;flex:1;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
-.sd-add-card{flex-shrink:0;width:72px;height:198px;border-radius:14px;border:1.5px dashed var(--border-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--text-3);font-size:10px;font-weight:700;padding:0 4px;text-align:center;background:transparent;}
+.sd-menu-card{flex-shrink:0;width:210px;height:280px;border-radius:18px;border:.5px solid var(--border);overflow:hidden;background:var(--surface);cursor:pointer;transition:transform .12s;display:flex;flex-direction:column;box-shadow:0 3px 10px rgba(0,0,0,.07);}
+.sd-menu-card:active{transform:scale(.98);}
+.sd-menu-card.sd-expanded{border-color:var(--green);border-width:1.5px;box-shadow:0 4px 14px rgba(22,168,122,.18);}
+.sd-menu-card-img{width:100%;height:160px;object-fit:cover;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:42px;}
+.sd-menu-card-info{padding:11px 13px 12px;flex:1;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+.sd-add-card{flex-shrink:0;width:96px;height:280px;border-radius:18px;border:1.5px dashed var(--border-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--text-3);font-size:11px;font-weight:700;padding:0 6px;text-align:center;background:transparent;}
 .sd-menu-expand-wrap{margin:0 16px 12px;border-radius:14px;border:.5px solid var(--green);background:var(--bg);overflow:hidden;animation:sdSlideDown .2s ease;}
 @keyframes sdSlideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .sd-comment-item{padding:10px 14px;border-bottom:.5px solid var(--border);}
@@ -8942,6 +8942,8 @@ var _sdCStar     = {};   // {cardId: 별점}
 var _sdNewImgFile= null; // 메뉴카드 추가용 이미지
 var _sdNewCat1   = '';   // 선택된 대분류 (예: '🍣 일식')
 var _sdNewCat2   = '';   // 선택된 소분류 (예: '스시')
+var _sdCmtPage   = {};   // {cardId: 댓글 현재 페이지 (0부터)}
+var SD_CMT_PER_PAGE = 5; // 댓글 페이지당 개수
 
 /* ── 메뉴 카테고리 (대분류 → 소분류) ── */
 var SD_CATS = {
@@ -9030,7 +9032,7 @@ function _sdRenderPhotos(photos) {
   var gmUrl = s.lat&&s.lng
     ? 'https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng
     : 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(_sdName||'');
-  var H=140; // 사진 영역 높이
+  var H=200; // 사진 영역 높이
   var h='<div style="padding:0 16px 12px;display:flex;gap:8px;align-items:stretch;">';
   // 왼쪽: 사진 영역
   if(photos.length===0){
@@ -9144,23 +9146,24 @@ function _sdRenderMenus(cards,loaded){
   cards.forEach(function(c){
     var isExp=_sdExpandId===c.id;
     var imgH=c.image_url
-      ?'<img style="width:100%;height:98px;object-fit:cover;display:block;" src="'+c.image_url+'" loading="lazy">'
+      ?'<img style="width:100%;height:160px;object-fit:cover;display:block;" src="'+c.image_url+'" loading="lazy">'
       :'<div class="sd-menu-card-img">🍽️</div>';
     var stars=c.rating_avg>0?('★'+parseFloat(c.rating_avg).toFixed(1)):'─';
+    var ratingCnt=c.rating_count>0?(' <span style="font-size:10px;color:var(--text-3);font-weight:600;">('+c.rating_count+')</span>'):'';
     h+='<div class="sd-menu-card'+(isExp?' sd-expanded':'')+'" onclick="sdToggleCard(\''+c.id+'\')">'
       +imgH
       +'<div class="sd-menu-card-info">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.menu_name+'</div>'
-      +(c.category?'<div style="font-size:10px;color:var(--text-3);">'+c.category+'</div>':'')
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">'
-      +'<span style="font-size:11px;font-weight:700;color:var(--gold);">'+stars+'</span>'
-      +'<span style="font-size:12px;font-weight:800;color:var(--green);">'+(c.price?'¥'+Number(c.price).toLocaleString():'')+'</span>'
+      +'<div style="font-size:15px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.3px;margin-bottom:2px;">'+c.menu_name+'</div>'
+      +(c.category?'<div style="font-size:11px;color:var(--text-3);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.category+'</div>':'<div></div>')
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--gold);">'+stars+ratingCnt+'</span>'
+      +'<span style="font-size:15px;font-weight:800;color:var(--text-1);">'+(c.price?'¥'+Number(c.price).toLocaleString():'')+'</span>'
       +'</div>'
       +'</div></div>';
   });
   h+='<div class="sd-add-card" onclick="sdOpenAddCard()">'
-    +'<span style="font-size:26px;color:var(--green);">+</span>'
-    +'<span>カード<br>追加</span>'
+    +'<span style="font-size:34px;color:var(--green);line-height:1;">+</span>'
+    +'<span style="font-size:11px;color:var(--text-2);line-height:1.3;">メニュー<br>カード<br>追加</span>'
     +'</div>';
   h+='</div>';
   h+='<div id="sd-expand-slot"></div>';
@@ -9177,6 +9180,7 @@ async function sdToggleCard(cardId){
     return;
   }
   _sdExpandId=cardId;
+  _sdCmtPage[cardId]=0; // 새로 펼칠 때 페이지 초기화
   document.querySelectorAll('.sd-menu-card.sd-expanded').forEach(function(el){el.classList.remove('sd-expanded');});
   var target=event&&event.currentTarget;
   var sl=document.getElementById('sd-expand-slot');
@@ -9229,8 +9233,21 @@ function _sdRenderExpandSlot(cardId,comments){
     }
     h+='</div></div>';
   }
-  // 댓글 목록
-  comments.forEach(function(c){
+  // 댓글 목록 (페이지네이션: 5개씩)
+  var totalCmts = comments.length;
+  var totalPages = Math.max(1, Math.ceil(totalCmts / SD_CMT_PER_PAGE));
+  var curPage = _sdCmtPage[cardId] || 0;
+  if(curPage >= totalPages) curPage = 0;
+  var pageStart = curPage * SD_CMT_PER_PAGE;
+  var pageEnd = pageStart + SD_CMT_PER_PAGE;
+  var pageComments = comments.slice(pageStart, pageEnd);
+  if(totalCmts > 0){
+    h+='<div style="padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between;background:var(--bg-2);">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--text-2);">💬 댓글 '+totalCmts+'개</div>'
+      +(totalPages>1?'<div style="font-size:10px;color:var(--text-3);font-weight:600;">'+(curPage+1)+' / '+totalPages+' 페이지</div>':'')
+      +'</div>';
+  }
+  pageComments.forEach(function(c){
     var nick=(c.profiles&&c.profiles.nickname)||'익명';
     var isMe=_currentUser&&c.user_id===_currentUser.id;
     var starsHtml='';
@@ -9262,6 +9279,20 @@ function _sdRenderExpandSlot(cardId,comments){
       +'</div></div>';
     h+='</div>';
   });
+  // 페이지네이션 컨트롤 (댓글 5개 초과 시)
+  if(totalPages > 1){
+    var canPrev = curPage > 0;
+    var canNext = curPage < totalPages - 1;
+    h+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;background:var(--bg-2);border-top:.5px solid var(--border);">'
+      +(canPrev
+        ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage-1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">◀ 이전</div>'
+        : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">◀ 이전</div>')
+      +'<span style="font-size:11px;font-weight:800;color:var(--text-1);min-width:42px;text-align:center;">'+(curPage+1)+' / '+totalPages+'</span>'
+      +(canNext
+        ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage+1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">다음 ▶</div>'
+        : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">다음 ▶</div>')
+      +'</div>';
+  }
   // 내 댓글 작성 영역
   h+='<div style="padding:12px 14px;">';
   if(!_currentUser){
@@ -9279,6 +9310,11 @@ function _sdRenderExpandSlot(cardId,comments){
   setTimeout(function(){sl.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
 }
 function sdToggleReplyForm(cid){var f=document.getElementById('rf-'+cid);if(f){f.style.display=f.style.display==='none'?'block':'none';}}
+function sdCmtPage(cardId,newPage){
+  if(newPage<0) return;
+  _sdCmtPage[cardId]=newPage;
+  _sdLoadCardDetail(cardId);
+}
 
 /* 댓글 폼 */
 function _sdCommentFormHtml(cardId,commentId,initStar,initText){
