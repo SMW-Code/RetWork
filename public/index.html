@@ -3860,10 +3860,12 @@ function renderHome() {
   var recent=DB.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,12);
   var groups={}, order=[];
   recent.forEach(function(r){ if(!groups[r.date]){groups[r.date]=[];order.push(r.date);} groups[r.date].push(r); });
+  var _homeAdHtml = '<div id="ad-slot-home-list" style="margin:0 16px 8px;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div></div>';
   var html='';
   if(recent.length===0){
     html='<div style="text-align:center;padding:30px 20px;color:var(--text-3);font-size:13px;">아직 영수증이 없어요<br>📷 카메라 버튼으로 스캔해보세요!</div>';
   } else {
+    var homeCardCnt=0;
     order.forEach(function(date){
       var recs=groups[date];
       var dayTotal=recs.reduce(function(a,r){return a+r.total;},0);
@@ -3878,6 +3880,7 @@ function renderHome() {
         +'<div style="font-size:10px;font-weight:700;color:var(--text-3);">¥'+dayTotal.toLocaleString()+'</div>'
         +'</div>';
       recs.forEach(function(r){
+        homeCardCnt++;
         var payBadge=r.pay?'<span style="font-size:10px;color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>':'';
         html+='<div class="receipt-row" onclick="goToHistoryEntry(\''+r.cat+'\',\''+r.id+'\')"'+(r.memo?' style="border:1.5px solid var(--green);"':'')+'>'
           +'<div class="r-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
@@ -3891,10 +3894,13 @@ function renderHome() {
           +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
           +'<div style="font-size:10px;color:var(--text-3);">'+r.items.length+'품목</div>'
           +'</div></div>';
+        // 첫 번째 카드 바로 아래 광고 삽입
+        if(homeCardCnt===1) html+=_homeAdHtml;
       });
     });
   }
   document.getElementById('home-receipts').innerHTML=html;
+  setTimeout(function(){ _injectAd('ad-slot-home-list','home'); },0);
 }
 
 /* ══════════════════════════════
@@ -3953,12 +3959,15 @@ function renderHistory(cat) {
     groups[r.date].push(r);
   });
   var dates = Object.keys(groups).sort(function(a,b){return b.localeCompare(a);});
+  var _histAdHtml = '<div id="ad-slot-hist-list" style="margin:0 16px 8px;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div></div>';
   var html = '';
+  var histCardCnt=0, histAdDone=false;
   dates.forEach(function(date) {
     var parts = date.split('-');
     var label = parts[1]+'月 '+parseInt(parts[2])+'日';
     html += '<div class="hgroup"><div class="date-lbl">'+label+'</div>';
     groups[date].forEach(function(r) {
+      histCardCnt++;
       html += '<div class="h-entry" id="he-'+r.id+'"'+(r.memo?' style="border:1.5px solid var(--green);"':'')+'>'
         +'<div class="h-head" onclick="toggleEntry(this)">'
         +'<div class="h-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
@@ -4008,8 +4017,17 @@ function renderHistory(cat) {
       html += '</div></div>';
     });
     html += '</div>';
+    // 4번째 카드 포함된 그룹 닫힌 뒤 광고 삽입
+    if (!histAdDone && histCardCnt >= 4) { html += _histAdHtml; histAdDone = true; }
   });
-  document.getElementById('hist-list').innerHTML = html || '<div style="padding:40px 20px;text-align:center;"><div style="font-size:28px;margin-bottom:10px;">📭</div><div style="font-size:13px;color:var(--text-3);font-weight:600;">'+histYear+'年 '+histMonth+'月 내역이 없어요</div></div>';
+  // 카드 없음: 빈 메시지 + 광고 / 1~3개: 끝에 광고
+  if (!html) {
+    html = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:28px;margin-bottom:10px;">📭</div><div style="font-size:13px;color:var(--text-3);font-weight:600;">'+histYear+'年 '+histMonth+'月 내역이 없어요</div></div>' + _histAdHtml;
+  } else if (!histAdDone) {
+    html += _histAdHtml;
+  }
+  document.getElementById('hist-list').innerHTML = html;
+  setTimeout(function(){ _injectAd('ad-slot-hist-list','feed'); },0);
 }
 function filterHistory(chip, cat) {
   selectWheelCat(cat);
@@ -7201,6 +7219,57 @@ function buildStoreInfoContent(s, fullscreen) {
     +'</div>';
 }
 
+// 맵 가게 목록 페이지네이션 상태
+var _mapStoreCards = [];
+var _mapStoreListPage = 1;
+
+function _renderMapStoreListPage() {
+  var ITEMS = 10;
+  var cards = _mapStoreCards;
+  var total = cards.length;
+  var totalPages = Math.max(1, Math.ceil(total / ITEMS));
+  if (_mapStoreListPage > totalPages) _mapStoreListPage = totalPages;
+  var page = cards.slice((_mapStoreListPage-1)*ITEMS, _mapStoreListPage*ITEMS);
+  var _mapAd = function(id) {
+    return '<div id="'+id+'" style="background:var(--surface);border-radius:14px;margin-bottom:8px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;">'
+      +'<div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div></div>';
+  };
+  var html = '';
+  if (total === 0) {
+    html = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">영수증을 스캔하면 가게가 여기 표시돼요</div>'
+         + _mapAd('ad-slot-map-empty');
+  } else {
+    page.forEach(function(card, idx) {
+      html += card;
+      if (idx === 2) html += _mapAd('ad-slot-map-inline'); // 3번째 카드 뒤
+    });
+    if (totalPages > 1) {
+      html += _mapAd('ad-slot-map-pag');
+      var bN = 'min-width:30px;height:30px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-family:var(--font);';
+      var bA = 'min-width:30px;height:30px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--green);color:#fff;font-family:var(--font);';
+      html += '<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding:6px 0 4px;">';
+      html += '<button style="'+bN+'" onclick="_mapGoPage('+Math.max(1,_mapStoreListPage-1)+')">‹</button>';
+      for (var i=1;i<=totalPages;i++) html+='<button style="'+(i===_mapStoreListPage?bA:bN)+'" onclick="_mapGoPage('+i+')">'+i+'</button>';
+      html += '<button style="'+bN+'" onclick="_mapGoPage('+Math.min(totalPages,_mapStoreListPage+1)+')">›</button>';
+      html += '</div>';
+    }
+  }
+  var el = document.getElementById('map-store-items');
+  if (el) el.innerHTML = html;
+  setTimeout(function(){
+    _injectAd('ad-slot-map-empty','feed');
+    _injectAd('ad-slot-map-inline','feed');
+    _injectAd('ad-slot-map-pag','feed');
+  },0);
+}
+
+function _mapGoPage(n) {
+  _mapStoreListPage = n;
+  _renderMapStoreListPage();
+  var panel = document.getElementById('map-store-list');
+  if (panel) panel.scrollTop = 0;
+}
+
 function renderMapPins() {
   if (!_map) return;
   _mapMarkers.forEach(function(m) { m.setMap(null); });
@@ -7214,7 +7283,7 @@ function renderMapPins() {
     if (r.lat) { stores[r.store].lat = r.lat; stores[r.store].lng = r.lng; stores[r.store].cat = r.cat || stores[r.store].cat; }
   });
 
-  var storeList = '';
+  var storeCards = [];
   Object.values(stores).forEach(function(s) {
     if (s.lat && s.lng) {
       var emoji = CAT_ICON[s.cat] || '📦';
@@ -7299,7 +7368,7 @@ function renderMapPins() {
     var cardOnclick = hasPin
       ? 'onclick="flyToStoreAndExpand('+s.lat+','+s.lng+',\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')"'
       : '';
-    storeList += '<div class="shop-card" ' + cardOnclick + ' style="flex-direction:column;' + (hasPin ? 'cursor:pointer;' : '') + '">'
+    storeCards.push('<div class="shop-card" ' + cardOnclick + ' style="flex-direction:column;' + (hasPin ? 'cursor:pointer;' : '') + '">'
       + '<div style="display:flex;align-items:center;gap:12px;width:100%;">'
       + '<div class="shop-score" style="background:var(--green-light);color:var(--green);">' + s.count + '회</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.name + '</div>'
@@ -7308,10 +7377,12 @@ function renderMapPins() {
       + pinBtn
       + '</div>'
       + detailHtml
-      + '</div>';
+      + '</div>');  // storeCards.push 닫기
   });
-  var el = document.getElementById('map-store-items');
-  if (el) el.innerHTML = storeList || '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">영수증을 스캔하면 가게가 여기 표시돼요</div>';
+  // 페이지네이션 + 광고 렌더
+  _mapStoreCards = storeCards;
+  _mapStoreListPage = 1;
+  _renderMapStoreListPage();
 
   // 가격 비교 패널이 열려있으면 같이 갱신
   var comparePanel = document.getElementById('mpanel-compare');
