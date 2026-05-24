@@ -8642,6 +8642,12 @@ function switchAuthTab(mode) {
   var pwInput   = document.getElementById('auth-password');
   var extraEl   = document.getElementById('auth-signup-extra');
   var errEl     = document.getElementById('auth-error');
+  // 탭 전환 시 폼 초기화
+  var emailInput = document.getElementById('auth-email');
+  var birthSel   = document.getElementById('auth-birth-year');
+  if (emailInput) emailInput.value = '';
+  if (pwInput)    pwInput.value    = '';
+  if (birthSel)   birthSel.value   = '';
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   // 성별 버튼 초기화
   ['m','f','n'].forEach(function(k) {
@@ -8709,8 +8715,48 @@ async function authSignup() {
   });
   btn.textContent = '회원가입'; btn.disabled = false;
   if (res.error) {
-    // 디버그: Supabase 원문 에러 그대로 표시
-    return showAuthError('[DEBUG] ' + res.error.message);
+    var rawMsg = res.error.message || '';
+    var msg = rawMsg;
+    if (/database.*saving|saving.*new.*user/i.test(rawMsg))
+      msg = '서버 오류가 발생했어요. 잠시 후 다시 시도해주세요.';
+    else if (/already.*(registered|exists)|registered/i.test(rawMsg))
+      msg = '이미 가입된 이메일이에요. 로그인 탭에서 로그인해주세요.';
+    else if (/weak.*password/i.test(rawMsg))
+      msg = '보안이 약한 비밀번호예요. 숫자·문자 조합 6자 이상으로 변경해주세요.';
+    else if (/password/i.test(rawMsg))
+      msg = '비밀번호는 6자 이상이어야 해요.';
+    else if (/invalid.*email|email.*invalid/i.test(rawMsg))
+      msg = '유효한 이메일 주소를 입력해주세요.';
+    else if (/rate.?limit|over_email/i.test(rawMsg)) {
+      msg = '이메일 발송 횟수 제한이에요. 잠시 후 다시 시도해주세요.';
+      // 폼 전체 초기화 + 60초 버튼 비활성화
+      var emailInput = document.getElementById('auth-email');
+      var birthSel   = document.getElementById('auth-birth-year');
+      if (emailInput) emailInput.value = '';
+      if (birthSel)   birthSel.value   = '';
+      _authGender = '';
+      ['m','f','n'].forEach(function(k) {
+        var gb = document.getElementById('auth-gender-'+k);
+        if (gb) { gb.style.background='#fff'; gb.style.color='var(--text-2)'; gb.style.borderColor='var(--border-mid)'; }
+      });
+      btn.disabled = true;
+      var secs = 60;
+      btn.textContent = '잠시 후 재시도 (' + secs + '초)';
+      var _rlTimer = setInterval(function() {
+        secs--;
+        if (secs <= 0) {
+          clearInterval(_rlTimer);
+          btn.disabled = false;
+          btn.textContent = '회원가입';
+        } else {
+          btn.textContent = '잠시 후 재시도 (' + secs + '초)';
+        }
+      }, 1000);
+    }
+    // 에러 후 비밀번호 필드 항상 초기화 (보안)
+    var pwEl = document.getElementById('auth-password');
+    if (pwEl) pwEl.value = '';
+    return showAuthError(msg);
   }
   if (!res.data.user) return showAuthError('회원가입에 실패했어요. 잠시 후 다시 시도해주세요');
 
