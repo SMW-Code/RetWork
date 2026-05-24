@@ -8710,7 +8710,9 @@ async function authSignup() {
   btn.textContent = '회원가입'; btn.disabled = false;
   if (res.error) {
     var msg = res.error.message || '';
-    if (/already.*(registered|exists)|registered/i.test(msg))
+    if (/database.*saving|saving.*new.*user/i.test(msg))
+      msg = '서버 오류가 발생했어요. Supabase 트리거 설정을 확인해주세요.\n아래 SQL을 Supabase SQL Editor에서 실행해주세요.';
+    else if (/already.*(registered|exists)|registered/i.test(msg))
       msg = '이미 가입된 이메일이에요. 로그인 탭에서 로그인해주세요.';
     else if (/password/i.test(msg))
       msg = '비밀번호는 6자 이상이어야 해요';
@@ -8723,6 +8725,21 @@ async function authSignup() {
     return showAuthError(msg);
   }
   if (!res.data.user) return showAuthError('회원가입에 실패했어요. 잠시 후 다시 시도해주세요');
+
+  var user = res.data.user;
+
+  // profiles 테이블에 행이 없으면 직접 삽입 (트리거 미실행 대비 안전장치)
+  if (res.data.session && _sb) {
+    try {
+      var refCode = Math.random().toString(36).slice(2,10).toUpperCase();
+      await _sb.from('profiles').upsert({
+        id: user.id,
+        nickname: '節約ユーザー',
+        referral_code: refCode
+      }, { onConflict: 'id', ignoreDuplicates: true });
+    } catch(e) { /* 트리거가 이미 삽입했으면 무시 */ }
+  }
+
   if (!res.data.session) {
     // 이메일 확인 필요 (Supabase Email Confirmation 활성화 시)
     var errEl = document.getElementById('auth-error');
@@ -8733,7 +8750,7 @@ async function authSignup() {
     setTimeout(function() { switchAuthTab('login'); }, 3000);
     return;
   }
-  _currentUser = res.data.user;
+  _currentUser = user;
   showApp();
 }
 
