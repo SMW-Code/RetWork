@@ -2962,7 +2962,7 @@ var _ctExpandedPost = null;
 function ctRenderPosts() {
   _ctExpandedPost = null;
   var filtered = ctFilterPosts();
-  var perPage = 5;
+  var perPage = 20;
   var totalPages = Math.max(1, Math.ceil(filtered.length / perPage));
   if (_ctPostPage > totalPages) _ctPostPage = totalPages;
   var page = filtered.slice((_ctPostPage - 1) * perPage, _ctPostPage * perPage);
@@ -2973,11 +2973,12 @@ function ctRenderPosts() {
   if (page.length === 0) {
     list.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:14px;">投稿がありません</div>';
   } else {
-    // 기존 인피드 광고 슬롯 제거 (페이지 전환 시 중복 방지)
-    var prevFeedAd = document.getElementById('ad-slot-feed');
-    if (prevFeedAd) prevFeedAd.remove();
-
-    list.innerHTML = page.map(function(p) {
+    // 광고 카드 HTML 헬퍼 (게시물 카드와 동일한 사이즈)
+    var adCardHtml = function(n) {
+      return '<div id="ad-slot-feed-'+n+'" style="background:var(--surface);border-radius:14px;margin-bottom:8px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;">'
+        +'<div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div></div>';
+    };
+    var postCards = page.map(function(p) {
       var cat = ctGetPostCat(p.cat);
       // 썸네일
       var thumb = '';
@@ -3033,16 +3034,18 @@ function ctRenderPosts() {
           '</div>' +
         '</div>'
       );
-    }).join('');
-
-    // 인피드 광고: 3번째 포스트 앞에 삽입 (AD_CONFIG.enabled 시)
-    if (AD_CONFIG.enabled && list.children.length >= 3) {
-      var adDiv = document.createElement('div');
-      adDiv.id = 'ad-slot-feed';
-      adDiv.style.cssText = 'margin-bottom:8px;border-radius:14px;overflow:hidden;background:var(--surface);border:0.5px solid var(--border);';
-      list.insertBefore(adDiv, list.children[2]);
-      _injectAd('ad-slot-feed', 'feed');
+    });
+    // 광고 4개 끼워넣기: 맨앞(①) / 7번 뒤(②) / 14번 뒤(③) / 맨뒤(④)
+    var segs = [adCardHtml(1)];
+    for (var ci = 0; ci < postCards.length; ci++) {
+      segs.push(postCards[ci]);
+      if (ci === 6  && postCards.length > 7)  segs.push(adCardHtml(2));
+      if (ci === 13 && postCards.length > 14) segs.push(adCardHtml(3));
     }
+    segs.push(adCardHtml(4));
+    list.innerHTML = segs.join('');
+    // AdSense 광고 주입 (승인 후 AD_CONFIG.enabled=true 시 자동 활성)
+    [1,2,3,4].forEach(function(n){ _injectAd('ad-slot-feed-'+n,'feed'); });
   }
 
   // 페이지네이션
