@@ -345,6 +345,31 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 #screen-auth::-webkit-scrollbar{display:none;}
 #screen-auth *::-webkit-scrollbar{display:none;}
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+/* ── 가게 상세 패널 ── */
+#ov-store-detail{position:fixed;z-index:900;}
+#store-detail-panel{background:var(--surface);border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:0 -8px 40px rgba(0,0,0,.2);width:100%;}
+#store-detail-panel::-webkit-scrollbar{display:none;}
+.sd-divider{height:.5px;background:var(--border);margin:0;}
+.sd-photo-scroll{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.sd-photo-scroll::-webkit-scrollbar{display:none;}
+.sd-photo-thumb{flex-shrink:0;width:88px;height:88px;border-radius:12px;object-fit:cover;background:var(--bg-2);display:block;}
+.sd-menu-scroll{display:flex;gap:10px;padding:12px 16px 16px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;align-items:flex-start;}
+.sd-menu-scroll::-webkit-scrollbar{display:none;}
+.sd-menu-card{flex-shrink:0;width:130px;height:198px;border-radius:14px;border:.5px solid var(--border);overflow:hidden;background:var(--surface);cursor:pointer;transition:transform .12s;display:flex;flex-direction:column;}
+.sd-menu-card:active{transform:scale(.97);}
+.sd-menu-card.sd-expanded{border-color:var(--green);border-width:1.5px;}
+.sd-menu-card-img{width:100%;height:98px;object-fit:cover;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:28px;}
+.sd-menu-card-info{padding:7px 8px;flex:1;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
+.sd-add-card{flex-shrink:0;width:72px;height:198px;border-radius:14px;border:1.5px dashed var(--border-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--text-3);font-size:10px;font-weight:700;padding:0 4px;text-align:center;background:transparent;}
+.sd-menu-expand-wrap{margin:0 16px 12px;border-radius:14px;border:.5px solid var(--green);background:var(--bg);overflow:hidden;animation:sdSlideDown .2s ease;}
+@keyframes sdSlideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.sd-comment-item{padding:10px 14px;border-bottom:.5px solid var(--border);}
+.sd-reply-item{padding:7px 14px 7px 30px;border-bottom:.5px solid var(--border);background:var(--bg-2);}
+.sd-star-sel{font-size:24px;cursor:pointer;line-height:1;transition:color .1s;}
+.sd-dot-popup{position:absolute;right:8px;top:52px;background:var(--surface);border-radius:12px;border:.5px solid var(--border);box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:200;min-width:130px;overflow:hidden;}
+.sd-dot-item{padding:12px 16px;font-size:13px;font-weight:600;color:var(--text-1);cursor:pointer;border-bottom:.5px solid var(--border);}
+.sd-dot-item:last-child{border-bottom:none;}
+.sd-dot-item:active{background:var(--bg-2);}
 @keyframes ct-ad-bg{0%{opacity:1}100%{opacity:.6}}
 @keyframes ct-ad-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
 .sheet-handle{width:36px;height:4px;background:var(--border-mid);border-radius:2px;margin:0 auto 18px;opacity:.5;}
@@ -1931,6 +1956,35 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div onclick="closeOv('ov-manual-pin')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;">キャンセル</div>
   </div>
 </div>
+
+<!-- ══ 가게 상세 모달 ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-store-detail" onclick="sdCloseOutside(event)">
+  <div id="store-detail-panel">
+    <div class="sheet-handle"></div>
+    <!-- 헤더: 주소/평점/3-dot/X + 가게명 -->
+    <div id="sd-header" style="position:relative;"></div>
+    <div class="sd-divider"></div>
+    <!-- 사진 섹션 -->
+    <div id="sd-photos-wrap" style="padding-top:12px;"></div>
+    <div class="sd-divider"></div>
+    <!-- 광고 카드 -->
+    <div style="margin:12px 16px;">
+      <div id="ad-slot-store-detail" style="background:var(--surface);border-radius:14px;border:.5px solid var(--border);overflow:hidden;min-height:70px;display:flex;align-items:center;justify-content:center;">
+        <div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div>
+      </div>
+    </div>
+    <div class="sd-divider"></div>
+    <!-- 구글맵 -->
+    <div id="sd-gmaps-wrap" style="padding:12px 16px;"></div>
+    <div class="sd-divider"></div>
+    <!-- 메뉴카드 -->
+    <div id="sd-menus-wrap" style="padding-top:12px;"></div>
+  </div>
+</div>
+<!-- 파일 입력 (카메라/갤러리/메뉴이미지) -->
+<input type="file" id="sd-cam-input"   accept="image/*" capture="environment" style="display:none" onchange="sdHandlePhotoInput(this)">
+<input type="file" id="sd-gal-input"   accept="image/*"                       style="display:none" onchange="sdHandlePhotoInput(this)">
+<input type="file" id="sd-menu-img-in" accept="image/*"                       style="display:none" onchange="sdHandleMenuImgInput(this)">
 
 <!-- ══ チリつもに公開 모달 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-chiri-publish" onclick="closeOvOutside(event,'ov-chiri-publish')">
@@ -7304,14 +7358,8 @@ function renderMapPins() {
       });
       (function(storeData, mk) {
         mk.addListener('click', function() {
-          if (_activeInfoWindow) _activeInfoWindow.close();
-          var info = new google.maps.InfoWindow({ content: buildStoreInfoContent(storeData, _mapFullscreen), maxWidth: 280 });
-          _activeInfoWindow = info;
-          info.open(_map, mk);
-          // 전체화면 모드: 마커를 지도 하단으로 팬해서 상세 말풍선이 온전히 보이게
-          if (_mapFullscreen) {
-            setTimeout(function() { _map.panBy(0, 120); }, 60);
-          }
+          if (_activeInfoWindow) { _activeInfoWindow.close(); _activeInfoWindow = null; }
+          openStoreDetail(storeData);
         });
       })(s, marker);
       _mapMarkers.push(marker);
@@ -8875,6 +8923,428 @@ async function authLogout() {
   history.replaceState(null, '', window.location.pathname);
   document.getElementById('screen-main').style.display = 'none';
   document.getElementById('screen-auth').style.display = 'flex';
+}
+
+/* ══════════════════════════════
+   가게 상세 모달 (마커 탭 → 상세 패널)
+══════════════════════════════ */
+var _sdName      = '';   // 현재 가게명
+var _sdSData     = null; // 현재 가게 객체
+var _sdExpandId  = null; // 펼쳐진 메뉴카드 ID
+var _sdCStar     = {};   // {cardId: 별점}
+var _sdNewImgFile= null; // 메뉴카드 추가용 이미지
+
+/* ── 열기 ── */
+async function openStoreDetail(sData) {
+  _sdName     = sData.name;
+  _sdSData    = sData;
+  _sdExpandId = null;
+  _sdNewImgFile = null;
+  _sdRenderHeader(0, 0);
+  _sdRenderPhotos([]);
+  _sdRenderGmaps();
+  _sdRenderMenus([], false);
+  openOv('ov-store-detail');
+  _injectAd('ad-slot-store-detail','store');
+  await Promise.all([_sdLoadPhotos(), _sdLoadMenuCards()]);
+}
+
+function closeStoreDetail() { closeOv('ov-store-detail'); var dm=document.getElementById('sd-dot-popup'); if(dm) dm.remove(); }
+function sdCloseOutside(e) { if(e.target===document.getElementById('ov-store-detail')) closeStoreDetail(); }
+
+/* ── 헤더 ── */
+function _sdRenderHeader(ratingAvg, ratingCount) {
+  var s = _sdSData;
+  var recs = DB.filter(function(r){return r.store===s.name;});
+  var addr = '';
+  for(var i=0;i<recs.length;i++){if(recs[i].address){addr=recs[i].address;break;}}
+  var rHtml = ratingCount>0
+    ? '<span style="font-size:13px;font-weight:800;color:var(--gold);">★'+ratingAvg.toFixed(1)+'</span>'
+      +'<span style="font-size:10px;color:var(--text-3);margin-left:2px;">('+ratingCount+')</span>'
+    : '<span style="font-size:11px;color:var(--text-3);">평가없음</span>';
+  var h = '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:8px;">'
+    +'<div style="flex:1;min-width:0;">'
+    +'<div style="font-size:11px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(addr||'주소 정보 없음')+'</div>'
+    +'<div style="font-size:15px;font-weight:700;color:#444;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">'+s.name+'</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">'
+    +'<div style="text-align:right;line-height:1.3;">'+rHtml+'</div>'
+    +'<div onclick="sdToggleDotMenu()" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;color:var(--text-3);border-radius:50%;flex-shrink:0;">⋮</div>'
+    +'<div onclick="closeStoreDetail()" style="width:30px;height:30px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--text-3);flex-shrink:0;">✕</div>'
+    +'</div>'
+    +'</div>';
+  var el=document.getElementById('sd-header'); if(el) el.innerHTML=h;
+}
+
+/* 3-dot 팝업 */
+function sdToggleDotMenu() {
+  var ex=document.getElementById('sd-dot-popup'); if(ex){ex.remove();return;}
+  var m=document.createElement('div'); m.id='sd-dot-popup'; m.className='sd-dot-popup';
+  m.innerHTML='<div class="sd-dot-item" onclick="sdReqEdit()">✏️ 수정 요청</div>'
+    +'<div class="sd-dot-item" onclick="sdShareStore()">📤 공유하기</div>'
+    +'<div class="sd-dot-item" onclick="closeStoreDetail()">✕ 닫기</div>';
+  document.getElementById('sd-header').appendChild(m);
+  setTimeout(function(){
+    document.addEventListener('click',function hdl(e){if(!m.contains(e.target)){m.remove();document.removeEventListener('click',hdl);}});
+  },10);
+}
+function sdReqEdit(){var d=document.getElementById('sd-dot-popup');if(d)d.remove();alert('수정 요청이 접수됐어요. 검토 후 반영됩니다.');}
+function sdShareStore(){
+  var d=document.getElementById('sd-dot-popup');if(d)d.remove();
+  var u='https://retwork.jp';
+  if(navigator.share) navigator.share({title:_sdName,text:_sdName+' - RetWork',url:u});
+  else navigator.clipboard.writeText(u).then(function(){alert('링크 복사됐어요!');});
+}
+
+/* ── 사진 ── */
+async function _sdLoadPhotos() {
+  if(!_sb) return;
+  var res=await _sb.from('store_community_photos').select('*').eq('store_name',_sdName).order('created_at',{ascending:false});
+  _sdRenderPhotos(res.data||[]);
+}
+function _sdRenderPhotos(photos) {
+  var wrap=document.getElementById('sd-photos-wrap'); if(!wrap) return;
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 8px;">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">📸 사진</div>'
+    +'<div onclick="sdPhotoSheet()" style="width:30px;height:30px;border-radius:50%;background:var(--green-light);border:1px solid var(--green);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--green);">+</div>'
+    +'</div>';
+  if(photos.length===0){
+    h+='<div style="padding:0 16px 12px;"><div style="height:76px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;gap:8px;">'
+      +'<span style="font-size:22px;">📷</span><span style="font-size:12px;color:var(--text-3);font-weight:600;">첫 사진을 올려보세요</span></div></div>';
+  } else {
+    h+='<div class="sd-photo-scroll">';
+    photos.forEach(function(p){h+='<img class="sd-photo-thumb" src="'+p.photo_url+'" alt="" loading="lazy">';});
+    h+='</div>';
+  }
+  wrap.innerHTML=h;
+}
+function sdPhotoSheet(){
+  var bg=document.createElement('div');
+  bg.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;';
+  var sh=document.createElement('div');
+  sh.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-radius:20px 20px 0 0;padding:16px 20px 40px;z-index:1101;animation:slideUp .25s ease;';
+  sh.innerHTML='<div style="text-align:center;font-size:13px;font-weight:700;color:var(--text-2);margin-bottom:14px;">사진 추가</div>'
+    +'<div onclick="sdDoCam()" style="padding:14px;border-radius:12px;background:var(--bg);margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;"><span style="font-size:22px;">📷</span><span style="font-size:14px;font-weight:600;color:var(--text-1);">사진 찍기</span></div>'
+    +'<div onclick="sdDoGal()" style="padding:14px;border-radius:12px;background:var(--bg);margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer;"><span style="font-size:22px;">🖼️</span><span style="font-size:14px;font-weight:600;color:var(--text-1);">갤러리에서 선택</span></div>'
+    +'<div onclick="rmSheet()" style="text-align:center;color:var(--text-3);font-size:13px;padding:8px;cursor:pointer;">취소</div>';
+  function rmSheet(){sh.remove();bg.remove();}
+  bg.onclick=rmSheet;
+  document.body.appendChild(bg); document.body.appendChild(sh);
+  window._sdRmSheet=rmSheet;
+}
+function sdDoCam(){if(window._sdRmSheet)window._sdRmSheet();document.getElementById('sd-cam-input').click();}
+function sdDoGal(){if(window._sdRmSheet)window._sdRmSheet();document.getElementById('sd-gal-input').click();}
+async function sdHandlePhotoInput(input){
+  var file=input.files[0]; if(!file||!_sb||!_currentUser) return;
+  input.value='';
+  var ext=file.name.split('.').pop()||'jpg';
+  var path='store-photos/'+_sdName.replace(/[^a-zA-Z0-9가-힣]/g,'_')+'/'+Date.now()+'.'+ext;
+  var {data:ud,error:ue}=await _sb.storage.from('store-photos').upload(path,file,{upsert:true});
+  if(ue){alert('업로드 실패: '+ue.message);return;}
+  var {data:uu}=_sb.storage.from('store-photos').getPublicUrl(path);
+  await _sb.from('store_community_photos').insert({store_name:_sdName,photo_url:uu.publicUrl,uploaded_by:_currentUser.id});
+  await _sdLoadPhotos();
+}
+
+/* ── 구글맵 링크 ── */
+function _sdRenderGmaps(){
+  var wrap=document.getElementById('sd-gmaps-wrap'); if(!wrap) return;
+  var s=_sdSData;
+  var url=s.lat&&s.lng
+    ?'https://www.google.com/maps/search/?api=1&query='+s.lat+','+s.lng
+    :'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(s.name);
+  wrap.innerHTML='<a href="'+url+'" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;border-radius:12px;background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;">'
+    +'<span style="font-size:18px;">🗺️</span>'
+    +'<span style="font-size:13px;font-weight:700;color:var(--text-1);">Googleマップで見る</span>'
+    +'<span style="font-size:12px;color:var(--text-3);">↗</span>'
+    +'</a>';
+}
+
+/* ── 메뉴카드 ── */
+async function _sdLoadMenuCards(){
+  if(!_sb){_sdRenderMenus([],true);return;}
+  var res=await _sb.from('store_menu_cards').select('*').eq('store_name',_sdName).order('created_at',{ascending:false});
+  _sdRenderMenus(res.data||[],true);
+  if(_sdExpandId) await _sdLoadCardDetail(_sdExpandId);
+  // 헤더 평점 갱신
+  var cards=res.data||[];
+  if(cards.length>0){
+    var rated=cards.filter(function(c){return c.rating_count>0;});
+    if(rated.length>0){
+      var totalR=rated.reduce(function(a,c){return a+parseFloat(c.rating_avg||0);},0)/rated.length;
+      var totalC=rated.reduce(function(a,c){return a+(c.rating_count||0);},0);
+      _sdRenderHeader(totalR,totalC);
+    }
+  }
+}
+function _sdRenderMenus(cards,loaded){
+  var wrap=document.getElementById('sd-menus-wrap'); if(!wrap) return;
+  var h='<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 6px;">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">🍽️ メニューカード</div>'
+    +(loaded?'':'<div style="font-size:11px;color:var(--text-3);">로딩 중...</div>')
+    +'</div>';
+  h+='<div class="sd-menu-scroll">';
+  cards.forEach(function(c){
+    var isExp=_sdExpandId===c.id;
+    var imgH=c.image_url
+      ?'<img style="width:100%;height:98px;object-fit:cover;display:block;" src="'+c.image_url+'" loading="lazy">'
+      :'<div class="sd-menu-card-img">🍽️</div>';
+    var stars=c.rating_avg>0?('★'+parseFloat(c.rating_avg).toFixed(1)):'─';
+    h+='<div class="sd-menu-card'+(isExp?' sd-expanded':'')+'" onclick="sdToggleCard(\''+c.id+'\')">'
+      +imgH
+      +'<div class="sd-menu-card-info">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.menu_name+'</div>'
+      +(c.category?'<div style="font-size:10px;color:var(--text-3);">'+c.category+'</div>':'')
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:3px;">'
+      +'<span style="font-size:11px;font-weight:700;color:var(--gold);">'+stars+'</span>'
+      +'<span style="font-size:12px;font-weight:800;color:var(--green);">'+(c.price?'¥'+Number(c.price).toLocaleString():'')+'</span>'
+      +'</div>'
+      +'</div></div>';
+  });
+  h+='<div class="sd-add-card" onclick="sdOpenAddCard()">'
+    +'<span style="font-size:26px;color:var(--green);">+</span>'
+    +'<span>カード<br>追加</span>'
+    +'</div>';
+  h+='</div>';
+  h+='<div id="sd-expand-slot"></div>';
+  wrap.innerHTML=h;
+  if(_sdExpandId) _sdRenderExpandSlot(_sdExpandId,[]);
+}
+
+/* 카드 토글 */
+async function sdToggleCard(cardId){
+  if(_sdExpandId===cardId){
+    _sdExpandId=null;
+    var sl=document.getElementById('sd-expand-slot'); if(sl) sl.innerHTML='';
+    document.querySelectorAll('.sd-menu-card.sd-expanded').forEach(function(el){el.classList.remove('sd-expanded');});
+    return;
+  }
+  _sdExpandId=cardId;
+  document.querySelectorAll('.sd-menu-card.sd-expanded').forEach(function(el){el.classList.remove('sd-expanded');});
+  var target=event&&event.currentTarget;
+  var sl=document.getElementById('sd-expand-slot');
+  if(sl) sl.innerHTML='<div style="margin:0 16px 12px;padding:16px;text-align:center;color:var(--text-3);font-size:12px;">로딩 중...</div>';
+  await _sdLoadCardDetail(cardId);
+  // expanded 클래스
+  document.querySelectorAll('.sd-menu-card').forEach(function(el){
+    if(el.getAttribute('onclick')&&el.getAttribute('onclick').indexOf(cardId)>-1) el.classList.add('sd-expanded');
+  });
+}
+
+/* 카드 상세 로드 */
+async function _sdLoadCardDetail(cardId){
+  if(!_sb){_sdRenderExpandSlot(cardId,[]);return;}
+  var res=await _sb.from('store_menu_comments')
+    .select('*, profiles(nickname)').eq('menu_card_id',cardId).order('created_at',{ascending:false});
+  var comments=res.data||[];
+  if(comments.length>0){
+    var ids=comments.map(function(c){return c.id;});
+    var rr=await _sb.from('store_menu_replies').select('*, profiles(nickname)').in('comment_id',ids).order('created_at',{ascending:true});
+    var replies=rr.data||[];
+    comments=comments.map(function(c){ c._replies=replies.filter(function(r){return r.comment_id===c.id;}); return c; });
+  }
+  _sdRenderExpandSlot(cardId,comments);
+}
+
+/* 카드 상세 렌더 */
+function _sdRenderExpandSlot(cardId,comments){
+  var sl=document.getElementById('sd-expand-slot'); if(!sl) return;
+  var myC=_currentUser?comments.find(function(c){return c.user_id===_currentUser.id;}):null;
+  var h='<div class="sd-menu-expand-wrap">';
+  // 평점 요약 바
+  if(comments.length>0){
+    var avg=comments.reduce(function(a,c){return a+(c.rating||0);},0)/comments.length;
+    h+='<div style="padding:10px 14px 8px;background:var(--green-light);border-bottom:.5px solid var(--border);">'
+      +'<div style="display:flex;align-items:center;gap:10px;">'
+      +'<span style="font-size:20px;font-weight:800;color:var(--green);">★'+avg.toFixed(1)+'</span>'
+      +'<span style="font-size:11px;color:var(--text-3);">'+comments.length+'명 평가</span>'
+      +'</div>'
+      +'<div style="display:flex;flex-direction:column;gap:3px;margin-top:6px;">';
+    for(var s=5;s>=1;s--){
+      var cnt=comments.filter(function(c){return c.rating===s;}).length;
+      var pct=Math.round(cnt/comments.length*100);
+      h+='<div style="display:flex;align-items:center;gap:5px;">'
+        +'<span style="font-size:9px;color:var(--text-3);width:14px;text-align:right;">'+s+'★</span>'
+        +'<div style="flex:1;height:5px;border-radius:5px;background:var(--border);overflow:hidden;">'
+        +'<div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:5px;"></div></div>'
+        +'<span style="font-size:9px;color:var(--text-3);width:20px;">'+pct+'%</span>'
+        +'</div>';
+    }
+    h+='</div></div>';
+  }
+  // 댓글 목록
+  comments.forEach(function(c){
+    var nick=(c.profiles&&c.profiles.nickname)||'익명';
+    var isMe=_currentUser&&c.user_id===_currentUser.id;
+    var starsHtml='';
+    for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--gold)':'#ddd');';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
+    h+='<div class="sd-comment-item">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
+      +'<div style="display:flex;align-items:center;gap:6px;">'
+      +'<span style="font-size:13px;font-weight:700;color:var(--text-1);">'+nick+'</span>'
+      +'<span>'+starsHtml+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:10px;">';
+    if(isMe) h+='<span onclick="sdEditMyComment(\''+c.id+'\',\''+cardId+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:700;">수정</span>';
+    h+='<span onclick="sdToggleReplyForm(\''+c.id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;">답글</span>'
+      +'</div></div>';
+    if(c.content) h+='<div style="font-size:12px;color:var(--text-2);line-height:1.55;">'+c.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    // 대댓글
+    (c._replies||[]).forEach(function(r){
+      var rn=(r.profiles&&r.profiles.nickname)||'익명';
+      h+='<div class="sd-reply-item">'
+        +'<span style="font-size:10px;font-weight:700;color:var(--text-3);">↳ '+rn+'</span>'
+        +(r.content?'<div style="font-size:11px;color:var(--text-2);margin-top:2px;">'+r.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>':'')
+        +'</div>';
+    });
+    // 대댓글 입력폼 (숨김)
+    h+='<div id="rf-'+c.id+'" style="display:none;padding:8px 0 0;">'
+      +'<div style="display:flex;gap:6px;">'
+      +'<input id="ri-'+c.id+'" type="text" placeholder="답글 쓰기..." style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:7px 10px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;">'
+      +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">등록</button>'
+      +'</div></div>';
+    h+='</div>';
+  });
+  // 내 댓글 작성 영역
+  h+='<div style="padding:12px 14px;">';
+  if(!_currentUser){
+    h+='<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">로그인 후 평가할 수 있어요</div>';
+  } else if(myC){
+    h+='<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;">✅ 내 평가 작성 완료</div>'
+      +'<div style="font-size:11px;color:var(--text-3);">위 내 댓글의 수정 버튼으로 편집할 수 있어요</div>';
+  } else {
+    h+='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">평가 작성</div>'
+      +_sdCommentFormHtml(cardId,null,0,'');
+  }
+  h+='</div></div>';
+  sl.innerHTML=h;
+  // 스크롤
+  setTimeout(function(){sl.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+}
+function sdToggleReplyForm(cid){var f=document.getElementById('rf-'+cid);if(f){f.style.display=f.style.display==='none'?'block':'none';}}
+
+/* 댓글 폼 */
+function _sdCommentFormHtml(cardId,commentId,initStar,initText){
+  var h='<div id="sd-cf-'+cardId+'">';
+  h+='<div style="display:flex;gap:4px;margin-bottom:8px;">';
+  for(var i=1;i<=5;i++)
+    h+='<span class="sd-star-sel" id="cst-'+cardId+'-'+i+'" onclick="sdPickStar(\''+cardId+'\','+i+')" style="color:'+(i<=initStar?'var(--gold)':'#ddd')+';">'+(i<=initStar?'★':'☆')+'</span>';
+  h+='</div>';
+  h+='<textarea id="sd-ct-'+cardId+'" placeholder="이 메뉴 어땠나요?" style="width:100%;border:1px solid var(--border-mid);border-radius:10px;padding:9px 12px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:8px;">'+(initText||'')+'</textarea>';
+  h+='<button onclick="sdSubmitComment(\''+cardId+'\''+(commentId?',\''+commentId+'\'':',null')+')" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">'+(commentId?'수정하기':'평가 등록')+'</button>';
+  if(commentId) h+='<div onclick="sdCancelEdit(\''+cardId+'\')" style="text-align:center;color:var(--text-3);font-size:12px;margin-top:8px;cursor:pointer;padding:4px;">취소</div>';
+  h+='</div>';
+  return h;
+}
+function sdPickStar(cardId,n){
+  _sdCStar[cardId]=n;
+  for(var i=1;i<=5;i++){var el=document.getElementById('cst-'+cardId+'-'+i);if(el){el.innerHTML=i<=n?'★':'☆';el.style.color=i<=n?'var(--gold)':'#ddd';}}
+}
+async function sdSubmitComment(cardId,existingId){
+  if(!_currentUser||!_sb) return;
+  var st=_sdCStar[cardId]||0;
+  var tx=(document.getElementById('sd-ct-'+cardId)||{value:''}).value.trim();
+  if(!st){alert('별점을 선택해주세요');return;}
+  if(existingId){
+    await _sb.from('store_menu_comments').update({rating:st,content:tx,updated_at:new Date().toISOString()}).eq('id',existingId);
+  } else {
+    await _sb.from('store_menu_comments').insert({menu_card_id:cardId,user_id:_currentUser.id,rating:st,content:tx});
+  }
+  await _sdUpdateCardRating(cardId);
+  await _sdLoadCardDetail(cardId);
+  await _sdLoadMenuCards();
+}
+async function _sdUpdateCardRating(cardId){
+  if(!_sb) return;
+  var r=await _sb.from('store_menu_comments').select('rating').eq('menu_card_id',cardId);
+  var rows=r.data||[];
+  if(!rows.length) return;
+  var avg=rows.reduce(function(a,r){return a+(r.rating||0);},0)/rows.length;
+  await _sb.from('store_menu_cards').update({rating_avg:avg.toFixed(1),rating_count:rows.length,updated_at:new Date().toISOString()}).eq('id',cardId);
+}
+function sdEditMyComment(cid,cardId){
+  if(!_sb) return;
+  _sb.from('store_menu_comments').select('*').eq('id',cid).single().then(function(res){
+    if(!res.data) return;
+    var c=res.data;
+    _sdCStar[cardId]=c.rating;
+    var area=document.querySelector('.sd-menu-expand-wrap > div:last-child');
+    if(area) area.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">평가 수정</div>'+_sdCommentFormHtml(cardId,cid,c.rating,c.content||'');
+  });
+}
+function sdCancelEdit(cardId){_sdLoadCardDetail(_sdExpandId);}
+async function sdSubmitReply(cid,cardId){
+  if(!_currentUser||!_sb) return;
+  var inp=document.getElementById('ri-'+cid);
+  var tx=inp?inp.value.trim():''; if(!tx) return;
+  await _sb.from('store_menu_replies').insert({comment_id:cid,user_id:_currentUser.id,content:tx});
+  await _sdLoadCardDetail(cardId);
+}
+
+/* ── 메뉴카드 추가 ── */
+function sdOpenAddCard(){
+  if(!_currentUser){alert('로그인 후 이용할 수 있어요');return;}
+  var wrap=document.getElementById('sd-menus-wrap'); if(!wrap) return;
+  _sdNewImgFile=null; _sdCStar['__new']=0;
+  wrap.innerHTML='<div style="padding:0 16px 16px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text-1);">🍽️ メニューカード 추가</div>'
+    +'<div onclick="sdCloseAddCard()" style="font-size:18px;color:var(--text-3);cursor:pointer;">✕</div>'
+    +'</div>'
+    +'<div id="sd-nmi-preview" onclick="sdPickMenuImg()" style="width:100%;height:130px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;">'
+    +'<div style="text-align:center;color:var(--text-3);"><div style="font-size:26px;margin-bottom:4px;">📷</div><div style="font-size:11px;font-weight:600;">사진 추가 (선택)</div></div></div>'
+    +'<input id="sd-nm-name" type="text" placeholder="메뉴 이름 *" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;margin-bottom:8px;">'
+    +'<div style="display:flex;gap:8px;margin-bottom:8px;">'
+    +'<input id="sd-nm-cat" type="text" placeholder="카테고리" style="flex:1;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;">'
+    +'<input id="sd-nm-price" type="number" placeholder="가격" style="width:90px;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;">'
+    +'</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">첫 평가 (선택)</div>'
+    +'<div style="display:flex;gap:4px;margin-bottom:8px;">'
+    +'<span class="sd-star-sel" id="cst-__new-1" onclick="sdPickStar(\'__new\',1)" style="color:#ddd;">☆</span>'
+    +'<span class="sd-star-sel" id="cst-__new-2" onclick="sdPickStar(\'__new\',2)" style="color:#ddd;">☆</span>'
+    +'<span class="sd-star-sel" id="cst-__new-3" onclick="sdPickStar(\'__new\',3)" style="color:#ddd;">☆</span>'
+    +'<span class="sd-star-sel" id="cst-__new-4" onclick="sdPickStar(\'__new\',4)" style="color:#ddd;">☆</span>'
+    +'<span class="sd-star-sel" id="cst-__new-5" onclick="sdPickStar(\'__new\',5)" style="color:#ddd;">☆</span>'
+    +'</div>'
+    +'<textarea id="sd-nm-comment" placeholder="한 마디 코멘트 (선택)" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:12px;"></textarea>'
+    +'<button onclick="sdSubmitNewCard()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">메뉴카드 추가</button>'
+    +'</div>';
+}
+function sdCloseAddCard(){_sdNewImgFile=null;_sdLoadMenuCards();}
+function sdPickMenuImg(){document.getElementById('sd-menu-img-in').click();}
+function sdHandleMenuImgInput(input){
+  var f=input.files[0]; if(!f) return;
+  _sdNewImgFile=f;
+  var r=new FileReader();
+  r.onload=function(e){var p=document.getElementById('sd-nmi-preview');if(p) p.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:130px;object-fit:cover;border-radius:10px;">';};
+  r.readAsDataURL(f); input.value='';
+}
+async function sdSubmitNewCard(){
+  if(!_currentUser||!_sb) return;
+  var name=(document.getElementById('sd-nm-name').value||'').trim();
+  var cat=(document.getElementById('sd-nm-cat').value||'').trim();
+  var prEl=document.getElementById('sd-nm-price');
+  var price=prEl?parseInt(prEl.value)||null:null;
+  var cmtEl=document.getElementById('sd-nm-comment');
+  var cmt=cmtEl?cmtEl.value.trim():'';
+  var st=_sdCStar['__new']||0;
+  if(!name){alert('메뉴 이름을 입력해주세요');return;}
+  var imgUrl=null;
+  if(_sdNewImgFile){
+    var ext=_sdNewImgFile.name.split('.').pop()||'jpg';
+    var path='menu-cards/'+_sdName.replace(/[^a-zA-Z0-9가-힣]/g,'_')+'/'+Date.now()+'.'+ext;
+    var {data:ud,error:ue}=await _sb.storage.from('store-photos').upload(path,_sdNewImgFile,{upsert:true});
+    if(!ue){var {data:uu}=_sb.storage.from('store-photos').getPublicUrl(path);imgUrl=uu.publicUrl;}
+  }
+  var ins=await _sb.from('store_menu_cards').insert({
+    store_name:_sdName,menu_name:name,category:cat||null,price:price,
+    image_url:imgUrl,rating_avg:st||0,rating_count:st?1:0,created_by:_currentUser.id
+  }).select().single();
+  if(ins.data&&st>0){
+    await _sb.from('store_menu_comments').insert({menu_card_id:ins.data.id,user_id:_currentUser.id,rating:st,content:cmt||null});
+  }
+  _sdNewImgFile=null;
+  await _sdLoadMenuCards();
 }
 
 // ── 앱 시작: 세션 먼저 확인 후 화면 분기 (로그인 화면 플래시 방지) ──
