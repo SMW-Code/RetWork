@@ -93,7 +93,7 @@
   --navy:#1A1A2E;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellipse at 30% 20%,#1a2a22 0%,#0C1410 60%,#080E0B 100%);display:flex;align-items:center;justify-content:center;font-family:var(--font);overflow:hidden;}
+html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellipse at 30% 20%,#1f2230 0%,#0f1018 60%,#08080d 100%);display:flex;align-items:center;justify-content:center;font-family:var(--font);overflow:hidden;}
 
 /* ── 데스크탑: 폰 프레임 ── */
 .phone{width:390px;height:844px;background:var(--bg);border-radius:0;border:1px solid rgba(255,255,255,0.14);overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 30px 60px rgba(0,0,0,.55),0 8px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12);}
@@ -8296,10 +8296,10 @@ function applyDarkMode(isDark, silent) {
   // 토글 UI 동기화
   var dtEl = document.getElementById('dark-toggle');
   if (dtEl) dtEl.classList.toggle('off', !_isDark);
-  // 바깥 배경 전환
+  // 바깥 배경 — 중립 다크 톤 (이전엔 초록빛 있어서 모바일 status bar 사이로 보이면 초록선처럼 보임)
   document.body.style.background = _isDark
     ? 'radial-gradient(ellipse at 30% 20%,#1a1a38 0%,#0e0e20 60%,#080812 100%)'
-    : 'radial-gradient(ellipse at 30% 20%,#1a2a22 0%,#0C1410 60%,#080E0B 100%)';
+    : 'radial-gradient(ellipse at 30% 20%,#1f2230 0%,#0f1018 60%,#08080d 100%)';
   // 항상 저장 (라이트 전환 시도 저장 누락 버그 수정)
   localStorage.setItem('riq_dark', _isDark ? '1' : '0');
   // 다크모드: CSS 변수 tint 적용 / 라이트모드: 테마 복원
@@ -8355,7 +8355,7 @@ function applyTheme(key, silent) {
 
 /* ── 모바일 상단 status bar 색상 동기화 ──
    Chrome / Edge / Samsung Internet 등 안드로이드 브라우저에서 상단 status bar 색상으로 사용됨
-   theme-color meta 를 현재 테마에 맞춰 동적으로 갱신 */
+   + html/body 배경도 동기화 → status bar 아래쪽 leak되는 영역도 같은 색으로 (초록선 방지) */
 function _updateMobileBarColor(){
   try {
     var t = THEMES[_currentTheme];
@@ -8363,6 +8363,13 @@ function _updateMobileBarColor(){
     if (_isDark && t) color = t.dark; // 다크모드면 어두운 톤
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', color);
+    // 모바일에서는 html 배경도 테마색으로 — 시스템 status bar 와 앱 헤더 사이 leak 영역 통일
+    var isMobile = window.matchMedia && window.matchMedia('(max-width:500px)').matches;
+    if (isMobile) {
+      document.documentElement.style.backgroundColor = color;
+    } else {
+      document.documentElement.style.backgroundColor = '';
+    }
   } catch(e){ console.warn('[theme-color]', e); }
 }
 
