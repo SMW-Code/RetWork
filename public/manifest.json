@@ -1,13 +1,12 @@
 {
-  "name": "ReceiptIQ",
-  "short_name": "ReceiptIQ",
+  "name": "RetWork (チリつも)",
+  "short_name": "RetWork",
   "description": "AI領収書管理＆チリつも価格共有アプリ",
   "start_url": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
-  "theme_color": "#16A87A",
+  "background_color": "#1f2230",
   "lang": "ja",
   "icons": [
     {
