@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v27';
+const CACHE_NAME = 'receiptiq-v28';
 const STATIC_CACHE = ['/manifest.json', '/icons/icon.svg'];
 
 // 설치: 정적 파일만 프리캐시
