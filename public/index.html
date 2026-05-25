@@ -382,6 +382,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 /* PC 드래그 가능한 가로 스크롤 영역 */
 .sd-photo-scroll,.sd-menu-scroll{cursor:grab;user-select:none;-webkit-user-select:none;}
 .sd-photo-scroll:active,.sd-menu-scroll:active{cursor:grabbing;}
+/* ── 이미지 업로드 확인 모달 (광고 포함) ── */
+#ov-upload-confirm{z-index:1100;background:rgba(0,0,0,.62);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+#upload-confirm-panel{background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:88vh;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.3);overflow:hidden;}
+@keyframes uc-shimmer{from{transform:translateX(-100%);}to{transform:translateX(100%);}}
+@keyframes uc-pulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.12);opacity:.85;}}
+@keyframes uc-progress{from{width:0%;}to{width:100%;}}
 @keyframes ct-ad-bg{0%{opacity:1}100%{opacity:.6}}
 @keyframes ct-ad-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
 .sheet-handle{width:36px;height:4px;background:var(--border-mid);border-radius:2px;margin:0 auto 18px;opacity:.5;}
@@ -1998,6 +2004,43 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="overlay bottom-sheet-overlay" id="ov-menu-detail" onclick="mdCloseOutside(event)">
   <div id="menu-detail-panel">
     <div id="md-content"><!-- dynamic --></div>
+  </div>
+</div>
+
+<!-- ══ 업로드 확인 모달 (광고 동영상 + 취소/등록) ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-upload-confirm" onclick="ucCloseOutside(event)">
+  <div id="upload-confirm-panel">
+    <div class="sheet-handle" style="margin:10px auto 6px;"></div>
+    <div style="font-size:17px;font-weight:800;color:var(--text-1);text-align:center;padding:8px 24px 4px;letter-spacing:-.3px;">
+      이미지를 업로드 하시겠습니까?
+    </div>
+    <div style="font-size:11px;color:var(--text-3);text-align:center;padding:0 24px 14px;font-weight:500;">
+      광고를 보시면 업로드가 진행됩니다
+    </div>
+    <!-- 자동재생 동영상 광고 카드 -->
+    <div style="margin:0 16px 16px;border:.5px solid var(--border);border-radius:14px;overflow:hidden;background:#0d0d22;box-shadow:0 4px 14px rgba(0,0,0,.08);">
+      <div style="position:relative;width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;">
+        <div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.16) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>
+        <div style="position:relative;z-index:2;text-align:center;color:#fff;">
+          <div style="font-size:42px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:.5px;margin-top:8px;">広告 自動再生中</div>
+          <div style="font-size:10px;opacity:.75;margin-top:3px;font-weight:500;">📢 Sponsored Content</div>
+        </div>
+        <!-- 진행 막대 (시각 효과) -->
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15);">
+          <div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
+        <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+      </div>
+    </div>
+    <!-- 버튼 -->
+    <div style="padding:0 16px 24px;display:flex;gap:8px;">
+      <button onclick="ucCancel()" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">취소</button>
+      <button onclick="ucConfirm()" style="flex:2;padding:13px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-green);">등록</button>
+    </div>
   </div>
 </div>
 
@@ -9152,11 +9195,17 @@ function sdPhotoSheet(){
   if(!_sb){ alert('セッション情報が見つかりません。再ログインしてください'); return; }
   document.getElementById('sd-photo-input').click();
 }
-async function sdHandlePhotoInput(input){
+function sdHandlePhotoInput(input){
   var file = input.files && input.files[0];
   if(!file){ return; }
   input.value = '';
   if(!_sb || !_currentUser){ alert('セッションが切れました。再ログインしてください'); return; }
+  // 광고 시청 + 등록 확인 후 실제 업로드
+  showUploadConfirm(function(){
+    _sdDoPhotoUpload(file);
+  });
+}
+async function _sdDoPhotoUpload(file){
   try {
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
     var path = 'community/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
@@ -9238,6 +9287,26 @@ function _sdRenderMenus(cards,loaded){
   wrap.innerHTML=h;
   // PC 드래그/휠 가로 스크롤 활성화
   setTimeout(function(){ _sdEnableDragScroll('.sd-menu-scroll'); }, 30);
+}
+
+/* ── 업로드 확인 모달 (광고 시청 → 등록/취소) ── */
+var _ucCallback = null;
+function showUploadConfirm(onConfirm){
+  _ucCallback = onConfirm;
+  openOv('ov-upload-confirm');
+}
+function ucCancel(){
+  _ucCallback = null;
+  closeOv('ov-upload-confirm');
+}
+function ucConfirm(){
+  var cb = _ucCallback;
+  _ucCallback = null;
+  closeOv('ov-upload-confirm');
+  if(cb){ try { cb(); } catch(e){ console.error('[UC cb]', e); } }
+}
+function ucCloseOutside(e){
+  if(e.target === document.getElementById('ov-upload-confirm')) ucCancel();
 }
 
 /* 메뉴 카드 클릭 → 카드가 커지듯 모달로 펼쳐짐 (배경 dim+blur) */
@@ -9644,23 +9713,32 @@ function sdHandleMenuImgInput(input){
   r.onload=function(e){var p=document.getElementById('sd-nmi-preview');if(p) p.innerHTML='<img src="'+e.target.result+'" style="width:100%;height:130px;object-fit:cover;border-radius:10px;">';};
   r.readAsDataURL(f); input.value='';
 }
-async function sdSubmitNewCard(){
+function sdSubmitNewCard(){
   if(!_currentUser||!_sb) return;
   var name=(document.getElementById('sd-nm-name').value||'').trim();
-  // 카테고리: 대분류 + ・ + 소분류 (예: "🍣 일식・스시")
+  if(!name){alert('메뉴 이름을 입력해주세요');return;}
+  // 폼 값 수집 (모달 동안 입력영역이 사라져도 유지되도록 미리 캡쳐)
   var cat = _sdNewCat1 ? (_sdNewCat1 + (_sdNewCat2?'・'+_sdNewCat2:'')) : '';
   var prEl=document.getElementById('sd-nm-price');
   var price=prEl?parseInt(prEl.value)||null:null;
   var cmtEl=document.getElementById('sd-nm-comment');
   var cmt=cmtEl?cmtEl.value.trim():'';
   var st=_sdCStar['__new']||0;
-  if(!name){alert('메뉴 이름을 입력해주세요');return;}
+  var payload = { name:name, cat:cat, price:price, cmt:cmt, st:st, imgFile:_sdNewImgFile };
+  // 이미지가 있으면 광고 확인 모달, 없으면 바로 제출
+  if(payload.imgFile){
+    showUploadConfirm(function(){ _sdDoSubmitNewCard(payload); });
+  } else {
+    _sdDoSubmitNewCard(payload);
+  }
+}
+async function _sdDoSubmitNewCard(p){
   var imgUrl=null;
-  if(_sdNewImgFile){
+  if(p.imgFile){
     try {
-      var ext=(_sdNewImgFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      var ext=(p.imgFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
       var path='menu-cards/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
-      var up=await _sb.storage.from('store-photos').upload(path,_sdNewImgFile,{upsert:false,contentType:_sdNewImgFile.type||'image/jpeg'});
+      var up=await _sb.storage.from('store-photos').upload(path,p.imgFile,{upsert:false,contentType:p.imgFile.type||'image/jpeg'});
       if(up.error){
         alert('画像アップロード失敗: '+up.error.message);
         console.error('[menu upload]', up.error);
@@ -9674,13 +9752,14 @@ async function sdSubmitNewCard(){
     }
   }
   var ins=await _sb.from('store_menu_cards').insert({
-    store_name:_sdName,menu_name:name,category:cat||null,price:price,
-    image_url:imgUrl,rating_avg:st||0,rating_count:st?1:0,created_by:_currentUser.id
+    store_name:_sdName,menu_name:p.name,category:p.cat||null,price:p.price,
+    image_url:imgUrl,rating_avg:p.st||0,rating_count:p.st?1:0,created_by:_currentUser.id
   }).select().single();
-  if(ins.data&&st>0){
-    await _sb.from('store_menu_comments').insert({menu_card_id:ins.data.id,user_id:_currentUser.id,rating:st,content:cmt||null});
+  if(ins.data && p.st>0){
+    await _sb.from('store_menu_comments').insert({menu_card_id:ins.data.id,user_id:_currentUser.id,rating:p.st,content:p.cmt||null});
   }
   _sdNewImgFile=null;
+  _sdNewCat1=''; _sdNewCat2='';
   await _sdLoadMenuCards();
 }
 
