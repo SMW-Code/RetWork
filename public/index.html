@@ -38,6 +38,8 @@
   /* チリつも 브랜드 컬러 */
   --gold:#E8A020; --gold-dark:#B87A10; --gold-light:#FDF3DC;
   --gold-shadow:0 6px 24px rgba(232,160,32,.30),0 2px 8px rgba(232,160,32,.15);
+  /* 별 평점 전용 노랑색 (gold는 chiri 모드 브랜드용이라 분리) */
+  --star:#FACC15; --star-empty:#E5E7EB;
   --navy:#1A1A2E;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
@@ -9003,7 +9005,7 @@ function _sdRenderHeader(ratingAvg, ratingCount) {
   var addr = '';
   for(var i=0;i<recs.length;i++){if(recs[i].address){addr=recs[i].address;break;}}
   var rHtml = ratingCount>0
-    ? '<span style="font-size:13px;font-weight:800;color:var(--gold);">★'+ratingAvg.toFixed(1)+'</span>'
+    ? '<span style="font-size:13px;font-weight:800;color:var(--star);">★'+ratingAvg.toFixed(1)+'</span>'
       +'<span style="font-size:10px;color:var(--text-3);margin-left:2px;">('+ratingCount+')</span>'
     : '<span style="font-size:11px;color:var(--text-3);">평가없음</span>';
   var h = '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:8px;">'
@@ -9177,7 +9179,7 @@ function _sdRenderMenus(cards,loaded){
       +'<div style="font-size:15px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.3px;margin-bottom:2px;">'+c.menu_name+'</div>'
       +(c.category?'<div style="font-size:11px;color:var(--text-3);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.category+'</div>':'<div></div>')
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;">'
-      +'<span style="font-size:13px;font-weight:700;color:var(--gold);">'+stars+ratingCnt+'</span>'
+      +'<span style="font-size:13px;font-weight:700;color:var(--star);">'+stars+ratingCnt+'</span>'
       +'<span style="font-size:15px;font-weight:800;color:var(--text-1);">'+(c.price?'¥'+Number(c.price).toLocaleString():'')+'</span>'
       +'</div>'
       +'</div></div>';
@@ -9291,16 +9293,16 @@ function _mdRender(){
     +'<div style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;margin-bottom:4px;">'+(card.menu_name||'')+'</div>'
     +(card.category?'<div style="font-size:13px;color:var(--text-3);font-weight:500;margin-bottom:10px;">'+card.category+'</div>':'')
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
-      +'<span style="font-size:18px;font-weight:800;color:var(--gold);">'+stars+ratingCnt+'</span>'
+      +'<span style="font-size:18px;font-weight:800;color:var(--star);">'+stars+ratingCnt+'</span>'
       +'<span style="font-size:22px;font-weight:800;color:var(--text-1);">'+(card.price?'¥'+Number(card.price).toLocaleString():'')+'</span>'
     +'</div></div>';
 
   // 별점 분포
   if(comments.length>0){
     var avg=comments.reduce(function(a,c){return a+(c.rating||0);},0)/comments.length;
-    h += '<div style="margin:14px 16px;padding:12px 14px;background:var(--green-light);border-radius:14px;">'
+    h += '<div style="margin:14px 16px;padding:12px 14px;background:#FEF9C3;border-radius:14px;">'
       +'<div style="display:flex;align-items:center;gap:10px;">'
-        +'<span style="font-size:22px;font-weight:800;color:var(--green);">★'+avg.toFixed(1)+'</span>'
+        +'<span style="font-size:22px;font-weight:800;color:var(--star);">★'+avg.toFixed(1)+'</span>'
         +'<span style="font-size:11px;color:var(--text-3);">'+comments.length+'명 평가</span>'
       +'</div>'
       +'<div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">';
@@ -9309,7 +9311,7 @@ function _mdRender(){
       var pct=Math.round(cnt/comments.length*100);
       h += '<div style="display:flex;align-items:center;gap:6px;">'
         +'<span style="font-size:10px;color:var(--text-3);width:14px;text-align:right;">'+s+'★</span>'
-        +'<div style="flex:1;height:6px;border-radius:6px;background:var(--border);overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:6px;"></div></div>'
+        +'<div style="flex:1;height:6px;border-radius:6px;background:var(--border);overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:var(--star);border-radius:6px;"></div></div>'
         +'<span style="font-size:10px;color:var(--text-3);width:22px;">'+pct+'%</span>'
       +'</div>';
     }
@@ -9334,7 +9336,7 @@ function _mdRender(){
     var nick=(c.profiles&&c.profiles.nickname)||'익명';
     var isMe=_currentUser&&c.user_id===_currentUser.id;
     var starsHtml='';
-    for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--gold)':'#ddd')+';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
+    for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--star)':'var(--star-empty)')+';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
     h += '<div class="sd-comment-item" style="padding:10px 18px;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
         +'<div style="display:flex;align-items:center;gap:6px;">'
@@ -9380,7 +9382,7 @@ function _mdRender(){
     h += '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">🔒 로그인 후 평가할 수 있어요</div>';
   } else if(myC){
     var myStars='';
-    for(var ms=1;ms<=5;ms++) myStars+='<span style="color:'+(ms<=(myC.rating||0)?'var(--gold)':'#ddd')+';font-size:13px;">'+(ms<=(myC.rating||0)?'★':'☆')+'</span>';
+    for(var ms=1;ms<=5;ms++) myStars+='<span style="color:'+(ms<=(myC.rating||0)?'var(--star)':'var(--star-empty)')+';font-size:13px;">'+(ms<=(myC.rating||0)?'★':'☆')+'</span>';
     h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;">'
       +'<div style="display:flex;align-items:center;gap:6px;">'
         +'<span style="font-size:11px;font-weight:800;color:var(--green);">✅ 내 평가</span>'
@@ -9449,7 +9451,7 @@ function _sdCommentFormHtml(cardId,commentId,initStar,initText){
   var h='<div id="sd-cf-'+cardId+'">';
   h+='<div style="display:flex;gap:4px;margin-bottom:8px;">';
   for(var i=1;i<=5;i++)
-    h+='<span class="sd-star-sel" id="cst-'+cardId+'-'+i+'" onclick="sdPickStar(\''+cardId+'\','+i+')" style="color:'+(i<=initStar?'var(--gold)':'#ddd')+';">'+(i<=initStar?'★':'☆')+'</span>';
+    h+='<span class="sd-star-sel" id="cst-'+cardId+'-'+i+'" onclick="sdPickStar(\''+cardId+'\','+i+')" style="color:'+(i<=initStar?'var(--star)':'var(--star-empty)')+';">'+(i<=initStar?'★':'☆')+'</span>';
   h+='</div>';
   h+='<textarea id="sd-ct-'+cardId+'" placeholder="이 메뉴 어땠나요?" style="width:100%;border:1px solid var(--border-mid);border-radius:10px;padding:9px 12px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:8px;">'+(initText||'')+'</textarea>';
   h+='<button onclick="sdSubmitComment(\''+cardId+'\''+(commentId?',\''+commentId+'\'':',null')+')" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">'+(commentId?'수정하기':'평가 등록')+'</button>';
@@ -9459,7 +9461,7 @@ function _sdCommentFormHtml(cardId,commentId,initStar,initText){
 }
 function sdPickStar(cardId,n){
   _sdCStar[cardId]=n;
-  for(var i=1;i<=5;i++){var el=document.getElementById('cst-'+cardId+'-'+i);if(el){el.innerHTML=i<=n?'★':'☆';el.style.color=i<=n?'var(--gold)':'#ddd';}}
+  for(var i=1;i<=5;i++){var el=document.getElementById('cst-'+cardId+'-'+i);if(el){el.innerHTML=i<=n?'★':'☆';el.style.color=i<=n?'var(--star)':'var(--star-empty)';}}
 }
 async function sdSubmitComment(cardId,existingId){
   if(!_currentUser||!_sb) return;
