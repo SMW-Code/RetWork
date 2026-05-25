@@ -2737,34 +2737,50 @@ function ctRenderPricePins() {
         },
         zIndex: 5
       });
-      (function(pins){
+      (function(pins, cLatRef, cLngRef){
         marker.addListener('click', function() {
+          var curZoom = _ctMap.getZoom() || zoom;
           if (pins.length === 1) {
-            // 단독: 해당 마커를 화면 정중앙으로 이동 + 확대
+            // 단독 클러스터 (cnt=1) → 한 단계 확대 (개별 핀 모드 진입)
             var p = pins[0];
             var loc = { lat: parseFloat(p.stores.lat), lng: parseFloat(p.stores.lng) };
             _ctMap.panTo(loc);
-            var nextZoom = Math.max(CT_CLUSTER_ZOOM, (_ctMap.getZoom() || zoom) + 2);
+            // CT_CLUSTER_ZOOM 미만이면 cluster zoom 으로, 이미 그 이상이면 +2
+            var nextZoom = curZoom < CT_CLUSTER_ZOOM ? CT_CLUSTER_ZOOM : Math.min(curZoom + 2, 20);
             _ctMap.setZoom(nextZoom);
           } else {
-            // 복수: 모든 마커가 화면에 들어오도록 bounds 맞춤 (= 자연히 마커들의 중간이 중심)
-            var bounds = new google.maps.LatLngBounds();
-            pins.forEach(function(p){
-              if (p.stores && p.stores.lat != null && p.stores.lng != null) {
-                bounds.extend({ lat: parseFloat(p.stores.lat), lng: parseFloat(p.stores.lng) });
+            // 복수: 클러스터가 split될 정도로만 단계적 확대
+            // 그리드 셀 크기: gridSize = 0.0012 * 2^(16-Z)
+            // 핀들이 다른 셀로 분리되려면 gridSize < maxDelta 필요
+            // 안전 margin: gridSize ≈ maxDelta / 1.5 → 2^(16-Z) = maxDelta / 0.0018
+            var maxDelta = 0;
+            for (var i=0; i<pins.length; i++) {
+              for (var j=i+1; j<pins.length; j++) {
+                var dLat = Math.abs(parseFloat(pins[i].stores.lat) - parseFloat(pins[j].stores.lat));
+                var dLng = Math.abs(parseFloat(pins[i].stores.lng) - parseFloat(pins[j].stores.lng));
+                var d = Math.max(dLat, dLng);
+                if (d > maxDelta) maxDelta = d;
               }
-            });
-            _ctMap.fitBounds(bounds, { top:80, right:60, bottom:120, left:60 });
-            // 마커들이 너무 가까이 모여있으면 fitBounds가 과도하게 확대될 수 있으므로
-            // 또 너무 적게 확대되면 개별 핀 모드로 전환이 안 되므로 zoom 보정
-            setTimeout(function(){
-              var z = _ctMap.getZoom() || 0;
-              if (z < CT_CLUSTER_ZOOM) _ctMap.setZoom(CT_CLUSTER_ZOOM);
-              else if (z > 19) _ctMap.setZoom(19);
-            }, 250);
+            }
+            var target;
+            if (maxDelta > 0) {
+              target = Math.ceil(16 - Math.log(maxDelta / 0.0018) / Math.LN2);
+            } else {
+              target = CT_CLUSTER_ZOOM;
+            }
+            // 한 번에 최대 +3 단계까지만 (너무 멀리 안 뛰게)
+            target = Math.min(target, curZoom + 3);
+            // 최소 +1 단계는 확대 (클릭 반응이 있어야)
+            target = Math.max(target, curZoom + 1);
+            // 절대 한계
+            target = Math.min(target, 20);
+            target = Math.max(target, CT_CLUSTER_ZOOM - 3); // 너무 낮으면 의미 없음
+            // centroid 로 이동 + 확대
+            _ctMap.panTo({ lat: cLatRef, lng: cLngRef });
+            _ctMap.setZoom(target);
           }
         });
-      })(cell.pins);
+      })(cell.pins, cLat, cLng);
       _ctMarkers.push(marker);
     });
 
