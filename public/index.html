@@ -8353,22 +8353,26 @@ function applyTheme(key, silent) {
   if (!silent) showToast('🎨 테마가 변경됐어요');
 }
 
-/* ── 모바일 상단 status bar 색상 동기화 ──
-   Chrome / Edge / Samsung Internet 등 안드로이드 브라우저에서 상단 status bar 색상으로 사용됨
-   + html/body 배경도 동기화 → status bar 아래쪽 leak되는 영역도 같은 색으로 (초록선 방지) */
+/* ── 모바일 상단 status bar + 주변 leak 영역을 모두 같은 테마 색으로 통일 ──
+   - meta theme-color → Android 시스템 status bar 색상
+   - html + body backgroundColor → 그 아래/주변 leak 영역
+   - 다크모드여도 t.color 유지 (t.dark 쓰면 시스템바와 앱 헤더 사이에 톤 차이 → 선 보임) */
 function _updateMobileBarColor(){
   try {
     var t = THEMES[_currentTheme];
     var color = t ? t.color : '#16A87A';
-    if (_isDark && t) color = t.dark; // 다크모드면 어두운 톤
+    // ※ 의도적으로 다크모드여도 t.dark 안 씀 — 시스템 status bar 와 앱 헤더 색이 정확히 일치해야 선이 안 보임
     var meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute('content', color);
-    // 모바일에서는 html 배경도 테마색으로 — 시스템 status bar 와 앱 헤더 사이 leak 영역 통일
+    // 모바일: html + body 둘 다 테마색으로 칠해서 어디서 leak 되어도 같은 색
     var isMobile = window.matchMedia && window.matchMedia('(max-width:500px)').matches;
     if (isMobile) {
       document.documentElement.style.backgroundColor = color;
+      // body 는 그라데이션이 inline 으로 들어가 있을 수 있으므로 강제 덮어쓰기
+      document.body.style.background = color;
     } else {
       document.documentElement.style.backgroundColor = '';
+      // 데스크탑은 body 다크 프레임 그라데이션 복원 (applyDarkMode 가 정상 갱신)
     }
   } catch(e){ console.warn('[theme-color]', e); }
 }
