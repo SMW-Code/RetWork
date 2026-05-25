@@ -8309,6 +8309,8 @@ function applyDarkMode(isDark, silent) {
   } else {
     applyTheme(_currentTheme, true);
   }
+  // status bar 색상도 다크/라이트에 맞춰 갱신
+  if (typeof _updateMobileBarColor === 'function') _updateMobileBarColor();
   if (!silent) showToast(_isDark ? '🌙 다크모드로 전환했어요' : '☀️ 라이트모드로 전환했어요');
 }
 
@@ -8335,7 +8337,22 @@ function applyTheme(key, silent) {
   document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = t.grad; });
   localStorage.setItem('receiptiq_theme', key);
   renderThemeSwatches();
+  // 모바일 상단 status bar 색상도 테마에 맞게
+  _updateMobileBarColor();
   if (!silent) showToast('🎨 테마가 변경됐어요');
+}
+
+/* ── 모바일 상단 status bar 색상 동기화 ──
+   Chrome / Edge / Samsung Internet 등 안드로이드 브라우저에서 상단 status bar 색상으로 사용됨
+   theme-color meta 를 현재 테마에 맞춰 동적으로 갱신 */
+function _updateMobileBarColor(){
+  try {
+    var t = THEMES[_currentTheme];
+    var color = t ? t.color : '#16A87A';
+    if (_isDark && t) color = t.dark; // 다크모드면 어두운 톤
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute('content', color);
+  } catch(e){ console.warn('[theme-color]', e); }
 }
 
 /* ══════════════════════════════
