@@ -370,6 +370,16 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-dot-item{padding:12px 16px;font-size:13px;font-weight:600;color:var(--text-1);cursor:pointer;border-bottom:.5px solid var(--border);}
 .sd-dot-item:last-child{border-bottom:none;}
 .sd-dot-item:active{background:var(--bg-2);}
+/* ── 메뉴카드 상세 모달 (카드가 커지듯 펼쳐짐) ── */
+#ov-menu-detail{z-index:960;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+#menu-detail-panel{background:var(--surface);border-radius:22px 22px 0 0;max-height:92vh;width:100%;display:flex;flex-direction:column;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.3),0 4px 20px rgba(22,168,122,.15);overflow:hidden;border:1.5px solid var(--green);border-bottom:none;}
+#md-content{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1;scrollbar-width:thin;}
+#md-content::-webkit-scrollbar{width:5px;}
+#md-content::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:3px;}
+.md-sticky-head{position:sticky;top:0;background:var(--surface);z-index:5;border-bottom:.5px solid var(--border);}
+/* PC 드래그 가능한 가로 스크롤 영역 */
+.sd-photo-scroll,.sd-menu-scroll{cursor:grab;user-select:none;-webkit-user-select:none;}
+.sd-photo-scroll:active,.sd-menu-scroll:active{cursor:grabbing;}
 @keyframes ct-ad-bg{0%{opacity:1}100%{opacity:.6}}
 @keyframes ct-ad-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.8}}
 .sheet-handle{width:36px;height:4px;background:var(--border-mid);border-radius:2px;margin:0 auto 18px;opacity:.5;}
@@ -1981,6 +1991,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- 파일 입력 (카메라/갤러리/메뉴이미지) -->
 <input type="file" id="sd-photo-input"  accept="image/*"                       style="display:none" onchange="sdHandlePhotoInput(this)">
 <input type="file" id="sd-menu-img-in" accept="image/*"                       style="display:none" onchange="sdHandleMenuImgInput(this)">
+
+<!-- ══ 메뉴카드 상세 모달 (카드 클릭 시 펼쳐짐) ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-menu-detail" onclick="mdCloseOutside(event)">
+  <div id="menu-detail-panel">
+    <div id="md-content"><!-- dynamic --></div>
+  </div>
+</div>
 
 <!-- ══ チリつもに公開 모달 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-chiri-publish" onclick="closeOvOutside(event,'ov-chiri-publish')">
@@ -8944,6 +8961,9 @@ var _sdNewCat1   = '';   // 선택된 대분류 (예: '🍣 일식')
 var _sdNewCat2   = '';   // 선택된 소분류 (예: '스시')
 var _sdCmtPage   = {};   // {cardId: 댓글 현재 페이지 (0부터)}
 var SD_CMT_PER_PAGE = 5; // 댓글 페이지당 개수
+var _sdCards     = [];   // 현재 가게의 메뉴카드 리스트 (모달용)
+var _mdCardId    = null; // 현재 열린 메뉴 상세 모달의 cardId
+var _mdComments  = [];   // 현재 모달의 댓글 캐시
 
 /* ── 메뉴 카테고리 (대분류 → 소분류) ── */
 var SD_CATS = {
@@ -9050,6 +9070,7 @@ function _sdRenderPhotos(photos) {
       h+='<img src="'+p.photo_url+'" alt="" loading="lazy" style="width:'+Math.round(H*1.35)+'px;height:'+H+'px;flex-shrink:0;object-fit:cover;display:block;">';
     });
     h+='</div></div>';
+    setTimeout(function(){ _sdEnableDragScroll('.sd-photo-scroll'); }, 30);
   }
   // 오른쪽: 사진추가 / 구글맵 (위아래)
   h+='<div style="width:84px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'
@@ -9121,14 +9142,15 @@ function _sdRenderGmaps(){
 
 /* ── 메뉴카드 ── */
 async function _sdLoadMenuCards(){
-  if(!_sb){_sdRenderMenus([],true);return;}
+  if(!_sb){_sdCards=[];_sdRenderMenus([],true);return;}
   var res=await _sb.from('store_menu_cards').select('*').eq('store_name',_sdName).order('created_at',{ascending:false});
-  _sdRenderMenus(res.data||[],true);
-  if(_sdExpandId) await _sdLoadCardDetail(_sdExpandId);
+  _sdCards = res.data || []; // 모달에서 조회용으로 전역 저장
+  _sdRenderMenus(_sdCards,true);
+  // 모달이 열려있는 카드가 있으면 갱신
+  if(_mdCardId) await _sdLoadCardDetail(_mdCardId);
   // 헤더 평점 갱신
-  var cards=res.data||[];
-  if(cards.length>0){
-    var rated=cards.filter(function(c){return c.rating_count>0;});
+  if(_sdCards.length>0){
+    var rated=_sdCards.filter(function(c){return c.rating_count>0;});
     if(rated.length>0){
       var totalR=rated.reduce(function(a,c){return a+parseFloat(c.rating_avg||0);},0)/rated.length;
       var totalC=rated.reduce(function(a,c){return a+(c.rating_count||0);},0);
@@ -9144,13 +9166,12 @@ function _sdRenderMenus(cards,loaded){
     +'</div>';
   h+='<div class="sd-menu-scroll">';
   cards.forEach(function(c){
-    var isExp=_sdExpandId===c.id;
     var imgH=c.image_url
       ?'<img style="width:100%;height:160px;object-fit:cover;display:block;" src="'+c.image_url+'" loading="lazy">'
       :'<div class="sd-menu-card-img">🍽️</div>';
     var stars=c.rating_avg>0?('★'+parseFloat(c.rating_avg).toFixed(1)):'─';
     var ratingCnt=c.rating_count>0?(' <span style="font-size:10px;color:var(--text-3);font-weight:600;">('+c.rating_count+')</span>'):'';
-    h+='<div class="sd-menu-card'+(isExp?' sd-expanded':'')+'" onclick="sdToggleCard(\''+c.id+'\')">'
+    h+='<div class="sd-menu-card" onclick="openMenuDetail(\''+c.id+'\')">'
       +imgH
       +'<div class="sd-menu-card-info">'
       +'<div style="font-size:15px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:-.3px;margin-bottom:2px;">'+c.menu_name+'</div>'
@@ -9166,103 +9187,136 @@ function _sdRenderMenus(cards,loaded){
     +'<span style="font-size:11px;color:var(--text-2);line-height:1.3;">メニュー<br>カード<br>追加</span>'
     +'</div>';
   h+='</div>';
-  h+='<div id="sd-expand-slot"></div>';
   wrap.innerHTML=h;
-  if(_sdExpandId) _sdRenderExpandSlot(_sdExpandId,[]);
+  // PC 드래그/휠 가로 스크롤 활성화
+  setTimeout(function(){ _sdEnableDragScroll('.sd-menu-scroll'); }, 30);
 }
 
-/* 카드 토글 */
-async function sdToggleCard(cardId){
-  if(_sdExpandId===cardId){
-    _sdExpandId=null;
-    var sl=document.getElementById('sd-expand-slot'); if(sl) sl.innerHTML='';
-    document.querySelectorAll('.sd-menu-card.sd-expanded').forEach(function(el){el.classList.remove('sd-expanded');});
-    return;
-  }
-  _sdExpandId=cardId;
-  _sdCmtPage[cardId]=0; // 새로 펼칠 때 페이지 초기화
-  document.querySelectorAll('.sd-menu-card.sd-expanded').forEach(function(el){el.classList.remove('sd-expanded');});
-  var target=event&&event.currentTarget;
-  var sl=document.getElementById('sd-expand-slot');
-  if(sl) sl.innerHTML='<div style="margin:0 16px 12px;padding:16px;text-align:center;color:var(--text-3);font-size:12px;">로딩 중...</div>';
-  await _sdLoadCardDetail(cardId);
-  // expanded 클래스
-  document.querySelectorAll('.sd-menu-card').forEach(function(el){
-    if(el.getAttribute('onclick')&&el.getAttribute('onclick').indexOf(cardId)>-1) el.classList.add('sd-expanded');
-  });
+/* 메뉴 카드 클릭 → 카드가 커지듯 모달로 펼쳐짐 (배경 dim+blur) */
+async function openMenuDetail(cardId){
+  var card = _sdCards.find(function(c){ return c.id === cardId; });
+  if(!card){ console.warn('[MD] card not found', cardId); return; }
+  _mdCardId = cardId;
+  _sdCmtPage[cardId] = 0;
+  _mdComments = [];
+  openOv('ov-menu-detail');
+  _mdRender(); // 즉시 스켈레톤 표시
+  // 댓글 로드 후 재렌더
+  _mdComments = await _sdLoadCommentsForCard(cardId);
+  _mdRender();
+}
+function closeMenuDetail(){
+  closeOv('ov-menu-detail');
+  _mdCardId = null;
+  _mdComments = [];
+}
+function mdCloseOutside(e){
+  if(e.target === document.getElementById('ov-menu-detail')) closeMenuDetail();
 }
 
-/* 카드 상세 로드
-   주의: store_menu_comments.user_id → auth.users(id) 이고 profiles 와는 직접 FK 없음.
-   따라서 PostgREST 의 select('*, profiles(nickname)') 조인은 실패 → 닉네임을 별도 쿼리로 가져옴 */
-async function _sdLoadCardDetail(cardId){
-  if(!_sb){_sdRenderExpandSlot(cardId,[]);return;}
-  // 1) 댓글 로드
-  var res=await _sb.from('store_menu_comments').select('*').eq('menu_card_id',cardId).order('created_at',{ascending:false});
-  if(res.error){
-    console.error('[SD load cmts]', res.error);
-    _sdRenderExpandSlot(cardId,[]);
-    return;
-  }
-  var comments=res.data||[];
+/* 카드의 댓글/대댓글을 닉네임과 함께 로드 (profiles 별도 fetch) */
+async function _sdLoadCommentsForCard(cardId){
+  if(!_sb || !cardId) return [];
+  var res = await _sb.from('store_menu_comments').select('*').eq('menu_card_id',cardId).order('created_at',{ascending:false});
+  if(res.error){ console.error('[SD load cmts]', res.error); return []; }
+  var comments = res.data || [];
   if(comments.length>0){
-    // 2) 닉네임 일괄 조회
     var uidSet={};
     comments.forEach(function(c){ if(c.user_id) uidSet[c.user_id]=true; });
     var userIds=Object.keys(uidSet);
     var nickMap={};
     if(userIds.length>0){
-      var prof=await _sb.from('profiles').select('id, nickname').in('id',userIds);
+      var prof = await _sb.from('profiles').select('id, nickname').in('id',userIds);
       (prof.data||[]).forEach(function(p){ nickMap[p.id]=p.nickname; });
     }
     comments.forEach(function(c){ c.profiles={ nickname: nickMap[c.user_id] || '익명' }; });
-    // 3) 대댓글 + 닉네임
-    var ids=comments.map(function(c){return c.id;});
-    var rr=await _sb.from('store_menu_replies').select('*').in('comment_id',ids).order('created_at',{ascending:true});
-    var replies=(rr&&rr.data)||[];
+    var ids = comments.map(function(c){ return c.id; });
+    var rr = await _sb.from('store_menu_replies').select('*').in('comment_id',ids).order('created_at',{ascending:true});
+    var replies = (rr&&rr.data)||[];
     if(replies.length>0){
       var ruidSet={};
       replies.forEach(function(r){ if(r.user_id) ruidSet[r.user_id]=true; });
       var ruids=Object.keys(ruidSet);
       var rnickMap={};
       if(ruids.length>0){
-        var rp=await _sb.from('profiles').select('id, nickname').in('id',ruids);
+        var rp = await _sb.from('profiles').select('id, nickname').in('id',ruids);
         (rp.data||[]).forEach(function(p){ rnickMap[p.id]=p.nickname; });
       }
       replies.forEach(function(r){ r.profiles={ nickname: rnickMap[r.user_id] || '익명' }; });
     }
     comments.forEach(function(c){ c._replies=replies.filter(function(r){return r.comment_id===c.id;}); });
   }
-  _sdRenderExpandSlot(cardId,comments);
+  return comments;
+}
+
+/* 호환 wrapper: 기존 함수들이 호출하는 경로. 모달이 열려있으면 모달 갱신 */
+async function _sdLoadCardDetail(cardId){
+  if(_mdCardId === cardId){
+    _mdComments = await _sdLoadCommentsForCard(cardId);
+    _mdRender();
+  }
 }
 
 /* 카드 상세 렌더 */
-function _sdRenderExpandSlot(cardId,comments){
-  var sl=document.getElementById('sd-expand-slot'); if(!sl) return;
-  var myC=_currentUser?comments.find(function(c){return c.user_id===_currentUser.id;}):null;
-  var h='<div class="sd-menu-expand-wrap">';
-  // 평점 요약 바
+/* 메뉴 상세 모달 렌더 (카드 + 별점분포 + 댓글 + 입력) */
+function _mdRender(){
+  if(!_mdCardId) return;
+  var card = _sdCards.find(function(c){ return c.id === _mdCardId; });
+  if(!card) return;
+  var content = document.getElementById('md-content');
+  if(!content) return;
+  var cardId = _mdCardId;
+  var comments = _mdComments;
+  var myC = _currentUser ? comments.find(function(cm){ return cm.user_id === _currentUser.id; }) : null;
+
+  var h = '';
+  // 스티키 헤더 (X 버튼)
+  h += '<div class="md-sticky-head">'
+    +'<div class="sheet-handle" style="margin:10px auto 6px;"></div>'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px 10px;">'
+      +'<div style="font-size:12px;color:var(--text-3);font-weight:700;letter-spacing:.3px;">📋 メニュー詳細</div>'
+      +'<div onclick="closeMenuDetail()" style="width:34px;height:34px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-2);">✕</div>'
+    +'</div></div>';
+
+  // 카드 hero 이미지
+  if(card.image_url){
+    h += '<img src="'+card.image_url+'" style="width:100%;height:260px;object-fit:cover;display:block;background:var(--bg-2);">';
+  } else {
+    h += '<div style="width:100%;height:260px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:72px;">🍽️</div>';
+  }
+  // 메뉴 정보
+  var stars=card.rating_avg>0?('★'+parseFloat(card.rating_avg).toFixed(1)):'─';
+  var ratingCnt=card.rating_count>0?(' <span style="font-size:13px;color:var(--text-3);font-weight:600;">('+card.rating_count+')</span>'):'';
+  h += '<div style="padding:18px 20px 14px;border-bottom:.5px solid var(--border);">'
+    +'<div style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;margin-bottom:4px;">'+(card.menu_name||'')+'</div>'
+    +(card.category?'<div style="font-size:13px;color:var(--text-3);font-weight:500;margin-bottom:10px;">'+card.category+'</div>':'')
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
+      +'<span style="font-size:18px;font-weight:800;color:var(--gold);">'+stars+ratingCnt+'</span>'
+      +'<span style="font-size:22px;font-weight:800;color:var(--text-1);">'+(card.price?'¥'+Number(card.price).toLocaleString():'')+'</span>'
+    +'</div></div>';
+
+  // 별점 분포
   if(comments.length>0){
     var avg=comments.reduce(function(a,c){return a+(c.rating||0);},0)/comments.length;
-    h+='<div style="padding:10px 14px 8px;background:var(--green-light);border-bottom:.5px solid var(--border);">'
+    h += '<div style="margin:14px 16px;padding:12px 14px;background:var(--green-light);border-radius:14px;">'
       +'<div style="display:flex;align-items:center;gap:10px;">'
-      +'<span style="font-size:20px;font-weight:800;color:var(--green);">★'+avg.toFixed(1)+'</span>'
-      +'<span style="font-size:11px;color:var(--text-3);">'+comments.length+'명 평가</span>'
+        +'<span style="font-size:22px;font-weight:800;color:var(--green);">★'+avg.toFixed(1)+'</span>'
+        +'<span style="font-size:11px;color:var(--text-3);">'+comments.length+'명 평가</span>'
       +'</div>'
-      +'<div style="display:flex;flex-direction:column;gap:3px;margin-top:6px;">';
+      +'<div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">';
     for(var s=5;s>=1;s--){
       var cnt=comments.filter(function(c){return c.rating===s;}).length;
       var pct=Math.round(cnt/comments.length*100);
-      h+='<div style="display:flex;align-items:center;gap:5px;">'
-        +'<span style="font-size:9px;color:var(--text-3);width:14px;text-align:right;">'+s+'★</span>'
-        +'<div style="flex:1;height:5px;border-radius:5px;background:var(--border);overflow:hidden;">'
-        +'<div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:5px;"></div></div>'
-        +'<span style="font-size:9px;color:var(--text-3);width:20px;">'+pct+'%</span>'
-        +'</div>';
+      h += '<div style="display:flex;align-items:center;gap:6px;">'
+        +'<span style="font-size:10px;color:var(--text-3);width:14px;text-align:right;">'+s+'★</span>'
+        +'<div style="flex:1;height:6px;border-radius:6px;background:var(--border);overflow:hidden;"><div style="height:100%;width:'+pct+'%;background:var(--gold);border-radius:6px;"></div></div>'
+        +'<span style="font-size:10px;color:var(--text-3);width:22px;">'+pct+'%</span>'
+      +'</div>';
     }
-    h+='</div></div>';
+    h += '</div></div>';
   }
-  // 댓글 목록 (페이지네이션: 5개씩)
+
+  // 댓글 페이지네이션
   var totalCmts = comments.length;
   var totalPages = Math.max(1, Math.ceil(totalCmts / SD_CMT_PER_PAGE));
   var curPage = _sdCmtPage[cardId] || 0;
@@ -9271,48 +9325,46 @@ function _sdRenderExpandSlot(cardId,comments){
   var pageEnd = pageStart + SD_CMT_PER_PAGE;
   var pageComments = comments.slice(pageStart, pageEnd);
   if(totalCmts > 0){
-    h+='<div style="padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between;background:var(--bg-2);">'
-      +'<div style="font-size:11px;font-weight:700;color:var(--text-2);">💬 댓글 '+totalCmts+'개</div>'
+    h += '<div style="padding:8px 18px 4px;display:flex;align-items:center;justify-content:space-between;">'
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">💬 댓글 '+totalCmts+'개</div>'
       +(totalPages>1?'<div style="font-size:10px;color:var(--text-3);font-weight:600;">'+(curPage+1)+' / '+totalPages+' 페이지</div>':'')
-      +'</div>';
+    +'</div>';
   }
   pageComments.forEach(function(c){
     var nick=(c.profiles&&c.profiles.nickname)||'익명';
     var isMe=_currentUser&&c.user_id===_currentUser.id;
     var starsHtml='';
     for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--gold)':'#ddd')+';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
-    h+='<div class="sd-comment-item">'
+    h += '<div class="sd-comment-item" style="padding:10px 18px;">'
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
-      +'<div style="display:flex;align-items:center;gap:6px;">'
-      +'<span style="font-size:13px;font-weight:700;color:var(--text-1);">'+nick+'</span>'
-      +'<span>'+starsHtml+'</span>'
+        +'<div style="display:flex;align-items:center;gap:6px;">'
+          +'<span style="font-size:13px;font-weight:700;color:var(--text-1);">'+nick+'</span>'
+          +'<span>'+starsHtml+'</span>'
+        +'</div>'
+        +'<div style="display:flex;gap:10px;">'
+        +(isMe?'<span onclick="sdEditMyComment(\''+c.id+'\',\''+cardId+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:700;">수정</span>':'')
+        +'<span onclick="sdToggleReplyForm(\''+c.id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;">답글</span>'
+        +'</div>'
       +'</div>'
-      +'<div style="display:flex;gap:10px;">';
-    if(isMe) h+='<span onclick="sdEditMyComment(\''+c.id+'\',\''+cardId+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:700;">수정</span>';
-    h+='<span onclick="sdToggleReplyForm(\''+c.id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;">답글</span>'
-      +'</div></div>';
-    if(c.content) h+='<div style="font-size:12px;color:var(--text-2);line-height:1.55;">'+c.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
-    // 대댓글
+      +(c.content?'<div style="font-size:12px;color:var(--text-2);line-height:1.55;">'+c.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>':'');
     (c._replies||[]).forEach(function(r){
       var rn=(r.profiles&&r.profiles.nickname)||'익명';
-      h+='<div class="sd-reply-item">'
+      h += '<div class="sd-reply-item" style="padding-left:30px;">'
         +'<span style="font-size:10px;font-weight:700;color:var(--text-3);">↳ '+rn+'</span>'
         +(r.content?'<div style="font-size:11px;color:var(--text-2);margin-top:2px;">'+r.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>':'')
-        +'</div>';
+      +'</div>';
     });
-    // 대댓글 입력폼 (숨김)
-    h+='<div id="rf-'+c.id+'" style="display:none;padding:8px 0 0;">'
+    h += '<div id="rf-'+c.id+'" style="display:none;padding:8px 0 0;">'
       +'<div style="display:flex;gap:6px;">'
-      +'<input id="ri-'+c.id+'" type="text" placeholder="답글 쓰기..." style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:7px 10px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;">'
-      +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">등록</button>'
-      +'</div></div>';
-    h+='</div>';
+        +'<input id="ri-'+c.id+'" type="text" placeholder="답글 쓰기..." style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:7px 10px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;">'
+        +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">등록</button>'
+      +'</div></div>'
+    +'</div>';
   });
-  // 페이지네이션 컨트롤 (댓글 5개 초과 시)
   if(totalPages > 1){
     var canPrev = curPage > 0;
     var canNext = curPage < totalPages - 1;
-    h+='<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;background:var(--bg-2);border-top:.5px solid var(--border);">'
+    h += '<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;background:var(--bg-2);border-top:.5px solid var(--border);">'
       +(canPrev
         ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage-1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">◀ 이전</div>'
         : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">◀ 이전</div>')
@@ -9320,34 +9372,72 @@ function _sdRenderExpandSlot(cardId,comments){
       +(canNext
         ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage+1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">다음 ▶</div>'
         : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">다음 ▶</div>')
-      +'</div>';
+    +'</div>';
   }
-  // 내 댓글 작성 / 수정 영역 (전용 ID로 안정적 타겟팅)
-  h+='<div id="sd-cmt-input-'+cardId+'" style="padding:12px 14px;border-top:.5px solid var(--border);">';
+  // 댓글 입력/수정 (전용 ID)
+  h += '<div id="sd-cmt-input-'+cardId+'" style="padding:14px 18px 30px;border-top:.5px solid var(--border);background:var(--bg);">';
   if(!_currentUser){
-    h+='<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">🔒 로그인 후 평가할 수 있어요</div>';
+    h += '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">🔒 로그인 후 평가할 수 있어요</div>';
   } else if(myC){
-    // 이미 평가한 유저 → 추가 작성 불가, 수정만 가능
     var myStars='';
     for(var ms=1;ms<=5;ms++) myStars+='<span style="color:'+(ms<=(myC.rating||0)?'var(--gold)':'#ddd')+';font-size:13px;">'+(ms<=(myC.rating||0)?'★':'☆')+'</span>';
-    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;">'
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;">'
       +'<div style="display:flex;align-items:center;gap:6px;">'
         +'<span style="font-size:11px;font-weight:800;color:var(--green);">✅ 내 평가</span>'
         +'<span>'+myStars+'</span>'
       +'</div>'
       +'<span style="font-size:10px;color:var(--text-3);font-weight:500;">한 사용자당 1개만 작성 가능</span>'
-      +'</div>'
-      +'<button onclick="sdEditMyComment(\''+myC.id+'\',\''+cardId+'\')" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--green);background:var(--green-light);color:var(--green);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">✏️ 내 평가 수정하기</button>';
+    +'</div>'
+    +'<button onclick="sdEditMyComment(\''+myC.id+'\',\''+cardId+'\')" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--green);background:var(--green-light);color:var(--green);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">✏️ 내 평가 수정하기</button>';
   } else {
-    h+='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">✍️ 평가 작성</div>'
-      +_sdCommentFormHtml(cardId,null,0,'');
+    h += '<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">✍️ 평가 작성</div>'
+      + _sdCommentFormHtml(cardId,null,0,'');
   }
-  h+='</div></div>';
-  sl.innerHTML=h;
-  // 스크롤
-  setTimeout(function(){sl.scrollIntoView({behavior:'smooth',block:'nearest'});},100);
+  h += '</div>';
+
+  content.innerHTML = h;
+  content.scrollTop = 0;
 }
 function sdToggleReplyForm(cid){var f=document.getElementById('rf-'+cid);if(f){f.style.display=f.style.display==='none'?'block':'none';}}
+
+/* PC 마우스 환경에서 가로 스크롤 컨테이너에 드래그 + 휠 지원 추가 */
+function _sdEnableDragScroll(selector){
+  document.querySelectorAll(selector).forEach(function(el){
+    if(el._dragScrollOn) return;
+    el._dragScrollOn = true;
+    var isDown=false, startX=0, scrollLeft=0, moved=false;
+    el.addEventListener('mousedown', function(e){
+      // 버튼/링크 위에서 시작 시 드래그 비활성화 (클릭 방해 안 함)
+      isDown = true; moved = false;
+      startX = e.pageX - el.offsetLeft;
+      scrollLeft = el.scrollLeft;
+    });
+    el.addEventListener('mouseleave', function(){ if(isDown){ isDown=false; } });
+    el.addEventListener('mouseup', function(){ isDown=false; });
+    el.addEventListener('mousemove', function(e){
+      if(!isDown) return;
+      var x = e.pageX - el.offsetLeft;
+      var walk = (x - startX) * 1.4;
+      if(Math.abs(walk) > 4) moved = true;
+      el.scrollLeft = scrollLeft - walk;
+    });
+    // 드래그 직후 click 이벤트 차단 (의도치 않은 카드 클릭 방지)
+    el.addEventListener('click', function(e){
+      if(moved){ e.preventDefault(); e.stopPropagation(); moved=false; }
+    }, true);
+    // 마우스 휠: 세로 휠 → 가로 스크롤 (가로 스크롤 가능 영역 안에서만 가로채기)
+    el.addEventListener('wheel', function(e){
+      if(el.scrollWidth <= el.clientWidth) return;
+      if(Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return; // 트랙패드 가로 제스처는 그대로
+      var hasRoomLeft = el.scrollLeft > 0;
+      var hasRoomRight = el.scrollLeft < (el.scrollWidth - el.clientWidth - 1);
+      if((e.deltaY < 0 && hasRoomLeft) || (e.deltaY > 0 && hasRoomRight)){
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    }, { passive:false });
+  });
+}
 function sdCmtPage(cardId,newPage){
   if(newPage<0) return;
   _sdCmtPage[cardId]=newPage;
