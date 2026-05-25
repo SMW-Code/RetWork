@@ -55,8 +55,28 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="RetWork">
-<meta name="theme-color" content="#16A87A">
+<meta name="theme-color" content="#16A87A" id="meta-theme-color">
 <link rel="apple-touch-icon" href="/icons/icon.svg">
+<!-- ── 최우선 인라인 스크립트: PWA 설치 전에 meta theme-color 를 사용자의 현재 테마로 갱신 ──
+     이게 안 되면 PWA install 시점에 위 기본값 #16A87A 가 status bar 색상으로 캐시됨 -->
+<script>
+(function(){
+  try {
+    var T = {
+      green:'#16A87A',blue:'#1A7FD4',purple:'#7C3AED',coral:'#E8541A',rose:'#E11D6A',
+      gold:'#D97706',indigo:'#4F46E5',cyan:'#0891B2',lime:'#65A30D',magenta:'#A21CAF'
+    };
+    var key = localStorage.getItem('receiptiq_theme') || 'green';
+    var color = T[key] || '#16A87A';
+    var m = document.getElementById('meta-theme-color');
+    if (m) m.setAttribute('content', color);
+    // 모바일에서만 html bg 도 테마색으로 (status bar / 앱 사이 leak 방지)
+    if (window.matchMedia && window.matchMedia('(max-width:500px)').matches) {
+      document.documentElement.style.backgroundColor = color;
+    }
+  } catch(e){}
+})();
+</script>
 <!-- ══ Google AdSense (Publisher: ca-pub-6495876616577319) ══ -->
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6495876616577319"
      crossorigin="anonymous"></script>
