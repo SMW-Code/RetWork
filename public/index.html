@@ -66,6 +66,9 @@
 
 :root {
   --green:#16A87A; --green-dark:#0C6B52; --green-light:#E0F5EE; --green-mid:#A8E2CC;
+  /* 테마 색 alpha 변형 — applyTheme() 에서 동적 갱신됨 (글로우/보더/배경 hint 용도) */
+  --theme-a05:#16A87A0D; --theme-a10:#16A87A1A; --theme-a15:#16A87A26;
+  --theme-a18:#16A87A2E; --theme-a30:#16A87A4D; --theme-a50:#16A87A80;
   --yellow:#F5BE5E; --yellow-bg:#FDF6E3;
   --blue:#3B82F6; --blue-bg:#EBF3FF;
   --purple:#8B5CF6; --purple-bg:#F0EDFF;
@@ -118,7 +121,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 /* ── 모드 토글 버튼 (설정 패널 내) ── */
 .mode-btn{flex:1;padding:9px 0;border-radius:12px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;font-family:var(--font);letter-spacing:-.2px;background:var(--bg);color:var(--text-3);}
-.mode-btn.receipt.active{background:var(--green);color:#fff;box-shadow:0 3px 10px rgba(22,168,122,.3);}
+.mode-btn.receipt.active{background:var(--green);color:#fff;box-shadow:0 3px 10px var(--theme-a30);}
 .mode-btn.chiri.active{background:var(--gold);color:#fff;box-shadow:var(--gold-shadow);}
 
 /* ── チリつも 화면 ── */
@@ -184,11 +187,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .hdr-title{font-size:20px;font-weight:800;color:var(--text-1);letter-spacing:-.6px;}
 .hdr-sub{font-size:11px;color:var(--text-3);margin-top:1px;font-weight:500;letter-spacing:.1px;}
 .hdr-date{font-size:11px;color:var(--text-3);font-weight:500;margin-left:8px;letter-spacing:.1px;}
-.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--green-light),#C8EEE1);border:1.5px solid rgba(22,168,122,.18);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--green);cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-xs);transition:transform .15s;}
+.avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--green-light),#C8EEE1);border:1.5px solid var(--theme-a18);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--green);cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-xs);transition:transform .15s;}
 .avatar:active{transform:scale(.9);}
 
 .chip{padding:7px 15px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;box-shadow:var(--shadow-xs);}
-.chip.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 3px 10px rgba(22,168,122,.3);}
+.chip.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 3px 10px var(--theme-a30);}
 .pay-chip-sel{padding:7px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;white-space:nowrap;transition:all .15s;}
 .pay-chip-sel.sel{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:700;}
 .spacer{height:20px;flex-shrink:0;}
@@ -208,7 +211,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 /* 인사말 밴드 */
 .greet-band{margin:10px 16px 0;background:var(--surface);border-radius:14px;padding:7px 14px;border:.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm);}
-.today-bubble{background:var(--green-light);border-radius:14px;padding:7px 12px;text-align:right;flex-shrink:0;border:.5px solid rgba(22,168,122,.15);}
+.today-bubble{background:var(--green-light);border-radius:14px;padding:7px 12px;text-align:right;flex-shrink:0;border:.5px solid var(--theme-a15);}
 
 /* 예산 카드 */
 .budget-wrap{margin:10px 16px 0;background:var(--surface);border-radius:14px;padding:8px 15px;border:.5px solid var(--border);box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s;}
@@ -382,7 +385,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .si:last-child{border-bottom:none;}
 .si-lbl{font-size:13px;font-weight:600;color:var(--text-1);flex:1;}
 .si-val{font-size:12px;color:var(--text-3);}
-.toggle{width:42px;height:25px;border-radius:13px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;box-shadow:0 2px 6px rgba(22,168,122,.3);}
+.toggle{width:42px;height:25px;border-radius:13px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;box-shadow:0 2px 6px var(--theme-a30);}
 .toggle::after{content:'';width:19px;height:19px;border-radius:50%;background:#fff;position:absolute;right:3px;top:3px;transition:right .2s;}
 .toggle.off{background:#C8D0CE;box-shadow:none;}
 .toggle.off::after{right:20px;}
@@ -405,7 +408,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-menu-scroll::-webkit-scrollbar{display:none;}
 .sd-menu-card{flex-shrink:0;width:210px;height:280px;border-radius:18px;border:.5px solid var(--border);overflow:hidden;background:var(--surface);cursor:pointer;transition:transform .12s;display:flex;flex-direction:column;box-shadow:0 3px 10px rgba(0,0,0,.07);}
 .sd-menu-card:active{transform:scale(.98);}
-.sd-menu-card.sd-expanded{border-color:var(--green);border-width:1.5px;box-shadow:0 4px 14px rgba(22,168,122,.18);}
+.sd-menu-card.sd-expanded{border-color:var(--green);border-width:1.5px;box-shadow:0 4px 14px var(--theme-a18);}
 .sd-menu-card-img{width:100%;height:160px;object-fit:cover;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:42px;}
 .sd-menu-card-info{padding:11px 13px 12px;flex:1;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;}
 .sd-add-card{flex-shrink:0;width:96px;height:280px;border-radius:18px;border:1.5px dashed var(--border-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;color:var(--text-3);font-size:11px;font-weight:700;padding:0 6px;text-align:center;background:transparent;}
@@ -420,7 +423,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-dot-item:active{background:var(--bg-2);}
 /* ── 메뉴카드 상세 모달 (카드가 커지듯 펼쳐짐) ── */
 #ov-menu-detail{z-index:960;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
-#menu-detail-panel{background:var(--surface);border-radius:22px 22px 0 0;max-height:92vh;width:100%;display:flex;flex-direction:column;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.3),0 4px 20px rgba(22,168,122,.15);overflow:hidden;border:1.5px solid var(--green);border-bottom:none;}
+#menu-detail-panel{background:var(--surface);border-radius:22px 22px 0 0;max-height:92vh;width:100%;display:flex;flex-direction:column;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.3),0 4px 20px var(--theme-a15);overflow:hidden;border:1.5px solid var(--green);border-bottom:none;}
 #md-content{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1;scrollbar-width:thin;}
 #md-content::-webkit-scrollbar{width:5px;}
 #md-content::-webkit-scrollbar-thumb{background:var(--border-mid);border-radius:3px;}
@@ -447,7 +450,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 /* API 키 설정 카드 */
 .api-setup-card{margin:0 16px 12px;background:var(--surface);border-radius:18px;border:1.5px dashed var(--green-mid);padding:16px;box-shadow:var(--shadow-xs);}
 .api-input{width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;margin-top:8px;background:var(--bg);transition:border-color .15s;}
-.api-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(22,168,122,.1);}
+.api-input:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--theme-a10);}
 .api-btn{background:linear-gradient(135deg,#1BBF8A,#0D7A5F);color:#fff;border:none;border-radius:12px;padding:10px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:opacity .15s;box-shadow:0 3px 10px rgba(12,107,82,.25);}
 .api-btn:active{opacity:.8;}
 
@@ -538,7 +541,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   --shadow-green:0 6px 24px rgba(22,168,122,.22),0 2px 8px rgba(22,168,122,.12);
   --gold-shadow:0 6px 24px rgba(232,160,32,.22),0 2px 8px rgba(232,160,32,.12);
   /* 액센트 라이트 → 다크 tint */
-  --green-light:rgba(22,168,122,.18);
+  --green-light:var(--theme-a18);
   --green-mid:rgba(22,168,122,.32);
   --gold-light:rgba(232,160,32,.16);
   --yellow-bg:rgba(245,190,94,.12);
@@ -1096,7 +1099,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         title="ピンを追加"
         style="background:var(--green);color:#fff;border:none;border-radius:50%;width:48px;height:48px;
                display:flex;align-items:center;justify-content:center;
-               box-shadow:0 4px 16px rgba(22,168,122,.5);cursor:pointer;font-size:22px;">
+               box-shadow:0 4px 16px var(--theme-a50);cursor:pointer;font-size:22px;">
         📌
       </button>
     </div>
@@ -1741,7 +1744,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <span id="mode-lbl-receipt" style="font-size:13px;font-weight:800;color:var(--green);transition:all .25s;white-space:nowrap;">🧾 ReceiptIQ</span>
             <div id="mode-toggle-sw" data-mode="receipt"
               onclick="switchMode(this.dataset.mode==='receipt'?'chiri':'receipt');closeOv('ov-settings')"
-              style="width:52px;height:28px;border-radius:14px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:0 2px 8px rgba(22,168,122,.3);">
+              style="width:52px;height:28px;border-radius:14px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:0 2px 8px var(--theme-a30);">
               <div id="mode-toggle-knob" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.18);"></div>
             </div>
             <span id="mode-lbl-chiri" style="font-size:13px;font-weight:700;color:var(--text-3);transition:all .25s;white-space:nowrap;">📍 チリつも</span>
@@ -2404,7 +2407,7 @@ function switchMode(mode) {
   var knob  = document.getElementById('mode-toggle-knob');
   var lblR  = document.getElementById('mode-lbl-receipt');
   var lblC  = document.getElementById('mode-lbl-chiri');
-  if (sw)   { sw.dataset.mode = mode; sw.style.background = isReceipt ? 'var(--green)' : 'var(--gold)'; sw.style.boxShadow = isReceipt ? '0 2px 8px rgba(22,168,122,.3)' : 'var(--gold-shadow)'; }
+  if (sw)   { sw.dataset.mode = mode; sw.style.background = isReceipt ? 'var(--green)' : 'var(--gold)'; sw.style.boxShadow = isReceipt ? '0 2px 8px var(--theme-a30)' : 'var(--gold-shadow)'; }
   if (knob) knob.style.left = isReceipt ? '3px' : '27px';
   if (lblR) { lblR.style.color = isReceipt ? 'var(--green)' : 'var(--text-3)'; lblR.style.fontWeight = isReceipt ? '800' : '600'; }
   if (lblC) { lblC.style.color = isReceipt ? 'var(--text-3)' : 'var(--gold)'; lblC.style.fontWeight = isReceipt ? '600' : '800'; }
@@ -5054,7 +5057,7 @@ function buildRankListHtml(list, cntMap, unitPriceMap, unitLabel, accentColor) {
       : '<span style="font-size:12px;font-weight:800;color:var(--text-3);width:26px;text-align:center;flex-shrink:0;display:inline-block;">'+medals[i]+'</span>';
     html += '<div style="display:flex;align-items:center;padding:10px 14px;'
       +'border-bottom:'+(i<list.length-1?'0.5px solid var(--border)':'none')+';'
-      +'background:'+(isTop?'rgba(22,168,122,.04)':'transparent')+';">'
+      +'background:'+(isTop?'var(--theme-a05)':'transparent')+';">'
       +medalHtml
       +'<div style="flex:1;min-width:0;margin-left:10px;">'
       +'<div style="font-size:13px;font-weight:'+(isTop?'800':'700')+';color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+name+'</div>'
@@ -8335,6 +8338,13 @@ function applyTheme(key, silent) {
   r.style.setProperty('--gold-shadow', '0 6px 24px '+t.dark+'4D, 0 2px 8px '+t.dark+'26');
   // 요약 카드 그라디언트
   document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = t.grad; });
+  // 알파 변형 (글로우 / 보더 / 약한 배경 등에서 쓰임 — 하드코딩 초록색을 대체)
+  r.style.setProperty('--theme-a05', t.color + '0D');  //  5% alpha (배경 매우 옅음)
+  r.style.setProperty('--theme-a10', t.color + '1A');  // 10% alpha
+  r.style.setProperty('--theme-a15', t.color + '26');  // 15% alpha
+  r.style.setProperty('--theme-a18', t.color + '2E');  // 18%
+  r.style.setProperty('--theme-a30', t.color + '4D');  // 30%
+  r.style.setProperty('--theme-a50', t.color + '80');  // 50%
   localStorage.setItem('receiptiq_theme', key);
   renderThemeSwatches();
   // 모바일 상단 status bar 색상도 테마에 맞게
