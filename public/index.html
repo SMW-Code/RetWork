@@ -9293,15 +9293,24 @@ function _sdRenderExpandSlot(cardId,comments){
         : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">다음 ▶</div>')
       +'</div>';
   }
-  // 내 댓글 작성 영역
-  h+='<div style="padding:12px 14px;">';
+  // 내 댓글 작성 / 수정 영역 (전용 ID로 안정적 타겟팅)
+  h+='<div id="sd-cmt-input-'+cardId+'" style="padding:12px 14px;border-top:.5px solid var(--border);">';
   if(!_currentUser){
-    h+='<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">로그인 후 평가할 수 있어요</div>';
+    h+='<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">🔒 로그인 후 평가할 수 있어요</div>';
   } else if(myC){
-    h+='<div style="font-size:11px;font-weight:700;color:var(--green);margin-bottom:4px;">✅ 내 평가 작성 완료</div>'
-      +'<div style="font-size:11px;color:var(--text-3);">위 내 댓글의 수정 버튼으로 편집할 수 있어요</div>';
+    // 이미 평가한 유저 → 추가 작성 불가, 수정만 가능
+    var myStars='';
+    for(var ms=1;ms<=5;ms++) myStars+='<span style="color:'+(ms<=(myC.rating||0)?'var(--gold)':'#ddd')+';font-size:13px;">'+(ms<=(myC.rating||0)?'★':'☆')+'</span>';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;">'
+      +'<div style="display:flex;align-items:center;gap:6px;">'
+        +'<span style="font-size:11px;font-weight:800;color:var(--green);">✅ 내 평가</span>'
+        +'<span>'+myStars+'</span>'
+      +'</div>'
+      +'<span style="font-size:10px;color:var(--text-3);font-weight:500;">한 사용자당 1개만 작성 가능</span>'
+      +'</div>'
+      +'<button onclick="sdEditMyComment(\''+myC.id+'\',\''+cardId+'\')" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--green);background:var(--green-light);color:var(--green);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">✏️ 내 평가 수정하기</button>';
   } else {
-    h+='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">평가 작성</div>'
+    h+='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">✍️ 평가 작성</div>'
       +_sdCommentFormHtml(cardId,null,0,'');
   }
   h+='</div></div>';
@@ -9339,9 +9348,26 @@ async function sdSubmitComment(cardId,existingId){
   var tx=(document.getElementById('sd-ct-'+cardId)||{value:''}).value.trim();
   if(!st){alert('별점을 선택해주세요');return;}
   if(existingId){
-    await _sb.from('store_menu_comments').update({rating:st,content:tx,updated_at:new Date().toISOString()}).eq('id',existingId);
+    // 수정
+    var upd=await _sb.from('store_menu_comments').update({rating:st,content:tx,updated_at:new Date().toISOString()}).eq('id',existingId);
+    if(upd.error){ alert('수정 실패: '+upd.error.message); return; }
   } else {
-    await _sb.from('store_menu_comments').insert({menu_card_id:cardId,user_id:_currentUser.id,rating:st,content:tx});
+    // 새 작성 — 혹시 이미 작성한 게 있는지 한번 더 확인 (UNIQUE 제약 + 친절한 메시지)
+    var existing=await _sb.from('store_menu_comments').select('id').eq('menu_card_id',cardId).eq('user_id',_currentUser.id).maybeSingle();
+    if(existing.data){
+      alert('이미 이 메뉴에 평가를 작성하셨습니다. 수정만 가능해요.');
+      await _sdLoadCardDetail(cardId);
+      return;
+    }
+    var ins=await _sb.from('store_menu_comments').insert({menu_card_id:cardId,user_id:_currentUser.id,rating:st,content:tx});
+    if(ins.error){
+      if(/duplicate|unique/i.test(ins.error.message||'')){
+        alert('이미 이 메뉴에 평가를 작성하셨습니다.');
+      } else {
+        alert('등록 실패: '+ins.error.message);
+      }
+      return;
+    }
   }
   await _sdUpdateCardRating(cardId);
   await _sdLoadCardDetail(cardId);
@@ -9361,8 +9387,11 @@ function sdEditMyComment(cid,cardId){
     if(!res.data) return;
     var c=res.data;
     _sdCStar[cardId]=c.rating;
-    var area=document.querySelector('.sd-menu-expand-wrap > div:last-child');
-    if(area) area.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">평가 수정</div>'+_sdCommentFormHtml(cardId,cid,c.rating,c.content||'');
+    var area=document.getElementById('sd-cmt-input-'+cardId);
+    if(area){
+      area.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:8px;">✏️ 내 평가 수정</div>'+_sdCommentFormHtml(cardId,cid,c.rating,c.content||'');
+      setTimeout(function(){ area.scrollIntoView({behavior:'smooth',block:'center'}); },50);
+    }
   });
 }
 function sdCancelEdit(cardId){_sdLoadCardDetail(_sdExpandId);}
