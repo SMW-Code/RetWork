@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# AdSense / AdsBot - allow crawl for ad serving
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+Sitemap: https://retwork.jp/sitemap.xml
