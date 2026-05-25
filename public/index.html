@@ -9330,7 +9330,7 @@ function _mdRender(){
   // 별점 분포
   if(comments.length>0){
     var avg=comments.reduce(function(a,c){return a+(c.rating||0);},0)/comments.length;
-    h += '<div style="margin:14px 16px;padding:12px 14px;background:#FEF9C3;border-radius:14px;">'
+    h += '<div style="margin:14px 16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border-mid);border-radius:14px;">'
       +'<div style="display:flex;align-items:center;gap:10px;">'
         +'<span style="font-size:22px;font-weight:800;color:var(--star);">★'+avg.toFixed(1)+'</span>'
         +'<span style="font-size:11px;color:var(--text-3);">'+comments.length+'명 평가</span>'
