@@ -2709,19 +2709,26 @@ function ctRenderPricePins() {
     filtered.forEach(function(p) {
       var s = p.stores;
       if (!s || s.lat == null || s.lng == null) return;
-      var clat = Math.floor(parseFloat(s.lat) / gridSize);
-      var clng = Math.floor(parseFloat(s.lng) / gridSize);
+      var lat = parseFloat(s.lat);
+      var lng = parseFloat(s.lng);
+      var clat = Math.floor(lat / gridSize);
+      var clng = Math.floor(lng / gridSize);
       var ck   = clat + ',' + clng;
-      if (!cells[ck]) cells[ck] = { pins: [], lat: (clat + 0.5) * gridSize, lng: (clng + 0.5) * gridSize };
+      if (!cells[ck]) cells[ck] = { pins: [], sumLat: 0, sumLng: 0 };
       cells[ck].pins.push(p);
+      cells[ck].sumLat += lat;
+      cells[ck].sumLng += lng;
     });
 
     Object.values(cells).forEach(function(cell) {
       var cnt = cell.pins.length;
+      // 클러스터 위치 = 마커들의 평균 좌표 (centroid) — 그리드 셀 중앙이 아니라 실제 데이터 위치
+      var cLat = cell.sumLat / cnt;
+      var cLng = cell.sumLng / cnt;
       var w   = Math.min(32 + cnt * 2, 56);
       var r   = w / 2;
       var marker = new google.maps.Marker({
-        position: { lat: cell.lat, lng: cell.lng },
+        position: { lat: cLat, lng: cLng },
         map: _ctMap,
         icon: {
           url: ctMakeClusterSVG(cnt),
@@ -2730,11 +2737,34 @@ function ctRenderPricePins() {
         },
         zIndex: 5
       });
-      var center = { lat: cell.lat, lng: cell.lng };
-      marker.addListener('click', function() {
-        _ctMap.setCenter(center);
-        _ctMap.setZoom(CT_CLUSTER_ZOOM);
-      });
+      (function(pins){
+        marker.addListener('click', function() {
+          if (pins.length === 1) {
+            // 단독: 해당 마커를 화면 정중앙으로 이동 + 확대
+            var p = pins[0];
+            var loc = { lat: parseFloat(p.stores.lat), lng: parseFloat(p.stores.lng) };
+            _ctMap.panTo(loc);
+            var nextZoom = Math.max(CT_CLUSTER_ZOOM, (_ctMap.getZoom() || zoom) + 2);
+            _ctMap.setZoom(nextZoom);
+          } else {
+            // 복수: 모든 마커가 화면에 들어오도록 bounds 맞춤 (= 자연히 마커들의 중간이 중심)
+            var bounds = new google.maps.LatLngBounds();
+            pins.forEach(function(p){
+              if (p.stores && p.stores.lat != null && p.stores.lng != null) {
+                bounds.extend({ lat: parseFloat(p.stores.lat), lng: parseFloat(p.stores.lng) });
+              }
+            });
+            _ctMap.fitBounds(bounds, { top:80, right:60, bottom:120, left:60 });
+            // 마커들이 너무 가까이 모여있으면 fitBounds가 과도하게 확대될 수 있으므로
+            // 또 너무 적게 확대되면 개별 핀 모드로 전환이 안 되므로 zoom 보정
+            setTimeout(function(){
+              var z = _ctMap.getZoom() || 0;
+              if (z < CT_CLUSTER_ZOOM) _ctMap.setZoom(CT_CLUSTER_ZOOM);
+              else if (z > 19) _ctMap.setZoom(19);
+            }, 250);
+          }
+        });
+      })(cell.pins);
       _ctMarkers.push(marker);
     });
 
