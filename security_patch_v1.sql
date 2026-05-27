@@ -82,16 +82,15 @@ REVOKE INSERT, UPDATE, DELETE ON coin_transactions FROM anon, authenticated;
 
 -- ─── [3] add_coins(): 권한 강화 + search_path 설정 ─────────────────────────
 -- 기존 함수가 SECURITY DEFINER 인데 search_path 미설정 + EXECUTE 권한 광범위.
+-- 파라미터 이름 변경 위해 DROP 먼저 (PostgreSQL은 CREATE OR REPLACE로 이름 변경 못 함).
 
-REVOKE EXECUTE ON FUNCTION add_coins(UUID, INTEGER, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION add_coins(UUID, INTEGER, TEXT, TEXT) TO service_role;
+DROP FUNCTION IF EXISTS add_coins(UUID, INTEGER, TEXT, TEXT);
 
--- 함수 재정의 (search_path 명시 + 호출자가 본인 user_id 만 적립하도록)
-CREATE OR REPLACE FUNCTION add_coins(
+CREATE FUNCTION add_coins(
   p_user_id UUID,
   p_amount INTEGER,
   p_type TEXT,
-  p_description TEXT DEFAULT NULL
+  p_desc TEXT DEFAULT NULL  -- 원본 파라미터 이름 그대로 유지
 )
 RETURNS VOID
 LANGUAGE plpgsql
@@ -107,13 +106,17 @@ BEGIN
 
   -- 코인 거래 기록 + 잔액 갱신
   INSERT INTO coin_transactions(user_id, amount, type, description)
-  VALUES (p_user_id, p_amount, p_type, p_description);
+  VALUES (p_user_id, p_amount, p_type, p_desc);
 
   UPDATE profiles
      SET coin_balance = coin_balance + p_amount
    WHERE id = p_user_id;
 END;
 $$;
+
+-- DROP/CREATE 직후 권한 회수 + service_role 만 허용
+REVOKE EXECUTE ON FUNCTION add_coins(UUID, INTEGER, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION add_coins(UUID, INTEGER, TEXT, TEXT) TO service_role;
 
 -- ─── [4] draw_entries: is_winner 셀프 설정 + 임의 entry 생성 차단 ───────────
 
