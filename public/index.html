@@ -3224,36 +3224,7 @@ var nextId = 1;
 var apiKey = '';  // Google Vision API 키 — 백엔드 /api/vision 경유 (Vercel 환경변수 GOOGLE_VISION_API_KEY)
 var gptKey  = '';  // OpenAI API 키 — 백엔드 /api/gpt 경유 (Vercel 환경변수 OPENAI_API_KEY)
 
-/* ══════════════════════════════
-   API 키
-══════════════════════════════ */
-function saveApiKey() {
-  apiKey = document.getElementById('api-key-input').value.trim();
-  var status = document.getElementById('api-status');
-  if (apiKey.length > 10) {
-    status.textContent = '✅ API 키가 저장됐어요. 이제 영수증을 스캔할 수 있어요!';
-    status.style.color = 'var(--green)';
-  } else {
-    status.textContent = '⚠️ API 키를 확인해주세요 (AIza... 형식)';
-    status.style.color = 'var(--red)';
-  }
-}
-
-// GPT API 키 저장
-function saveGptKey() {
-  gptKey = document.getElementById('gpt-key-input').value.trim();
-  var status = document.getElementById('gpt-status');
-  if (gptKey.startsWith('sk-') && gptKey.length > 20) {
-    localStorage.setItem('riq_gpt_key', gptKey);
-    status.textContent = '✅ OpenAI 키 저장 완료! GPT가 품목을 정확하게 분류해요.';
-    status.style.color = 'var(--green)';
-  } else {
-    gptKey = '';
-    localStorage.removeItem('riq_gpt_key');
-    status.textContent = '⚠️ sk- 로 시작하는 OpenAI API 키를 입력해주세요';
-    status.style.color = 'var(--red)';
-  }
-}
+/* API 키 — 모두 백엔드(/api/vision, /api/gpt)에서 처리. 클라이언트 입력 UI 제거됨 */
 
 /* ══════════════════════════════
    モード切替 (ReceiptIQ ↔ チリつも)
@@ -4317,13 +4288,8 @@ var _ctDummyPosts = [];
 var _ctNotifMessages = [];
 var _ctNotifications = [];
 
-function _timeAgo(dateStr) {
-  var diff = (Date.now() - new Date(dateStr).getTime()) / 1000;
-  if (diff < 60)    return 'たった今';
-  if (diff < 3600)  return Math.floor(diff / 60) + '分前';
-  if (diff < 86400) return Math.floor(diff / 3600) + '時間前';
-  return Math.floor(diff / 86400) + '日前';
-}
+// _timeAgo — 사용자/관리자 양쪽에서 사용. i18n 지원하려고 통합본 사용 (line 14129 정의가 hoisting 후 이김).
+// 이 자리에는 stub만 두고, 진짜 본체는 아래쪽 정의 (14129 부근) 한 곳에서 관리.
 
 async function ctLoadNotifications() {
   if (!_currentUser || !_sb) return;
@@ -5586,12 +5552,12 @@ function renderHistory(cat) {
       // 주소 + 지도 버튼 (주소 있는 경우만)
       if (r.address) {
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
-          +'<span style="font-size:11px;color:var(--text-3);">📍 '+r.address+'</span>'
-          +'<button onclick="event.stopPropagation();flyToStoreFromHistory(\''+r.address.replace(/'/g,"\\'")+'\',\''+r.store.replace(/'/g,"\\'")+'\',\''+r.lat+'\',\''+r.lng+'\')" style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">🗺 지도에서 보기</button>'
+          +'<span style="font-size:11px;color:var(--text-3);">📍 '+_esc(r.address)+'</span>'
+          +'<button onclick="event.stopPropagation();flyToStoreFromHistory('+JSON.stringify(r.address)+','+JSON.stringify(r.store)+','+JSON.stringify(String(r.lat))+','+JSON.stringify(String(r.lng))+')" style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">🗺 지도에서 보기</button>'
           +'</div>';
       }
       r.items.forEach(function(item){
-        html += '<div class="d-row"><span>'+item.name+(item.qty>1?' ×'+item.qty:'')+'</span><span>¥'+item.price.toLocaleString()+'</span></div>';
+        html += '<div class="d-row"><span>'+_esc(item.name)+(item.qty>1?' ×'+item.qty:'')+'</span><span>¥'+item.price.toLocaleString()+'</span></div>';
       });
       html += '<div class="d-row" style="font-weight:800;border-top:0.5px solid var(--border);padding-top:6px;margin-top:2px;"><span>합계</span><span style="color:var(--green);">¥'+r.total.toLocaleString()+'</span></div>';
       if (r.pay) {
@@ -8496,7 +8462,7 @@ function showOcrResult(previewSrc, result) {
     return items.map(function(item, idx){
       return '<div style="display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:0.5px solid var(--border);">'
         +'<div style="flex:1;min-width:0;">'
-        +'<div contenteditable="true" id="in-name-'+idx+'" style="font-size:13px;font-weight:600;color:var(--text-1);outline:none;padding:2px 0;border-bottom:1px dashed var(--border-mid);" onblur="syncOcrItems()">'+item.name+'</div>'
+        +'<div contenteditable="true" id="in-name-'+idx+'" style="font-size:13px;font-weight:600;color:var(--text-1);outline:none;padding:2px 0;border-bottom:1px dashed var(--border-mid);" onblur="syncOcrItems()">'+_esc(item.name)+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">'
         +'<span style="font-size:10px;color:var(--text-3);">수량</span>'
         +'<input type="number" id="in-qty-'+idx+'" value="'+(item.qty||1)+'" min="1" max="99" style="width:38px;font-size:12px;border:0.5px solid var(--border-mid);border-radius:6px;padding:2px 4px;text-align:center;background:var(--bg);" oninput="syncOcrItems()">'
@@ -8531,7 +8497,7 @@ function showOcrResult(previewSrc, result) {
     +'<img src="'+previewSrc+'" class="ocr-preview" alt="영수증">'
     +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px;">'
     +'<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;">가게 이름</div>'
-    +'<div style="font-size:15px;font-weight:800;color:var(--text-1);" contenteditable="true" id="ocr-store">'+result.store+'</div>'
+    +'<div style="font-size:15px;font-weight:800;color:var(--text-1);" contenteditable="true" id="ocr-store">'+_esc(result.store)+'</div>'
     +'</div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">인식된 품목 (<span id=\'item-count\'>'+window._ocrItems.length+'</span>개)</div>'
@@ -8877,7 +8843,7 @@ function updateCpPreview() {
   }
   listEl.innerHTML = _cpSelectedItems.map(function(it) {
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">'
-      + '<span style="font-size:12px;font-weight:700;color:var(--text-1);flex:1;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + it.name + '</span>'
+      + '<span style="font-size:12px;font-weight:700;color:var(--text-1);flex:1;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(it.name) + '</span>'
       + '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
       + '</div>';
   }).join('');
@@ -8891,7 +8857,7 @@ function _buildCpChip(it, i, selected) {
   var priceLabel = it.qty > 1 ? '@¥'+it.price.toLocaleString() : '¥'+it.price.toLocaleString();
   return '<div id="cp-chip-wrap-'+i+'" onclick="toggleCpItemChip('+i+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;user-select:none;border:1.5px solid '+(selected?'var(--green)':'var(--border-mid)')+';background:'+(selected?'var(--green-light)':'var(--surface)')+';">'
     + '<span id="cp-chip-check-'+i+'" style="width:20px;height:20px;border-radius:50%;border:2px solid '+(selected?'var(--green)':'var(--border-mid)')+';background:'+(selected?'var(--green)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;font-weight:900;">'+(selected?'✓':'')+'</span>'
-    + '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+it.name+'</span>'
+    + '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(it.name)+'</span>'
     + '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">'+priceLabel+'</span>'
     + '</div>';
 }
@@ -12916,7 +12882,7 @@ async function _sdLoadStoreComments(){
         +     reportBtn
         +   '</div>'
         + '</div>'
-        + (c.content ? '<div style="font-size:12px;color:var(--text-2);line-height:1.4;">'+String(c.content).replace(/</g,'&lt;')+'</div>' : '')
+        + (c.content ? '<div style="font-size:12px;color:var(--text-2);line-height:1.4;">'+_esc(c.content)+'</div>' : '')
         + '<div style="display:flex;justify-content:space-between;margin-top:4px;">'
         +   '<span style="font-size:10px;color:var(--text-3);">'+date+'</span>'
         +   (c.has_receipt ? '<span style="font-size:10px;color:var(--green);font-weight:700;">🧾 영수증 인증</span>' : '')
@@ -14155,13 +14121,22 @@ async function openAdminUserDetail(userId) {
 }
 
 // 시간 경과 표시 ("2시간 전", "3일 전")
+// _timeAgo — 통합 정의. 현재 언어 (_currentLang) 기준으로 표현 선택.
 function _timeAgo(iso) {
   if (!iso) return '';
   var diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return '방금 전';
-  if (diff < 3600) return Math.floor(diff/60) + '분 전';
-  if (diff < 86400) return Math.floor(diff/3600) + '시간 전';
-  if (diff < 86400*7) return Math.floor(diff/86400) + '일 전';
+  var lang = (typeof _currentLang === 'string' ? _currentLang : 'ja');
+  // 라벨: { now, m, h, d } 짧은 표현
+  var L = {
+    ja: { now:'たった今', m:'分前', h:'時間前', d:'日前' },
+    ko: { now:'방금 전', m:'분 전', h:'시간 전', d:'일 전' },
+    en: { now:'just now', m:'m ago', h:'h ago', d:'d ago' },
+    zh: { now:'刚刚', m:'分钟前', h:'小时前', d:'天前' }
+  }[lang] || { now:'たった今', m:'分前', h:'時間前', d:'日前' };
+  if (diff < 60)    return L.now;
+  if (diff < 3600)  return Math.floor(diff / 60) + (lang==='en' ? L.m : L.m);
+  if (diff < 86400) return Math.floor(diff / 3600) + L.h;
+  if (diff < 86400*7) return Math.floor(diff / 86400) + L.d;
   return iso.slice(0,10);
 }
 
@@ -15637,7 +15612,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v125';
+window.__APP_VERSION__ = 'v126';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
