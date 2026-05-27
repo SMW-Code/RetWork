@@ -799,8 +799,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 슬라이드 3 -->
       <div class="onb-slide">
         <div class="onb-illus" style="background:var(--yellow-bg);">📊</div>
-        <div class="onb-title">지출 패턴을 한눈에</div>
-        <div class="onb-desc">카테고리별 분석 · 달력 · 리포트로<br>내 소비 습관을 쉽게 파악하고<br>예산을 스마트하게 관리해요.</div>
+        <div class="onb-title" data-i18n="onb.pattern_title">支出パターンを一目で</div>
+        <div class="onb-desc" data-i18n="onb.pattern_desc">カテゴリ別分析・カレンダー・レポートで<br>自分の消費習慣を簡単に把握し<br>予算をスマートに管理</div>
       </div>
       <!-- 슬라이드 4 -->
       <div class="onb-slide">
@@ -828,7 +828,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- 로고 -->
     <div style="font-size:26px;font-weight:800;color:var(--text-1);letter-spacing:-1px;margin-bottom:6px;">RetWork</div>
-    <div style="font-size:13px;color:var(--text-3);margin-bottom:26px;text-align:center;line-height:1.6;">지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.</div>
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:26px;text-align:center;line-height:1.6;" data-i18n="onb.start">支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。</div>
 
     <!-- 탭 전환 -->
     <div style="display:flex;width:100%;background:var(--surface);border-radius:12px;padding:3px;margin-bottom:20px;border:0.5px solid var(--border);">
@@ -968,8 +968,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="hist-mnav-btn" onclick="changeHistMonth(1)">›</div>
   </div>
   <div class="subtab-bar">
-    <div class="subtab active" id="stab-history" onclick="switchSubtab('history')">지출 내역</div>
-    <div class="subtab" id="stab-report" onclick="switchSubtab('report')">리포트</div>
+    <div class="subtab active" id="stab-history" onclick="switchSubtab('history')" data-i18n="subtab.history">支出履歴</div>
+    <div class="subtab" id="stab-report" onclick="switchSubtab('report')" data-i18n="subtab.report">レポート</div>
   </div>
   <div class="subscreen active" id="ss-history" style="position:relative;">
     <!-- 카테고리 필터 트리거 -->
@@ -1004,7 +1004,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div id="report-summary" style="padding:12px 16px 0;"></div>
 
       <!-- 지출 추이 -->
-      <div style="padding:14px 16px 6px;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;">📈 지출 추이</div>
+      <div style="padding:14px 16px 6px;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;" data-i18n="home.trend">📈 支出推移</div>
       <div class="period-bar">
         <div class="chip active" onclick="switchPeriod(this,'week')">주간</div>
         <div class="chip" onclick="switchPeriod(this,'month')">월간</div>
@@ -1013,7 +1013,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div class="bar-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-          <div style="font-size:11px;font-weight:700;color:var(--text-3);" id="chart-title">이번 주 일별 지출</div>
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);" id="chart-title" data-i18n="home.chart.weekly">今週の日別支出</div>
           <div style="font-size:13px;font-weight:800;color:var(--green);" id="report-total">¥ 0</div>
         </div>
         <div id="bars-wrap" style="position:relative;padding-top:22px;">
@@ -1075,7 +1075,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- ══ CALENDAR ══ -->
 <div class="screen" id="screen-calendar">
   <div class="hdr">
-    <div><div class="hdr-title">달력</div><div class="hdr-sub">날짜별 지출 확인</div></div>
+    <div><div class="hdr-title" data-i18n="cal.title">カレンダー</div><div class="hdr-sub" data-i18n="cal.sub">日付別の支出を確認</div></div>
     <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
   </div>
   <div class="scroll">
@@ -1106,10 +1106,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <div class="month-summary" onclick="openMonthDetail()" style="cursor:pointer;transition:box-shadow .15s;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">이달 요약</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;" data-i18n="cal.month_summary">今月のまとめ</div>
         <div style="font-size:11px;font-weight:700;color:var(--green);">자세히 보기 ›</div>
       </div>
-      <div class="ms-row"><span style="color:var(--text-2);font-weight:600;">총 지출</span><span style="font-weight:800;color:var(--green);" id="cal-month-total">¥ 0</span></div>
+      <div class="ms-row"><span style="color:var(--text-2);font-weight:600;" data-i18n="cal.month_total">総支出</span><span style="font-weight:800;color:var(--green);" id="cal-month-total">¥ 0</span></div>
       <div class="ms-row"><span style="color:var(--text-2);font-weight:600;">영수증 수</span><span style="font-weight:700;color:var(--text-1);" id="cal-month-cnt">0건</span></div>
       <div class="ms-row"><span style="color:var(--text-2);font-weight:600;">하루 평균</span><span style="font-weight:700;color:var(--text-1);" id="cal-month-avg">¥ 0</span></div>
     </div>
@@ -1898,10 +1898,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="overlay bottom-sheet-overlay" id="ov-budget" onclick="closeOvOutside(event,'ov-budget')">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">🎯 이달 예산 설정</div>
-    <div class="sheet-sub">목표 지출 금액을 입력하세요</div>
+    <div class="sheet-title" data-i18n="budget.title">🎯 今月の予算設定</div>
+    <div class="sheet-sub" data-i18n="budget.sub">目標支出額を入力</div>
     <div style="margin:16px 0 8px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">예산 금액 (¥)</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;" data-i18n="budget.amount">予算額 (¥)</div>
       <div style="position:relative;">
         <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;font-weight:700;color:var(--text-2);">¥</span>
         <input id="budget-input" type="number" min="0" step="1000" placeholder="80,000"
@@ -1917,13 +1917,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="setBudgetQuick(150000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥150,000</div>
     </div>
     <button onclick="saveBudget()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;">저장</button>
-    <div onclick="clearBudget()" style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-3);cursor:pointer;padding:6px;">예산 해제</div>
+    <div onclick="clearBudget()" style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-3);cursor:pointer;padding:6px;" data-i18n="budget.clear">予算を解除</div>
   </div>
 </div>
 
 <!-- ══ 아바타 크롭 편집기 ══ -->
 <div id="ov-avatar-crop" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);flex-direction:column;align-items:center;justify-content:center;padding:20px;">
-  <div style="color:#fff;font-size:16px;font-weight:800;margin-bottom:16px;letter-spacing:-.3px;">아바타 편집</div>
+  <div style="color:#fff;font-size:16px;font-weight:800;margin-bottom:16px;letter-spacing:-.3px;" data-i18n="avatar.title">アバター編集</div>
 
   <!-- 크롭 컨테이너 -->
   <div id="crop-container" style="width:280px;height:280px;position:relative;overflow:hidden;border-radius:14px;background:#000;touch-action:none;flex-shrink:0;">
@@ -1935,7 +1935,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 
   <!-- 안내 -->
-  <div style="color:rgba(255,255,255,.55);font-size:12px;margin-top:10px;text-align:center;line-height:1.5;">드래그로 위치 조정<br>슬라이더로 크기 조절</div>
+  <div style="color:rgba(255,255,255,.55);font-size:12px;margin-top:10px;text-align:center;line-height:1.5;" data-i18n="avatar.hint">ドラッグで位置調整<br>スライダーでサイズ調整</div>
 
   <!-- 줌 슬라이더 -->
   <div style="display:flex;align-items:center;gap:10px;margin-top:14px;width:260px;">
@@ -1947,8 +1947,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
   <!-- 버튼 -->
   <div style="display:flex;gap:10px;margin-top:20px;width:260px;">
-    <button onclick="cancelCrop()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;">취소</button>
-    <button onclick="confirmCrop()" style="flex:2;padding:13px;border-radius:14px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;">✅ 적용</button>
+    <button onclick="cancelCrop()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.cancel">キャンセル</button>
+    <button onclick="confirmCrop()" style="flex:2;padding:13px;border-radius:14px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="avatar.apply">✅ 適用</button>
   </div>
 </div>
 
@@ -1956,30 +1956,30 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="overlay bottom-sheet-overlay" id="ov-scan" onclick="closeOvOutside(event,'ov-scan')">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">영수증 스캔</div>
-    <div class="sheet-sub">스캔 방식을 선택하세요</div>
+    <div class="sheet-title" data-i18n="scan.title">レシートをスキャン</div>
+    <div class="sheet-sub" data-i18n="scan.subtitle">スキャン方法を選択</div>
     <!-- 1장 촬영 -->
     <label class="scan-opt" style="display:flex;">
       <span style="font-size:26px;">📷</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);">카메라로 촬영</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;">실시간 OCR · Google Vision API</div></div>
+      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.camera.title">カメラで撮影</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.camera.sub">リアルタイム OCR · Google Vision API</div></div>
       <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImageFile(this)">
     </label>
     <!-- 갤러리 1장 -->
     <label class="scan-opt" style="display:flex;">
       <span style="font-size:26px;">🖼️</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);">갤러리에서 선택</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;">저장된 영수증 사진</div></div>
+      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.gallery.title">ギャラリーから選択</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.gallery.sub">保存済みのレシート写真</div></div>
       <input type="file" accept="image/*" style="display:none;" onchange="handleImageFile(this)">
     </label>
-    <!-- 긴 영수증 분할 촬영 (새 기능) -->
+    <!-- 긴 영수증 분할 촬영 -->
     <div class="scan-opt" style="display:flex;" onclick="startMultiScan()">
       <span style="font-size:26px;">📜</span>
       <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);">긴 영수증 · 여러 장 찍기</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">나눠서 촬영 후 AI가 하나로 합쳐서 분석</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.multi.title">長いレシート · 複数枚撮影</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.multi.sub">分けて撮影 → AI が合体して分析</div>
       </div>
       <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--green);background:rgba(29,158,117,0.12);padding:3px 8px;border-radius:10px;align-self:center;">NEW</span>
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan')">취소</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan')" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -1987,8 +1987,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="overlay bottom-sheet-overlay" id="ov-multi" onclick="closeOvOutside(event,'ov-multi')">
   <div class="sheet" style="max-height:85vh;overflow-y:auto;">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">📜 긴 영수증 분할 촬영</div>
-    <div class="sheet-sub" id="multi-sub">위쪽부터 순서대로 찍어주세요</div>
+    <div class="sheet-title" data-i18n="multi.title">📜 長いレシート分割撮影</div>
+    <div class="sheet-sub" id="multi-sub" data-i18n="multi.sub">上から順番に撮影してください</div>
 
     <!-- 촬영된 사진 미리보기 목록 -->
     <div id="multi-preview-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
@@ -1996,12 +1996,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 촬영 버튼들 -->
     <label class="scan-opt" style="display:flex;margin-bottom:6px;">
       <span style="font-size:22px;">📷</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);">다음 장 촬영 (카메라)</div></div>
+      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="multi.next.camera">次の1枚（カメラ）</div></div>
       <input type="file" id="multi-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleMultiImageFile(this)">
     </label>
     <label class="scan-opt" style="display:flex;margin-bottom:6px;">
       <span style="font-size:22px;">🖼️</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);">다음 장 갤러리</div></div>
+      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="multi.next.gallery">次の1枚（ギャラリー）</div></div>
       <input type="file" id="multi-gallery-input" accept="image/*" style="display:none;" onchange="handleMultiImageFile(this)">
     </label>
 
@@ -2010,12 +2010,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       onclick="analyzeMultiReceipt()"
       style="width:100%;padding:14px;background:var(--green);color:#fff;font-size:15px;font-weight:700;border:none;border-radius:14px;margin-top:8px;opacity:0.4;cursor:not-allowed;transition:opacity .2s;"
       disabled>
-      🔍 AI로 합쳐서 분석하기
+      <span data-i18n="multi.analyze">🔍 AIで結合して分析</span>
     </button>
-    <div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:8px;">
-      최소 2장 · 최대 5장까지 지원
+    <div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:8px;" data-i18n="multi.hint">
+      最少 2枚 · 最大 5枚まで対応
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;" onclick="cancelMultiScan()">취소</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;" onclick="cancelMultiScan()" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -2031,22 +2031,22 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="overlay bottom-sheet-overlay" id="ov-saving" onclick="closeOvOutside(event,'ov-saving')">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">💡 절약 기회 분석</div>
-    <div class="sheet-sub">내 영수증 기반 · イオン vs 業務スーパー</div>
+    <div class="sheet-title" data-i18n="saving.title">💡 節約チャンス分析</div>
+    <div class="sheet-sub"><span data-i18n="saving.sub">マイレシート分析</span> · イオン vs 業務スーパー</div>
     <div class="saving-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🥛 牛乳 (우유) 1L</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">월 ¥480 절약 가능</div></div>
-      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">매달 12회 구매 기준</div>
-      <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン (현재)</div><div class="saving-price">¥198</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥158</div><div class="saving-badge">¥40 저렴</div></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🥛 牛乳 1L</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;" data-i18n="saving.based">月12回購入基準</div>
+      <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥198</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥158</div><div class="saving-badge">-¥40</div></div></div>
     </div>
     <div class="saving-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🍞 食パン (식빵)</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">월 ¥480 절약 가능</div></div>
-      <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥168</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥128</div><div class="saving-badge">¥40 저렴</div></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🍞 食パン</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
+      <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥168</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥128</div><div class="saving-badge">-¥40</div></div></div>
     </div>
     <div class="saving-total">
-      <div><div style="font-size:12px;font-weight:700;color:var(--green-dark);">합계 절약 예상액</div><div style="font-size:11px;color:var(--green);margin-top:2px;">연간 ¥15,840 절약 가능</div></div>
-      <div style="font-size:28px;font-weight:900;color:var(--green);">¥1,320<span style="font-size:13px;font-weight:600;">/월</span></div>
+      <div><div style="font-size:12px;font-weight:700;color:var(--green-dark);" data-i18n="saving.total">合計節約見込み額</div><div style="font-size:11px;color:var(--green);margin-top:2px;"><span data-i18n="saving.annual">年間節約見込み額</span>: ¥15,840</div></div>
+      <div style="font-size:28px;font-weight:900;color:var(--green);">¥1,320<span style="font-size:13px;font-weight:600;">/月</span></div>
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:14px;cursor:pointer;" onclick="closeOv('ov-saving')">닫기</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:14px;cursor:pointer;" onclick="closeOv('ov-saving')" data-i18n="btn.close">閉じる</div>
   </div>
 </div>
 
@@ -2056,13 +2056,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="sheet-handle"></div>
     <!-- 헤더 타이틀 + X -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-      <div class="sheet-title" id="mdet-title">5月 지출 상세</div>
+      <div class="sheet-title" id="mdet-title" data-i18n="mdet.title">月別支出詳細</div>
       <div onclick="closeOv('ov-month-detail')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
     </div>
     <!-- 총 합계 강조 카드 -->
     <div id="mdet-hero" style="background:linear-gradient(135deg,var(--green) 0%,var(--green-dark) 100%);border-radius:16px;padding:16px 20px;margin-bottom:16px;color:#fff;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-green);">
       <div>
-        <div style="font-size:10px;font-weight:700;opacity:.75;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;">이달 총 지출</div>
+        <div style="font-size:10px;font-weight:700;opacity:.75;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;" data-i18n="mdet.month_total">今月の総支出</div>
         <div id="mdet-total-amt" style="font-size:28px;font-weight:800;letter-spacing:-1.5px;line-height:1;">¥0</div>
       </div>
       <div style="text-align:right;">
@@ -2084,15 +2084,15 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet" style="max-height:92%;overflow-y:auto;">
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div class="sheet-title">✏️ 手動でピンを追加</div>
+      <div class="sheet-title" data-i18n="mp.title">✏️ 手動でピンを追加</div>
       <div onclick="closeOv('ov-manual-pin')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
     </div>
     <!-- 현재 위치 표시 -->
     <div style="background:var(--green-light);border-radius:12px;padding:10px 14px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);display:flex;align-items:center;gap:8px;">
       <span style="font-size:16px;">📍</span>
       <div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);">📍 ピン位置</div>
-        <div id="mp-location-text" style="font-size:11px;color:var(--text-2);">🗺️ チズで選択した場所</div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);" data-i18n="mp.location">📍 ピン位置</div>
+        <div id="mp-location-text" style="font-size:11px;color:var(--text-2);" data-i18n="mp.location.text">🗺️ チズで選択した場所</div>
       </div>
     </div>
     <!-- 가게명 -->
@@ -3091,7 +3091,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- 가게명 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;">가게명 / 지출처</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.store">店名 / 支出先</div>
       <input id="manual-store" type="text" placeholder="예) 주유소, 편의점..." style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
     </div>
 
@@ -9151,6 +9151,38 @@ var I18N = {
     'empty.history':'まだレシートがありません','empty.calendar':'この日には記録がありません','empty.search':'結果が見つかりません',
     // 토스트 공통
     'toast.saved':'✓ 保存しました','toast.deleted':'✓ 削除しました','toast.copied':'コピーしました','toast.login_required':'ログインが必要です','toast.error':'エラーが発生しました',
+    // 스캔 모달
+    'scan.subtitle':'スキャン方法を選択','scan.camera.title':'カメラで撮影','scan.camera.sub':'リアルタイム OCR · Google Vision API',
+    'scan.gallery.title':'ギャラリーから選択','scan.gallery.sub':'保存済みのレシート写真',
+    'scan.multi.title':'長いレシート · 複数枚撮影','scan.multi.sub':'分けて撮影 → AI が合体して分析',
+    // 분할 촬영
+    'multi.title':'📜 長いレシート分割撮影','multi.sub':'上から順番に撮影してください',
+    'multi.next.camera':'次の1枚（カメラ）','multi.next.gallery':'次の1枚（ギャラリー）',
+    'multi.analyze':'🔍 AIで結合して分析','multi.hint':'最少 2枚 · 最大 5枚まで対応',
+    // 절약 모달
+    'saving.title':'💡 節約チャンス分析','saving.sub':'マイレシート分析',
+    'saving.based':'月12回購入基準','saving.total':'合計節約見込み額','saving.annual':'年間節約見込み額','saving.cheap':'安い',
+    // 이달 요약
+    'mdet.month_total':'今月の総支出','mdet.count':'件','mdet.title':'月別支出詳細',
+    // 예산
+    'budget.title':'🎯 今月の予算設定','budget.sub':'目標支出額を入力','budget.amount':'予算額 (¥)','budget.clear':'予算を解除',
+    // 홈 메인
+    'home.this_month':'今月の合計支出','home.today_label':'今日の支出','home.budget_label':'今月の予算',
+    'home.chart.weekly':'今週の日別支出','home.chart.monthly':'今月の日別支出','home.chart.yearly':'今年の月別支出',
+    'home.trend':'📈 支出推移',
+    // 서브탭
+    'subtab.history':'支出履歴','subtab.report':'レポート',
+    // 달력
+    'cal.title':'カレンダー','cal.sub':'日付別の支出を確認','cal.month_summary':'今月のまとめ','cal.month_total':'総支出',
+    // 영수증 편집
+    'edit.title':'レシート編集','edit.store':'店名 / 支出先','edit.date':'日付','edit.amount':'金額','edit.memo':'メモ','edit.category':'カテゴリ',
+    // 아바타
+    'avatar.title':'アバター編集','avatar.hint':'ドラッグで位置調整<br>スライダーでサイズ調整','avatar.apply':'✅ 適用',
+    // 수동 핀
+    'mp.title':'✏️ 手動でピンを追加','mp.location':'📍 ピン位置','mp.location.text':'🗺️ チズで選択した場所',
+    // 온보딩
+    'onb.pattern_title':'支出パターンを一目で','onb.pattern_desc':'カテゴリ別分析・カレンダー・レポートで<br>自分の消費習慣を簡単に把握し<br>予算をスマートに管理',
+    'onb.start':'支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。',
   },
   ko: {
     'tab.home':'홈','tab.history':'내역','tab.calendar':'달력','tab.map':'맵','tab.profile':'프로필',
@@ -9175,6 +9207,26 @@ var I18N = {
     'talk.write':'글쓰기','talk.placeholder':'오늘의 절약 정보를 공유해보세요...','talk.post':'게시',
     'empty.history':'아직 영수증이 없습니다','empty.calendar':'이 날에는 기록이 없습니다','empty.search':'결과가 없습니다',
     'toast.saved':'✓ 저장됐어요','toast.deleted':'✓ 삭제됐어요','toast.copied':'복사됐어요','toast.login_required':'로그인이 필요합니다','toast.error':'오류가 발생했습니다',
+    'scan.subtitle':'스캔 방식을 선택하세요','scan.camera.title':'카메라로 촬영','scan.camera.sub':'실시간 OCR · Google Vision API',
+    'scan.gallery.title':'갤러리에서 선택','scan.gallery.sub':'저장된 영수증 사진',
+    'scan.multi.title':'긴 영수증 · 여러 장 찍기','scan.multi.sub':'나눠서 촬영 후 AI가 하나로 합쳐서 분석',
+    'multi.title':'📜 긴 영수증 분할 촬영','multi.sub':'위쪽부터 순서대로 찍어주세요',
+    'multi.next.camera':'다음 장 촬영 (카메라)','multi.next.gallery':'다음 장 갤러리',
+    'multi.analyze':'🔍 AI로 합쳐서 분석하기','multi.hint':'최소 2장 · 최대 5장까지 지원',
+    'saving.title':'💡 절약 기회 분석','saving.sub':'내 영수증 기반',
+    'saving.based':'매달 12회 구매 기준','saving.total':'합계 절약 예상액','saving.annual':'연간 절약 가능','saving.cheap':'저렴',
+    'mdet.month_total':'이달 총 지출','mdet.count':'건','mdet.title':'월별 지출 상세',
+    'budget.title':'🎯 이달 예산 설정','budget.sub':'목표 지출 금액을 입력하세요','budget.amount':'예산 금액 (¥)','budget.clear':'예산 해제',
+    'home.this_month':'이달 합계 지출','home.today_label':'오늘의 지출','home.budget_label':'이달 예산',
+    'home.chart.weekly':'이번 주 일별 지출','home.chart.monthly':'이번 달 일별 지출','home.chart.yearly':'올해 월별 지출',
+    'home.trend':'📈 지출 추이',
+    'subtab.history':'지출 내역','subtab.report':'리포트',
+    'cal.title':'달력','cal.sub':'날짜별 지출 확인','cal.month_summary':'이달 요약','cal.month_total':'총 지출',
+    'edit.title':'영수증 편집','edit.store':'가게명 / 지출처','edit.date':'날짜','edit.amount':'금액','edit.memo':'메모','edit.category':'카테고리',
+    'avatar.title':'아바타 편집','avatar.hint':'드래그로 위치 조정<br>슬라이더로 크기 조절','avatar.apply':'✅ 적용',
+    'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치',
+    'onb.pattern_title':'지출 패턴을 한눈에','onb.pattern_desc':'카테고리별 분석 · 달력 · 리포트로<br>내 소비 습관을 쉽게 파악하고<br>예산을 스마트하게 관리해요.',
+    'onb.start':'지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.',
   },
   en: {
     'tab.home':'Home','tab.history':'History','tab.calendar':'Calendar','tab.map':'Map','tab.profile':'Profile',
@@ -9199,6 +9251,26 @@ var I18N = {
     'talk.write':'Write post','talk.placeholder':'Share today’s savings tips...','talk.post':'Post',
     'empty.history':'No receipts yet','empty.calendar':'No records on this day','empty.search':'No results',
     'toast.saved':'✓ Saved','toast.deleted':'✓ Deleted','toast.copied':'Copied','toast.login_required':'Login required','toast.error':'An error occurred',
+    'scan.subtitle':'Choose scan method','scan.camera.title':'Take Photo','scan.camera.sub':'Live OCR · Google Vision API',
+    'scan.gallery.title':'Pick from Gallery','scan.gallery.sub':'Saved receipt photos',
+    'scan.multi.title':'Long Receipt · Multi-shot','scan.multi.sub':'Split shots → AI merges & analyzes',
+    'multi.title':'📜 Long Receipt Multi-shot','multi.sub':'Shoot from top to bottom',
+    'multi.next.camera':'Next shot (Camera)','multi.next.gallery':'Next shot (Gallery)',
+    'multi.analyze':'🔍 Merge & analyze with AI','multi.hint':'Min 2 · Max 5 shots',
+    'saving.title':'💡 Savings Opportunity','saving.sub':'Based on your receipts',
+    'saving.based':'Based on 12 purchases/mo','saving.total':'Total Estimated Savings','saving.annual':'Annual savings','saving.cheap':'cheaper',
+    'mdet.month_total':"This month's total",'mdet.count':'records','mdet.title':'Monthly Detail',
+    'budget.title':'🎯 Monthly Budget','budget.sub':'Enter target amount','budget.amount':'Budget (¥)','budget.clear':'Clear budget',
+    'home.this_month':"This month's total",'home.today_label':"Today's spend",'home.budget_label':"This month's budget",
+    'home.chart.weekly':'Daily spend this week','home.chart.monthly':'Daily spend this month','home.chart.yearly':'Monthly spend this year',
+    'home.trend':'📈 Spend trend',
+    'subtab.history':'History','subtab.report':'Report',
+    'cal.title':'Calendar','cal.sub':'Spend by date','cal.month_summary':"Month Summary",'cal.month_total':'Total',
+    'edit.title':'Edit Receipt','edit.store':'Store / Payee','edit.date':'Date','edit.amount':'Amount','edit.memo':'Memo','edit.category':'Category',
+    'avatar.title':'Edit Avatar','avatar.hint':'Drag to position<br>Slider to resize','avatar.apply':'✅ Apply',
+    'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map',
+    'onb.pattern_title':'See your spending at a glance','onb.pattern_desc':'Category analysis · Calendar · Reports<br>understand habits and<br>manage budget smartly.',
+    'onb.start':'Track expenses, understand habits.<br>Today’s receipt becomes tomorrow’s insight.',
   },
   zh: {
     'tab.home':'主页','tab.history':'记录','tab.calendar':'日历','tab.map':'地图','tab.profile':'个人',
@@ -9223,6 +9295,26 @@ var I18N = {
     'talk.write':'写帖子','talk.placeholder':'分享今天的省钱情报...','talk.post':'发布',
     'empty.history':'还没有票据','empty.calendar':'这天没有记录','empty.search':'未找到结果',
     'toast.saved':'✓ 已保存','toast.deleted':'✓ 已删除','toast.copied':'已复制','toast.login_required':'需要登录','toast.error':'发生错误',
+    'scan.subtitle':'选择扫描方式','scan.camera.title':'拍照','scan.camera.sub':'实时 OCR · Google Vision API',
+    'scan.gallery.title':'从相册选择','scan.gallery.sub':'已保存的票据照片',
+    'scan.multi.title':'长票据 · 多张拍摄','scan.multi.sub':'分张拍摄 → AI合并分析',
+    'multi.title':'📜 长票据分段拍摄','multi.sub':'请从上往下依次拍摄',
+    'multi.next.camera':'下一张（拍照）','multi.next.gallery':'下一张（相册）',
+    'multi.analyze':'🔍 用AI合并分析','multi.hint':'至少2张 · 最多5张',
+    'saving.title':'💡 省钱机会分析','saving.sub':'基于我的票据',
+    'saving.based':'每月12次购买基准','saving.total':'合计预计节省','saving.annual':'每年节省','saving.cheap':'便宜',
+    'mdet.month_total':'本月总支出','mdet.count':'笔','mdet.title':'月支出明细',
+    'budget.title':'🎯 本月预算设置','budget.sub':'请输入目标支出额','budget.amount':'预算 (¥)','budget.clear':'清除预算',
+    'home.this_month':'本月总支出','home.today_label':'今日支出','home.budget_label':'本月预算',
+    'home.chart.weekly':'本周每日支出','home.chart.monthly':'本月每日支出','home.chart.yearly':'本年每月支出',
+    'home.trend':'📈 支出趋势',
+    'subtab.history':'支出记录','subtab.report':'报表',
+    'cal.title':'日历','cal.sub':'按日期查看支出','cal.month_summary':'本月总结','cal.month_total':'总支出',
+    'edit.title':'编辑票据','edit.store':'店名 / 支出对象','edit.date':'日期','edit.amount':'金额','edit.memo':'备注','edit.category':'类别',
+    'avatar.title':'头像编辑','avatar.hint':'拖动调整位置<br>滑动调整尺寸','avatar.apply':'✅ 应用',
+    'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置',
+    'onb.pattern_title':'一眼看清消费习惯','onb.pattern_desc':'分类分析 · 日历 · 报表<br>轻松掌握消费习惯<br>智能管理预算',
+    'onb.start':'记录支出，掌握习惯。<br>今天的票据是明天的洞察。',
   }
 };
 // 브라우저 언어 자동 감지 (저장된 값 없을 때만)
@@ -9248,10 +9340,13 @@ function applyLang(lang){
   _currentLang = lang;
   document.documentElement.setAttribute('lang', lang);
   // data-i18n 속성 가진 모든 요소 번역
+  // 번역값에 HTML 태그(<br> 등)가 들어있으면 innerHTML 사용, 아니면 textContent (XSS 회피)
   document.querySelectorAll('[data-i18n]').forEach(function(el){
     var key = el.getAttribute('data-i18n');
     var translated = t(key);
-    if (translated) el.textContent = translated;
+    if (!translated) return;
+    if (translated.indexOf('<') >= 0) el.innerHTML = translated;
+    else el.textContent = translated;
   });
   // placeholder 속성 번역
   document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
@@ -15274,7 +15369,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v122';
+window.__APP_VERSION__ = 'v123';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
