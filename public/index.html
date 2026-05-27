@@ -4039,12 +4039,12 @@ function ctRenderPricePins() {
       // 클러스터 위치 = 핀들의 평균 좌표
       var cLat = cell.sumLat / cell.pins.length;
       var cLng = cell.sumLng / cell.pins.length;
-      // 프라이빗 모드 + 비공개 메모 가게 포함 여부 체크
+      // 프라이빗 모드 + 비공개 메모 가게 포함 여부 체크 (fuzzy 매칭)
       var clusterHasPrivateNote = false;
       if (_ctMapMode === 'private') {
         for (var ki = 0; ki < cell.pins.length; ki++) {
           var pn = cell.pins[ki].stores && cell.pins[ki].stores.name;
-          if (pn && _privateNoteStores[pn]) { clusterHasPrivateNote = true; break; }
+          if (pn && _storeHasPrivateNote(pn)) { clusterHasPrivateNote = true; break; }
         }
       }
       var w   = Math.min(32 + cnt * 2, 56);
@@ -4123,7 +4123,7 @@ function ctRenderPricePins() {
         : Math.min.apply(null, group.items.map(function(i) { return i.price; }));
       var multi    = group.items.length > 1;
       var isTop    = idx < 3;
-      var hasPrivateNote = (_ctMapMode === 'private') && !!_privateNoteStores[group.store.name];
+      var hasPrivateNote = (_ctMapMode === 'private') && _storeHasPrivateNote(group.store.name);
       var pinW = hasPrivateNote ? 112 : (isTop ? 110 : 100);
       var marker   = new google.maps.Marker({
         position: { lat: parseFloat(group.store.lat), lng: parseFloat(group.store.lng) },
@@ -7405,6 +7405,36 @@ async function sdSavePrivateNote() {
 ══════════════════════════════ */
 var _ctMapMode = 'public';
 var _privateNoteStores = {}; // { store_name: true } — 본인 메모 있는 가게 목록
+
+// 가게 이름 정규화 (공백/전각 등 통일)
+function _normStoreName(s) {
+  if (!s) return '';
+  return String(s)
+    .toLowerCase()
+    .replace(/\s+/g, '')
+    .replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); })
+    .replace(/[Ａ-Ｚａ-ｚ]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); });
+}
+
+// 핀 이름과 비공개 메모 가게 이름이 같은 物理的 가게인지 판단
+// (정확 매칭 + prefix/substring fuzzy 매칭)
+function _storeHasPrivateNote(pinName) {
+  if (!pinName || !_privateNoteStores) return false;
+  if (_privateNoteStores[pinName]) return true;             // 정확 매칭
+  var pn = _normStoreName(pinName);
+  if (!pn) return false;
+  var keys = Object.keys(_privateNoteStores);
+  for (var i = 0; i < keys.length; i++) {
+    var kn = _normStoreName(keys[i]);
+    if (!kn) continue;
+    // 한쪽이 다른쪽 prefix 거나 substring 이면 같은 가게로 취급
+    // (e.g. 'とんかつまるや' 가 'とんかつまるや竹橋店' 의 prefix)
+    if (kn.indexOf(pn) === 0 || pn.indexOf(kn) === 0) return true;
+    if (kn.length >= 4 && pn.indexOf(kn) >= 0) return true; // 핀에 메모 풀네임이 포함됨
+    if (pn.length >= 4 && kn.indexOf(pn) >= 0) return true; // 메모에 핀 풀네임이 포함됨
+  }
+  return false;
+}
 
 // 본인의 모든 private_store_notes 가게 이름 로드 (마커 필터링용)
 async function _loadMyPrivateNoteStores() {
@@ -15147,7 +15177,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v118';
+window.__APP_VERSION__ = 'v119';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
