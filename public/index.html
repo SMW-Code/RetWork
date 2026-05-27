@@ -1174,7 +1174,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="ct-hdr">
     <div onclick="ctToggleMapModeBar()" style="cursor:pointer;flex:1;min-width:0;">
       <div class="ct-hdr-title">📍 チリつも <span id="ct-mode-chevron" style="font-size:10px;color:var(--text-3);margin-left:4px;display:inline-block;transition:transform .25s;">▼</span></div>
-      <div class="ct-hdr-sub" id="ct-map-sub">レシートでつながる、街のおトクチズ</div>
+      <div class="ct-hdr-sub" id="ct-map-sub" data-i18n="ct.map.sub">レシートでつながる、街のおトクチズ</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <div class="ct-coin" onclick="ctToggleCoinHistory()" style="cursor:pointer;"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance">0</span></div>
@@ -1184,14 +1184,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 모드 토글 (공개 / 프라이빗) — 헤더 클릭 시 슬라이드 다운 -->
   <div id="ct-mode-bar" style="overflow:hidden;max-height:0;transition:max-height .3s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
-      <button id="ct-mode-public" onclick="ctSetMapMode('public')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--gold);border-radius:18px;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🌐 공개 모드</button>
-      <button id="ct-mode-private" onclick="ctSetMapMode('private')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--border-mid);border-radius:18px;background:var(--surface);color:var(--text-3);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🔒 프라이빗</button>
+      <button id="ct-mode-public" onclick="ctSetMapMode('public')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--gold);border-radius:18px;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ct.map.mode.public">🌐 公開モード</button>
+      <button id="ct-mode-private" onclick="ctSetMapMode('private')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--border-mid);border-radius:18px;background:var(--surface);color:var(--text-3);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ct.map.mode.private">🔒 プライベート</button>
     </div>
   </div>
   <!-- 포인트 내역 아코디언 패널 -->
   <div id="ct-coin-panel-map" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
-      <div style="font-size:13px;font-weight:800;color:var(--text-1);">✨ ポイント履歴</div>
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);" data-i18n="coin.history">✨ ポイント履歴</div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:11px;color:var(--gold-dark);font-weight:700;">残高 <span id="ct-coin-panel-balance-map">0</span>pt</div>
         <div onclick="ctToggleCoinHistory()" style="font-size:16px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 4px;">✕</div>
@@ -1217,7 +1217,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 검색 -->
       <div style="flex:1;background:#fff;border-radius:20px;padding:7px 13px;font-size:12px;
                   color:var(--text-3);box-shadow:0 2px 8px rgba(0,0,0,.15);cursor:pointer;"
-           onclick="ctShowSearch()">🔍 店名・メニュー・住所</div>
+           onclick="ctShowSearch()" data-i18n="ct.map.search.placeholder">🔍 店名・メニュー・住所</div>
       <!-- 필터 -->
       <div onclick="ctShowFilter()"
         style="background:#fff;border-radius:20px;width:36px;height:36px;display:flex;align-items:center;
@@ -1233,7 +1233,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         style="background:var(--gold);color:#fff;border:none;border-radius:20px;
                padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;
                font-family:var(--font);box-shadow:var(--gold-shadow);display:none;">
-        このエリアをもっと見る
+        <span data-i18n="ct.map.area_more">このエリアをもっと見る</span>
       </button>
     </div>
 
@@ -1263,7 +1263,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="width:2px;height:18px;background:var(--gold);opacity:.9;margin-top:-2px;"></div>
       </div>
       <!-- 안내 토스트 (상단) -->
-      <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:700;white-space:nowrap;backdrop-filter:blur(4px);">
+      <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:700;white-space:nowrap;backdrop-filter:blur(4px);" data-i18n="ct.map.pin.hint">
         チズをドラッグして位置を合わせてください
       </div>
     </div>
@@ -1272,18 +1272,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div id="ct-pin-action-bar" style="display:none;position:absolute;bottom:80px;left:14px;right:14px;z-index:21;">
       <div style="background:#fff;border-radius:18px;padding:13px 14px;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;align-items:center;gap:10px;">
         <div style="flex:1;min-width:0;">
-          <div style="font-size:12px;font-weight:800;color:var(--green);">📍 중앙에 핀을 등록합니다</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">ドラッグして位置を微調整できます</div>
+          <div style="font-size:12px;font-weight:800;color:var(--green);" data-i18n="ct.map.pin.center">📍 中央にピンを登録します</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="ct.map.pin.drag_hint">ドラッグして位置を微調整できます</div>
         </div>
-        <button onclick="cancelTempPin()" style="padding:8px 13px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);flex-shrink:0;">キャンセル</button>
-        <button onclick="openManualPinModal()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;white-space:nowrap;">ここに登録 →</button>
+        <button onclick="cancelTempPin()" style="padding:8px 13px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);flex-shrink:0;" data-i18n="btn.cancel">キャンセル</button>
+        <button onclick="openManualPinModal()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;white-space:nowrap;" data-i18n="ct.map.pin.confirm">ここに登録 →</button>
       </div>
     </div>
 
     <!-- 수동 핀 추가 FAB -->
     <div style="position:absolute;bottom:132px;right:14px;z-index:10;">
       <button onclick="openManualPin()"
-        title="ピンを追加"
+        title="ピンを追加" data-i18n-title="ct.map.pin.add_tooltip"
         style="background:var(--green);color:#fff;border:none;border-radius:50%;width:48px;height:48px;
                display:flex;align-items:center;justify-content:center;
                box-shadow:0 4px 16px var(--theme-a50);cursor:pointer;font-size:22px;">
@@ -1308,12 +1308,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
        background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;z-index:100;
        box-shadow:0 -4px 30px rgba(0,0,0,.15);">
     <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 18px;"></div>
-    <div style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:4px;">フィルター <span style="font-size:12px;color:var(--gold);font-weight:600;">1個適用</span></div>
+    <div style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:4px;"><span data-i18n="ct.map.filter">フィルター</span> <span style="font-size:12px;color:var(--gold);font-weight:600;" data-i18n="ct.map.filter.applied">1個適用</span></div>
 
     <!-- 가격 슬라이더 -->
     <div style="background:var(--bg);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-        <span style="font-size:13px;font-weight:700;color:var(--text-1);">価格帯</span>
+        <span style="font-size:13px;font-weight:700;color:var(--text-1);" data-i18n="ct.map.price">価格帯</span>
         <span style="font-size:13px;font-weight:700;color:var(--gold);" id="ct-price-range-label">¥0 〜 ¥1,500</span>
       </div>
       <input type="range" id="ct-price-slider" min="300" max="3000" step="100" value="1500"
@@ -1326,29 +1326,29 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
 
     <!-- 카테고리 칩 -->
-    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.3px;">カテゴリ</div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.3px;" data-i18n="ct.map.category">カテゴリ</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="ct-cat-chips">
-      <div class="ct-cat-chip active" data-cat="all"      onclick="ctSelectCat(this)">🍽️ すべて</div>
-      <div class="ct-cat-chip"       data-cat="teishoku"  onclick="ctSelectCat(this)">🍱 定食・丼</div>
-      <div class="ct-cat-chip"       data-cat="ramen"     onclick="ctSelectCat(this)">🍜 ラーメン</div>
-      <div class="ct-cat-chip"       data-cat="soba"      onclick="ctSelectCat(this)">🍵 うどん・そば</div>
-      <div class="ct-cat-chip"       data-cat="sushi"     onclick="ctSelectCat(this)">🍣 スシ</div>
-      <div class="ct-cat-chip"       data-cat="tonkatsu"  onclick="ctSelectCat(this)">🥩 とんかつ</div>
-      <div class="ct-cat-chip"       data-cat="chinese"   onclick="ctSelectCat(this)">🥡 中華</div>
-      <div class="ct-cat-chip"       data-cat="korean"    onclick="ctSelectCat(this)">🥘 韓国料理</div>
-      <div class="ct-cat-chip"       data-cat="curry"     onclick="ctSelectCat(this)">🍛 カレー</div>
-      <div class="ct-cat-chip"       data-cat="thai"      onclick="ctSelectCat(this)">🌶️ タイ</div>
-      <div class="ct-cat-chip"       data-cat="pizza"     onclick="ctSelectCat(this)">🍕 ピザ</div>
-      <div class="ct-cat-chip"       data-cat="fast"      onclick="ctSelectCat(this)">🍔 バーガー</div>
-      <div class="ct-cat-chip"       data-cat="cafe"      onclick="ctSelectCat(this)">☕ カフェ</div>
-      <div class="ct-cat-chip"       data-cat="konbini"   onclick="ctSelectCat(this)">🏪 コンビニ</div>
-      <div class="ct-cat-chip"       data-cat="izakaya"   onclick="ctSelectCat(this)">🍶 居酒屋</div>
+      <div class="ct-cat-chip active" data-cat="all"      onclick="ctSelectCat(this)" data-i18n="ct.cat.all">🍽️ すべて</div>
+      <div class="ct-cat-chip"       data-cat="teishoku"  onclick="ctSelectCat(this)" data-i18n="ct.cat.teishoku">🍱 定食・丼</div>
+      <div class="ct-cat-chip"       data-cat="ramen"     onclick="ctSelectCat(this)" data-i18n="ct.cat.ramen">🍜 ラーメン</div>
+      <div class="ct-cat-chip"       data-cat="soba"      onclick="ctSelectCat(this)" data-i18n="ct.cat.soba">🍵 うどん・そば</div>
+      <div class="ct-cat-chip"       data-cat="sushi"     onclick="ctSelectCat(this)" data-i18n="ct.cat.sushi">🍣 スシ</div>
+      <div class="ct-cat-chip"       data-cat="tonkatsu"  onclick="ctSelectCat(this)" data-i18n="ct.cat.tonkatsu">🥩 とんかつ</div>
+      <div class="ct-cat-chip"       data-cat="chinese"   onclick="ctSelectCat(this)" data-i18n="ct.cat.chinese">🥡 中華</div>
+      <div class="ct-cat-chip"       data-cat="korean"    onclick="ctSelectCat(this)" data-i18n="ct.cat.korean">🥘 韓国料理</div>
+      <div class="ct-cat-chip"       data-cat="curry"     onclick="ctSelectCat(this)" data-i18n="ct.cat.curry">🍛 カレー</div>
+      <div class="ct-cat-chip"       data-cat="thai"      onclick="ctSelectCat(this)" data-i18n="ct.cat.thai">🌶️ タイ</div>
+      <div class="ct-cat-chip"       data-cat="pizza"     onclick="ctSelectCat(this)" data-i18n="ct.cat.pizza">🍕 ピザ</div>
+      <div class="ct-cat-chip"       data-cat="fast"      onclick="ctSelectCat(this)" data-i18n="ct.cat.fast">🍔 バーガー</div>
+      <div class="ct-cat-chip"       data-cat="cafe"      onclick="ctSelectCat(this)" data-i18n="ct.cat.cafe">☕ カフェ</div>
+      <div class="ct-cat-chip"       data-cat="konbini"   onclick="ctSelectCat(this)" data-i18n="ct.cat.konbini">🏪 コンビニ</div>
+      <div class="ct-cat-chip"       data-cat="izakaya"   onclick="ctSelectCat(this)" data-i18n="ct.cat.izakaya">🍶 居酒屋</div>
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="ctResetFilter()" style="flex:1;padding:12px;border:1.5px solid var(--border-mid);
-        border-radius:12px;font-size:13px;font-weight:700;background:#fff;cursor:pointer;font-family:var(--font);color:var(--text-2);">初期化</button>
+        border-radius:12px;font-size:13px;font-weight:700;background:#fff;cursor:pointer;font-family:var(--font);color:var(--text-2);" data-i18n="btn.reset">初期化</button>
       <button onclick="ctApplyFilter()" style="flex:2;padding:12px;border:none;border-radius:12px;
-        font-size:13px;font-weight:700;background:var(--gold);color:#fff;cursor:pointer;font-family:var(--font);">適用</button>
+        font-size:13px;font-weight:700;background:var(--gold);color:#fff;cursor:pointer;font-family:var(--font);" data-i18n="btn.apply">適用</button>
     </div>
   </div>
 
@@ -1358,17 +1358,17 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
        max-height:70%;overflow-y:auto;box-shadow:0 -4px 30px rgba(0,0,0,.15);">
     <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 14px;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-      <div style="font-size:15px;font-weight:800;color:var(--text-1);">ランキング</div>
+      <div style="font-size:15px;font-weight:800;color:var(--text-1);" data-i18n="ct.map.ranking">ランキング</div>
       <button onclick="ctCloseSheets()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-3);">×</button>
     </div>
     <!-- 탭 -->
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <div id="ct-rank-tab-value" onclick="ctRankTab('value')"
         style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
-               background:var(--gold);color:#fff;">✓ コスパ</div>
+               background:var(--gold);color:#fff;" data-i18n="ct.map.rank.value">✓ コスパ</div>
       <div id="ct-rank-tab-contrib" onclick="ctRankTab('contrib')"
         style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
-               background:var(--bg);color:var(--text-2);">貢献</div>
+               background:var(--bg);color:var(--text-2);" data-i18n="ct.map.rank.contrib">貢献</div>
     </div>
     <div id="ct-ranking-list"></div>
   </div>
@@ -1395,7 +1395,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 포인트 내역 아코디언 패널 -->
   <div id="ct-coin-panel-community" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
-      <div style="font-size:13px;font-weight:800;color:var(--text-1);">✨ ポイント履歴</div>
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);" data-i18n="coin.history">✨ ポイント履歴</div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:11px;color:var(--gold-dark);font-weight:700;">残高 <span id="ct-coin-panel-balance-community">0</span>pt</div>
         <div onclick="ctToggleCoinHistory()" style="font-size:16px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 4px;">✕</div>
@@ -1407,9 +1407,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 알림 패널 (아코디언) -->
   <div id="ct-notif-panel" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:#fff;border-bottom:0.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
-      <div style="font-size:13px;font-weight:800;color:var(--text-1);">通知</div>
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);" data-i18n="ct.notif.title">通知</div>
       <div style="display:flex;align-items:center;gap:14px;">
-        <div style="font-size:11px;color:var(--green);font-weight:700;cursor:pointer;" onclick="ctMarkAllRead()">すべて既読</div>
+        <div style="font-size:11px;color:var(--green);font-weight:700;cursor:pointer;" onclick="ctMarkAllRead()" data-i18n="ct.notif.markAll">すべて既読</div>
         <div onclick="ctToggleNotif()" style="font-size:18px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px;">✕</div>
       </div>
     </div>
@@ -1419,7 +1419,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 검색바 + 글쓰기 버튼 -->
   <div style="padding:10px 14px 0;background:var(--bg);display:flex;gap:8px;align-items:center;flex-shrink:0;">
     <div style="flex:1;position:relative;">
-      <input type="text" id="ct-search-input" placeholder="投稿を検索..." oninput="ctSearchPosts()"
+      <input type="text" id="ct-search-input" placeholder="投稿を検索..." data-i18n-placeholder="ct.talk.search.placeholder" oninput="ctSearchPosts()"
         style="width:100%;padding:9px 12px 9px 36px;border-radius:20px;border:1px solid var(--border-mid);background:#fff;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
@@ -1448,8 +1448,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="ct-screen" id="ct-screen-reward" style="display:none;">
   <div class="ct-hdr">
     <div>
-      <div class="ct-hdr-title">🎁 チリワード</div>
-      <div class="ct-hdr-sub">코인 적립 & 드로우</div>
+      <div class="ct-hdr-title" data-i18n="ct.reward.title">🎁 チリワード</div>
+      <div class="ct-hdr-sub" data-i18n="ct.reward.sub">ポイント獲得 & 抽選</div>
     </div>
     <div style="display:flex;align-items:center;gap:10px;">
       <div class="ct-coin" onclick="ctToggleCoinHistory()" style="cursor:pointer;"><span style="font-size:14px;">✨</span><span class="ct-coin-val" id="ct-coin-balance3">0</span></div>
@@ -1459,7 +1459,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 포인트 내역 아코디언 패널 -->
   <div id="ct-coin-panel-reward" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
-      <div style="font-size:13px;font-weight:800;color:var(--text-1);">✨ ポイント履歴</div>
+      <div style="font-size:13px;font-weight:800;color:var(--text-1);" data-i18n="coin.history">✨ ポイント履歴</div>
       <div style="display:flex;align-items:center;gap:12px;">
         <div style="font-size:11px;color:var(--gold-dark);font-weight:700;">残高 <span id="ct-coin-panel-balance-reward">0</span>pt</div>
         <div onclick="ctToggleCoinHistory()" style="font-size:16px;color:var(--text-3);cursor:pointer;line-height:1;padding:2px 4px;">✕</div>
@@ -9183,6 +9183,32 @@ var I18N = {
     // 온보딩
     'onb.pattern_title':'支出パターンを一目で','onb.pattern_desc':'カテゴリ別分析・カレンダー・レポートで<br>自分の消費習慣を簡単に把握し<br>予算をスマートに管理',
     'onb.start':'支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。',
+    // 치리맵 헤더 / 모드
+    'ct.map.sub':'レシートでつながる、街のおトクチズ',
+    'ct.map.mode.public':'🌐 公開モード','ct.map.mode.private':'🔒 プライベート',
+    // 검색/필터/액션
+    'ct.map.search.placeholder':'🔍 店名・メニュー・住所',
+    'ct.map.area_more':'このエリアをもっと見る',
+    'ct.map.filter':'フィルター','ct.map.filter.applied':'1個適用','ct.map.price':'価格帯','ct.map.category':'カテゴリ',
+    'ct.map.pin.hint':'チズをドラッグして位置を合わせてください',
+    'ct.map.pin.center':'📍 中央にピンを登録します','ct.map.pin.drag_hint':'ドラッグして位置を微調整できます',
+    'ct.map.pin.confirm':'ここに登録 →','ct.map.pin.add_tooltip':'ピンを追加',
+    'ct.map.ranking':'ランキング','ct.map.rank.value':'✓ コスパ','ct.map.rank.contrib':'貢献',
+    'btn.reset':'初期化','btn.apply':'適用',
+    // 카테고리 칩
+    'ct.cat.all':'🍽️ すべて','ct.cat.teishoku':'🍱 定食・丼','ct.cat.ramen':'🍜 ラーメン','ct.cat.soba':'🍵 うどん・そば',
+    'ct.cat.sushi':'🍣 スシ','ct.cat.tonkatsu':'🥩 とんかつ','ct.cat.chinese':'🥡 中華','ct.cat.korean':'🥘 韓国料理',
+    'ct.cat.curry':'🍛 カレー','ct.cat.thai':'🌶️ タイ','ct.cat.pizza':'🍕 ピザ','ct.cat.fast':'🍔 バーガー',
+    'ct.cat.cafe':'☕ カフェ','ct.cat.konbini':'🏪 コンビニ','ct.cat.izakaya':'🍶 居酒屋',
+    // 코인 패널 / 알림
+    'coin.history':'✨ ポイント履歴','coin.balance':'残高','coin.unit':'pt',
+    'ct.notif.title':'通知','ct.notif.markAll':'すべて既読',
+    // 치리톡
+    'ct.talk.search.placeholder':'投稿を検索...','ct.talk.write':'投稿を書く',
+    // 리워드
+    'ct.reward.title':'🎁 チリワード','ct.reward.sub':'ポイント獲得 & 抽選',
+    // 가게 상세 모달 추가
+    'sd.no_address':'住所情報なし','sd.no_rating':'評価なし',
   },
   ko: {
     'tab.home':'홈','tab.history':'내역','tab.calendar':'달력','tab.map':'맵','tab.profile':'프로필',
@@ -9227,6 +9253,25 @@ var I18N = {
     'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치',
     'onb.pattern_title':'지출 패턴을 한눈에','onb.pattern_desc':'카테고리별 분석 · 달력 · 리포트로<br>내 소비 습관을 쉽게 파악하고<br>예산을 스마트하게 관리해요.',
     'onb.start':'지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.',
+    'ct.map.sub':'영수증으로 이어지는, 동네의 알찬 지도',
+    'ct.map.mode.public':'🌐 공개 모드','ct.map.mode.private':'🔒 프라이빗',
+    'ct.map.search.placeholder':'🔍 가게명 · 메뉴 · 주소',
+    'ct.map.area_more':'이 지역 더 보기',
+    'ct.map.filter':'필터','ct.map.filter.applied':'1개 적용','ct.map.price':'가격대','ct.map.category':'카테고리',
+    'ct.map.pin.hint':'지도를 드래그해서 위치를 맞춰주세요',
+    'ct.map.pin.center':'📍 중앙에 핀을 등록합니다','ct.map.pin.drag_hint':'드래그로 위치를 미세 조정할 수 있습니다',
+    'ct.map.pin.confirm':'여기 등록 →','ct.map.pin.add_tooltip':'핀 추가',
+    'ct.map.ranking':'랭킹','ct.map.rank.value':'✓ 가성비','ct.map.rank.contrib':'기여',
+    'btn.reset':'초기화','btn.apply':'적용',
+    'ct.cat.all':'🍽️ 전체','ct.cat.teishoku':'🍱 정식·덮밥','ct.cat.ramen':'🍜 라멘','ct.cat.soba':'🍵 우동·소바',
+    'ct.cat.sushi':'🍣 초밥','ct.cat.tonkatsu':'🥩 돈카츠','ct.cat.chinese':'🥡 중식','ct.cat.korean':'🥘 한식',
+    'ct.cat.curry':'🍛 카레','ct.cat.thai':'🌶️ 태국','ct.cat.pizza':'🍕 피자','ct.cat.fast':'🍔 버거',
+    'ct.cat.cafe':'☕ 카페','ct.cat.konbini':'🏪 편의점','ct.cat.izakaya':'🍶 이자카야',
+    'coin.history':'✨ 포인트 내역','coin.balance':'잔고','coin.unit':'pt',
+    'ct.notif.title':'알림','ct.notif.markAll':'모두 읽음',
+    'ct.talk.search.placeholder':'게시물 검색...','ct.talk.write':'글쓰기',
+    'ct.reward.title':'🎁 치리워드','ct.reward.sub':'포인트 적립 & 드로우',
+    'sd.no_address':'주소 정보 없음','sd.no_rating':'평가 없음',
   },
   en: {
     'tab.home':'Home','tab.history':'History','tab.calendar':'Calendar','tab.map':'Map','tab.profile':'Profile',
@@ -9271,6 +9316,25 @@ var I18N = {
     'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map',
     'onb.pattern_title':'See your spending at a glance','onb.pattern_desc':'Category analysis · Calendar · Reports<br>understand habits and<br>manage budget smartly.',
     'onb.start':'Track expenses, understand habits.<br>Today’s receipt becomes tomorrow’s insight.',
+    'ct.map.sub':'A neighborhood map powered by receipts',
+    'ct.map.mode.public':'🌐 Public','ct.map.mode.private':'🔒 Private',
+    'ct.map.search.placeholder':'🔍 Store · Menu · Address',
+    'ct.map.area_more':'Show more in this area',
+    'ct.map.filter':'Filter','ct.map.filter.applied':'1 applied','ct.map.price':'Price range','ct.map.category':'Category',
+    'ct.map.pin.hint':'Drag the map to position the pin',
+    'ct.map.pin.center':'📍 Pin will be set at center','ct.map.pin.drag_hint':'Drag to fine-tune position',
+    'ct.map.pin.confirm':'Place here →','ct.map.pin.add_tooltip':'Add pin',
+    'ct.map.ranking':'Ranking','ct.map.rank.value':'✓ Value','ct.map.rank.contrib':'Contribution',
+    'btn.reset':'Reset','btn.apply':'Apply',
+    'ct.cat.all':'🍽️ All','ct.cat.teishoku':'🍱 Set Meal','ct.cat.ramen':'🍜 Ramen','ct.cat.soba':'🍵 Udon/Soba',
+    'ct.cat.sushi':'🍣 Sushi','ct.cat.tonkatsu':'🥩 Tonkatsu','ct.cat.chinese':'🥡 Chinese','ct.cat.korean':'🥘 Korean',
+    'ct.cat.curry':'🍛 Curry','ct.cat.thai':'🌶️ Thai','ct.cat.pizza':'🍕 Pizza','ct.cat.fast':'🍔 Burger',
+    'ct.cat.cafe':'☕ Cafe','ct.cat.konbini':'🏪 Konbini','ct.cat.izakaya':'🍶 Izakaya',
+    'coin.history':'✨ Point history','coin.balance':'Balance','coin.unit':'pt',
+    'ct.notif.title':'Notifications','ct.notif.markAll':'Mark all read',
+    'ct.talk.search.placeholder':'Search posts...','ct.talk.write':'Write post',
+    'ct.reward.title':'🎁 Chiri-ward','ct.reward.sub':'Earn points & lottery',
+    'sd.no_address':'No address','sd.no_rating':'No rating',
   },
   zh: {
     'tab.home':'主页','tab.history':'记录','tab.calendar':'日历','tab.map':'地图','tab.profile':'个人',
@@ -9315,6 +9379,25 @@ var I18N = {
     'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置',
     'onb.pattern_title':'一眼看清消费习惯','onb.pattern_desc':'分类分析 · 日历 · 报表<br>轻松掌握消费习惯<br>智能管理预算',
     'onb.start':'记录支出，掌握习惯。<br>今天的票据是明天的洞察。',
+    'ct.map.sub':'用票据连接的，街区实惠地图',
+    'ct.map.mode.public':'🌐 公开模式','ct.map.mode.private':'🔒 私密',
+    'ct.map.search.placeholder':'🔍 店名 · 菜单 · 地址',
+    'ct.map.area_more':'查看本区域更多',
+    'ct.map.filter':'筛选','ct.map.filter.applied':'已应用1项','ct.map.price':'价格区间','ct.map.category':'分类',
+    'ct.map.pin.hint':'拖动地图调整位置',
+    'ct.map.pin.center':'📍 在中央位置注册图钉','ct.map.pin.drag_hint':'可拖动微调位置',
+    'ct.map.pin.confirm':'在此注册 →','ct.map.pin.add_tooltip':'添加图钉',
+    'ct.map.ranking':'排行','ct.map.rank.value':'✓ 性价比','ct.map.rank.contrib':'贡献',
+    'btn.reset':'重置','btn.apply':'应用',
+    'ct.cat.all':'🍽️ 全部','ct.cat.teishoku':'🍱 套餐·盖饭','ct.cat.ramen':'🍜 拉面','ct.cat.soba':'🍵 乌冬·荞麦',
+    'ct.cat.sushi':'🍣 寿司','ct.cat.tonkatsu':'🥩 炸猪排','ct.cat.chinese':'🥡 中餐','ct.cat.korean':'🥘 韩餐',
+    'ct.cat.curry':'🍛 咖喱','ct.cat.thai':'🌶️ 泰餐','ct.cat.pizza':'🍕 比萨','ct.cat.fast':'🍔 汉堡',
+    'ct.cat.cafe':'☕ 咖啡','ct.cat.konbini':'🏪 便利店','ct.cat.izakaya':'🍶 居酒屋',
+    'coin.history':'✨ 积分记录','coin.balance':'余额','coin.unit':'pt',
+    'ct.notif.title':'通知','ct.notif.markAll':'全部标记已读',
+    'ct.talk.search.placeholder':'搜索帖子...','ct.talk.write':'写帖子',
+    'ct.reward.title':'🎁 奖励','ct.reward.sub':'积分获取 & 抽奖',
+    'sd.no_address':'无地址信息','sd.no_rating':'无评价',
   }
 };
 // 브라우저 언어 자동 감지 (저장된 값 없을 때만)
@@ -9351,6 +9434,10 @@ function applyLang(lang){
   // placeholder 속성 번역
   document.querySelectorAll('[data-i18n-placeholder]').forEach(function(el){
     el.setAttribute('placeholder', t(el.getAttribute('data-i18n-placeholder')));
+  });
+  // title 속성 번역 (툴팁용)
+  document.querySelectorAll('[data-i18n-title]').forEach(function(el){
+    el.setAttribute('title', t(el.getAttribute('data-i18n-title')));
   });
   // 탭바 라벨도 동기화
   var labels = LANG[lang] || LANG.ko;
@@ -12376,10 +12463,10 @@ function _sdRenderHeader(ratingAvg, ratingCount) {
   var rHtml = ratingCount>0
     ? '<span style="font-size:13px;font-weight:800;color:var(--star);">★'+ratingAvg.toFixed(1)+'</span>'
       +'<span style="font-size:10px;color:var(--text-3);margin-left:2px;">('+ratingCount+')</span>'
-    : '<span style="font-size:11px;color:var(--text-3);">평가없음</span>';
+    : '<span style="font-size:11px;color:var(--text-3);">'+t('sd.no_rating')+'</span>';
   var h = '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:8px;">'
     +'<div style="flex:1;min-width:0;">'
-    +'<div style="font-size:11px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(addr||'주소 정보 없음')+'</div>'
+    +'<div style="font-size:11px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(addr||t('sd.no_address'))+'</div>'
     +'<div style="font-size:15px;font-weight:700;color:#444;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">'+s.name+'</div>'
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:4px;flex-shrink:0;padding-top:2px;">'
@@ -15369,7 +15456,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v123';
+window.__APP_VERSION__ = 'v124';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
