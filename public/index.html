@@ -3639,7 +3639,7 @@ function ctDoCheckIn(){
   var slot = _ctAttSlot();
   var today = data.days[dk] || [];
   if (today.indexOf(slot) >= 0) {
-    showToast('⏰ このスロットは既にチェック済みです');
+    showToast(t('toast.slot_done'));
     return;
   }
   today.push(slot);
@@ -3656,7 +3656,7 @@ function ctDoCheckIn(){
     if (streak >= r.days && rewardKey.indexOf(r.days) < 0) {
       rewardKey.push(r.days);
       ctAddCoin(r.coins, '🎁 連続'+r.days+'日ボーナス');
-      setTimeout(function(){ showToast('🎉 連続'+r.days+'日達成！ +'+r.coins+'チリ'); }, 800);
+      setTimeout(function(){ showToast(t('toast.streak', {days: r.days, coins: r.coins})); }, 800);
     }
   });
   localStorage.setItem(ATT_STREAK_KEY, JSON.stringify(rewardKey));
@@ -3676,7 +3676,7 @@ function acCloseOutside(e){
 function acSkip(){
   closeOv('ov-att-complete');
   // 건너뛰기 → 기본 보상 +5チリ 메시지 (ctDoCheckIn 에서 이미 지급됨)
-  showToast('✨ +5チリ 획득!');
+  showToast(t('toast.checkin'));
 }
 function acWatchAd(){
   closeOv('ov-att-complete');
@@ -3711,7 +3711,7 @@ function ctWatchAd() {
   // 영수증 모드 등 다른 곳에서 호출 시 기존 모달 사용
   showAdModal(function() {
     ctAddCoin(50, '📺 広告視聴');
-    showToast('🎉 +50チリ 獲得！広告視聴ありがとうございます！');
+    showToast(t('toast.ad_reward'));
   });
 }
 
@@ -3763,7 +3763,7 @@ function ctUpdateRewardAdRemain() {
 function ctStartRewardAd() {
   var today = new Date().toDateString();
   var used  = parseInt(localStorage.getItem('ct_rad_' + today) || '0');
-  if (used >= 3) { showToast('今日の視聴上限（3回）に達しました'); return; }
+  if (used >= 3) { showToast(t('toast.daily_limit', {n: 3})); return; }
   ctOpenFullscreenAd('reward', null);
 }
 
@@ -3771,12 +3771,12 @@ function ctResetRewardAd()  { ctCloseFullscreenAd(); }
 
 function ctStoreExchange(id, name, cost) {
   if (_ctCoinBalance < cost) {
-    showToast('チリが足りません。あと' + (cost - _ctCoinBalance) + 'チリ必要です');
+    showToast(t('toast.coin_short', {n: (cost - _ctCoinBalance)}));
     return;
   }
   if (!confirm('「' + name + '」と交換しますか？\n' + cost + 'pt消費します。')) return;
   ctAddCoin(-cost, '🎁 「' + name + '」交換');
-  showToast('✅ ' + name + 'と交換しました！');
+  showToast(t('toast.exchange_done', {name: name}));
 }
 
 /* ══════════════════════════════
@@ -3857,14 +3857,14 @@ async function renderCtStore() {
 
 // DB 기반 교환 — 상품 정보를 매번 새로 확인 후 처리 (재고/가격 변경 대응)
 async function ctStoreExchangeDB(itemId) {
-  if (!_sb || !_currentUser) { showToast('로그인 후 이용 가능'); return; }
+  if (!_sb || !_currentUser) { showToast(t('toast.login_required')); return; }
   // 최신 상품 정보 확인
   var res = await _sb.from('store_items').select('*').eq('id', itemId).eq('is_active', true).maybeSingle();
-  if (res.error || !res.data) { showToast('상품 정보를 찾을 수 없어요'); return; }
+  if (res.error || !res.data) { showToast(t('toast.product_not_found')); return; }
   var it = res.data;
-  if (it.stock === 0) { showToast('品切れです'); return; }
+  if (it.stock === 0) { showToast(t('toast.out_of_stock')); return; }
   if (_ctCoinBalance < it.cost_chiri) {
-    showToast('チリが足りません。あと' + (it.cost_chiri - _ctCoinBalance) + 'チリ必要です');
+    showToast(t('toast.coin_short', {n: (it.cost_chiri - _ctCoinBalance)}));
     return;
   }
   if (!confirm('「' + it.name + '」と交換しますか？\n' + it.cost_chiri + ' チリを消費します。')) return;
@@ -3876,7 +3876,7 @@ async function ctStoreExchangeDB(itemId) {
     _ctStoreCache = null; // 캐시 무효화 → 다음 로드 시 갱신
     renderCtStore();
   }
-  showToast('✅ ' + it.name + ' と交換しました！');
+  showToast(t('toast.exchange_done', {name: it.name}));
 }
 
 /* ══════════════════════════════
@@ -4289,7 +4289,7 @@ function ctGoToRankPin(idx) {
 
   var lat = parseFloat(p.stores.lat);
   var lng = parseFloat(p.stores.lng);
-  if (isNaN(lat) || isNaN(lng)) { showToast('位置情報がありません'); return; }
+  if (isNaN(lat) || isNaN(lng)) { showToast(t('toast.no_pos')); return; }
 
   if (_ctMap) {
     _ctMap.panTo({ lat: lat, lng: lng });
@@ -4610,7 +4610,7 @@ function ctFocusComment(id) {
 }
 
 async function ctAddComment(id) {
-  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  if (!_currentUser) { showToast(t('toast.login_required')); return; }
   var input = document.getElementById('ct-comment-input-' + id);
   var text = input ? input.value.trim() : '';
   if (!text) return;
@@ -4618,7 +4618,7 @@ async function ctAddComment(id) {
   // 벤워드 사전 검사
   var banned = await _checkContentForBannedWord(text);
   if (banned) {
-    showToast('🚫 부적절한 표현이 포함되어 있어요 (차단어: ' + banned + ')');
+    showToast(t('toast.banned_word', {word: banned}));
     return;
   }
 
@@ -4635,7 +4635,7 @@ async function ctAddComment(id) {
   input.disabled = false;
   if (res.error) {
     if (_handleCommentInsertError(res.error)) return;
-    showToast('コメント送信に失敗しました');
+    showToast(t('toast.comment_fail'));
     return;
   }
   input.value = '';
@@ -5015,12 +5015,12 @@ async function ctSubmitPost() {
   var content = (document.getElementById('ct-write-content').value || '').trim();
   if (!title)   { alert('タイトルを入力してください'); return; }
   if (!content) { alert('内容を入力してください'); return; }
-  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  if (!_currentUser) { showToast(t('toast.login_required')); return; }
   // 벤워드 사전 검사 (title + content)
   var combined = title + ' ' + content;
   var banned = await _checkContentForBannedWord(combined);
   if (banned) {
-    showToast('🚫 부적절한 표현이 포함되어 있어요 (차단어: ' + banned + ')');
+    showToast(t('toast.banned_word', {word: banned}));
     return;
   }
 
@@ -5030,7 +5030,7 @@ async function ctSubmitPost() {
   // 이미지 Storage 업로드
   var imageUrls = [];
   if (_ctWriteImgs.length > 0) {
-    showToast('📤 画像をアップロード中...');
+    showToast(t('toast.upload_image'));
     for (var i = 0; i < _ctWriteImgs.length; i++) {
       var url = await _uploadCtImg(_ctWriteImgs[i], i);
       if (url) imageUrls.push(url);
@@ -5049,7 +5049,7 @@ async function ctSubmitPost() {
 
   if (res.error) {
     if (_handleCommentInsertError(res.error)) return; // 벤워드/차단 에러 처리
-    showToast('投稿に失敗しました 😢');
+    showToast(t('toast.post_fail'));
     console.error(res.error);
     return;
   }
@@ -5075,7 +5075,7 @@ async function ctSubmitPost() {
   _ctPostPage = 1;
   ctRenderCatBar();
   ctRenderPosts();
-  showToast('✅ 投稿しました！ +5pt');
+  showToast(t('toast.post_done'));
   ctAddCoin(5, '💬 チリトーク投稿');
 }
 
@@ -5091,8 +5091,8 @@ async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   } else {
     res = await _sb.from('pin_ratings').insert({ store_name: storeName, user_id: _currentUser.id, rating: star, has_receipt: hasReceipt });
   }
-  if (res && res.error) { showToast('評価の保存に失敗しました'); return; }
-  if (!silent) showToast('⭐ 評価しました！');
+  if (res && res.error) { showToast(t('toast.rating_fail')); return; }
+  if (!silent) showToast(t('toast.rating_done'));
 }
 /* ── チリつも 공개 모달 별점 ── */
 function cpSelectStar(n) {
@@ -5139,7 +5139,7 @@ function goMyLocation() {
       _mapUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       _map.panTo(_mapUserPos);
       _map.setZoom(15);
-    }, function() { showToast('위치 권한을 허용해주세요'); });
+    }, function() { showToast(t('toast.allow_geo')); });
   }
 }
 function ctLoadAreaPins() {
@@ -5962,7 +5962,7 @@ function saveEditReceipt() {
   closeOv('ov-edit');
   renderHistory(currentFilter);
   renderHome();
-  showToast('✅ 수정이 저장됐어요!');
+  showToast(t('toast.edit_saved'));
 }
 
 /* ══════════════════════════════
@@ -6025,7 +6025,7 @@ function deleteReceipt(id) {
   renderHistory(currentFilter);
   renderHome();
   renderMapPins();
-  showToast('🗑 내역이 삭제됐어요');
+  showToast(t('toast.history_deleted'));
 }
 
 function toggleEntry(header) {
@@ -6577,7 +6577,7 @@ function openMonthDetail() {
     var d = new Date(r.date);
     return d.getFullYear() === calYear && (d.getMonth()+1) === calMonth;
   });
-  if (!monthReceipts.length) { showToast('이달 지출 내역이 없어요'); return; }
+  if (!monthReceipts.length) { showToast(t('toast.no_receipts')); return; }
 
   var total = monthReceipts.reduce(function(s,r){ return s+r.total; },0);
   var days  = new Set(monthReceipts.map(function(r){ return r.date; })).size;
@@ -7411,20 +7411,20 @@ function sdToggleSentiment(key) {
 }
 
 async function sdSavePrivateNote() {
-  if (!_sb || !_currentUser || !_sdName) { showToast('로그인 필요'); return; }
+  if (!_sb || !_currentUser || !_sdName) { showToast(t('toast.login_required')); return; }
   var note = document.getElementById('sd-private-note').value.trim();
   // 현재 선택 sentiment 가져오기 (data-sent의 active 상태)
   var activeBtn = document.querySelector('[data-sent][style*="rgb(255, 255, 255)"]'); // active 버튼
   // 더 안전한 방식: _sdPrivateSentiment 활용
-  if (!_sdPrivateSentiment && !note) { showToast('감정 또는 메모를 입력해주세요'); return; }
+  if (!_sdPrivateSentiment && !note) { showToast(t('toast.sentiment_or_note')); return; }
   var res = await _sb.from('private_store_notes').upsert({
     user_id: _currentUser.id,
     store_name: _sdName,
     sentiment: _sdPrivateSentiment,
     note: note || null
   }, { onConflict: 'user_id,store_name' });
-  if (res.error) { showToast('저장 실패: '+res.error.message); return; }
-  showToast('🔒 비공개 저장됨');
+  if (res.error) { showToast(t('toast.save_fail', {msg: res.error.message})); return; }
+  showToast(t('toast.private_saved'));
   _privateNoteStores[_sdName] = true; // 캐시 즉시 갱신
   await _sdLoadPrivateNote();
 }
@@ -7583,7 +7583,7 @@ async function _doSetMapMode(mode) {
     if (pubBtn) { pubBtn.style.background = 'var(--surface)'; pubBtn.style.color = 'var(--text-3)'; pubBtn.style.border = '1px solid var(--border-mid)'; }
     if (prvBtn) { prvBtn.style.background = '#2c2c2c'; prvBtn.style.color = '#fff'; prvBtn.style.border = '1px solid #2c2c2c'; }
     if (_ctMap) _ctMap.setOptions({ styles: MAP_STYLE_PRIVATE });
-    showToast('🔒 프라이빗 모드 (다크)');
+    showToast(t('map.private.toast'));
     // 진입 시 비공개 메모 가게 목록을 최신화 (마커 구분용)
     if (typeof _loadMyPrivateNoteStores === 'function') {
       try { await _loadMyPrivateNoteStores(); } catch(e) { /* noop */ }
@@ -7592,7 +7592,7 @@ async function _doSetMapMode(mode) {
     if (pubBtn) { pubBtn.style.background = 'var(--gold)'; pubBtn.style.color = '#fff'; pubBtn.style.border = '1px solid var(--gold)'; }
     if (prvBtn) { prvBtn.style.background = 'var(--surface)'; prvBtn.style.color = 'var(--text-3)'; prvBtn.style.border = '1px solid var(--border-mid)'; }
     if (_ctMap) _ctMap.setOptions({ styles: null });
-    showToast('🌐 공개 모드');
+    showToast(t('map.public.toast'));
   }
   // 가게 상세 모달이 열려있으면 메모 영역 + 레이아웃 즉시 갱신
   var sdOpen = document.getElementById('ov-store-detail');
@@ -8663,7 +8663,7 @@ function _doSaveOcrResult() {
   var store = storeEl ? storeEl.textContent.trim() : r.store;
   // 점포명이 '不明'인 채로 저장하면 위치 핀이 엉뚱하게 찍힘 → 사용자에게 수정 유도
   if (/^\s*(店舗名不明|不明|店名不明|店舗不明)\s*$/.test(store || '')) {
-    showToast('⚠️ 가게명을 입력하거나 수정해주세요');
+    showToast(t('toast.store_required2'));
     if (storeEl && storeEl.focus) {
       try { storeEl.focus(); } catch(e){}
       try {
@@ -8765,7 +8765,7 @@ function _doSaveOcrResult() {
   // 홈으로 이동 & 갱신
   switchTab('home');
   var _d = new Date(); renderCalendar(_d.getFullYear(), _d.getMonth()+1);
-  showToast('✅ 영수증이 저장됐어요! ¥'+finalTotal.toLocaleString());
+  showToast(t('toast.receipt_saved', {amount: finalTotal.toLocaleString()}));
 }
 
 function showOcrError(previewSrc, msg) {
@@ -8853,7 +8853,7 @@ function toggleCpItem(el, idx) {
   var pos = _cpSelectedItems.indexOf(it);
   if (pos >= 0) {
     // 이미 선택 → 해제 (최소 1개는 유지)
-    if (_cpSelectedItems.length <= 1) { showToast('最低1品目は選んでください'); return; }
+    if (_cpSelectedItems.length <= 1) { showToast(t('toast.min_one_item')); return; }
     _cpSelectedItems.splice(pos, 1);
     if (el) el.classList.remove('sel');
   } else {
@@ -8901,7 +8901,7 @@ function toggleCpItemChip(idx) {
   if (!it) return;
   var pos = _cpSelectedItems.indexOf(it);
   if (pos >= 0) {
-    if (_cpSelectedItems.length <= 1) { showToast('最低1品目は選んでください'); return; }
+    if (_cpSelectedItems.length <= 1) { showToast(t('toast.min_one_item')); return; }
     _cpSelectedItems.splice(pos, 1);
   } else {
     _cpSelectedItems.push(it);
@@ -8969,7 +8969,7 @@ function closeImgViewer() {
 
 
 async function submitChiriPublish() {
-  if (_cpSelectedItems.length === 0) { showToast('品目を選んでください'); return; }
+  if (_cpSelectedItems.length === 0) { showToast(t('toast.pick_item')); return; }
   var r = window._cpReceiptData || window._ocrResult;
   if (!r) return;
 
@@ -8983,7 +8983,7 @@ async function submitChiriPublish() {
   if (commentText) {
     var banned = await _checkContentForBannedWord(commentText);
     if (banned) {
-      showToast('🚫 부적절한 표현이 포함되어 있어요 (차단어: ' + banned + ')');
+      showToast(t('toast.banned_word', {word: banned}));
       return;
     }
   }
@@ -9098,7 +9098,7 @@ function _afterChiriPublish() {
   if (_ctMap && typeof ctRenderPricePins === 'function') {
     ctRenderPricePins();
   }
-  showToast('✅ チリつもチズへの保存が完了しました！ +10チリ');
+  showToast(t('toast.chiri_publish_ok'));
 }
 
 /* ══════════════════════════════
@@ -9209,6 +9209,50 @@ var I18N = {
     'ct.reward.title':'🎁 チリワード','ct.reward.sub':'ポイント獲得 & 抽選',
     // 가게 상세 모달 추가
     'sd.no_address':'住所情報なし','sd.no_rating':'評価なし',
+    // 동적 토스트 (변수 치환은 {name} 형태)
+    'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
+    'toast.daily_limit':'今日の視聴上限（{n}回）に達しました',
+    'toast.exchange_done':'✅ {name} と交換しました！',
+    'toast.streak':'🎉 連続{days}日達成！ +{coins}チリ',
+    'toast.checkin':'✨ +5チリ 獲得！',
+    'toast.ad_reward':'🎉 +50チリ 獲得！広告視聴ありがとうございます！',
+    'toast.slot_done':'⏰ このスロットは既にチェック済みです',
+    'toast.banned_word':'🚫 不適切な表現が含まれています（禁止語: {word}）',
+    'toast.upload_image':'📤 画像をアップロード中...',
+    'toast.post_fail':'投稿に失敗しました 😢',
+    'toast.post_done':'✅ 投稿しました！ +5pt',
+    'toast.rating_fail':'評価の保存に失敗しました',
+    'toast.rating_done':'⭐ 評価しました！',
+    'toast.comment_fail':'コメント送信に失敗しました',
+    'toast.no_pos':'位置情報がありません',
+    'toast.allow_geo':'位置情報の使用を許可してください',
+    'toast.pin_added':'✅ ピンを追加しました！ +10チリ',
+    'toast.store_required':'お店の名前を入力してください',
+    'toast.menu_required':'メニューと価格を入力してください',
+    'toast.min_one_item':'最低1品目は選んでください',
+    'toast.pick_item':'品目を選んでください',
+    'toast.store_save_err':'⚠️ 店舗保存エラー: {msg}',
+    'toast.pin_save_err':'⚠️ ピン保存エラー: {msg}',
+    'toast.save_exception':'⚠️ 保存例外: {msg}',
+    'toast.chiri_publish_ok':'✅ チリつもチズへの保存が完了しました！ +10チリ',
+    'toast.private_saved':'🔒 非公開メモを保存しました',
+    'toast.sentiment_or_note':'感情またはメモを入力してください',
+    'toast.save_fail':'保存に失敗しました: {msg}',
+    'toast.receipt_saved':'✅ レシートを保存しました！ ¥{amount}',
+    'toast.store_required2':'⚠️ 店名を入力または修正してください',
+    'toast.theme_changed':'🎨 テーマを変更しました',
+    'toast.budget_saved':'🎯 予算 ¥{amount} を保存しました！',
+    'toast.budget_cleared':'予算を解除しました',
+    'toast.img_too_big':'⚠️ 10MB以下の画像のみアップロードできます',
+    'toast.no_receipts':'今月の支出履歴がありません',
+    'toast.no_receipts_short':'レシートが見つかりません',
+    'toast.no_store_card':'該当店舗のカードが見つかりません',
+    'toast.open_map_first':'チズを開いてください',
+    'toast.product_not_found':'商品情報が見つかりません',
+    'toast.out_of_stock':'品切れです',
+    'toast.history_deleted':'🗑 履歴を削除しました',
+    'toast.edit_saved':'✅ 修正を保存しました！',
+    'toast.move_to_store':'💡 「{name}」の全履歴に移動',
   },
   ko: {
     'tab.home':'홈','tab.history':'내역','tab.calendar':'달력','tab.map':'맵','tab.profile':'프로필',
@@ -9272,6 +9316,49 @@ var I18N = {
     'ct.talk.search.placeholder':'게시물 검색...','ct.talk.write':'글쓰기',
     'ct.reward.title':'🎁 치리워드','ct.reward.sub':'포인트 적립 & 드로우',
     'sd.no_address':'주소 정보 없음','sd.no_rating':'평가 없음',
+    'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
+    'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
+    'toast.exchange_done':'✅ {name} 으로 교환했어요!',
+    'toast.streak':'🎉 연속 {days}일 달성! +{coins}치리',
+    'toast.checkin':'✨ +5치리 획득!',
+    'toast.ad_reward':'🎉 +50치리 획득! 광고 시청 감사합니다!',
+    'toast.slot_done':'⏰ 이 슬롯은 이미 체크 완료됐어요',
+    'toast.banned_word':'🚫 부적절한 표현이 포함되어 있어요 (차단어: {word})',
+    'toast.upload_image':'📤 이미지 업로드 중...',
+    'toast.post_fail':'게시물 작성에 실패했어요 😢',
+    'toast.post_done':'✅ 게시 완료! +5pt',
+    'toast.rating_fail':'평가 저장에 실패했어요',
+    'toast.rating_done':'⭐ 평가했어요!',
+    'toast.comment_fail':'댓글 전송에 실패했어요',
+    'toast.no_pos':'위치 정보가 없어요',
+    'toast.allow_geo':'위치 권한을 허용해주세요',
+    'toast.pin_added':'✅ 핀을 추가했어요! +10치리',
+    'toast.store_required':'가게 이름을 입력해주세요',
+    'toast.menu_required':'메뉴와 가격을 입력해주세요',
+    'toast.min_one_item':'최소 1품목은 선택해주세요',
+    'toast.pick_item':'품목을 선택해주세요',
+    'toast.store_save_err':'⚠️ 가게 저장 오류: {msg}',
+    'toast.pin_save_err':'⚠️ 핀 저장 오류: {msg}',
+    'toast.save_exception':'⚠️ 저장 예외: {msg}',
+    'toast.chiri_publish_ok':'✅ 치리츠모 맵에 저장 완료! +10치리',
+    'toast.private_saved':'🔒 비공개 메모를 저장했어요',
+    'toast.sentiment_or_note':'감정 또는 메모를 입력해주세요',
+    'toast.save_fail':'저장 실패: {msg}',
+    'toast.receipt_saved':'✅ 영수증을 저장했어요! ¥{amount}',
+    'toast.store_required2':'⚠️ 가게명을 입력하거나 수정해주세요',
+    'toast.theme_changed':'🎨 테마를 변경했어요',
+    'toast.budget_saved':'🎯 예산 ¥{amount} 저장됐어요!',
+    'toast.budget_cleared':'예산이 해제됐어요',
+    'toast.img_too_big':'⚠️ 10MB 이하 이미지만 업로드 가능해요',
+    'toast.no_receipts':'이달 지출 내역이 없어요',
+    'toast.no_receipts_short':'영수증을 찾을 수 없어요',
+    'toast.no_store_card':'해당 가게의 카드를 찾을 수 없어요',
+    'toast.open_map_first':'맵을 열어주세요',
+    'toast.product_not_found':'상품 정보를 찾을 수 없어요',
+    'toast.out_of_stock':'품절됐어요',
+    'toast.history_deleted':'🗑 내역이 삭제됐어요',
+    'toast.edit_saved':'✅ 수정이 저장됐어요!',
+    'toast.move_to_store':'💡 「{name}」 전체 내역으로 이동',
   },
   en: {
     'tab.home':'Home','tab.history':'History','tab.calendar':'Calendar','tab.map':'Map','tab.profile':'Profile',
@@ -9335,6 +9422,49 @@ var I18N = {
     'ct.talk.search.placeholder':'Search posts...','ct.talk.write':'Write post',
     'ct.reward.title':'🎁 Chiri-ward','ct.reward.sub':'Earn points & lottery',
     'sd.no_address':'No address','sd.no_rating':'No rating',
+    'toast.coin_short':'Not enough chiri. Need {n} more',
+    'toast.daily_limit':"You've hit today's limit ({n})",
+    'toast.exchange_done':'✅ Exchanged for {name}!',
+    'toast.streak':'🎉 {days}-day streak! +{coins} chiri',
+    'toast.checkin':'✨ +5 chiri earned!',
+    'toast.ad_reward':'🎉 +50 chiri earned! Thanks for watching.',
+    'toast.slot_done':'⏰ This slot is already checked',
+    'toast.banned_word':'🚫 Contains blocked words ({word})',
+    'toast.upload_image':'📤 Uploading image...',
+    'toast.post_fail':'Failed to post 😢',
+    'toast.post_done':'✅ Posted! +5pt',
+    'toast.rating_fail':'Failed to save rating',
+    'toast.rating_done':'⭐ Rated!',
+    'toast.comment_fail':'Failed to send comment',
+    'toast.no_pos':'No location data',
+    'toast.allow_geo':'Please allow location access',
+    'toast.pin_added':'✅ Pin added! +10 chiri',
+    'toast.store_required':'Please enter store name',
+    'toast.menu_required':'Please enter menu & price',
+    'toast.min_one_item':'Select at least 1 item',
+    'toast.pick_item':'Please pick an item',
+    'toast.store_save_err':'⚠️ Store save error: {msg}',
+    'toast.pin_save_err':'⚠️ Pin save error: {msg}',
+    'toast.save_exception':'⚠️ Save exception: {msg}',
+    'toast.chiri_publish_ok':'✅ Saved to Chiri map! +10 chiri',
+    'toast.private_saved':'🔒 Private note saved',
+    'toast.sentiment_or_note':'Please add a sentiment or note',
+    'toast.save_fail':'Save failed: {msg}',
+    'toast.receipt_saved':'✅ Receipt saved! ¥{amount}',
+    'toast.store_required2':'⚠️ Please enter or fix the store name',
+    'toast.theme_changed':'🎨 Theme changed',
+    'toast.budget_saved':'🎯 Budget ¥{amount} saved!',
+    'toast.budget_cleared':'Budget cleared',
+    'toast.img_too_big':'⚠️ Only images under 10MB allowed',
+    'toast.no_receipts':'No receipts this month',
+    'toast.no_receipts_short':'No receipt found',
+    'toast.no_store_card':'No card found for this store',
+    'toast.open_map_first':'Please open the map',
+    'toast.product_not_found':'Product not found',
+    'toast.out_of_stock':'Out of stock',
+    'toast.history_deleted':'🗑 Item deleted',
+    'toast.edit_saved':'✅ Edit saved!',
+    'toast.move_to_store':'💡 Moving to all entries of "{name}"',
   },
   zh: {
     'tab.home':'主页','tab.history':'记录','tab.calendar':'日历','tab.map':'地图','tab.profile':'个人',
@@ -9398,6 +9528,49 @@ var I18N = {
     'ct.talk.search.placeholder':'搜索帖子...','ct.talk.write':'写帖子',
     'ct.reward.title':'🎁 奖励','ct.reward.sub':'积分获取 & 抽奖',
     'sd.no_address':'无地址信息','sd.no_rating':'无评价',
+    'toast.coin_short':'积分不足。还需 {n} 个',
+    'toast.daily_limit':'今日已达到观看上限（{n}次）',
+    'toast.exchange_done':'✅ 已兑换为 {name}！',
+    'toast.streak':'🎉 连续 {days} 天达成！+{coins} 积分',
+    'toast.checkin':'✨ +5 积分获取！',
+    'toast.ad_reward':'🎉 +50 积分获取！感谢观看广告',
+    'toast.slot_done':'⏰ 此时段已经签到过了',
+    'toast.banned_word':'🚫 包含不当用语（违禁词：{word}）',
+    'toast.upload_image':'📤 正在上传图片...',
+    'toast.post_fail':'发布失败 😢',
+    'toast.post_done':'✅ 已发布！+5pt',
+    'toast.rating_fail':'保存评价失败',
+    'toast.rating_done':'⭐ 已评价！',
+    'toast.comment_fail':'评论发送失败',
+    'toast.no_pos':'没有位置信息',
+    'toast.allow_geo':'请允许使用位置信息',
+    'toast.pin_added':'✅ 已添加图钉！+10 积分',
+    'toast.store_required':'请输入店名',
+    'toast.menu_required':'请输入菜单和价格',
+    'toast.min_one_item':'至少选择1个品项',
+    'toast.pick_item':'请选择品项',
+    'toast.store_save_err':'⚠️ 店铺保存错误：{msg}',
+    'toast.pin_save_err':'⚠️ 图钉保存错误：{msg}',
+    'toast.save_exception':'⚠️ 保存异常：{msg}',
+    'toast.chiri_publish_ok':'✅ 已保存至 Chiri 地图！+10 积分',
+    'toast.private_saved':'🔒 已保存私密备注',
+    'toast.sentiment_or_note':'请输入心情或备注',
+    'toast.save_fail':'保存失败：{msg}',
+    'toast.receipt_saved':'✅ 已保存票据！¥{amount}',
+    'toast.store_required2':'⚠️ 请输入或修正店名',
+    'toast.theme_changed':'🎨 已更换主题',
+    'toast.budget_saved':'🎯 已保存预算 ¥{amount}！',
+    'toast.budget_cleared':'已解除预算',
+    'toast.img_too_big':'⚠️ 仅支持10MB以下图片',
+    'toast.no_receipts':'本月没有支出记录',
+    'toast.no_receipts_short':'未找到票据',
+    'toast.no_store_card':'未找到该店铺的卡片',
+    'toast.open_map_first':'请打开地图',
+    'toast.product_not_found':'未找到商品信息',
+    'toast.out_of_stock':'已售罄',
+    'toast.history_deleted':'🗑 已删除记录',
+    'toast.edit_saved':'✅ 已保存修改！',
+    'toast.move_to_store':'💡 跳转到「{name}」全部记录',
   }
 };
 // 브라우저 언어 자동 감지 (저장된 값 없을 때만)
@@ -9414,9 +9587,17 @@ function _detectLang(){
   } catch(e) { return 'ja'; }
 }
 var _currentLang = _detectLang();
-function t(key){
+// t(key) — 키 → 현재 언어 텍스트
+// t(key, {name:'value'}) — 텍스트 안의 {name} 을 value 로 치환
+function t(key, params){
   var dict = I18N[_currentLang] || I18N.ja;
-  return dict[key] || (I18N.ja && I18N.ja[key]) || (I18N.ko && I18N.ko[key]) || key;
+  var s = dict[key] || (I18N.ja && I18N.ja[key]) || (I18N.ko && I18N.ko[key]) || key;
+  if (params && typeof s === 'string' && s.indexOf('{') >= 0) {
+    s = s.replace(/\{(\w+)\}/g, function(_, k){
+      return params[k] != null ? params[k] : '';
+    });
+  }
+  return s;
 }
 function applyLang(lang){
   if (!I18N[lang]) lang = 'ja';
@@ -10080,7 +10261,7 @@ function _mapGoPage(n) {
 function openReceiptStoreDetail(storeName){
   if (_activeInfoWindow) { _activeInfoWindow.close(); _activeInfoWindow = null; }
   var recs = DB.filter(function(r){ return r.store === storeName; });
-  if (recs.length === 0) { showToast('영수증을 찾을 수 없어요'); return; }
+  if (recs.length === 0) { showToast(t('toast.no_receipts_short')); return; }
 
   // 통계
   var total = recs.reduce(function(a,r){ return a + (r.total||0); }, 0);
@@ -10215,7 +10396,7 @@ function rsdOpenReceipt(receiptId){
 /* "전체 보기" → 내역 탭으로 (가게 필터 적용 — 향후 확장) */
 function rsdGotoHistory(storeName){
   closeOv('ov-rcpt-store-detail');
-  showToast('💡 「' + storeName + '」전체 내역으로 이동');
+  showToast(t('toast.move_to_store', {name: storeName}));
   // 임시: 내역 탭으로만 전환 (검색 필터 기능 추가시 storeName 으로 자동 입력)
   if (typeof switchTab === 'function') switchTab('history');
 }
@@ -10227,7 +10408,7 @@ function scrollToStoreCard(storeName){
   var cardId = 'sc-' + encodeURIComponent(storeName).replace(/%/g,'_');
   var card = document.getElementById(cardId);
   if (!card) {
-    showToast('해당 가게의 카드를 찾을 수 없어요');
+    showToast(t('toast.no_store_card'));
     return;
   }
   card.scrollIntoView({ behavior:'smooth', block:'center' });
@@ -10507,7 +10688,7 @@ var _mpPinHintListener = null;
 
 /* 📌 ピン追加 버튼 → 크로스헤어 + 액션바 표시 */
 function openManualPin() {
-  if (!_ctMap) { showToast('チズを開いてください'); return; }
+  if (!_ctMap) { showToast(t('toast.open_map_first')); return; }
   var crosshair = document.getElementById('ct-pin-crosshair');
   var actionBar = document.getElementById('ct-pin-action-bar');
   if (crosshair) crosshair.style.display = 'flex';
@@ -10620,10 +10801,10 @@ function selectMpCat(key) {
 
 async function submitManualPin() {
   var storeName = (document.getElementById('mp-store').value || '').trim();
-  if (!storeName) { showToast('お店の名前を入力してください'); return; }
+  if (!storeName) { showToast(t('toast.store_required')); return; }
   var validItems = _mpItems.filter(function(it){ return it.name && it.price; });
-  if (!validItems.length) { showToast('メニューと価格を入力してください'); return; }
-  if (!_currentUser) { showToast('ログインが必要です'); return; }
+  if (!validItems.length) { showToast(t('toast.menu_required')); return; }
+  if (!_currentUser) { showToast(t('toast.login_required')); return; }
 
   var comment = (document.getElementById('mp-comment').value || '').trim();
   // 지도에서 선택한 위치 우선, 없으면 현재 위치 사용
@@ -10657,7 +10838,7 @@ async function submitManualPin() {
   if (_tempManualPin) { _tempManualPin.setMap(null); _tempManualPin = null; }
   _mpManualLat = null; _mpManualLng = null;
   closeOv('ov-manual-pin');
-  showToast('✅ ピンを追加しました！ +10チリ');
+  showToast(t('toast.pin_added'));
 
   // Supabase 저장
   if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
@@ -10723,7 +10904,7 @@ async function _persistPinToSupabase(pin) {
     }, { onConflict: 'name' }).select('id').single();
     if (storeRes.error) {
       console.warn('store upsert error:', storeRes.error.message, storeRes.error);
-      showToast('⚠️ 店舗保存エラー: ' + storeRes.error.message);
+      showToast(t('toast.store_save_err', {msg: storeRes.error.message}));
       return;
     }
     var pinRes = await _sb.from('price_pins').insert({
@@ -10735,13 +10916,13 @@ async function _persistPinToSupabase(pin) {
     });
     if (pinRes.error) {
       console.warn('pin insert error:', pinRes.error.message, pinRes.error);
-      showToast('⚠️ ピン保存エラー: ' + pinRes.error.message);
+      showToast(t('toast.pin_save_err', {msg: pinRes.error.message}));
     } else {
       pin._persisted = true;
     }
   } catch(e) {
     console.warn('_persistPinToSupabase exception:', e.message);
-    showToast('⚠️ 保存例外: ' + e.message);
+    showToast(t('toast.save_exception', {msg: e.message}));
   }
 }
 
@@ -11130,7 +11311,7 @@ function applyTheme(key, silent) {
   renderThemeSwatches();
   // 모바일 상단 status bar 색상도 테마에 맞게
   _updateMobileBarColor();
-  if (!silent) showToast('🎨 테마가 변경됐어요');
+  if (!silent) showToast(t('toast.theme_changed'));
 }
 
 /* ── 모바일 status bar 색상은 고정 (흰색) ──
@@ -11157,7 +11338,7 @@ function saveBudget() {
   var val = parseInt(document.getElementById('budget-input').value || '0');
   if (val > 0) {
     localStorage.setItem('receiptiq_budget', val);
-    showToast('🎯 예산 ¥'+val.toLocaleString()+' 저장됐어요!');
+    showToast(t('toast.budget_saved', {amount: val.toLocaleString()}));
   }
   closeOv('ov-budget');
   renderHome();
@@ -11166,7 +11347,7 @@ function clearBudget() {
   localStorage.removeItem('receiptiq_budget');
   closeOv('ov-budget');
   renderHome();
-  showToast('예산이 해제됐어요');
+  showToast(t('toast.budget_cleared'));
 }
 
 /* ══════════════════════════════
@@ -11388,7 +11569,7 @@ var CROP_CONT = 280, CROP_R = 112, CROP_CX = 140, CROP_CY = 140;
 function handleAvatarImage(input) {
   var file = input.files[0];
   if (!file) return;
-  if (file.size > 10 * 1024 * 1024) { showToast('⚠️ 10MB 이하 이미지만 업로드 가능해요'); return; }
+  if (file.size > 10 * 1024 * 1024) { showToast(t('toast.img_too_big')); return; }
   var reader = new FileReader();
   reader.onload = function(e) {
     var img = new Image();
@@ -15456,7 +15637,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v124';
+window.__APP_VERSION__ = 'v125';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
