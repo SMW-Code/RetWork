@@ -1,32 +1,48 @@
 -- ════════════════════════════════════════════════════════════════════════════
 -- 보안 패치 v1 — 권한 상승 / 코인 위변조 / 셀프 당첨 / 메뉴 변조 차단
 -- 적용처: Supabase SQL Editor (또는 supabase db push)
--- 적용 전 백업 권장: supabase db dump --schema-only > backup_$(date).sql
+--
+-- 모든 단계가 "테이블/함수 존재 시에만" 실행되도록 가드됨 → 누락 테이블 있어도 안전.
 -- ════════════════════════════════════════════════════════════════════════════
 
-BEGIN;
+-- 헬퍼: 테이블 존재 여부
+CREATE OR REPLACE FUNCTION _sec_table_exists(t TEXT) RETURNS BOOLEAN
+LANGUAGE sql STABLE AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = t
+  );
+$$;
+
+-- 헬퍼: 함수 존재 여부
+CREATE OR REPLACE FUNCTION _sec_function_exists(fn TEXT) RETURNS BOOLEAN
+LANGUAGE sql STABLE AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname = fn
+  );
+$$;
 
 -- ─── [1] profiles: 권한 상승 (is_admin / coin_balance 위변조) 방지 ───────────
--- 기존 정책 (FOR ALL USING auth.uid()=id) 은 WITH CHECK 가 없어
--- 클라이언트가 update({is_admin:true, coin_balance:99999999}) 가능했음.
+DO $$
+BEGIN
+  IF _sec_table_exists('profiles') THEN
+    EXECUTE 'DROP POLICY IF EXISTS profiles_write_own ON profiles';
+    EXECUTE 'DROP POLICY IF EXISTS "Users insert own profile" ON profiles';
+    EXECUTE 'DROP POLICY IF EXISTS profiles_update_own ON profiles';
+    EXECUTE 'DROP POLICY IF EXISTS profiles_insert_self ON profiles';
 
-DROP POLICY IF EXISTS profiles_write_own ON profiles;
-DROP POLICY IF EXISTS "Users insert own profile" ON profiles;
-DROP POLICY IF EXISTS profiles_update_own ON profiles;
-DROP POLICY IF EXISTS profiles_insert_self ON profiles;
+    EXECUTE 'CREATE POLICY profiles_insert_self ON profiles
+             FOR INSERT WITH CHECK (auth.uid() = id)';
 
--- INSERT: 본인 id 로만 가입 가능 (트리거가 만들지만 client 도 fallback 가능)
-CREATE POLICY profiles_insert_self ON profiles
-  FOR INSERT WITH CHECK (auth.uid() = id);
-
--- UPDATE: 본인 행만, 그리고 본인 id 로 유지해야 함
-CREATE POLICY profiles_update_own ON profiles
-  FOR UPDATE
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+    EXECUTE 'CREATE POLICY profiles_update_own ON profiles
+             FOR UPDATE
+             USING (auth.uid() = id)
+             WITH CHECK (auth.uid() = id)';
+  END IF;
+END $$;
 
 -- 권한 상승 / 코인 인플레 방지 트리거
--- (UPDATE 시 is_admin 와 coin_balance 가 변경되면 service_role 이 아닌 한 차단)
 CREATE OR REPLACE FUNCTION profiles_block_privileged_columns()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -41,7 +57,7 @@ BEGIN
 
   IF NEW.is_admin IS DISTINCT FROM OLD.is_admin THEN
     RAISE EXCEPTION 'profiles.is_admin cannot be changed by client'
-      USING ERRCODE = '42501'; -- insufficient_privilege
+      USING ERRCODE = '42501';
   END IF;
 
   IF NEW.coin_balance IS DISTINCT FROM OLD.coin_balance THEN
@@ -53,44 +69,51 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS profiles_block_privileged_columns_trg ON profiles;
-CREATE TRIGGER profiles_block_privileged_columns_trg
-  BEFORE UPDATE ON profiles
-  FOR EACH ROW
-  EXECUTE FUNCTION profiles_block_privileged_columns();
+DO $$
+BEGIN
+  IF _sec_table_exists('profiles') THEN
+    EXECUTE 'DROP TRIGGER IF EXISTS profiles_block_privileged_columns_trg ON profiles';
+    EXECUTE 'CREATE TRIGGER profiles_block_privileged_columns_trg
+             BEFORE UPDATE ON profiles
+             FOR EACH ROW
+             EXECUTE FUNCTION profiles_block_privileged_columns()';
+  END IF;
+END $$;
 
 -- ─── [2] coin_transactions: 클라이언트 INSERT 차단 ──────────────────────────
--- FOR ALL USING (auth.uid()=user_id) 는 INSERT 도 허용 → 임의 코인 적립 가능했음.
+DO $$
+BEGIN
+  IF _sec_table_exists('coin_transactions') THEN
+    EXECUTE 'DROP POLICY IF EXISTS coins_own ON coin_transactions';
+    EXECUTE 'DROP POLICY IF EXISTS coin_tx_insert_own ON coin_transactions';
+    EXECUTE 'DROP POLICY IF EXISTS coin_tx_select_own ON coin_transactions';
+    EXECUTE 'DROP POLICY IF EXISTS coin_tx_admin_select ON coin_transactions';
 
-DROP POLICY IF EXISTS coins_own ON coin_transactions;
-DROP POLICY IF EXISTS coin_tx_insert_own ON coin_transactions;
-DROP POLICY IF EXISTS coin_tx_select_own ON coin_transactions;
-DROP POLICY IF EXISTS coin_tx_admin_select ON coin_transactions;
+    EXECUTE 'CREATE POLICY coin_tx_select_own ON coin_transactions
+             FOR SELECT
+             USING (auth.uid() = user_id)';
 
--- SELECT: 본인 거래만 조회
-CREATE POLICY coin_tx_select_own ON coin_transactions
-  FOR SELECT
-  USING (auth.uid() = user_id);
+    EXECUTE 'CREATE POLICY coin_tx_admin_select ON coin_transactions
+             FOR SELECT
+             USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))';
 
--- SELECT: 어드민 전체 조회 (대시보드)
-CREATE POLICY coin_tx_admin_select ON coin_transactions
-  FOR SELECT
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
-
--- INSERT/UPDATE/DELETE: 일반 클라이언트 차단 (SECURITY DEFINER 함수만 사용)
-REVOKE INSERT, UPDATE, DELETE ON coin_transactions FROM anon, authenticated;
+    EXECUTE 'REVOKE INSERT, UPDATE, DELETE ON coin_transactions FROM anon, authenticated';
+  END IF;
+END $$;
 
 -- ─── [3] add_coins(): 권한 강화 + search_path 설정 ─────────────────────────
--- 기존 함수가 SECURITY DEFINER 인데 search_path 미설정 + EXECUTE 권한 광범위.
--- 파라미터 이름 변경 위해 DROP 먼저 (PostgreSQL은 CREATE OR REPLACE로 이름 변경 못 함).
-
-DROP FUNCTION IF EXISTS add_coins(UUID, INTEGER, TEXT, TEXT);
+DO $$
+BEGIN
+  IF _sec_function_exists('add_coins') THEN
+    EXECUTE 'DROP FUNCTION IF EXISTS add_coins(UUID, INTEGER, TEXT, TEXT)';
+  END IF;
+END $$;
 
 CREATE FUNCTION add_coins(
   p_user_id UUID,
   p_amount INTEGER,
   p_type TEXT,
-  p_desc TEXT DEFAULT NULL  -- 원본 파라미터 이름 그대로 유지
+  p_desc TEXT DEFAULT NULL
 )
 RETURNS VOID
 LANGUAGE plpgsql
@@ -98,13 +121,11 @@ SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
 BEGIN
-  -- service_role 은 자유롭게, 그 외엔 본인만
   IF current_setting('request.jwt.claims', true)::jsonb->>'role' <> 'service_role'
      AND p_user_id <> auth.uid() THEN
     RAISE EXCEPTION 'add_coins: cannot add coins to another user';
   END IF;
 
-  -- 코인 거래 기록 + 잔액 갱신
   INSERT INTO coin_transactions(user_id, amount, type, description)
   VALUES (p_user_id, p_amount, p_type, p_desc);
 
@@ -114,154 +135,182 @@ BEGIN
 END;
 $$;
 
--- DROP/CREATE 직후 권한 회수 + service_role 만 허용
 REVOKE EXECUTE ON FUNCTION add_coins(UUID, INTEGER, TEXT, TEXT) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION add_coins(UUID, INTEGER, TEXT, TEXT) TO service_role;
 
 -- ─── [4] draw_entries: is_winner 셀프 설정 + 임의 entry 생성 차단 ───────────
+DO $$
+BEGIN
+  IF _sec_table_exists('draw_entries') THEN
+    EXECUTE 'DROP POLICY IF EXISTS entries_own ON draw_entries';
+    EXECUTE 'DROP POLICY IF EXISTS entries_read_own ON draw_entries';
+    EXECUTE 'DROP POLICY IF EXISTS entries_insert_own ON draw_entries';
 
-DROP POLICY IF EXISTS entries_own ON draw_entries;
-DROP POLICY IF EXISTS entries_read_own ON draw_entries;
-DROP POLICY IF EXISTS entries_insert_own ON draw_entries;
+    EXECUTE 'CREATE POLICY entries_read_own ON draw_entries
+             FOR SELECT USING (auth.uid() = user_id)';
 
--- SELECT: 본인 응모 조회
-CREATE POLICY entries_read_own ON draw_entries
-  FOR SELECT
-  USING (auth.uid() = user_id);
+    EXECUTE 'CREATE POLICY entries_insert_own ON draw_entries
+             FOR INSERT WITH CHECK (auth.uid() = user_id AND COALESCE(is_winner, false) = false)';
 
--- INSERT: 본인 응모, is_winner=false 강제 (당첨은 어드민/서버 함수에서만)
-CREATE POLICY entries_insert_own ON draw_entries
-  FOR INSERT
-  WITH CHECK (auth.uid() = user_id AND COALESCE(is_winner, false) = false);
-
--- UPDATE/DELETE: 클라이언트 차단 (어드민/서버 함수만)
-REVOKE UPDATE, DELETE ON draw_entries FROM anon, authenticated;
+    EXECUTE 'REVOKE UPDATE, DELETE ON draw_entries FROM anon, authenticated';
+  END IF;
+END $$;
 
 -- ─── [5] store_menu_cards: 모든 메뉴 변조 차단 ──────────────────────────────
+DO $$
+BEGIN
+  IF _sec_table_exists('store_menu_cards') THEN
+    EXECUTE 'DROP POLICY IF EXISTS smc_update ON store_menu_cards';
+    EXECUTE 'DROP POLICY IF EXISTS smc_update_own ON store_menu_cards';
+    EXECUTE 'DROP POLICY IF EXISTS smc_delete_own ON store_menu_cards';
 
-DROP POLICY IF EXISTS smc_update ON store_menu_cards;
-DROP POLICY IF EXISTS smc_update_own ON store_menu_cards;
+    EXECUTE 'CREATE POLICY smc_update_own ON store_menu_cards
+             FOR UPDATE
+             USING (
+               auth.uid() = created_by
+               OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+             )
+             WITH CHECK (
+               auth.uid() = created_by
+               OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+             )';
 
-CREATE POLICY smc_update_own ON store_menu_cards
-  FOR UPDATE
-  USING (
-    auth.uid() = created_by
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-  )
-  WITH CHECK (
-    auth.uid() = created_by
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-  );
+    EXECUTE 'CREATE POLICY smc_delete_own ON store_menu_cards
+             FOR DELETE
+             USING (
+               auth.uid() = created_by
+               OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+             )';
+  END IF;
+END $$;
 
--- DELETE: 본인 또는 어드민
-DROP POLICY IF EXISTS smc_delete_own ON store_menu_cards;
-CREATE POLICY smc_delete_own ON store_menu_cards
-  FOR DELETE
-  USING (
-    auth.uid() = created_by
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-  );
+-- ─── [6] DELETE 정책 추가 (본인 또는 어드민) ────────────────────────────────
+DO $$
+BEGIN
+  IF _sec_table_exists('store_menu_comments') THEN
+    EXECUTE 'DROP POLICY IF EXISTS smcmt_delete_own ON store_menu_comments';
+    EXECUTE 'CREATE POLICY smcmt_delete_own ON store_menu_comments
+             FOR DELETE
+             USING (
+               auth.uid() = user_id
+               OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+             )';
+  END IF;
 
--- ─── [6] store_menu_comments / store_menu_replies / store_community_photos
---      DELETE 정책 추가 (본인 또는 어드민) ────────────────────────────────────
+  IF _sec_table_exists('store_menu_replies') THEN
+    EXECUTE 'DROP POLICY IF EXISTS smrpl_delete_own ON store_menu_replies';
+    EXECUTE 'CREATE POLICY smrpl_delete_own ON store_menu_replies
+             FOR DELETE
+             USING (
+               auth.uid() = user_id
+               OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+             )';
+  END IF;
 
-DROP POLICY IF EXISTS smcmt_delete_own ON store_menu_comments;
-CREATE POLICY smcmt_delete_own ON store_menu_comments
-  FOR DELETE
-  USING (
-    auth.uid() = user_id
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-  );
-
-DROP POLICY IF EXISTS smrpl_delete_own ON store_menu_replies;
-CREATE POLICY smrpl_delete_own ON store_menu_replies
-  FOR DELETE
-  USING (
-    auth.uid() = user_id
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-  );
-
-DROP POLICY IF EXISTS scp_delete_own ON store_community_photos;
-CREATE POLICY scp_delete_own ON store_community_photos
-  FOR DELETE
-  USING (
-    auth.uid() = uploaded_by
-    OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
-  );
+  IF _sec_table_exists('store_community_photos') THEN
+    EXECUTE 'DROP POLICY IF EXISTS scp_delete_own ON store_community_photos';
+    EXECUTE 'CREATE POLICY scp_delete_own ON store_community_photos
+             FOR DELETE
+             USING (
+               auth.uid() = uploaded_by
+               OR EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true)
+             )';
+  END IF;
+END $$;
 
 -- ─── [7] WITH CHECK 누락 정책들 일괄 보강 ───────────────────────────────────
--- 본인 user_id 만 INSERT/UPDATE 가능하도록 강제
+DO $$
+DECLARE
+  tbl TEXT;
+  policy_name TEXT;
+  tables_with_user_id TEXT[] := ARRAY[
+    'store_reactions',
+    'post_likes',
+    'comment_likes',
+    'store_bookmarks',
+    'attendance',
+    'ad_missions',
+    'posts',
+    'comments'
+  ];
+BEGIN
+  FOREACH tbl IN ARRAY tables_with_user_id LOOP
+    IF _sec_table_exists(tbl) THEN
+      -- 기존 _own 정책 이름 추정 (관례: <prefix>_own)
+      -- 일괄 DROP — 동일 이름의 옛 정책이 있으면 제거
+      EXECUTE format(
+        'DROP POLICY IF EXISTS %I ON %I',
+        replace(tbl, '_', '') || '_own',
+        tbl
+      );
+      EXECUTE format(
+        'DROP POLICY IF EXISTS %I_own ON %I',
+        regexp_replace(tbl, '_[a-z]+$', ''),  -- e.g. store_reactions -> reactions
+        tbl
+      );
+      EXECUTE format('DROP POLICY IF EXISTS %I_own ON %I', tbl, tbl);
+      -- 새 정책 — FOR ALL + USING + WITH CHECK
+      EXECUTE format(
+        'CREATE POLICY %I_own ON %I
+         FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id)',
+        tbl, tbl
+      );
+    END IF;
+  END LOOP;
+END $$;
 
-DROP POLICY IF EXISTS reactions_own ON store_reactions;
-CREATE POLICY reactions_own ON store_reactions
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS post_likes_own ON post_likes;
-CREATE POLICY post_likes_own ON post_likes
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS comment_likes_own ON comment_likes;
-CREATE POLICY comment_likes_own ON comment_likes
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS bookmarks_own ON store_bookmarks;
-CREATE POLICY bookmarks_own ON store_bookmarks
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS attendance_own ON attendance;
-CREATE POLICY attendance_own ON attendance
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS ad_missions_own ON ad_missions;
-CREATE POLICY ad_missions_own ON ad_missions
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS posts_own ON posts;
-CREATE POLICY posts_own ON posts
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
-DROP POLICY IF EXISTS comments_own ON comments;
-CREATE POLICY comments_own ON comments
-  FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- ─── [8] stores: 어드민 전용 UPDATE/DELETE 정책 명시 ────────────────────────
--- 코드에서 가게 수정 기능이 있는데 정책이 없어서 service_role 키 노출 가능성 의심.
-
-DROP POLICY IF EXISTS stores_admin_write ON stores;
-CREATE POLICY stores_admin_write ON stores
-  FOR ALL
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+-- ─── [8] stores: 어드민 전용 정책 명시 ─────────────────────────────────────
+DO $$
+BEGIN
+  IF _sec_table_exists('stores') THEN
+    EXECUTE 'DROP POLICY IF EXISTS stores_admin_write ON stores';
+    EXECUTE 'CREATE POLICY stores_admin_write ON stores
+             FOR ALL
+             USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))
+             WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))';
+  END IF;
+END $$;
 
 -- ─── [9] draws: 어드민 전용 ─────────────────────────────────────────────────
-
-DROP POLICY IF EXISTS draws_admin_write ON draws;
-CREATE POLICY draws_admin_write ON draws
-  FOR ALL
-  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))
-  WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
+DO $$
+BEGIN
+  IF _sec_table_exists('draws') THEN
+    EXECUTE 'DROP POLICY IF EXISTS draws_admin_write ON draws';
+    EXECUTE 'CREATE POLICY draws_admin_write ON draws
+             FOR ALL
+             USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))
+             WITH CHECK (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true))';
+  END IF;
+END $$;
 
 -- ─── [10] handle_new_user(): search_path 보강 ─────────────────────────────
-
--- 기존 함수 정의 그대로 유지하되 search_path 만 추가 (정의 본문은 fix_trigger.sql 참조)
--- ALTER FUNCTION handle_new_user() SET search_path = public, pg_temp;
--- ↑ 실제 적용 시 fix_trigger.sql 의 함수 정의 끝에 SET 절 추가 권장.
--- 이미 동일 함수가 있다면 다음 줄로 처리:
-ALTER FUNCTION handle_new_user() SET search_path = public, pg_temp;
+DO $$
+BEGIN
+  IF _sec_function_exists('handle_new_user') THEN
+    EXECUTE 'ALTER FUNCTION handle_new_user() SET search_path = public, pg_temp';
+  END IF;
+END $$;
 
 -- ─── [11] storage.objects 의 store-photos 폴더 검증 ─────────────────────────
--- 기존 정책이 임의 경로 업로드 허용 → 본인 폴더로 제한
+DO $$
+BEGIN
+  -- storage 스키마 정책은 supabase 기본으로 존재
+  EXECUTE 'DROP POLICY IF EXISTS store_photos_upload ON storage.objects';
+  EXECUTE 'CREATE POLICY store_photos_upload ON storage.objects
+           FOR INSERT
+           WITH CHECK (
+             bucket_id = ''store-photos''
+             AND auth.uid() IS NOT NULL
+             AND (storage.foldername(name))[1] = auth.uid()::text
+           )';
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE NOTICE 'storage.objects 정책 적용 실패 (무시): %', SQLERRM;
+END $$;
 
-DROP POLICY IF EXISTS store_photos_upload ON storage.objects;
-CREATE POLICY store_photos_upload ON storage.objects
-  FOR INSERT
-  WITH CHECK (
-    bucket_id = 'store-photos'
-    AND auth.uid() IS NOT NULL
-    AND (storage.foldername(name))[1] = auth.uid()::text
-  );
-
-COMMIT;
+-- ─── 헬퍼 함수 정리 ────────────────────────────────────────────────────────
+DROP FUNCTION IF EXISTS _sec_table_exists(TEXT);
+DROP FUNCTION IF EXISTS _sec_function_exists(TEXT);
 
 -- ════════════════════════════════════════════════════════════════════════════
 -- 검증 쿼리 (적용 후 실행)
