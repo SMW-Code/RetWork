@@ -3,18 +3,39 @@
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic'; // 빌드 캐시에 키가 박히지 않도록 매 요청 평가
 
+// 여러 후보 이름을 순서대로 시도 — Vercel에서 특정 이름이 안 잡히는 경우 우회
+const KEY_CANDIDATES = [
+  'GOOGLE_VISION_API_KEY',
+  'VISION_KEY',
+  'VISION_API_KEY',
+  'GOOGLE_VISION_KEY',
+  'GCP_VISION_KEY',
+];
+
+function pickApiKey(): { key: string | null; source: string; tried: Record<string, number> } {
+  const tried: Record<string, number> = {};
+  for (const name of KEY_CANDIDATES) {
+    const raw = process.env[name];
+    const len = raw ? raw.trim().length : 0;
+    tried[name] = len;
+    if (len > 0) return { key: raw!.trim(), source: name, tried };
+  }
+  return { key: null, source: '', tried };
+}
+
 export async function POST(request: Request) {
-  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+  const { key, source, tried } = pickApiKey();
 
-  // 진단 로그 — Vercel Functions 로그에서 확인
-  console.log('[vision] env key present?', Boolean(apiKey), 'length:', apiKey ? apiKey.length : 0);
+  // 진단 로그 — Vercel Functions 로그에서 확인 가능
+  console.log('[vision] picked source:', source || '(none)', 'tried lengths:', JSON.stringify(tried));
 
-  if (!apiKey) {
+  if (!key) {
     return Response.json(
       {
         error: {
           message: 'Google Vision API key is not configured on the server.',
-          hint: 'GOOGLE_VISION_API_KEY env var missing or empty. Check Vercel Project Settings → Environment Variables.',
+          hint: 'Tried env vars: ' + KEY_CANDIDATES.join(', ') + '. Add one with the value in Vercel Project Settings → Environment Variables.',
+          tried,
         },
       },
       { status: 500 }
@@ -34,7 +55,7 @@ export async function POST(request: Request) {
   }
 
   const upstream = await fetch(
-    'https://vision.googleapis.com/v1/images:annotate?key=' + encodeURIComponent(apiKey.trim()),
+    'https://vision.googleapis.com/v1/images:annotate?key=' + encodeURIComponent(key),
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
