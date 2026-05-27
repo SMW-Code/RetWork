@@ -49,8 +49,36 @@
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="RetWork">
 <meta name="twitter:card" content="summary_large_image">
-<!-- PWA -->
-<link rel="manifest" href="/manifest.json">
+<!-- PWA — manifest를 인라인 Blob URL로 제공 (Vercel 방화벽 우회) -->
+<script>
+(function(){
+  try {
+    var m = {
+      name: "RetWork (チリつも)",
+      short_name: "RetWork",
+      description: "AI領収書管理＆チリつも価格共有アプリ",
+      start_url: "/index.html",
+      scope: "/",
+      display: "standalone",
+      orientation: "portrait",
+      background_color: "#FFFFFF",
+      theme_color: "#FFFFFF",
+      lang: "ja",
+      icons: [
+        { src: "/icons/icon.png", sizes: "any", type: "image/png", purpose: "any" },
+        { src: "/icons/icon.png", sizes: "any", type: "image/png", purpose: "maskable" }
+      ],
+      categories: ["finance", "utilities"],
+      screenshots: []
+    };
+    var blob = new Blob([JSON.stringify(m)], { type: "application/manifest+json" });
+    var link = document.createElement("link");
+    link.rel = "manifest";
+    link.href = URL.createObjectURL(blob);
+    document.head.appendChild(link);
+  } catch(e) { /* silent */ }
+})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15177,7 +15205,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v119';
+window.__APP_VERSION__ = 'v120';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
