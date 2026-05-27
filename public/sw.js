@@ -1,5 +1,5 @@
-const CACHE_NAME = 'receiptiq-v36';
-const STATIC_CACHE = ['/manifest.json', '/icons/icon.svg'];
+const CACHE_NAME = 'receiptiq-v118';
+const STATIC_CACHE = ['/manifest.json', '/icons/icon.png', '/icons/icon.svg'];
 
 // 설치: 정적 파일만 프리캐시
 self.addEventListener('install', event => {
