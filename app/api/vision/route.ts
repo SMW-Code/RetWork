@@ -30,12 +30,20 @@ export async function POST(request: Request) {
   console.log('[vision] picked source:', source || '(none)', 'tried lengths:', JSON.stringify(tried));
 
   if (!key) {
+    // 환경변수 시스템이 통째로 깨졌는지 확인 — 다른 키도 같이 점검
+    const otherKnown = {
+      OPENAI_API_KEY: (process.env.OPENAI_API_KEY || '').length,
+      NODE_ENV: process.env.NODE_ENV || '',
+      VERCEL: process.env.VERCEL || '',
+      VERCEL_ENV: process.env.VERCEL_ENV || '',
+    };
     return Response.json(
       {
         error: {
           message: 'Google Vision API key is not configured on the server.',
-          hint: 'Tried env vars: ' + KEY_CANDIDATES.join(', ') + '. Add one with the value in Vercel Project Settings → Environment Variables.',
+          hint: 'Tried env vars: ' + KEY_CANDIDATES.join(', ') + '. Add one in Vercel Project Settings → Environment Variables and Redeploy without cache.',
           tried,
+          system: otherKnown,
         },
       },
       { status: 500 }
