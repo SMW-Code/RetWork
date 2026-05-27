@@ -1,9 +1,26 @@
-// Node.js runtime — 환경변수를 매 요청마다 안정적으로 읽기 위해 사용
+// Node.js runtime — Vercel 환경변수를 매 요청마다 안정적으로 읽기 위해 사용
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// 여러 후보 이름을 순서대로 시도 — 어느 이름으로 등록돼 있어도 동작
+const KEY_CANDIDATES = [
+  'GOOGLE_VISION_API_KEY',
+  'VISION_KEY',
+  'VISION_API_KEY',
+  'GOOGLE_VISION_KEY',
+  'GCP_VISION_KEY',
+];
+
+function pickApiKey(): string | null {
+  for (const name of KEY_CANDIDATES) {
+    const raw = process.env[name];
+    if (raw && raw.trim().length > 0) return raw.trim();
+  }
+  return null;
+}
+
 export async function POST(request: Request) {
-  const apiKey = (process.env.GOOGLE_VISION_API_KEY || '').trim();
+  const apiKey = pickApiKey();
 
   if (!apiKey) {
     return Response.json(
