@@ -4124,19 +4124,19 @@ function ctRenderPricePins() {
         ? group.store.featured_price
         : Math.min.apply(null, group.items.map(function(i) { return i.price; }));
       var multi    = group.items.length > 1;
-      var isTop    = idx < 3;
       var hasPrivateNote = (_ctMapMode === 'private') && _storeHasPrivateNote(group.store.name);
-      var pinW = hasPrivateNote ? 112 : (isTop ? 110 : 100);
+      var pinW = hasPrivateNote ? 112 : 100;
       var marker   = new google.maps.Marker({
         position: { lat: parseFloat(group.store.lat), lng: parseFloat(group.store.lng) },
         map: _ctMap,
         icon: {
-          url: ctMakePinSVG(icon, minPrice, isTop, multi, hasPrivateNote),
+          // isTop 파라미터는 더 이상 시각적 차이를 만들지 않음 (false 전달)
+          url: ctMakePinSVG(icon, minPrice, false, multi, hasPrivateNote),
           scaledSize: new google.maps.Size(pinW, 36),
           anchor: new google.maps.Point(pinW/2, 36)
         },
         title: group.store.name,
-        zIndex: hasPrivateNote ? 20 : (isTop ? 10 : 1)
+        zIndex: hasPrivateNote ? 20 : 1
       });
       // 마커 클릭 → 가게 상세 모달
       (function(storeObj, mk) {
@@ -4154,16 +4154,18 @@ function ctRenderPricePins() {
   }
 }
 
-/* 가격 핀 SVG 생성 */
+/* 가격 핀 SVG 생성
+   - hasPrivateNote(프라이빗 모드): #C8B273 골드 베이지 링
+   - 그 외 일반 마커:        현재 테마 색 링 (THEMES[_currentTheme].color)
+   - isTop 파라미터는 backward compat 위해 받지만 시각적 차이는 없음 */
 function ctMakePinSVG(icon, price, isTop, multi, hasPrivateNote) {
-  // 비공개 메모가 있는 마커는 보라색 링 (테마색 녹색/금색과 안 겹침)
-  var borderColor = hasPrivateNote ? '#C8B273' : (isTop ? '#E8A020' : '#2D5A27');
-  // 새 링 색에 어울리는 연한 톤 배경 (#C8B273 의 매우 옅은 베이지)
-  var bg          = hasPrivateNote ? '#FAF6E8' : (isTop ? '#FDF3DC' : '#ffffff');
+  var themeColor  = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#16A87A';
+  var borderColor = hasPrivateNote ? '#C8B273' : themeColor;
+  var bg          = hasPrivateNote ? '#FAF6E8' : '#ffffff';
   var textColor   = '#1A1A2E';
   var priceStr    = '¥' + price.toLocaleString() + (multi ? '~' : '');
   var w = hasPrivateNote ? 112 : 100, h = 34;
-  var strokeW = hasPrivateNote ? 2.5 : (isTop ? 2.5 : 1.8);
+  var strokeW = hasPrivateNote ? 2.5 : 1.8;
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
     + '<rect x="1" y="1" width="' + (w-2) + '" height="' + (h-2) + '" rx="' + (h/2-1) + '" ry="' + (h/2-1) + '"'
     + ' fill="' + bg + '" stroke="' + borderColor + '" stroke-width="' + strokeW + '"/>'
@@ -15629,7 +15631,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v128';
+window.__APP_VERSION__ = 'v129';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
