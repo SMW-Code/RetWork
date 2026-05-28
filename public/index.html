@@ -9421,6 +9421,12 @@ var I18N = {
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'common.loading':'読み込み中...','common.share':'共有',
     'sd.menu_cards':'🍽️ メニューカード','sd.add_card':'メニュー<br>カード<br>追加',
+    // 메뉴 상세 모달
+    'md.title':'📋 メニュー詳細','md.rated_count':'{n}人が評価','md.comments_count':'💬 コメント {n}件',
+    'md.page':'{cur} / {total} ページ','md.reply':'返信','md.report':'通報','md.reply_ph':'返信を書く...',
+    'md.prev':'◀ 前へ','md.next':'次へ ▶','md.login_to_rate':'🔒 ログイン後に評価できます',
+    'md.my_rating':'✅ マイ評価','md.one_per_user':'1ユーザーにつき1件のみ',
+    'common.anon':'匿名','btn.submit':'登録',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9579,6 +9585,11 @@ var I18N = {
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'common.loading':'로딩 중...','common.share':'공유',
     'sd.menu_cards':'🍽️ 메뉴 카드','sd.add_card':'메뉴<br>카드<br>추가',
+    'md.title':'📋 메뉴 상세','md.rated_count':'{n}명 평가','md.comments_count':'💬 댓글 {n}개',
+    'md.page':'{cur} / {total} 페이지','md.reply':'답글','md.report':'신고','md.reply_ph':'답글 쓰기...',
+    'md.prev':'◀ 이전','md.next':'다음 ▶','md.login_to_rate':'🔒 로그인 후 평가할 수 있어요',
+    'md.my_rating':'✅ 내 평가','md.one_per_user':'한 사용자당 1개만 작성 가능',
+    'common.anon':'익명','btn.submit':'등록',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9736,6 +9747,11 @@ var I18N = {
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'common.loading':'Loading...','common.share':'Share',
     'sd.menu_cards':'🍽️ Menu Cards','sd.add_card':'Add<br>Menu<br>Card',
+    'md.title':'📋 Menu Detail','md.rated_count':'{n} rated','md.comments_count':'💬 {n} comments',
+    'md.page':'{cur} / {total}','md.reply':'Reply','md.report':'Report','md.reply_ph':'Write a reply...',
+    'md.prev':'◀ Prev','md.next':'Next ▶','md.login_to_rate':'🔒 Log in to rate',
+    'md.my_rating':'✅ My rating','md.one_per_user':'1 per user only',
+    'common.anon':'Anonymous','btn.submit':'Submit',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9893,6 +9909,11 @@ var I18N = {
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'common.loading':'加载中...','common.share':'分享',
     'sd.menu_cards':'🍽️ 菜单卡','sd.add_card':'添加<br>菜单<br>卡',
+    'md.title':'📋 菜单详情','md.rated_count':'{n}人评价','md.comments_count':'💬 评论 {n}条',
+    'md.page':'{cur} / {total} 页','md.reply':'回复','md.report':'举报','md.reply_ph':'写回复...',
+    'md.prev':'◀ 上一页','md.next':'下一页 ▶','md.login_to_rate':'🔒 登录后可评价',
+    'md.my_rating':'✅ 我的评价','md.one_per_user':'每位用户限1条',
+    'common.anon':'匿名','btn.submit':'提交',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -15828,7 +15849,7 @@ function _mdRender(){
   h += '<div class="md-sticky-head">'
     +'<div class="sheet-handle" style="margin:10px auto 6px;"></div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;padding:0 16px 10px;">'
-      +'<div style="font-size:12px;color:var(--text-3);font-weight:700;letter-spacing:.3px;">📋 メニュー詳細</div>'
+      +'<div style="font-size:12px;color:var(--text-3);font-weight:700;letter-spacing:.3px;">'+t('md.title')+'</div>'
       +'<div onclick="closeMenuDetail()" style="width:34px;height:34px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-2);">✕</div>'
     +'</div></div>';
 
@@ -15855,7 +15876,7 @@ function _mdRender(){
     h += '<div style="margin:14px 16px;padding:12px 14px;background:var(--surface);border:1px solid var(--border-mid);border-radius:14px;">'
       +'<div style="display:flex;align-items:center;gap:10px;">'
         +'<span style="font-size:22px;font-weight:800;color:var(--star);">★'+avg.toFixed(1)+'</span>'
-        +'<span style="font-size:11px;color:var(--text-3);">'+comments.length+'명 평가</span>'
+        +'<span style="font-size:11px;color:var(--text-3);">'+t('md.rated_count',{n:comments.length})+'</span>'
       +'</div>'
       +'<div style="display:flex;flex-direction:column;gap:4px;margin-top:8px;">';
     for(var s=5;s>=1;s--){
@@ -15880,12 +15901,12 @@ function _mdRender(){
   var pageComments = comments.slice(pageStart, pageEnd);
   if(totalCmts > 0){
     h += '<div style="padding:8px 18px 4px;display:flex;align-items:center;justify-content:space-between;">'
-      +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">💬 댓글 '+totalCmts+'개</div>'
-      +(totalPages>1?'<div style="font-size:10px;color:var(--text-3);font-weight:600;">'+(curPage+1)+' / '+totalPages+' 페이지</div>':'')
+      +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('md.comments_count',{n:totalCmts})+'</div>'
+      +(totalPages>1?'<div style="font-size:10px;color:var(--text-3);font-weight:600;">'+t('md.page',{cur:curPage+1,total:totalPages})+'</div>':'')
     +'</div>';
   }
   pageComments.forEach(function(c){
-    var nick=(c.profiles&&c.profiles.nickname)||'익명';
+    var nick=(c.profiles&&c.profiles.nickname)||t('common.anon');
     var isMe=_currentUser&&c.user_id===_currentUser.id;
     var starsHtml='';
     for(var i=1;i<=5;i++) starsHtml+='<span style="color:'+(i<=(c.rating||0)?'var(--star)':'var(--star-empty)')+';font-size:12px;">'+(i<=(c.rating||0)?'★':'☆')+'</span>';
@@ -15896,14 +15917,14 @@ function _mdRender(){
           +'<span>'+starsHtml+'</span>'
         +'</div>'
         +'<div style="display:flex;gap:10px;">'
-        +(isMe?'<span onclick="sdEditMyComment(\''+c.id+'\',\''+cardId+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:700;">수정</span>':'')
-        +'<span onclick="sdToggleReplyForm(\''+c.id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;">답글</span>'
-        +(!isMe && _currentUser ? '<span onclick="userOpenReportModal(\'store_menu_comments\',\''+c.id+'\',\''+(c.content||'').replace(/\'/g,"\\\\'").substring(0,200)+'\',\''+c.user_id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;" title="신고">🚨</span>' : '')
+        +(isMe?'<span onclick="sdEditMyComment(\''+c.id+'\',\''+cardId+'\')" style="font-size:11px;color:var(--green);cursor:pointer;font-weight:700;">'+t('btn.edit')+'</span>':'')
+        +'<span onclick="sdToggleReplyForm(\''+c.id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;">'+t('md.reply')+'</span>'
+        +(!isMe && _currentUser ? '<span onclick="userOpenReportModal(\'store_menu_comments\',\''+c.id+'\',\''+(c.content||'').replace(/\'/g,"\\\\'").substring(0,200)+'\',\''+c.user_id+'\')" style="font-size:11px;color:var(--text-3);cursor:pointer;" title="'+t('md.report')+'">🚨</span>' : '')
         +'</div>'
       +'</div>'
       +(c.content?'<div style="font-size:12px;color:var(--text-2);line-height:1.55;">'+c.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>':'');
     (c._replies||[]).forEach(function(r){
-      var rn=(r.profiles&&r.profiles.nickname)||'익명';
+      var rn=(r.profiles&&r.profiles.nickname)||t('common.anon');
       h += '<div class="sd-reply-item" style="padding-left:30px;">'
         +'<span style="font-size:10px;font-weight:700;color:var(--text-3);">↳ '+rn+'</span>'
         +(r.content?'<div style="font-size:11px;color:var(--text-2);margin-top:2px;">'+r.content.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>':'')
@@ -15911,8 +15932,8 @@ function _mdRender(){
     });
     h += '<div id="rf-'+c.id+'" style="display:none;padding:8px 0 0;">'
       +'<div style="display:flex;gap:6px;">'
-        +'<input id="ri-'+c.id+'" type="text" placeholder="답글 쓰기..." style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:7px 10px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;">'
-        +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">등록</button>'
+        +'<input id="ri-'+c.id+'" type="text" placeholder="'+t('md.reply_ph')+'" style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:7px 10px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;">'
+        +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">'+t('btn.submit')+'</button>'
       +'</div></div>'
     +'</div>';
   });
@@ -15921,27 +15942,27 @@ function _mdRender(){
     var canNext = curPage < totalPages - 1;
     h += '<div style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 14px;background:var(--bg-2);border-top:.5px solid var(--border);">'
       +(canPrev
-        ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage-1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">◀ 이전</div>'
-        : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">◀ 이전</div>')
+        ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage-1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">'+t('md.prev')+'</div>'
+        : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">'+t('md.prev')+'</div>')
       +'<span style="font-size:11px;font-weight:800;color:var(--text-1);min-width:42px;text-align:center;">'+(curPage+1)+' / '+totalPages+'</span>'
       +(canNext
-        ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage+1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">다음 ▶</div>'
-        : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">다음 ▶</div>')
+        ? '<div onclick="sdCmtPage(\''+cardId+'\','+(curPage+1)+')" style="padding:6px 12px;border-radius:8px;background:var(--surface);border:.5px solid var(--border);cursor:pointer;font-size:11px;font-weight:700;color:var(--text-2);">'+t('md.next')+'</div>'
+        : '<div style="padding:6px 12px;opacity:.35;font-size:11px;font-weight:700;color:var(--text-3);">'+t('md.next')+'</div>')
     +'</div>';
   }
   // 댓글 입력/수정 (전용 ID)
   h += '<div id="sd-cmt-input-'+cardId+'" style="padding:14px 18px 30px;border-top:.5px solid var(--border);background:var(--bg);">';
   if(!_currentUser){
-    h += '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">🔒 로그인 후 평가할 수 있어요</div>';
+    h += '<div style="text-align:center;color:var(--text-3);font-size:12px;padding:8px 0;">'+t('md.login_to_rate')+'</div>';
   } else if(myC){
     var myStars='';
     for(var ms=1;ms<=5;ms++) myStars+='<span style="color:'+(ms<=(myC.rating||0)?'var(--star)':'var(--star-empty)')+';font-size:13px;">'+(ms<=(myC.rating||0)?'★':'☆')+'</span>';
     h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;flex-wrap:wrap;">'
       +'<div style="display:flex;align-items:center;gap:6px;">'
-        +'<span style="font-size:11px;font-weight:800;color:var(--green);">✅ 내 평가</span>'
+        +'<span style="font-size:11px;font-weight:800;color:var(--green);">'+t('md.my_rating')+'</span>'
         +'<span>'+myStars+'</span>'
       +'</div>'
-      +'<span style="font-size:10px;color:var(--text-3);font-weight:500;">한 사용자당 1개만 작성 가능</span>'
+      +'<span style="font-size:10px;color:var(--text-3);font-weight:500;">'+t('md.one_per_user')+'</span>'
     +'</div>'
     +'<button onclick="sdEditMyComment(\''+myC.id+'\',\''+cardId+'\')" style="width:100%;padding:11px;border-radius:10px;border:1.5px solid var(--green);background:var(--green-light);color:var(--green);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">✏️ 내 평가 수정하기</button>';
   } else {
@@ -16251,7 +16272,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v137';
+window.__APP_VERSION__ = 'v138';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
