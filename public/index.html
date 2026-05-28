@@ -11749,16 +11749,16 @@ function _initAds() {
    테마 색상
 ══════════════════════════════ */
 var THEMES = {
-  green:   { name: '에메랄드', color: '#16A87A', dark: '#0C6B52', light: '#E0F5EE', mid: '#A8E2CC', grad: 'linear-gradient(140deg,#1BBF8A 0%,#0D7A5F 55%,#085C47 100%)' },
-  blue:    { name: '오션블루', color: '#1A7FD4', dark: '#0F5A9C', light: '#DDEEFF', mid: '#9ECBF0', grad: 'linear-gradient(140deg,#2490E8 0%,#1466B0 55%,#083D70 100%)' },
-  purple:  { name: '퍼플',    color: '#7C3AED', dark: '#5B21B6', light: '#EDE9FE', mid: '#C4B5FD', grad: 'linear-gradient(140deg,#8B5CF6 0%,#6D28D9 55%,#4C1D95 100%)' },
-  coral:   { name: '코랄',    color: '#E8541A', dark: '#C2410C', light: '#FEF0E7', mid: '#FDBA74', grad: 'linear-gradient(140deg,#F97316 0%,#EA580C 55%,#C2410C 100%)' },
-  rose:    { name: '로즈핑크', color: '#E11D6A', dark: '#9D174D', light: '#FCE7F3', mid: '#F9A8D4', grad: 'linear-gradient(140deg,#EC4899 0%,#DB2777 55%,#9D174D 100%)' },
-  gold:    { name: '골드',    color: '#D97706', dark: '#92400E', light: '#FEF3C7', mid: '#FCD34D', grad: 'linear-gradient(140deg,#F59E0B 0%,#D97706 55%,#92400E 100%)' },
-  indigo:  { name: '인디고',  color: '#4F46E5', dark: '#3730A3', light: '#EEF2FF', mid: '#A5B4FC', grad: 'linear-gradient(140deg,#6366F1 0%,#4338CA 55%,#3730A3 100%)' },
-  cyan:    { name: '사이언',  color: '#0891B2', dark: '#0E7490', light: '#ECFEFF', mid: '#67E8F9', grad: 'linear-gradient(140deg,#06B6D4 0%,#0891B2 55%,#0E7490 100%)' },
-  lime:    { name: '라임',    color: '#65A30D', dark: '#3F6212', light: '#F7FEE7', mid: '#BEF264', grad: 'linear-gradient(140deg,#84CC16 0%,#65A30D 55%,#3F6212 100%)' },
-  magenta: { name: '마젠타',  color: '#A21CAF', dark: '#701A75', light: '#FDF4FF', mid: '#E879F9', grad: 'linear-gradient(140deg,#C026D3 0%,#A21CAF 55%,#701A75 100%)' },
+  green:   { name: '에메랄드', color: '#00644D', dark: '#004132', light: '#E0ECEA', mid: '#7FB2A6', grad: 'linear-gradient(140deg,#388674 0%,#00644D 55%,#004132 100%)' },
+  blue:    { name: '오션블루', color: '#0279F7', dark: '#014FA1', light: '#E1EFFE', mid: '#80BCFB', grad: 'linear-gradient(140deg,#3A97F9 0%,#0279F7 55%,#014FA1 100%)' },
+  purple:  { name: '퍼플',    color: '#380193', dark: '#240160', light: '#E7E0F2', mid: '#9B80C9', grad: 'linear-gradient(140deg,#6439AB 0%,#380193 55%,#240160 100%)' },
+  coral:   { name: '코랄',    color: '#F78156', dark: '#A15438', light: '#FFF0EB', mid: '#FBC0AB', grad: 'linear-gradient(140deg,#F89571 0%,#F78156 55%,#A15438 100%)' },
+  rose:    { name: '로즈핑크', color: '#F71C89', dark: '#A11259', light: '#FFE4F1', mid: '#FB8EC4', grad: 'linear-gradient(140deg,#F8409B 0%,#F71C89 55%,#A11259 100%)' },
+  gold:    { name: '골드',    color: '#FFD700', dark: '#A68C00', light: '#FFFAE0', mid: '#FFEB80', grad: 'linear-gradient(140deg,#FFE033 0%,#FFD700 55%,#A68C00 100%)' },
+  indigo:  { name: '인디고',  color: '#172C58', dark: '#0F1D39', light: '#E3E6EB', mid: '#8B95AB', grad: 'linear-gradient(140deg,#495E80 0%,#172C58 55%,#0F1D39 100%)' },
+  cyan:    { name: '사이언',  color: '#266586', dark: '#194257', light: '#E5ECF0', mid: '#92B2C2', grad: 'linear-gradient(140deg,#53889F 0%,#266586 55%,#194257 100%)' },
+  lime:    { name: '라임',    color: '#38CF39', dark: '#248725', light: '#E7F9E7', mid: '#9BE79C', grad: 'linear-gradient(140deg,#60E361 0%,#38CF39 55%,#248725 100%)' },
+  magenta: { name: '마젠타',  color: '#E30884', dark: '#940556', light: '#FCE1F0', mid: '#F183C2', grad: 'linear-gradient(140deg,#E83A9C 0%,#E30884 55%,#940556 100%)' },
 };
 var _currentTheme = localStorage.getItem('receiptiq_theme') || 'green';
 var _isDark = false;
@@ -16326,7 +16326,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v141';
+window.__APP_VERSION__ = 'v142';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
