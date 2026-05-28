@@ -122,6 +122,8 @@
   /* 별 평점 전용 노랑색 (gold는 chiri 모드 브랜드용이라 분리) */
   --star:#FACC15; --star-empty:#E5E7EB;
   --navy:#1A1A2E;
+  /* 테마색 배경 위에 올라가는 글자색 (커스텀 테마에서 가독성 위해 변경 가능) */
+  --on-theme:#ffffff;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellipse at 30% 20%,#1f2230 0%,#0f1018 60%,#08080d 100%);display:flex;align-items:center;justify-content:center;font-family:var(--font);overflow:hidden;}
@@ -653,7 +655,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .cat-select{display:flex;flex-wrap:wrap;gap:8px;padding:12px 0;}
 .cat-chip-sel{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);cursor:pointer;}
 .cat-chip-sel.sel{background:var(--green-light);border-color:var(--green);color:var(--green);}
-.save-btn{width:100%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:14px;box-shadow:var(--shadow-green);transition:opacity .15s,transform .12s;}
+.save-btn{width:100%;background:linear-gradient(135deg,var(--green),var(--green-dark));color:var(--on-theme);border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:14px;box-shadow:var(--shadow-green);transition:opacity .15s,transform .12s;}
 .save-btn:active{opacity:.85;transform:scale(.98);}
 
 /* 절약 모달 */
@@ -1905,8 +1907,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="closeOv('ov-custom-color')" style="width:30px;height:30px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text-3);">✕</div>
     </div>
 
-    <!-- 미리보기 -->
-    <div id="cc-preview" style="height:84px;border-radius:16px;background:#808080;border:1px solid var(--border-mid);display:flex;align-items:flex-end;justify-content:flex-end;padding:8px 12px;margin-bottom:6px;transition:background .12s;"></div>
+    <!-- 미리보기 (배경=선택색, 가운데 샘플 버튼 글자=선택 글자색) -->
+    <div id="cc-preview" style="height:84px;border-radius:16px;background:#808080;border:1px solid var(--border-mid);display:flex;align-items:center;justify-content:center;margin-bottom:6px;transition:background .12s;">
+      <span id="cc-preview-text" style="font-size:15px;font-weight:800;color:#fff;font-family:var(--font);">RetWork ¥1,200</span>
+    </div>
     <div id="cc-hex-label" style="text-align:center;font-size:15px;font-weight:800;color:var(--text-1);letter-spacing:1px;margin-bottom:14px;font-family:var(--font);">#808080</div>
 
     <!-- 슬라이더 모드 -->
@@ -1932,6 +1936,16 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div id="cc-code-mode" style="display:none;margin-bottom:16px;">
       <input type="text" id="cc-code-input" maxlength="7" placeholder="#RRGGBB" data-i18n-placeholder="cc.code_ph" oninput="_ccFromCode(this.value)"
         style="width:100%;padding:14px 16px;border:1.5px solid var(--border-mid);border-radius:12px;font-size:18px;font-weight:800;letter-spacing:2px;text-align:center;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;text-transform:uppercase;box-sizing:border-box;">
+    </div>
+
+    <!-- 글자색 선택 (테마 배경 위 텍스트) -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;" data-i18n="cc.text_color">글자색</div>
+      <div style="display:flex;gap:6px;">
+        <button id="cc-text-auto" onclick="_ccSetText('auto')" style="flex:1;padding:8px;border:1.5px solid var(--green);border-radius:10px;background:var(--green-light);color:var(--text-1);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="cc.text_auto">자동</button>
+        <button id="cc-text-white" onclick="_ccSetText('#ffffff')" style="flex:1;padding:8px;border:1.5px solid var(--border-mid);border-radius:10px;background:#fff;color:#333;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="cc.text_white">⚪ 흰색</button>
+        <button id="cc-text-black" onclick="_ccSetText('#1A1A2E')" style="flex:1;padding:8px;border:1.5px solid var(--border-mid);border-radius:10px;background:#1A1A2E;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="cc.text_black">⚫ 검정</button>
+      </div>
     </div>
 
     <!-- 모드 전환 -->
@@ -9495,6 +9509,7 @@ var I18N = {
     'theme.custom':'カスタム','theme.invalid':'カラーコードを確認してください','theme.pick':'好きな色を選ぶ',
     'cc.title':'🎨 カスタムカラー','cc.hue':'色相','cc.sat':'彩度','cc.val':'明度',
     'cc.code_mode':'⌨ コードで入力','cc.slider_mode':'🎚 スライダーで','cc.apply':'設定','cc.code_ph':'#RRGGBB',
+    'cc.text_color':'文字色','cc.text_auto':'自動','cc.text_white':'⚪ 白','cc.text_black':'⚫ 黒',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9674,6 +9689,7 @@ var I18N = {
     'theme.custom':'커스텀','theme.invalid':'색상 코드를 확인해주세요','theme.pick':'원하는 색 선택',
     'cc.title':'🎨 커스텀 색상','cc.hue':'색조','cc.sat':'채도','cc.val':'명도',
     'cc.code_mode':'⌨ 코드로 입력','cc.slider_mode':'🎚 슬라이더로','cc.apply':'설정','cc.code_ph':'#RRGGBB',
+    'cc.text_color':'글자색','cc.text_auto':'자동','cc.text_white':'⚪ 흰색','cc.text_black':'⚫ 검정',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9852,6 +9868,7 @@ var I18N = {
     'theme.custom':'Custom','theme.invalid':'Please check the color code','theme.pick':'Pick your color',
     'cc.title':'🎨 Custom Color','cc.hue':'Hue','cc.sat':'Saturation','cc.val':'Brightness',
     'cc.code_mode':'⌨ Enter code','cc.slider_mode':'🎚 Sliders','cc.apply':'Apply','cc.code_ph':'#RRGGBB',
+    'cc.text_color':'Text color','cc.text_auto':'Auto','cc.text_white':'⚪ White','cc.text_black':'⚫ Black',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -10030,6 +10047,7 @@ var I18N = {
     'theme.custom':'自定义','theme.invalid':'请检查颜色代码','theme.pick':'选择喜欢的颜色',
     'cc.title':'🎨 自定义颜色','cc.hue':'色相','cc.sat':'饱和度','cc.val':'明度',
     'cc.code_mode':'⌨ 输入代码','cc.slider_mode':'🎚 滑块','cc.apply':'设置','cc.code_ph':'#RRGGBB',
+    'cc.text_color':'文字颜色','cc.text_auto':'自动','cc.text_white':'⚪ 白','cc.text_black':'⚫ 黑',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -11882,6 +11900,13 @@ function applyTheme(key, silent) {
   r.style.setProperty('--theme-a18', th.color + '2E');  // 18%
   r.style.setProperty('--theme-a30', th.color + '4D');  // 30%
   r.style.setProperty('--theme-a50', th.color + '80');  // 50%
+  // 테마색 배경 위 글자색: 커스텀이면 저장값(없으면 자동대비), 프리셋이면 흰색
+  var onTheme = '#ffffff';
+  if (key === 'custom') {
+    onTheme = localStorage.getItem('receiptiq_custom_text') || _autoOnTheme(th.color);
+  }
+  r.style.setProperty('--on-theme', onTheme);
+  _applyOnThemeOverride(onTheme);
   localStorage.setItem('receiptiq_theme', key);
   renderThemeSwatches();
   // 모바일 상단 status bar 색상도 테마에 맞게
@@ -11916,12 +11941,39 @@ function _deriveTheme(hex, name){
     grad: 'linear-gradient(140deg,'+gstart+' 0%,'+main+' 55%,'+dark+' 100%)'
   };
 }
-// 커스텀 색 적용 + 저장
-function applyCustomColor(hex){
+// 색의 상대 휘도로 흑/백 자동 대비색 결정
+function _autoOnTheme(hex){
+  var rgb = _hexToRgb(hex);
+  if (!rgb) return '#ffffff';
+  // WCAG 상대휘도 근사 (sRGB)
+  var lum = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+  return lum > 0.6 ? '#1A1A2E' : '#ffffff';
+}
+// 인라인 color:#fff 박힌 테마색 버튼들을 !important 로 오버라이드
+function _applyOnThemeOverride(textColor){
+  var styleEl = document.getElementById('on-theme-override');
+  if (!styleEl) { styleEl = document.createElement('style'); styleEl.id = 'on-theme-override'; document.head.appendChild(styleEl); }
+  // 흰색이면 기본 동작이라 오버라이드 불필요
+  if (!textColor || textColor.toLowerCase() === '#ffffff' || textColor.toLowerCase() === '#fff') {
+    styleEl.textContent = '';
+    return;
+  }
+  // 테마색(--green/--gold) 배경을 쓰는 주요 인라인 버튼들의 글자색 강제
+  styleEl.textContent =
+    '[style*="var(--green)"][style*="color:#fff"],'
+  + '[style*="var(--gold)"][style*="color:#fff"],'
+  + '[style*="background:var(--green)"],'
+  + '[style*="background:var(--gold)"],'
+  + '.save-btn,.att-go-btn{color:'+textColor+' !important;}';
+}
+
+// 커스텀 색 적용 + 저장 (textColor 선택: 미지정 시 자동 대비)
+function applyCustomColor(hex, textColor){
   var th = _deriveTheme(hex, t('theme.custom'));
   if (!th) { showToast(t('theme.invalid')); return; }
   THEMES.custom = th;
   localStorage.setItem('receiptiq_custom_color', th.color);
+  localStorage.setItem('receiptiq_custom_text', textColor || _autoOnTheme(th.color));
   applyTheme('custom');
 }
 // 앱 시작 시 저장된 커스텀 색 복원 (THEMES.custom 등록)
@@ -11938,6 +11990,26 @@ _initCustomTheme();
 var _ccHSV = { h:180, s:50, v:50 };
 var _ccHex = '#808080';
 var _ccMode = 'slider';
+var _ccText = 'auto'; // 'auto' | '#ffffff' | '#1A1A2E'
+
+// 현재 선택된 글자색 (auto면 배경색 기준 자동 계산)
+function _ccResolvedText(){
+  return _ccText === 'auto' ? _autoOnTheme(_ccHex) : _ccText;
+}
+// 글자색 토글 버튼 시각 상태 + 미리보기 갱신
+function _ccSetText(choice){
+  _ccText = choice;
+  ['auto','white','black'].forEach(function(k){
+    var id = 'cc-text-' + k;
+    var el = document.getElementById(id);
+    if (!el) return;
+    var on = (k==='auto' && choice==='auto') || (k==='white' && choice==='#ffffff') || (k==='black' && choice==='#1A1A2E');
+    el.style.borderColor = on ? 'var(--green)' : 'var(--border-mid)';
+    if (k==='auto') el.style.background = on ? 'var(--green-light)' : 'var(--surface)';
+  });
+  var pt = document.getElementById('cc-preview-text');
+  if (pt) pt.style.color = _ccResolvedText();
+}
 
 function _hsvToRgb(h, s, v){
   s/=100; v/=100;
@@ -11977,6 +12049,10 @@ function openCustomColor(){
   document.getElementById('cc-hue').value = _ccHSV.h;
   document.getElementById('cc-sat').value = _ccHSV.s;
   document.getElementById('cc-val').value = _ccHSV.v;
+  // 저장된 글자색 복원 (없으면 자동)
+  var savedText = localStorage.getItem('receiptiq_custom_text');
+  _ccText = (savedText === '#ffffff' || savedText === '#1A1A2E') ? savedText : 'auto';
+  _ccSetText(_ccText);
   _ccUpdate();
   openOv('ov-custom-color');
 }
@@ -11994,6 +12070,8 @@ function _ccUpdate(){
   if (satEl) satEl.style.background = 'linear-gradient(90deg,'+_hsvToRgb(_ccHSV.h,0,_ccHSV.v)+','+_hsvToRgb(_ccHSV.h,100,_ccHSV.v)+')';
   if (valEl) valEl.style.background = 'linear-gradient(90deg,#000000,'+_hsvToRgb(_ccHSV.h,_ccHSV.s,100)+')';
   var ci = document.getElementById('cc-code-input'); if (ci && _ccMode==='code') ci.value = _ccHex.toUpperCase();
+  // 미리보기 글자색 (auto면 배경 휘도 기준 자동)
+  var pt = document.getElementById('cc-preview-text'); if (pt) pt.style.color = _ccResolvedText();
 }
 
 function _ccToggleMode(){
@@ -12023,10 +12101,11 @@ function _ccFromCode(v){
   document.getElementById('cc-val').value = _ccHSV.v;
   document.getElementById('cc-preview').style.background = _ccHex;
   document.getElementById('cc-hex-label').textContent = _ccHex.toUpperCase();
+  var pt = document.getElementById('cc-preview-text'); if (pt) pt.style.color = _ccResolvedText();
 }
 
 function _ccApply(){
-  applyCustomColor(_ccHex);
+  applyCustomColor(_ccHex, _ccText === 'auto' ? null : _ccText);
   closeOv('ov-custom-color');
 }
 
@@ -16546,7 +16625,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v145';
+window.__APP_VERSION__ = 'v146';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
