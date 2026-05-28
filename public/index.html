@@ -11925,9 +11925,20 @@ function _rgbToHex(r,g,b){
   var c = function(v){ v = Math.max(0, Math.min(255, Math.round(v))); return ('0'+v.toString(16)).slice(-2); };
   return '#' + c(r) + c(g) + c(b);
 }
-// 메인색에서 테마 5속성 파생 (수동 계산과 동일 규칙)
-function _deriveTheme(hex, name){
+// 너무 밝은 테마색은 흰 배경에서 안 보이므로 휘도 클램프 (색조 유지, 밝기만 하향)
+function _clampThemeColor(hex){
   var rgb = _hexToRgb(hex);
+  if (!rgb) return hex;
+  var lum = (0.299*rgb.r + 0.587*rgb.g + 0.114*rgb.b) / 255;
+  var MAX = 0.82, TARGET = 0.78;
+  if (lum <= MAX) return _rgbToHex(rgb.r, rgb.g, rgb.b);
+  var k = TARGET / lum; // 비율 유지 → 색조/채도 보존, 밝기만 down
+  return _rgbToHex(rgb.r*k, rgb.g*k, rgb.b*k);
+}
+// 메인색에서 테마 5속성 파생 (수동 계산과 동일 규칙) + 밝기 클램프
+function _deriveTheme(hex, name){
+  var clamped = _clampThemeColor(hex);
+  var rgb = _hexToRgb(clamped);
   if (!rgb) return null;
   var r = rgb.r, g = rgb.g, b = rgb.b;
   var dark   = _rgbToHex(r*0.65, g*0.65, b*0.65);
@@ -11992,9 +12003,9 @@ var _ccHex = '#808080';
 var _ccMode = 'slider';
 var _ccText = 'auto'; // 'auto' | '#ffffff' | '#1A1A2E'
 
-// 현재 선택된 글자색 (auto면 배경색 기준 자동 계산)
+// 현재 선택된 글자색 (auto면 클램프된 배경색 기준 자동 계산)
 function _ccResolvedText(){
-  return _ccText === 'auto' ? _autoOnTheme(_ccHex) : _ccText;
+  return _ccText === 'auto' ? _autoOnTheme(_clampThemeColor(_ccHex)) : _ccText;
 }
 // 글자색 토글 버튼 시각 상태 + 미리보기 갱신
 function _ccSetText(choice){
@@ -12070,7 +12081,9 @@ function _ccUpdate(){
   if (satEl) satEl.style.background = 'linear-gradient(90deg,'+_hsvToRgb(_ccHSV.h,0,_ccHSV.v)+','+_hsvToRgb(_ccHSV.h,100,_ccHSV.v)+')';
   if (valEl) valEl.style.background = 'linear-gradient(90deg,#000000,'+_hsvToRgb(_ccHSV.h,_ccHSV.s,100)+')';
   var ci = document.getElementById('cc-code-input'); if (ci && _ccMode==='code') ci.value = _ccHex.toUpperCase();
-  // 미리보기 글자색 (auto면 배경 휘도 기준 자동)
+  // 미리보기: 클램프된 실제 적용색으로 표시 (WYSIWYG)
+  var shown = _clampThemeColor(_ccHex);
+  var pv = document.getElementById('cc-preview'); if (pv) pv.style.background = shown;
   var pt = document.getElementById('cc-preview-text'); if (pt) pt.style.color = _ccResolvedText();
 }
 
@@ -16625,7 +16638,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v146';
+window.__APP_VERSION__ = 'v147';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
