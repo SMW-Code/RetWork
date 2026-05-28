@@ -7491,6 +7491,42 @@ function _ratingLabel(rating){
   return (entry && entry[lang]) || (entry && entry.ja) || '';
 }
 
+// 현재 가게에 매칭되는 비공개 메모 행의 실제 store_name (저장 시 UPDATE 대상 — 중복 방지)
+var _sdMatchedNoteStoreName = null;
+
+// 현재 _sdName 에 해당하는 본인 비공개 메모 행을 찾음.
+// 1) 정확 매칭 우선 → 2) 마커 골드링과 동일한 prefix/substring 퍼지 매칭 fallback.
+// (영수증 가게명과 가격핀 canonical 가게명이 달라도 같은 행을 찾도록)
+async function _sdFetchMatchingPrivateNote() {
+  if (!_sb || !_currentUser || !_sdName) return null;
+  // 1) 정확 매칭
+  try {
+    var exact = await _sb.from('private_store_notes')
+      .select('store_name,rating,sentiment,note,updated_at')
+      .eq('user_id', _currentUser.id)
+      .eq('store_name', _sdName)
+      .maybeSingle();
+    if (exact.data) return exact.data;
+  } catch(e) { /* 무시 */ }
+  // 2) 퍼지 매칭 — 본인 모든 노트 중 물리적으로 같은 가게
+  try {
+    var all = await _sb.from('private_store_notes')
+      .select('store_name,rating,sentiment,note,updated_at')
+      .eq('user_id', _currentUser.id);
+    var rows = all.data || [];
+    var pn = _normStoreName(_sdName);
+    if (!pn) return null;
+    for (var i = 0; i < rows.length; i++) {
+      var kn = _normStoreName(rows[i].store_name);
+      if (!kn) continue;
+      if (kn.indexOf(pn) === 0 || pn.indexOf(kn) === 0) return rows[i];
+      if (kn.length >= 4 && pn.indexOf(kn) >= 0) return rows[i];
+      if (pn.length >= 4 && kn.indexOf(pn) >= 0) return rows[i];
+    }
+  } catch(e) { /* 무시 */ }
+  return null;
+}
+
 async function _sdLoadPrivateNote() {
   var wrap = document.getElementById('sd-private-wrap');
   if (!wrap) return;
@@ -7503,18 +7539,15 @@ async function _sdLoadPrivateNote() {
   wrap.style.display = '';
   if (!_sb || !_currentUser || !_sdName) return;
   var current = { rating: null, note: '', updated_at: null };
-  try {
-    var res = await _sb.from('private_store_notes')
-      .select('rating,sentiment,note,updated_at')
-      .eq('user_id', _currentUser.id)
-      .eq('store_name', _sdName)
-      .maybeSingle();
-    if (res.data) {
-      current.rating = res.data.rating || null;
-      current.note = res.data.note || '';
-      current.updated_at = res.data.updated_at || null;
-    }
-  } catch(e) { /* 무시 */ }
+  var row = await _sdFetchMatchingPrivateNote();
+  if (row) {
+    current.rating = row.rating || null;
+    current.note = row.note || '';
+    current.updated_at = row.updated_at || null;
+    _sdMatchedNoteStoreName = row.store_name || null; // 저장 시 이 이름으로 UPDATE (중복 방지)
+  } else {
+    _sdMatchedNoteStoreName = null;
+  }
   _sdPrivateRating = current.rating;
   _sdPrivateExists = !!(current.rating || current.note);
   _sdPrivateOpen = _sdPrivateOpen || false; // 아코디언 열림 상태 유지
@@ -7633,9 +7666,11 @@ async function sdSavePrivateNote() {
   var noteEl = document.getElementById('sd-private-note');
   var note = noteEl ? noteEl.value.trim() : '';
   if (!_sdPrivateRating && !note) { showToast(t('toast.sentiment_or_note')); return; }
+  // 기존 행이 (퍼지 매칭으로) 다른 이름으로 있으면 그 이름으로 UPDATE → 중복 행 방지
+  var saveStoreName = _sdMatchedNoteStoreName || _sdName;
   var res = await _sb.from('private_store_notes').upsert({
     user_id: _currentUser.id,
-    store_name: _sdName,
+    store_name: saveStoreName,
     rating: _sdPrivateRating,
     note: note || null
   }, { onConflict: 'user_id,store_name' });
@@ -7650,13 +7685,16 @@ async function sdDeletePrivateNote() {
   if (!_sb || !_currentUser || !_sdName) return;
   // confirm 대체: 토스트로 한 번에 처리 (모달 흐름 깨지지 않게)
   if (!confirm('이 가게의 비공개 메모를 삭제하시겠습니까? (마커 링도 제거됩니다)')) return;
+  var delStoreName = _sdMatchedNoteStoreName || _sdName;
   var res = await _sb.from('private_store_notes')
     .delete()
     .eq('user_id', _currentUser.id)
-    .eq('store_name', _sdName);
+    .eq('store_name', delStoreName);
   if (res.error) { showToast(t('toast.save_fail', {msg: res.error.message})); return; }
   showToast('🗑 비공개 메모 삭제됨');
   delete _privateNoteStores[_sdName];
+  delete _privateNoteStores[delStoreName];
+  _sdMatchedNoteStoreName = null;
   _sdPrivateRating = null;
   _sdPrivateExists = false;
   // 마커 재렌더 → 골드 링 사라짐
@@ -16825,7 +16863,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v161';
+window.__APP_VERSION__ = 'v162';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
