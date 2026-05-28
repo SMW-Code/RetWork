@@ -1506,7 +1506,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <div style="font-size:11px;color:var(--text-3);">動画を見てチリをゲット · <span id="ct-rad-remain-hdr">3</span>回/日</div>
           </div>
           <div style="text-align:right;flex-shrink:0;margin-right:6px;">
-            <div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+200</div>
+            <div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+50</div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;">チリ</div>
           </div>
           <div id="ct-rad-arrow" style="font-size:11px;color:var(--text-3);flex-shrink:0;">▼</div>
@@ -1784,7 +1784,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 완료 오버레이 (카운트다운 끝 후 자동 표시) -->
   <div id="rv-complete-overlay" style="display:none;position:absolute;inset:0;background:rgba(0,0,0,.82);flex-direction:column;align-items:center;justify-content:center;gap:18px;">
     <div id="rv-complete-icon" style="font-size:60px;">✨</div>
-    <div id="rv-complete-title" style="font-size:26px;font-weight:900;color:#fff;">+200チリ 獲得！</div>
+    <div id="rv-complete-title" style="font-size:26px;font-weight:900;color:#fff;">+50チリ 獲得！</div>
     <div style="font-size:13px;color:rgba(255,255,255,.55);">自動で閉じます…</div>
   </div>
 </div>
@@ -13247,7 +13247,7 @@ function ctOpenFullscreenAd(mode, callback) {
 
       // ad_views 기록 (어드민 통계용)
       if (_sb && _currentUser) {
-        var rewardAmount = (mode === 'reward') ? 200 : 0;
+        var rewardAmount = (mode === 'reward') ? 50 : 0;
         _sb.from('ad_views').insert({
           user_id: _currentUser.id,
           ad_context: mode || 'save',
@@ -17045,7 +17045,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v177';
+window.__APP_VERSION__ = 'v178';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
