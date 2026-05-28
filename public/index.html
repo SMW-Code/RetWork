@@ -1981,7 +1981,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="setBudgetQuick(100000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥100,000</div>
       <div onclick="setBudgetQuick(150000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥150,000</div>
     </div>
-    <button onclick="saveBudget()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;">저장</button>
+    <button onclick="saveBudget()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.save">保存</button>
     <div onclick="clearBudget()" style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-3);cursor:pointer;padding:6px;" data-i18n="budget.clear">予算を解除</div>
   </div>
 </div>
@@ -5533,16 +5533,16 @@ function renderHome() {
       var remain=budget-totalAmt;
       budgetEl.innerHTML='<div class="budget-wrap" onclick="openBudgetSet()">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;">'
-        +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">이달 예산</div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('home.budget_this')+'</div>'
         +'<div style="display:flex;align-items:baseline;gap:6px;">'
         +'<span style="font-size:12px;font-weight:700;color:'+(remain>=0?'var(--green)':'var(--red)')+';">'
-        +(remain>=0?'¥'+remain.toLocaleString()+' 남음':'¥'+Math.abs(remain).toLocaleString()+' 초과')
+        +(remain>=0?'¥'+remain.toLocaleString()+' '+t('home.budget_remain'):'¥'+Math.abs(remain).toLocaleString()+' '+t('home.budget_over'))
         +'</span>'
         +'<span style="font-size:18px;font-weight:800;color:'+(isWarn?'var(--orange)':'var(--green)')+';letter-spacing:-1px;">'+pct+'%</span>'
         +'</div></div>'
         +'<div class="budget-track"><div class="budget-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+(isWarn?'#F07340,#E8894A':'var(--green-dark),var(--green)')+');"></div></div>'
         +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-weight:600;">'
-        +'<span>¥'+totalAmt.toLocaleString()+' 지출</span><span>목표 ¥'+budget.toLocaleString()+'</span>'
+        +'<span>¥'+totalAmt.toLocaleString()+' '+t('home.budget_spent')+'</span><span>'+t('home.budget_goal')+' ¥'+budget.toLocaleString()+'</span>'
         +'</div></div>';
     }
   }
@@ -9447,6 +9447,7 @@ var I18N = {
     'home.no_record':'記録なし','home.no_receipts_yet':'まだレシートがありません<br>📷 カメラボタンでスキャンしてみよう！',
     'home.budget_cta':'今月の予算を設定','home.budget_cta_sub':'目標額を設定して達成率を確認',
     'home.saving_cta':'節約チャンス発見！','home.saving_cta_sub':'3商品をスーパーを変えるだけで月¥1,320節約可能',
+    'home.budget_this':'今月の予算','home.budget_remain':'残り','home.budget_over':'超過','home.budget_spent':'支出','home.budget_goal':'目標',
     // 카테고리 라벨 (영수증 기록)
     'cat.all':'すべて','cat.food':'食料品','cat.eat':'外食','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
@@ -9650,6 +9651,7 @@ var I18N = {
     'home.no_record':'기록 없음','home.no_receipts_yet':'아직 영수증이 없어요<br>📷 카메라 버튼으로 스캔해보세요!',
     'home.budget_cta':'이달 예산 설정하기','home.budget_cta_sub':'목표 금액을 설정해 달성률을 확인해요',
     'home.saving_cta':'절약 기회 발견!','home.saving_cta_sub':'3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능',
+    'home.budget_this':'이달 예산','home.budget_remain':'남음','home.budget_over':'초과','home.budget_spent':'지출','home.budget_goal':'목표',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
@@ -9837,6 +9839,7 @@ var I18N = {
     'home.no_record':'No record','home.no_receipts_yet':'No receipts yet<br>📷 Tap the camera button to scan!',
     'home.budget_cta':'Set this month’s budget','home.budget_cta_sub':'Set a goal to track your progress',
     'home.saving_cta':'Savings found!','home.saving_cta_sub':'Switch stores for 3 items, save ¥1,320/mo',
+    'home.budget_this':"This month's budget",'home.budget_remain':'left','home.budget_over':'over','home.budget_spent':'spent','home.budget_goal':'Goal',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
@@ -10024,6 +10027,7 @@ var I18N = {
     'home.no_record':'暂无记录','home.no_receipts_yet':'还没有票据<br>📷 点击相机按钮扫描吧！',
     'home.budget_cta':'设置本月预算','home.budget_cta_sub':'设定目标查看达成率',
     'home.saving_cta':'发现省钱机会！','home.saving_cta_sub':'3件商品换家超市，每月省¥1,320',
+    'home.budget_this':'本月预算','home.budget_remain':'剩余','home.budget_over':'超出','home.budget_spent':'支出','home.budget_goal':'目标',
     'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
@@ -16707,7 +16711,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v149';
+window.__APP_VERSION__ = 'v150';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
