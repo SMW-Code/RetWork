@@ -6929,8 +6929,8 @@ async function analyzeMultiReceipt() {
       if (statusEl) {
         statusEl.innerHTML = '<div class="runner">🏃</div>'
           + '<div style="font-size:13px;color:var(--text-2);font-weight:600;">'
-          + (i+1) + '/' + multiPages.length + '장 읽고 있어요<br>'
-          + '<span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div>';
+          + t('ocr.reading_page', {i: i+1, n: multiPages.length}) + '<br>'
+          + '<span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div>';
       }
 
       // Vision API로 텍스트 추출 (백엔드 /api/vision 경유)
@@ -6949,8 +6949,8 @@ async function analyzeMultiReceipt() {
     if (statusEl2) {
       statusEl2.innerHTML = '<div class="runner">🏃</div>'
         + '<div style="font-size:13px;color:var(--text-2);font-weight:600;">'
-        + '품목을 정리하고 있어요<br>'
-        + '<span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div>';
+        + t('ocr.organizing')+'<br>'
+        + '<span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div>';
     }
 
     // ── GPT 파싱 (백엔드 /api/gpt 경유) ──
@@ -7111,9 +7111,9 @@ function parseWithGPTMulti(combinedText, pageCount) {
 function showOcrLoadingMulti(previewSrc, pageCount) {
   document.getElementById('ocr-content').innerHTML =
     '<div class="sheet-handle"></div>'
-    +'<div class="sheet-title">📜 분할 영수증 분석 중...</div>'
-    +'<img src="'+previewSrc+'" class="ocr-preview" alt="영수증">'
-    +'<div class="ocr-status"><div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">영수증을 확인하고 있어요<br><span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div></div>'
+    +'<div class="sheet-title">'+t('ocr.title_split')+'</div>'
+    +'<img src="'+previewSrc+'" class="ocr-preview" alt="receipt">'
+    +'<div class="ocr-status"><div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">'+t('ocr.checking')+'<br><span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div></div>'
     + _ocrLoadingAdHtml();
   openOv('ov-ocr');
 }
@@ -7123,21 +7123,21 @@ function _ocrLoadingAdHtml(){
   return '<div style="margin:14px 0 4px;border:.5px solid var(--border);border-radius:14px;overflow:hidden;background:#0d0d22;box-shadow:0 3px 12px rgba(0,0,0,.08);">'
     + '<div style="background:var(--gold);color:#fff;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;">'
       + '<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;">📢</span><span style="font-size:10px;font-weight:800;letter-spacing:.4px;">SPONSORED</span></div>'
-      + '<span style="font-size:9px;font-weight:700;opacity:.85;">分析中... 잠시만</span>'
+      + '<span style="font-size:9px;font-weight:700;opacity:.85;">'+t('ocr.ad_badge')+'</span>'
     + '</div>'
     + '<div style="position:relative;width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;">'
       + '<div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.16) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>'
       + '<div style="position:relative;z-index:2;text-align:center;color:#fff;padding:0 16px;">'
         + '<div style="font-size:36px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>'
-        + '<div style="font-size:12px;font-weight:800;letter-spacing:.5px;margin-top:6px;">広告 自動再生中</div>'
+        + '<div style="font-size:12px;font-weight:800;letter-spacing:.5px;margin-top:6px;">'+t('ad.autoplay')+'</div>'
       + '</div>'
       + '<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.18);">'
         + '<div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>'
       + '</div>'
     + '</div>'
     + '<div style="padding:6px 12px;background:var(--bg-2);display:flex;align-items:center;justify-content:space-between;">'
-      + '<span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>'
-      + '<span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고</span>'
+      + '<span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 '+t('ad.label')+'</span>'
+      + '<span style="font-size:9px;color:var(--text-3);font-weight:500;">'+t('ad.adsense_note')+'</span>'
     + '</div>'
     + '</div>';
 }
@@ -7390,9 +7390,9 @@ async function handleImageFile(input) {
 function showOcrLoading(previewSrc) {
   document.getElementById('ocr-content').innerHTML =
     '<div class="sheet-handle"></div>'
-    +'<div class="sheet-title">📷 영수증 분석 중...</div>'
-    +'<img src="'+previewSrc+'" class="ocr-preview" alt="영수증">'
-    +'<div class="ocr-status"><div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">영수증을 확인하고 있어요<br><span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div></div>'
+    +'<div class="sheet-title">'+t('ocr.title')+'</div>'
+    +'<img src="'+previewSrc+'" class="ocr-preview" alt="receipt">'
+    +'<div class="ocr-status"><div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">'+t('ocr.checking')+'<br><span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div></div>'
     + _ocrLoadingAdHtml();
   openOv('ov-ocr');
 }
@@ -7427,7 +7427,7 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
       // 항상 하이브리드 모드 (백엔드 /api/gpt 경유)
       var statusEl = document.querySelector('.ocr-status');
       if (statusEl) {
-        statusEl.innerHTML = '<div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">품목을 정리하고 있어요<br><span style="font-size:11px;color:var(--text-3);">잠시만 기다려주세요</span></div>';
+        statusEl.innerHTML = '<div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">'+t('ocr.organizing')+'<br><span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div>';
       }
       showOcrDebugHybrid(previewSrc, rawText, base64Image);
     })
@@ -9370,6 +9370,7 @@ var I18N = {
     'ad.publish_btn':'広告を見て保存＋チリモード公開','ad.install':'インストール',
     'ad.premium_title':'✨ プレミアムで広告なし','ad.premium_sub':'¥320/月 · スキャン無制限','ad.detail':'詳細',
     'ad.reward_get':'広告を見てチリ獲得','ad.loading':'広告を読み込み中...',
+    'ad.autoplay':'広告 自動再生中','ad.label':'広告','ad.adsense_note':'AdSense承認後に実広告',
     'plan.user':'{name}さん','sp.free_plan':'無料プラン',
     // 가게/맵
     'map.search':'店舗を検索...','map.filter':'フィルター','map.ranking':'ランキング','map.private':'プライベート','map.public':'公開',
@@ -9504,6 +9505,7 @@ var I18N = {
     'ocr.qty':'数量','ocr.subtotal':'小計','ocr.tax':'税','ocr.total':'合計',
     'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
     'ocr.store_unknown':'不明','ocr.save_budget':'💾 家計簿に保存','ocr.item_unit':'品目',
+    'ocr.title':'📷 レシート解析中...','ocr.title_split':'📜 分割レシート解析中...','ocr.checking':'レシートを確認しています','ocr.organizing':'商品を整理しています','ocr.wait':'しばらくお待ちください','ocr.reading_page':'{i}/{n}枚目を読み取り中','ocr.ad_badge':'分析中...',
     // 편집 모달
     'edit.add_item':'+ 品目追加','edit.total':'合計','edit.total_amount':'合計金額 (¥)','edit.qty':'数量',
     // 편집/수동 모달
@@ -9619,6 +9621,7 @@ var I18N = {
     'ad.publish_btn':'광고 보고 가계부저장 + 치리모드 공개','ad.install':'설치하기',
     'ad.premium_title':'✨ 프리미엄 구독시 광고 없이 사용','ad.premium_sub':'¥320 / 월 · 무제한 스캔','ad.detail':'자세히',
     'ad.reward_get':'광고 보고 치리 받기','ad.loading':'광고 불러오는 중...',
+    'ad.autoplay':'광고 자동 재생 중','ad.label':'광고','ad.adsense_note':'AdSense 승인 후 실광고',
     'plan.user':'{name}님','sp.free_plan':'무료 플랜',
     'map.search':'가게 검색...','map.filter':'필터','map.ranking':'랭킹','map.private':'프라이빗','map.public':'공개',
     'map.private.toast':'🔒 프라이빗 모드','map.public.toast':'🌐 공개 모드',
@@ -9717,6 +9720,7 @@ var I18N = {
     'ocr.qty':'수량','ocr.subtotal':'소계','ocr.tax':'세금','ocr.total':'합계',
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
     'ocr.store_unknown':'불명','ocr.save_budget':'💾 가계부에 저장하기','ocr.item_unit':'품목',
+    'ocr.title':'📷 영수증 분석 중...','ocr.title_split':'📜 분할 영수증 분석 중...','ocr.checking':'영수증을 확인하고 있어요','ocr.organizing':'품목을 정리하고 있어요','ocr.wait':'잠시만 기다려주세요','ocr.reading_page':'{i}/{n}장 읽고 있어요','ocr.ad_badge':'분석 중...',
     'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
     'edit.title2':'✏️ 영수증 수정','edit.store_name':'가게명','edit.date_label':'날짜','edit.category_label':'카테고리',
     'edit.pay_method':'결제수단','edit.items_label':'품목','edit.save':'💾 수정 저장',
@@ -9822,6 +9826,7 @@ var I18N = {
     'ad.publish_btn':'Watch ad: save + publish to Chiri','ad.install':'Install',
     'ad.premium_title':'✨ Go Premium, no ads','ad.premium_sub':'¥320/mo · unlimited scans','ad.detail':'Details',
     'ad.reward_get':'Watch ad & earn chiri','ad.loading':'Loading ad...',
+    'ad.autoplay':'Ad auto-playing','ad.label':'Ad','ad.adsense_note':'Real ads after AdSense approval',
     'plan.user':'{name}','sp.free_plan':'Free plan',
     'map.search':'Search store...','map.filter':'Filter','map.ranking':'Ranking','map.private':'Private','map.public':'Public',
     'map.private.toast':'🔒 Private mode','map.public.toast':'🌐 Public mode',
@@ -9920,6 +9925,7 @@ var I18N = {
     'ocr.qty':'Qty','ocr.subtotal':'Subtotal','ocr.tax':'Tax','ocr.total':'Total',
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
     'ocr.store_unknown':'Unknown','ocr.save_budget':'💾 Save to Budget','ocr.item_unit':'items',
+    'ocr.title':'📷 Analyzing receipt...','ocr.title_split':'📜 Analyzing split receipt...','ocr.checking':'Reading your receipt','ocr.organizing':'Organizing items','ocr.wait':'Please wait a moment','ocr.reading_page':'Reading page {i}/{n}','ocr.ad_badge':'Analyzing...',
     'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
     'edit.title2':'✏️ Edit Receipt','edit.store_name':'Store','edit.date_label':'Date','edit.category_label':'Category',
     'edit.pay_method':'Payment','edit.items_label':'Items','edit.save':'💾 Save Changes',
@@ -10025,6 +10031,7 @@ var I18N = {
     'ad.publish_btn':'看广告：保存 + 公开到Chiri','ad.install':'安装',
     'ad.premium_title':'✨ 升级高级版免广告','ad.premium_sub':'¥320/月 · 无限扫描','ad.detail':'详情',
     'ad.reward_get':'看广告领积分','ad.loading':'广告加载中...',
+    'ad.autoplay':'广告自动播放中','ad.label':'广告','ad.adsense_note':'AdSense 审核通过后展示真实广告',
     'plan.user':'{name}','sp.free_plan':'免费版',
     'map.search':'搜索店铺...','map.filter':'筛选','map.ranking':'排行','map.private':'私密','map.public':'公开',
     'map.private.toast':'🔒 私密模式','map.public.toast':'🌐 公开模式',
@@ -10123,6 +10130,7 @@ var I18N = {
     'ocr.qty':'数量','ocr.subtotal':'小计','ocr.tax':'税','ocr.total':'合计',
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
     'ocr.store_unknown':'未知','ocr.save_budget':'💾 保存到账本','ocr.item_unit':'件',
+    'ocr.title':'📷 正在分析票据...','ocr.title_split':'📜 正在分析分割票据...','ocr.checking':'正在确认票据','ocr.organizing':'正在整理商品','ocr.wait':'请稍候','ocr.reading_page':'正在读取第 {i}/{n} 张','ocr.ad_badge':'分析中...',
     'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
     'edit.title2':'✏️ 编辑票据','edit.store_name':'店名','edit.date_label':'日期','edit.category_label':'类别',
     'edit.pay_method':'付款方式','edit.items_label':'商品','edit.save':'💾 保存修改',
@@ -16797,7 +16805,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v157';
+window.__APP_VERSION__ = 'v158';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
