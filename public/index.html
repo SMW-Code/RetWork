@@ -6235,7 +6235,7 @@ function buildCatDetailHtml(cat) {
       +'</div>'
       +'<div style="text-align:right;flex-shrink:0;">'
       +'<div style="font-size:13px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
-      +'<div style="font-size:9px;color:var(--green);font-weight:700;margin-top:2px;">상세 보기 ›</div>'
+      +'<div style="font-size:9px;color:var(--green);font-weight:700;margin-top:2px;">'+t('rep.detail_view')+'</div>'
       +'</div>'
       +'</div>';
   });
@@ -9565,7 +9565,7 @@ var I18N = {
     'rep.pay_breakdown':'💳 支払い方法別支出','rep.unit_cnt':'件','rep.book_title':'{y}年 {m}月 家計簿','rep.week_n':'第{n}週',
     'hist.title':'履歴','hist.month':'{y}年 {m}月','hist.total':'合計 ¥{amt} ({n}件)','rep.mon_short':'{m}月','cat.cnt_unit':'件','mdet.count_n':'{n}件','mdet.detail_title':'{y}年 {m}月 支出詳細',
     'pay.label.cash':'現金','pay.label.credit':'クレジットカード','pay.label.ic':'交通系IC','pay.label.qr':'QR決済','pay.label.debit':'デビットカード',
-    'rank.nth':'{n}位','rep.weekdays':'月,火,水,木,金,土,日','rep.no_data':'データがありません',
+    'rank.nth':'{n}位','rep.weekdays':'月,火,水,木,金,土,日','rep.no_data':'データがありません','rep.detail_view':'詳細を見る ›',
     'radar.empty_title':'データがまだありません','radar.empty_sub':'レシートを撮影すると自動で追跡されます',
     // 달력 잔여
     'cal.see_detail':'詳しく見る','cal.receipt_count':'レシート数','cal.daily_avg':'1日平均','common.total':'合計',
@@ -9797,7 +9797,7 @@ var I18N = {
     'rep.pay_breakdown':'💳 결제수단별 지출','rep.unit_cnt':'건','rep.book_title':'{y}年 {m}月 가계부','rep.week_n':'{n}주',
     'hist.title':'내역','hist.month':'{y}年 {m}月','hist.total':'총 ¥{amt} ({n}건)','rep.mon_short':'{m}月','cat.cnt_unit':'건','mdet.count_n':'{n}건','mdet.detail_title':'{y}年 {m}月 지출 상세',
     'pay.label.cash':'현금','pay.label.credit':'신용카드','pay.label.ic':'IC카드','pay.label.qr':'QR결제','pay.label.debit':'체크카드',
-    'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요',
+    'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요','rep.detail_view':'상세 보기 ›',
     'radar.empty_title':'아직 데이터가 없어요','radar.empty_sub':'영수증을 촬영하면 자동으로 추적됩니다',
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
@@ -10011,7 +10011,7 @@ var I18N = {
     'rep.pay_breakdown':'💳 Spend by payment','rep.unit_cnt':'','rep.book_title':'{y}/{m} Budget','rep.week_n':'W{n}',
     'hist.title':'History','hist.month':'{mon} {y}','hist.total':'Total ¥{amt} ({n})','rep.mon_short':'{mon}','cat.cnt_unit':'','mdet.count_n':'{n} items','mdet.detail_title':'{mon} {y} Spending',
     'pay.label.cash':'Cash','pay.label.credit':'Credit','pay.label.ic':'IC Card','pay.label.qr':'QR Pay','pay.label.debit':'Debit',
-    'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data',
+    'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data','rep.detail_view':'View detail ›',
     'radar.empty_title':'No data yet','radar.empty_sub':'Tracked automatically when you scan receipts',
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
@@ -10225,7 +10225,7 @@ var I18N = {
     'rep.pay_breakdown':'💳 按付款方式支出','rep.unit_cnt':'笔','rep.book_title':'{y}年 {m}月 账本','rep.week_n':'第{n}周',
     'hist.title':'记录','hist.month':'{y}年 {m}月','hist.total':'共 ¥{amt} ({n}笔)','rep.mon_short':'{m}月','cat.cnt_unit':'笔','mdet.count_n':'{n}笔','mdet.detail_title':'{y}年 {m}月 支出明细',
     'pay.label.cash':'现金','pay.label.credit':'信用卡','pay.label.ic':'交通卡','pay.label.qr':'QR支付','pay.label.debit':'借记卡',
-    'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据',
+    'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据','rep.detail_view':'查看详情 ›',
     'radar.empty_title':'还没有数据','radar.empty_sub':'拍摄票据后将自动追踪',
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
@@ -17001,7 +17001,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v169';
+window.__APP_VERSION__ = 'v170';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
