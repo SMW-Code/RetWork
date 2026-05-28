@@ -979,10 +979,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div id="hist-filter-bar" style="padding:10px 16px 8px;flex-shrink:0;display:flex;align-items:center;gap:8px;">
       <button id="cat-wheel-btn" onclick="toggleCatWheel()"
         style="display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:20px;border:1.5px solid var(--green);background:var(--green-light);color:var(--green);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s;">
-        <span id="cat-wheel-label">전체</span>
+        <span id="cat-wheel-label" data-i18n="cat.all">すべて</span>
         <span id="cat-wheel-arrow" style="font-size:10px;transition:transform .2s;">▼</span>
       </button>
-      <div style="font-size:11px;color:var(--text-3);" id="cat-wheel-hint">카테고리 선택</div>
+      <div style="font-size:11px;color:var(--text-3);" id="cat-wheel-hint" data-i18n="catwheel.hint">カテゴリ選択</div>
     </div>
 
     <!-- 카테고리 드롭다운 -->
@@ -5766,7 +5766,7 @@ function _selectCat(cat) {
   _currentCatFilter = cat;
   var isAll  = cat === 'all';
   var icon   = isAll ? '' : CAT_ICON[cat] + ' ';
-  var label  = isAll ? '전체' : CAT_LABEL[cat];
+  var label  = isAll ? t('cat.all') : CAT_LABEL[cat];
   var btnEl  = document.getElementById('cat-wheel-btn');
   document.getElementById('cat-wheel-label').textContent = icon + label;
   document.getElementById('cat-wheel-hint').textContent  = isAll ? t('catwheel.hint') : t('catwheel.filtering');
@@ -16711,7 +16711,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v150';
+window.__APP_VERSION__ = 'v151';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
