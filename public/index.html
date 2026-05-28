@@ -3543,32 +3543,31 @@ function _ctRenderAttendance(){
   var curSlot = _ctAttSlot();
   var curSlotDone = todaySlots.indexOf(curSlot) >= 0;
   var nextMs = _ctAttNextSlotMs();
-  var slotLabels = ['00-08','08-16','16-24'];
   var canCheck = !curSlotDone;
   var btnLabel = '';
   if (todayCount >= 3) {
-    btnLabel = '✅ 本日完了';
+    btnLabel = t('att.done_today');
   } else if (curSlotDone) {
-    btnLabel = '次のスロットまで ' + _ctAttFmtMs(nextMs);
+    btnLabel = t('att.next_until', {t: _ctAttFmtMs(nextMs)});
   } else {
-    btnLabel = (todayCount+1) + '回目 出席する → +5チリ';
+    btnLabel = t('att.checkin_n', {n: todayCount+1});
   }
 
   var h = '';
   // ─── 카드1: 오늘 상태 ───
   h += '<div class="att-card">'
-    + '<div class="att-card-title">📅 今日の出席</div>'
+    + '<div class="att-card-title">'+t('att.today')+'</div>'
     + '<div class="att-stat-row">'
-      + '<span class="att-stat-lbl">今日の出席</span>'
-      + '<span class="att-stat-val">'+todayCount+' / 3 回</span>'
+      + '<span class="att-stat-lbl">'+t('att.today_count')+'</span>'
+      + '<span class="att-stat-val">'+t('att.times',{n:todayCount})+'</span>'
     + '</div>'
     + '<div class="att-stat-row">'
-      + '<span class="att-stat-lbl">連続出席</span>'
-      + '<span class="att-stat-val" style="color:var(--gold-dark);">🔥 '+streak+' 日</span>'
+      + '<span class="att-stat-lbl">'+t('att.streak')+'</span>'
+      + '<span class="att-stat-val" style="color:var(--gold-dark);">'+t('att.days',{n:streak})+'</span>'
     + '</div>'
     + '<div class="att-stat-row">'
-      + '<span class="att-stat-lbl">次のスロット</span>'
-      + '<span class="att-stat-val" style="font-size:12px;">' + (todayCount>=3 ? '明日 00:00' : _ctAttFmtMs(nextMs)) + '</span>'
+      + '<span class="att-stat-lbl">'+t('att.next_slot')+'</span>'
+      + '<span class="att-stat-val" style="font-size:12px;">' + (todayCount>=3 ? t('att.tomorrow') : _ctAttFmtMs(nextMs)) + '</span>'
     + '</div>'
     // 슬롯 진행 바
     + '<div class="att-slot-bar">';
@@ -3577,9 +3576,9 @@ function _ctRenderAttendance(){
   }
   h += '</div>'
     + '<div class="att-slot-labels">'
-      + '<span>'+slotLabels[0]+' (1回)</span>'
-      + '<span>'+slotLabels[1]+' (2回)</span>'
-      + '<span>'+slotLabels[2]+' (3回)</span>'
+      + '<span>'+t('att.slot1')+'</span>'
+      + '<span>'+t('att.slot2')+'</span>'
+      + '<span>'+t('att.slot3')+'</span>'
     + '</div>'
     // 출석하기 버튼
     + '<button class="att-go-btn" onclick="ctDoCheckIn()" '+(canCheck && todayCount<3 ? '' : 'disabled')+'>'+btnLabel+'</button>'
@@ -3606,8 +3605,8 @@ function _ctRenderAttendance(){
     + '</div>'
     // 하단 캡션
     + '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-2);">'
-      + '<span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>'
-      + '<span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>'
+      + '<span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 '+t('att.ad')+'</span>'
+      + '<span style="font-size:9px;color:var(--text-3);font-weight:500;">'+t('att.ad_note')+'</span>'
     + '</div>'
     + '</div>';
 
@@ -3621,7 +3620,7 @@ function _ctRenderAttendance(){
   var days = data.days || {};
   var dowLbl = ['日','月','火','水','木','金','土'];
   h += '<div class="att-card">'
-    + '<div class="att-card-title">🗓 '+(year)+'年 '+(month+1)+'月</div>'
+    + '<div class="att-card-title">'+t('att.cal_title',{y:year,m:month+1})+'</div>'
     + '<div class="att-cal-grid">';
   // 요일 헤더
   dowLbl.forEach(function(d){ h += '<div class="att-cal-dow">'+d+'</div>'; });
@@ -3641,7 +3640,7 @@ function _ctRenderAttendance(){
 
   // ─── 카드4: 연속 보상 ───
   h += '<div class="att-card">'
-    + '<div class="att-card-title">🎁 連続出席ボーナス</div>';
+    + '<div class="att-card-title">'+t('att.bonus')+'</div>';
   ATT_STREAK_REWARDS.forEach(function(r){
     var achieved = streak >= r.days;
     var current = !achieved && (ATT_STREAK_REWARDS.findIndex(function(x){return streak < x.days;}) === ATT_STREAK_REWARDS.indexOf(r));
@@ -3649,7 +3648,7 @@ function _ctRenderAttendance(){
     if (achieved) cls += ' achieved';
     else if (current) cls += ' current';
     h += '<div class="'+cls+'">'
-      + '<span class="att-rwd-days">'+r.days+'日連続</span>'
+      + '<span class="att-rwd-days">'+t('att.streak_days',{n:r.days})+'</span>'
       + '<span class="att-rwd-coin">+'+r.coins+'チリ</span>'
     + '</div>';
   });
@@ -9431,6 +9430,13 @@ var I18N = {
     'prof.nickname':'ニックネーム','prof.nickname_ph':'ニックネーム入力（最大12文字）',
     'prof.avatar':'アバター選択','prof.photo_upload':'写真をアップロード','prof.photo_sub':'ギャラリーから画像を選択',
     'prof.or_emoji':'または絵文字を選択','prof.save':'✅ 保存','prof.mode_switch':'モード切替',
+    // 출석 화면
+    'att.today':'📅 今日の出席','att.today_count':'今日の出席','att.streak':'連続出席','att.next_slot':'次のスロット',
+    'att.times':'{n} / 3 回','att.days':'🔥 {n} 日','att.tomorrow':'明日 00:00',
+    'att.done_today':'✅ 本日完了','att.next_until':'次のスロットまで {t}','att.checkin_n':'{n}回目 出席する → +5チリ',
+    'att.bonus':'🎁 連続出席ボーナス','att.streak_days':'{n}日連続','att.ad':'広告','att.ad_note':'AdSense承認後に実広告を表示',
+    'att.slot1':'00-08 (1回)','att.slot2':'08-16 (2回)','att.slot3':'16-24 (3回)',
+    'att.cal_title':'🗓 {y}年 {m}月',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9597,6 +9603,12 @@ var I18N = {
     'prof.nickname':'닉네임','prof.nickname_ph':'닉네임 입력 (최대 12자)',
     'prof.avatar':'아바타 선택','prof.photo_upload':'사진 업로드','prof.photo_sub':'갤러리에서 이미지 선택',
     'prof.or_emoji':'또는 이모지 선택','prof.save':'✅ 저장','prof.mode_switch':'모드 전환',
+    'att.today':'📅 오늘의 출석','att.today_count':'오늘의 출석','att.streak':'연속 출석','att.next_slot':'다음 슬롯',
+    'att.times':'{n} / 3 회','att.days':'🔥 {n} 일','att.tomorrow':'내일 00:00',
+    'att.done_today':'✅ 오늘 완료','att.next_until':'다음 슬롯까지 {t}','att.checkin_n':'{n}회차 출석하기 → +5치리',
+    'att.bonus':'🎁 연속 출석 보너스','att.streak_days':'{n}일 연속','att.ad':'광고','att.ad_note':'AdSense 승인 후 실광고 표시',
+    'att.slot1':'00-08 (1회)','att.slot2':'08-16 (2회)','att.slot3':'16-24 (3회)',
+    'att.cal_title':'🗓 {y}년 {m}월',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9762,6 +9774,12 @@ var I18N = {
     'prof.nickname':'Nickname','prof.nickname_ph':'Enter nickname (max 12)',
     'prof.avatar':'Choose Avatar','prof.photo_upload':'Upload Photo','prof.photo_sub':'Pick image from gallery',
     'prof.or_emoji':'Or pick an emoji','prof.save':'✅ Save','prof.mode_switch':'Switch Mode',
+    'att.today':'📅 Today','att.today_count':"Today's check-ins",'att.streak':'Streak','att.next_slot':'Next slot',
+    'att.times':'{n} / 3','att.days':'🔥 {n}d','att.tomorrow':'Tomorrow 00:00',
+    'att.done_today':'✅ Done today','att.next_until':'Next slot in {t}','att.checkin_n':'Check-in #{n} → +5 chiri',
+    'att.bonus':'🎁 Streak Bonus','att.streak_days':'{n}-day streak','att.ad':'Ad','att.ad_note':'Real ads after AdSense approval',
+    'att.slot1':'00-08 (1st)','att.slot2':'08-16 (2nd)','att.slot3':'16-24 (3rd)',
+    'att.cal_title':'🗓 {y}/{m}',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9927,6 +9945,12 @@ var I18N = {
     'prof.nickname':'昵称','prof.nickname_ph':'输入昵称（最多12字）',
     'prof.avatar':'选择头像','prof.photo_upload':'上传照片','prof.photo_sub':'从相册选择图片',
     'prof.or_emoji':'或选择表情','prof.save':'✅ 保存','prof.mode_switch':'切换模式',
+    'att.today':'📅 今日签到','att.today_count':'今日签到','att.streak':'连续签到','att.next_slot':'下个时段',
+    'att.times':'{n} / 3 次','att.days':'🔥 {n} 天','att.tomorrow':'明天 00:00',
+    'att.done_today':'✅ 今日完成','att.next_until':'距下个时段 {t}','att.checkin_n':'第{n}次签到 → +5积分',
+    'att.bonus':'🎁 连续签到奖励','att.streak_days':'连续{n}天','att.ad':'广告','att.ad_note':'AdSense审核通过后显示真实广告',
+    'att.slot1':'00-08 (第1次)','att.slot2':'08-16 (第2次)','att.slot3':'16-24 (第3次)',
+    'att.cal_title':'🗓 {y}年 {m}月',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -16285,7 +16309,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v139';
+window.__APP_VERSION__ = 'v140';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
