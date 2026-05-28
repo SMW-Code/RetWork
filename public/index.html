@@ -1094,7 +1094,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div><span data-i18n="cat.life">生活雑貨</span></div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div><span data-i18n="cat.med">医療・健康</span></div>
       </div>
-      <div class="cal-dow">
+      <div class="cal-dow" id="cal-dow">
         <div class="dow" style="color:var(--red);">日</div><div class="dow">月</div><div class="dow">火</div><div class="dow">水</div><div class="dow">木</div><div class="dow">金</div><div class="dow" style="color:var(--blue);">土</div>
       </div>
       <div class="cal-days" id="cal-days"></div>
@@ -6660,7 +6660,16 @@ function buildCalData() {
 }
 function renderCalendar(y,m) {
   calYear=y; calMonth=m;
-  document.getElementById('cal-label').textContent=y+'年 '+m+'月';
+  document.getElementById('cal-label').textContent=t('hist.month',{y:y,m:m,mon:_monName(m)});
+  // 요일 헤더 — 현재 언어로 (일=빨강, 토=파랑)
+  var dowEl = document.getElementById('cal-dow');
+  if (dowEl) {
+    var dows = t('home.weekdays_sun').split(','); // 0=일 ~ 6=토
+    dowEl.innerHTML = dows.map(function(name, i){
+      var color = i===0 ? 'color:var(--red);' : (i===6 ? 'color:var(--blue);' : '');
+      return '<div class="dow" style="'+color+'">'+name+'</div>';
+    }).join('');
+  }
   var calMap = buildCalData();
   var first=new Date(y,m-1,1).getDay();
   var total=new Date(y,m,0).getDate();
@@ -6668,7 +6677,7 @@ function renderCalendar(y,m) {
   var monthTotal=0; var monthCnt=0;
   Object.values(monthData).forEach(function(arr){ arr.forEach(function(r){ monthTotal+=r.total; monthCnt++; }); });
   document.getElementById('cal-month-total').textContent='¥ '+monthTotal.toLocaleString();
-  document.getElementById('cal-month-cnt').textContent=monthCnt+'건';
+  document.getElementById('cal-month-cnt').textContent=monthCnt+t('rep.unit_cnt');
   document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/total).toLocaleString():0);
   var html=''; var today=new Date();
   for(var i=0;i<first;i++) html+='<div class="cal-day empty">0</div>';
@@ -17001,7 +17010,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v170';
+window.__APP_VERSION__ = 'v171';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
