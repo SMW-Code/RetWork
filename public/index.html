@@ -554,6 +554,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 #ov-admin-item-form,
 #ov-admin-ann,
 #ov-admin-bwords,
+#ov-admin-i18n,
 #ov-admin-banned-users,
 #ov-admin-reports,
 #ov-admin-edit-store,
@@ -2255,6 +2256,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div style="font-size:12px;font-weight:800;color:var(--text-1);">단가·요율</div>
           <div style="font-size:10px;color:var(--text-3);margin-top:2px;">참고표·조정</div>
         </div>
+        <div onclick="openAdminI18n()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
+          <div style="font-size:28px;margin-bottom:4px;">🌐</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text-1);">언어 시트</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">번역 편집·즉시 반영</div>
+        </div>
       </div>
 
       <div style="margin-top:14px;padding:10px;background:var(--bg-2);border-radius:10px;font-size:11px;color:var(--text-3);text-align:center;">
@@ -2719,6 +2725,45 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 벤워드 리스트 -->
       <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📋 등록된 벤워드</div>
       <div id="adm-bw-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 언어 시트 (i18n CMS) 모달 ══ -->
+<div class="overlay" id="ov-admin-i18n" style="z-index:965;" onclick="if(event.target===this)closeOv('ov-admin-i18n')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:680px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🌐 언어 시트</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">번역 텍스트 편집 · 저장 즉시 모든 사용자에 반영</div>
+        </div>
+        <div onclick="closeOv('ov-admin-i18n')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+
+      <!-- 검색 + 새 키 추가 -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input type="text" id="adm-i18n-search" placeholder="🔍 키 또는 값 검색 (예: home.recent, 영수증)"
+          oninput="_loadAdminI18n()"
+          style="flex:1;padding:9px 12px;border:1px solid var(--border-mid);border-radius:10px;font-size:12px;font-family:var(--font);outline:none;background:var(--surface);color:var(--text-1);">
+        <select id="adm-i18n-prefix" onchange="_loadAdminI18n()" style="padding:9px;border:1px solid var(--border-mid);border-radius:10px;font-size:11px;font-family:var(--font);background:var(--surface);color:var(--text-2);">
+          <option value="">전체 prefix</option>
+        </select>
+      </div>
+
+      <!-- 통계 -->
+      <div id="adm-i18n-stats" style="font-size:11px;color:var(--text-3);margin-bottom:10px;padding:8px 12px;background:var(--bg-2);border-radius:8px;"></div>
+
+      <!-- 키 목록 -->
+      <div id="adm-i18n-list" style="display:flex;flex-direction:column;gap:8px;max-height:60vh;overflow-y:auto;"></div>
+
+      <!-- 푸터: 도움말 -->
+      <div style="margin-top:14px;padding:10px;background:var(--bg-2);border-radius:10px;font-size:10px;color:var(--text-3);line-height:1.6;">
+        💡 빈 칸으로 두면 정적 fallback (코드 내장값)이 사용됩니다.<br>
+        💡 저장 즉시 Supabase Realtime 으로 모든 접속자에 반영됩니다.<br>
+        💡 `{name}` 같은 placeholder 는 보존하세요 (예: 'Hello {name}').
+      </div>
     </div>
   </div>
 </div>
@@ -9831,10 +9876,82 @@ function applyLang(lang){
   var sel = document.getElementById('lang-select');
   if (sel) sel.value = lang;
 }
+/* ══════════════════════════════
+   i18n CMS — Supabase 어드민 편집 가능한 번역 override 레이어
+   - 정적 I18N 위에 덮어쓰기. 정적 fallback 안전망.
+   - localStorage 캐시로 즉시 표시, 백그라운드에서 fresh fetch.
+   - Realtime 구독으로 어드민 편집이 모든 사용자에 즉시 반영.
+══════════════════════════════ */
+var I18N_CMS_CACHE_KEY = 'i18n_cms_v1';
+
+// localStorage 캐시 → I18N 머지 (앱 시작 즉시, 네트워크 전)
+function _i18nApplyCache(){
+  try {
+    var raw = localStorage.getItem(I18N_CMS_CACHE_KEY);
+    if (!raw) return false;
+    var rows = JSON.parse(raw);
+    if (!Array.isArray(rows)) return false;
+    rows.forEach(function(r){
+      if (I18N[r.lang]) I18N[r.lang][r.key] = r.value;
+    });
+    return true;
+  } catch(e) { return false; }
+}
+
+// Supabase에서 최신 번역 fetch → I18N 머지 + 캐시 갱신
+async function _i18nFetchAndMerge(){
+  if (!_sb) return;
+  try {
+    var res = await _sb.from('i18n_translations').select('key,lang,value');
+    if (res.error || !res.data) return;
+    res.data.forEach(function(r){
+      if (I18N[r.lang]) I18N[r.lang][r.key] = r.value;
+    });
+    localStorage.setItem(I18N_CMS_CACHE_KEY, JSON.stringify(res.data));
+    // 갱신 후 화면 재적용
+    if (typeof applyLang === 'function') applyLang(_currentLang);
+  } catch(e) { console.warn('[i18n cms fetch]', e && e.message); }
+}
+
+// Realtime 구독 — 어드민이 한 번역을 바꾸면 즉시 모든 사용자에 반영
+function _i18nSubscribeRealtime(){
+  if (!_sb || !_sb.channel) return;
+  try {
+    _sb.channel('i18n-cms')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'i18n_translations' }, function(payload){
+        var row = payload['new'] || payload['old'];
+        if (!row) return;
+        if (payload.eventType === 'DELETE') {
+          // 정적 I18N 의 원래 값으로 되돌리려면 페이지 새로고침 필요. 일단 캐시만 무효화.
+          localStorage.removeItem(I18N_CMS_CACHE_KEY);
+          return;
+        }
+        if (row && row.lang && I18N[row.lang]) {
+          I18N[row.lang][row.key] = row.value;
+          if (typeof applyLang === 'function') applyLang(_currentLang);
+        }
+      })
+      .subscribe();
+  } catch(e) { console.warn('[i18n realtime]', e && e.message); }
+}
+
 /* 앱 시작 시 저장된 언어 또는 자동 감지 결과로 적용 */
 function _initLang(){
   try {
+    // 1) 캐시된 CMS override 즉시 머지 (네트워크 전)
+    _i18nApplyCache();
+    // 2) 정적 + 캐시 머지 상태로 즉시 화면 적용
     applyLang(_currentLang);
+    // 3) 백그라운드 fetch + realtime 구독 (Supabase 준비된 후)
+    var tryFetch = function(){
+      if (_sb && _currentUser !== undefined) {
+        _i18nFetchAndMerge();
+        _i18nSubscribeRealtime();
+      } else {
+        setTimeout(tryFetch, 500);
+      }
+    };
+    setTimeout(tryFetch, 800);
   } catch(e){ console.warn('[lang init]', e); }
 }
 // DOMContentLoaded 후 / 또는 즉시 (script 가 body 끝에 있어서 DOM 이미 준비됨)
@@ -13203,6 +13320,157 @@ function _sdRenderMenus(cards,loaded){
 }
 
 /* ══════════════════════════════
+   언어 시트 (i18n CMS) — 어드민 편집
+══════════════════════════════ */
+async function openAdminI18n() {
+  if (!_isAdmin) { showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  openOv('ov-admin-i18n');
+  // prefix 셀렉트 초기화
+  var sel = document.getElementById('adm-i18n-prefix');
+  if (sel) {
+    var prefixes = {};
+    Object.keys(I18N.ja || {}).forEach(function(k){
+      var p = k.split('.')[0];
+      prefixes[p] = true;
+    });
+    sel.innerHTML = '<option value="">전체 prefix</option>' +
+      Object.keys(prefixes).sort().map(function(p){ return '<option value="'+p+'">'+p+'.*</option>'; }).join('');
+  }
+  await _loadAdminI18n();
+}
+
+var _i18nOverrides = {}; // {key: {ja, ko, en, zh}} 어드민 모달용 캐시
+
+async function _loadAdminI18n() {
+  var wrap = document.getElementById('adm-i18n-list');
+  if (!wrap || !_sb) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3);">로딩 중...</div>';
+
+  // 1) DB 에서 override 가져오기
+  var res = await _sb.from('i18n_translations').select('key,lang,value,updated_at');
+  if (res.error) {
+    wrap.innerHTML = '<div style="color:var(--red);padding:10px;font-size:12px;">로딩 실패: '+res.error.message+'</div>';
+    return;
+  }
+  _i18nOverrides = {};
+  (res.data || []).forEach(function(r){
+    if (!_i18nOverrides[r.key]) _i18nOverrides[r.key] = {};
+    _i18nOverrides[r.key][r.lang] = r.value;
+  });
+
+  // 2) 정적 I18N 의 모든 키 수집 (ja 기준)
+  var allKeys = Object.keys(I18N.ja || {}).sort();
+
+  // 3) 검색/필터 적용
+  var search = (document.getElementById('adm-i18n-search') || {}).value || '';
+  search = search.trim().toLowerCase();
+  var prefix = (document.getElementById('adm-i18n-prefix') || {}).value || '';
+  var filtered = allKeys.filter(function(k){
+    if (prefix && k.indexOf(prefix + '.') !== 0 && k !== prefix) return false;
+    if (!search) return true;
+    if (k.toLowerCase().indexOf(search) >= 0) return true;
+    // 값에서도 검색
+    var langs = ['ja','ko','en','zh'];
+    for (var i=0; i<langs.length; i++) {
+      var v = (I18N[langs[i]] && I18N[langs[i]][k]) || '';
+      var ov = (_i18nOverrides[k] && _i18nOverrides[k][langs[i]]) || '';
+      if ((v + ov).toLowerCase().indexOf(search) >= 0) return true;
+    }
+    return false;
+  });
+
+  // 4) 통계
+  var overridden = Object.keys(_i18nOverrides).length;
+  var statsEl = document.getElementById('adm-i18n-stats');
+  if (statsEl) {
+    statsEl.textContent = '전체 ' + allKeys.length + '개 키 · 표시 ' + filtered.length + '개 · CMS 편집됨 ' + overridden + '개';
+  }
+
+  // 5) 렌더
+  if (filtered.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;padding:18px;font-size:12px;color:var(--text-3);">조건에 맞는 키가 없어요</div>';
+    return;
+  }
+
+  wrap.innerHTML = filtered.slice(0, 100).map(function(k){
+    var langs = [
+      { code:'ja', label:'🇯🇵 JA' },
+      { code:'ko', label:'🇰🇷 KO' },
+      { code:'en', label:'🇺🇸 EN' },
+      { code:'zh', label:'🇨🇳 ZH' }
+    ];
+    var inputs = langs.map(function(l){
+      var staticV = (I18N[l.code] && I18N[l.code][k]) || '';
+      var override = (_i18nOverrides[k] && _i18nOverrides[k][l.code]) || '';
+      var hasOverride = override !== '';
+      var displayV = hasOverride ? override : staticV;
+      return '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
+        + '<div style="width:48px;font-size:10px;font-weight:700;color:'+(hasOverride?'var(--gold-dark)':'var(--text-3)')+';flex-shrink:0;">'+l.label+(hasOverride?' ✏️':'')+'</div>'
+        + '<input type="text" id="adm-i18n-'+l.code+'-'+_esc(k).replace(/[^a-z0-9._-]/gi,'_')+'" '
+        +   'value="'+_esc(displayV)+'" '
+        +   'placeholder="(정적: '+_esc(staticV)+')" '
+        +   'style="flex:1;padding:6px 10px;border:1px solid '+(hasOverride?'var(--gold)':'var(--border-mid)')+';border-radius:8px;font-size:11px;font-family:var(--font);background:'+(hasOverride?'var(--gold-light)':'var(--surface)')+';color:var(--text-1);outline:none;">'
+        + '</div>';
+    }).join('');
+
+    return '<div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:10px 12px;">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
+      +   '<code style="font-size:11px;font-weight:800;color:var(--text-1);background:var(--bg-2);padding:2px 8px;border-radius:6px;">'+_esc(k)+'</code>'
+      +   '<div style="display:flex;gap:4px;">'
+      +     '<button onclick="admSaveI18nKey(\''+_esc(k).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')" style="padding:4px 10px;border:none;border-radius:7px;background:var(--green);color:#fff;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>'
+      +     (_i18nOverrides[k] ? '<button onclick="admResetI18nKey(\''+_esc(k).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')" style="padding:4px 10px;border:1px solid var(--red);border-radius:7px;background:transparent;color:var(--red);font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">↺ 초기화</button>' : '')
+      +   '</div>'
+      + '</div>'
+      + inputs
+      + '</div>';
+  }).join('') + (filtered.length > 100 ? '<div style="text-align:center;padding:10px;font-size:11px;color:var(--text-3);">상위 100개만 표시. 검색으로 좁혀보세요.</div>' : '');
+}
+
+async function admSaveI18nKey(key) {
+  if (!_isAdmin || !_sb) return;
+  var safe = _esc(key).replace(/[^a-z0-9._-]/gi,'_');
+  var langs = ['ja','ko','en','zh'];
+  var rows = [];
+  var deletes = [];
+  langs.forEach(function(l){
+    var el = document.getElementById('adm-i18n-'+l+'-'+safe);
+    if (!el) return;
+    var val = el.value.trim();
+    var staticV = (I18N[l] && I18N[l][key]) || '';
+    if (val === '' || val === staticV) {
+      // 빈 값 또는 정적값과 동일 → override 삭제 (있다면)
+      deletes.push(l);
+    } else {
+      rows.push({ key: key, lang: l, value: val });
+    }
+  });
+
+  if (rows.length > 0) {
+    var res = await _sb.from('i18n_translations').upsert(rows, { onConflict: 'key,lang' });
+    if (res.error) { showToast('저장 실패: '+res.error.message); return; }
+  }
+  if (deletes.length > 0) {
+    for (var i=0; i<deletes.length; i++) {
+      await _sb.from('i18n_translations').delete().eq('key', key).eq('lang', deletes[i]);
+    }
+  }
+  showToast('✅ 저장됨: '+key);
+  await _loadAdminI18n();
+  // 정적 I18N 에도 즉시 머지 (어드민 본인 화면도 갱신)
+  rows.forEach(function(r){ if (I18N[r.lang]) I18N[r.lang][r.key] = r.value; });
+  if (typeof applyLang === 'function') applyLang(_currentLang);
+}
+
+async function admResetI18nKey(key) {
+  if (!_isAdmin || !_sb) return;
+  if (!confirm('「'+key+'」의 모든 언어 override 를 삭제하고 정적값으로 되돌리시겠습니까?')) return;
+  var res = await _sb.from('i18n_translations').delete().eq('key', key);
+  if (res.error) { showToast('초기화 실패: '+res.error.message); return; }
+  showToast('↺ 초기화됨: '+key);
+  await _loadAdminI18n();
+}
+
+/* ══════════════════════════════
    벤워드 관리 (banned_words)
 ══════════════════════════════ */
 async function openAdminBannedWords() {
@@ -15863,7 +16131,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v131';
+window.__APP_VERSION__ = 'v132';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
