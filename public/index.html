@@ -10191,6 +10191,8 @@ function applyLang(lang){
   // 언어 선택 드롭다운 값 동기화
   var sel = document.getElementById('lang-select');
   if (sel) sel.value = lang;
+  // 테마 스와치 이름(JS 생성)도 즉시 재렌더 (data-i18n 아님)
+  if (typeof renderThemeSwatches === 'function') { try { renderThemeSwatches(); } catch(e){} }
 }
 /* ══════════════════════════════
    i18n CMS — Supabase 어드민 편집 가능한 번역 override 레이어
@@ -16715,7 +16717,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v152';
+window.__APP_VERSION__ = 'v153';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
