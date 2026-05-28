@@ -9437,6 +9437,11 @@ var I18N = {
     'att.bonus':'🎁 連続出席ボーナス','att.streak_days':'{n}日連続','att.ad':'広告','att.ad_note':'AdSense承認後に実広告を表示',
     'att.slot1':'00-08 (1回)','att.slot2':'08-16 (2回)','att.slot3':'16-24 (3回)',
     'att.cal_title':'🗓 {y}年 {m}月',
+    // 영수증 가게상세(rsd) 모달
+    'rsd.stats':'📊 統計','rsd.visits':'訪問回数','rsd.total_spend':'総支出','rsd.avg_spend':'平均支出','rsd.last_visit':'最近の訪問',
+    'rsd.times':'{n}回','rsd.top_items':'🛍 よく買う品目','rsd.item_stat':'{c}回 · ¥{avg}/個',
+    'rsd.monthly':'📈 月別支出（直近6ヶ月）','rsd.recent':'🧾 最近のレシート ({a}/{b})','rsd.item_count':'{n}個 商品',
+    'rsd.see_all':'全{n}件を見る →',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9609,6 +9614,10 @@ var I18N = {
     'att.bonus':'🎁 연속 출석 보너스','att.streak_days':'{n}일 연속','att.ad':'광고','att.ad_note':'AdSense 승인 후 실광고 표시',
     'att.slot1':'00-08 (1회)','att.slot2':'08-16 (2회)','att.slot3':'16-24 (3회)',
     'att.cal_title':'🗓 {y}년 {m}월',
+    'rsd.stats':'📊 통계','rsd.visits':'방문 횟수','rsd.total_spend':'총 지출','rsd.avg_spend':'평균 지출','rsd.last_visit':'최근 방문',
+    'rsd.times':'{n}회','rsd.top_items':'🛍 자주 산 품목','rsd.item_stat':'{c}회 · ¥{avg}/1개',
+    'rsd.monthly':'📈 월별 지출 (최근 6개월)','rsd.recent':'🧾 최근 영수증 ({a}/{b})','rsd.item_count':'{n}개 상품',
+    'rsd.see_all':'전체 {n}건 보기 →',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9780,6 +9789,10 @@ var I18N = {
     'att.bonus':'🎁 Streak Bonus','att.streak_days':'{n}-day streak','att.ad':'Ad','att.ad_note':'Real ads after AdSense approval',
     'att.slot1':'00-08 (1st)','att.slot2':'08-16 (2nd)','att.slot3':'16-24 (3rd)',
     'att.cal_title':'🗓 {y}/{m}',
+    'rsd.stats':'📊 Stats','rsd.visits':'Visits','rsd.total_spend':'Total','rsd.avg_spend':'Average','rsd.last_visit':'Last visit',
+    'rsd.times':'{n}','rsd.top_items':'🛍 Frequently bought','rsd.item_stat':'{c}x · ¥{avg}/ea',
+    'rsd.monthly':'📈 Monthly (last 6 months)','rsd.recent':'🧾 Recent receipts ({a}/{b})','rsd.item_count':'{n} items',
+    'rsd.see_all':'See all {n} →',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9951,6 +9964,10 @@ var I18N = {
     'att.bonus':'🎁 连续签到奖励','att.streak_days':'连续{n}天','att.ad':'广告','att.ad_note':'AdSense审核通过后显示真实广告',
     'att.slot1':'00-08 (第1次)','att.slot2':'08-16 (第2次)','att.slot3':'16-24 (第3次)',
     'att.cal_title':'🗓 {y}年 {m}月',
+    'rsd.stats':'📊 统计','rsd.visits':'访问次数','rsd.total_spend':'总支出','rsd.avg_spend':'平均支出','rsd.last_visit':'最近访问',
+    'rsd.times':'{n}次','rsd.top_items':'🛍 常买商品','rsd.item_stat':'{c}次 · ¥{avg}/个',
+    'rsd.monthly':'📈 月支出（近6个月）','rsd.recent':'🧾 最近票据 ({a}/{b})','rsd.item_count':'{n}件商品',
+    'rsd.see_all':'查看全部 {n} 笔 →',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -10818,22 +10835,22 @@ function openReceiptStoreDetail(storeName){
 
   // 카드1: 통계 그리드
   h += '<div class="rsd-card">'
-    + '<div class="rsd-card-title">📊 통계</div>'
+    + '<div class="rsd-card-title">'+t('rsd.stats')+'</div>'
     + '<div class="rsd-stat-grid">'
-      + '<div class="rsd-stat"><div class="rsd-stat-lbl">방문 횟수</div><div class="rsd-stat-val">'+recs.length+'회</div></div>'
-      + '<div class="rsd-stat"><div class="rsd-stat-lbl">총 지출</div><div class="rsd-stat-val">¥'+Number(total).toLocaleString()+'</div></div>'
-      + '<div class="rsd-stat"><div class="rsd-stat-lbl">평균 지출</div><div class="rsd-stat-val" style="color:var(--green);">¥'+Number(avg).toLocaleString()+'</div></div>'
-      + '<div class="rsd-stat"><div class="rsd-stat-lbl">최근 방문</div><div class="rsd-stat-val" style="font-size:13px;">'+lastStr+'</div></div>'
+      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.visits')+'</div><div class="rsd-stat-val">'+t('rsd.times',{n:recs.length})+'</div></div>'
+      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.total_spend')+'</div><div class="rsd-stat-val">¥'+Number(total).toLocaleString()+'</div></div>'
+      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.avg_spend')+'</div><div class="rsd-stat-val" style="color:var(--green);">¥'+Number(avg).toLocaleString()+'</div></div>'
+      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.last_visit')+'</div><div class="rsd-stat-val" style="font-size:13px;">'+lastStr+'</div></div>'
     + '</div></div>';
 
   // 카드2: 자주 산 품목
   if (topItems.length > 0) {
     h += '<div class="rsd-card">'
-      + '<div class="rsd-card-title">🛍 자주 산 품목</div>';
+      + '<div class="rsd-card-title">'+t('rsd.top_items')+'</div>';
     topItems.forEach(function(it){
       h += '<div class="rsd-item-row">'
-        + '<span class="rsd-item-name">'+it.name+'</span>'
-        + '<span class="rsd-item-stat">'+it.count+'회 · <strong>¥'+Number(it.avg).toLocaleString()+'</strong>/1개</span>'
+        + '<span class="rsd-item-name">'+_esc(it.name)+'</span>'
+        + '<span class="rsd-item-stat">'+t('rsd.item_stat',{c:it.count,avg:Number(it.avg).toLocaleString()})+'</span>'
       + '</div>';
     });
     h += '</div>';
@@ -10841,7 +10858,7 @@ function openReceiptStoreDetail(storeName){
 
   // 카드3: 월별 지출 그래프
   h += '<div class="rsd-card">'
-    + '<div class="rsd-card-title">📈 월별 지출 (최근 6개월)</div>'
+    + '<div class="rsd-card-title">'+t('rsd.monthly')+'</div>'
     + '<div class="rsd-bar-row">';
   months.forEach(function(m){
     if (m.total > 0) {
@@ -10857,18 +10874,18 @@ function openReceiptStoreDetail(storeName){
 
   // 카드4: 최근 영수증 (5건)
   h += '<div class="rsd-card">'
-    + '<div class="rsd-card-title">🧾 최근 영수증 ('+Math.min(5, sorted.length)+'/'+sorted.length+')</div>';
+    + '<div class="rsd-card-title">'+t('rsd.recent',{a:Math.min(5,sorted.length),b:sorted.length})+'</div>';
   sorted.slice(0,5).forEach(function(r){
     var dateStr = r.date ? (function(){ var p=r.date.split('-'); return p[1]+'/'+p[2]; })() : '-';
     var itemCnt = (r.items||[]).length;
     h += '<div class="rsd-rcpt-row" onclick="rsdOpenReceipt(\''+r.id+'\')">'
       + '<div><div class="rsd-rcpt-date">📅 '+dateStr+'</div>'
-      + '<div class="rsd-rcpt-cnt">'+itemCnt+'개 상품</div></div>'
+      + '<div class="rsd-rcpt-cnt">'+t('rsd.item_count',{n:itemCnt})+'</div></div>'
       + '<span class="rsd-rcpt-amt">¥'+Number(r.total||0).toLocaleString()+'</span>'
     + '</div>';
   });
   if (sorted.length > 5) {
-    h += '<div onclick="rsdGotoHistory(\''+storeName.replace(/'/g,"\\'")+'\')" style="margin-top:10px;padding:10px;text-align:center;background:var(--green-light);color:var(--green-dark);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">전체 '+sorted.length+'건 보기 →</div>';
+    h += '<div onclick="rsdGotoHistory(\''+storeName.replace(/'/g,"\\'")+'\')" style="margin-top:10px;padding:10px;text-align:center;background:var(--green-light);color:var(--green-dark);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;">'+t('rsd.see_all',{n:sorted.length})+'</div>';
   }
   h += '</div>';
 
@@ -16309,7 +16326,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v140';
+window.__APP_VERSION__ = 'v141';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
