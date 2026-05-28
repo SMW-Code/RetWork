@@ -3984,7 +3984,7 @@ function ctMakeClusterSVG(count, hasPrivateNote) {
   var fs  = count > 99 ? 9 : count > 9 ? 11 : 13;
   var col = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#E8A020';
   // 비공개 메모가 포함된 클러스터 → 보라색 링
-  var ring = hasPrivateNote ? '#7A3FE8' : '#fff';
+  var ring = hasPrivateNote ? '#C8B273' : '#fff';
   var ringW = hasPrivateNote ? 3.5 : 2.5;
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + w + '">'
     + '<circle cx="' + r + '" cy="' + r + '" r="' + (r - 2) + '" fill="' + col + '" stroke="' + ring + '" stroke-width="' + ringW + '" opacity="0.93"/>'
@@ -4157,8 +4157,9 @@ function ctRenderPricePins() {
 /* 가격 핀 SVG 생성 */
 function ctMakePinSVG(icon, price, isTop, multi, hasPrivateNote) {
   // 비공개 메모가 있는 마커는 보라색 링 (테마색 녹색/금색과 안 겹침)
-  var borderColor = hasPrivateNote ? '#7A3FE8' : (isTop ? '#E8A020' : '#2D5A27');
-  var bg          = hasPrivateNote ? '#F3EBFE' : (isTop ? '#FDF3DC' : '#ffffff');
+  var borderColor = hasPrivateNote ? '#C8B273' : (isTop ? '#E8A020' : '#2D5A27');
+  // 새 링 색에 어울리는 연한 톤 배경 (#C8B273 의 매우 옅은 베이지)
+  var bg          = hasPrivateNote ? '#FAF6E8' : (isTop ? '#FDF3DC' : '#ffffff');
   var textColor   = '#1A1A2E';
   var priceStr    = '¥' + price.toLocaleString() + (multi ? '~' : '');
   var w = hasPrivateNote ? 112 : 100, h = 34;
@@ -15628,7 +15629,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v127';
+window.__APP_VERSION__ = 'v128';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
