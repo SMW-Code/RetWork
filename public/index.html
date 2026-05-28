@@ -1026,7 +1026,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
 
       <!-- 카테고리 분석 -->
-      <div style="padding:6px 16px 6px;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;">🗂 카테고리 분석 <span style="font-size:10px;font-weight:500;">· 탭해서 내역 펼치기</span></div>
+      <div style="padding:6px 16px 6px;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;"><span data-i18n="rep.cat_analysis">🗂 カテゴリ分析</span> <span style="font-size:10px;font-weight:500;" data-i18n="rep.tap_expand">· タップで明細を開く</span></div>
       <div class="bar-card" style="margin-bottom:4px;">
         <!-- 도넛 차트 + 범례 -->
         <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px;padding-bottom:16px;border-bottom:0.5px solid var(--border);">
@@ -1045,26 +1045,26 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
       <!-- 물가 레이더 -->
       <div style="padding:14px 16px 6px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;">📊 물가 레이더</div>
-        <div style="font-size:10px;color:var(--text-3);">품목별 가격 변동 추적</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;" data-i18n="rep.radar">📊 物価レーダー</div>
+        <div style="font-size:10px;color:var(--text-3);" data-i18n="rep.radar_sub">品目別の価格変動を追跡</div>
       </div>
       <div class="bar-card" style="margin-bottom:4px;padding:0;overflow:hidden;">
         <!-- 필터 탭 -->
         <div style="display:flex;border-bottom:0.5px solid var(--border);">
-          <div onclick="switchRadar('up')" id="rtab-up" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:#e53935;border-bottom:2px solid #e53935;cursor:pointer;">🔴 오르는 중</div>
-          <div onclick="switchRadar('down')" id="rtab-down" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;">🟢 내리는 중</div>
-          <div onclick="switchRadar('all')" id="rtab-all" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;">전체</div>
+          <div onclick="switchRadar('up')" id="rtab-up" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:#e53935;border-bottom:2px solid #e53935;cursor:pointer;" data-i18n="rep.up">🔴 上昇中</div>
+          <div onclick="switchRadar('down')" id="rtab-down" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;" data-i18n="rep.down">🟢 下落中</div>
+          <div onclick="switchRadar('all')" id="rtab-all" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:var(--text-3);border-bottom:2px solid transparent;cursor:pointer;" data-i18n="cat.all">すべて</div>
         </div>
         <!-- 정렬 버튼 -->
         <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:7px 12px;border-bottom:0.5px solid var(--border);background:var(--bg);">
-          <span style="font-size:11px;color:var(--text-3);font-weight:600;">정렬</span>
+          <span style="font-size:11px;color:var(--text-3);font-weight:600;" data-i18n="rep.sort">並び替え</span>
           <div id="rsort-desc" onclick="switchRadarSort('desc')"
-            style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--green);background:var(--green);color:#fff;transition:all .15s;">
-            변동↑ 큰 순
+            style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--green);background:var(--green);color:#fff;transition:all .15s;" data-i18n="rep.sort_desc">
+            変動↑ 大きい順
           </div>
           <div id="rsort-asc" onclick="switchRadarSort('asc')"
-            style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border-mid);background:transparent;color:var(--text-3);transition:all .15s;">
-            변동↓ 작은 순
+            style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--border-mid);background:transparent;color:var(--text-3);transition:all .15s;" data-i18n="rep.sort_asc">
+            変動↓ 小さい順
           </div>
         </div>
         <div id="radar-list" style="padding:4px 0 4px;"></div>
@@ -1091,8 +1091,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border);">
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div><span data-i18n="cat.food">食料品</span></div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange);"></div><span data-i18n="cat.eat">外食</span></div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div>생활용품</div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div>의약품</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div><span data-i18n="cat.life">生活雑貨</span></div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div><span data-i18n="cat.med">医療・健康</span></div>
       </div>
       <div class="cal-dow">
         <div class="dow" style="color:var(--red);">日</div><div class="dow">月</div><div class="dow">火</div><div class="dow">水</div><div class="dow">木</div><div class="dow">金</div><div class="dow" style="color:var(--blue);">土</div>
@@ -1103,18 +1103,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="font-size:12px;font-weight:700;color:var(--text-1);margin-bottom:10px;" id="cal-detail-title"></div>
       <div id="cal-entries"></div>
       <div style="display:flex;justify-content:space-between;padding-top:10px;margin-top:4px;border-top:0.5px solid var(--border);">
-        <span style="font-size:12px;font-weight:700;color:var(--text-2);">합계</span>
+        <span style="font-size:12px;font-weight:700;color:var(--text-2);" data-i18n="common.total">合計</span>
         <span style="font-size:15px;font-weight:800;color:var(--green);" id="cal-total"></span>
       </div>
     </div>
     <div class="month-summary" onclick="openMonthDetail()" style="cursor:pointer;transition:box-shadow .15s;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;" data-i18n="cal.month_summary">今月のまとめ</div>
-        <div style="font-size:11px;font-weight:700;color:var(--green);">자세히 보기 ›</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green);"><span data-i18n="cal.see_detail">詳しく見る</span> ›</div>
       </div>
       <div class="ms-row"><span style="color:var(--text-2);font-weight:600;" data-i18n="cal.month_total">総支出</span><span style="font-weight:800;color:var(--green);" id="cal-month-total">¥ 0</span></div>
-      <div class="ms-row"><span style="color:var(--text-2);font-weight:600;">영수증 수</span><span style="font-weight:700;color:var(--text-1);" id="cal-month-cnt">0건</span></div>
-      <div class="ms-row"><span style="color:var(--text-2);font-weight:600;">하루 평균</span><span style="font-weight:700;color:var(--text-1);" id="cal-month-avg">¥ 0</span></div>
+      <div class="ms-row"><span style="color:var(--text-2);font-weight:600;" data-i18n="cal.receipt_count">レシート数</span><span style="font-weight:700;color:var(--text-1);" id="cal-month-cnt">0</span></div>
+      <div class="ms-row"><span style="color:var(--text-2);font-weight:600;" data-i18n="cal.daily_avg">1日平均</span><span style="font-weight:700;color:var(--text-1);" id="cal-month-avg">¥ 0</span></div>
     </div>
     <!-- 수동기입 + 버튼 (카드와 하단 메뉴 사이 공백) -->
     <div style="display:flex;justify-content:flex-end;padding:4px 20px 0;">
@@ -1127,7 +1127,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- ══ MAP ══ -->
 <div class="screen" id="screen-map">
   <div class="hdr">
-    <div><div class="hdr-title">가성비 맵</div><div class="hdr-sub" id="map-sub">내 위치 기반 · 영수증 핀</div></div>
+    <div><div class="hdr-title" data-i18n="rmap.title">コスパマップ</div><div class="hdr-sub" id="map-sub" data-i18n="rmap.sub">現在地ベース · レシートピン</div></div>
     <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
   </div>
   <div style="flex:1;min-height:0;position:relative;">
@@ -1148,7 +1148,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 가게 목록 -->
     <div id="mpanel-stores">
-      <div id="map-store-items"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">영수증을 스캔하면 가게가 여기 표시돼요</div></div>
+      <div id="map-store-items"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;" data-i18n="rmap.empty">レシートをスキャンすると店舗がここに表示されます</div></div>
     </div>
     <!-- 가격 비교 -->
     <div id="mpanel-compare" style="display:none;">
@@ -1160,10 +1160,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="font-size:11px;color:var(--text-3);background:var(--bg-2);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.6;">
           💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.
         </div>
-        <input class="pc-search" id="pc-search-input" placeholder="품목 검색..." oninput="renderPriceComparison(this.value)">
+        <input class="pc-search" id="pc-search-input" placeholder="品目を検索..." data-i18n-placeholder="rmap.search_ph" oninput="renderPriceComparison(this.value)">
         <div id="price-compare-content"></div>
       </div>
-      <div id="pc-nearby" style="display:none;"><div id="price-community-content"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">불러오는 중...</div></div></div>
+      <div id="pc-nearby" style="display:none;"><div id="price-community-content"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;" data-i18n="rmap.loading">読み込み中...</div></div></div>
     </div>
   </div>
 </div>
@@ -5664,7 +5664,7 @@ function renderHistory(cat) {
         +'<div class="h-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
         +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
         +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">'
-        +'<span style="font-size:11px;color:var(--text-3);">'+CAT_LABEL[r.cat]+' · '+r.items.length+'품목</span>'
+        +'<span style="font-size:11px;color:var(--text-3);">'+CAT_LABEL[r.cat]+' · '+r.items.length+t('ocr.item_unit')+'</span>'
         +(r.pay ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+PAY_BG[r.pay]+';color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>' : '')
         +'</div></div>'
         +'<div class="h-amt" style="text-align:right;flex-shrink:0;">'
@@ -5683,7 +5683,7 @@ function renderHistory(cat) {
       r.items.forEach(function(item){
         html += '<div class="d-row"><span>'+_esc(item.name)+(item.qty>1?' ×'+item.qty:'')+'</span><span>¥'+item.price.toLocaleString()+'</span></div>';
       });
-      html += '<div class="d-row" style="font-weight:800;border-top:0.5px solid var(--border);padding-top:6px;margin-top:2px;"><span>합계</span><span style="color:var(--green);">¥'+r.total.toLocaleString()+'</span></div>';
+      html += '<div class="d-row" style="font-weight:800;border-top:0.5px solid var(--border);padding-top:6px;margin-top:2px;"><span>'+t('common.total')+'</span><span style="color:var(--green);">¥'+r.total.toLocaleString()+'</span></div>';
       if (r.pay) {
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:7px 10px;background:'+PAY_BG[r.pay]+';border-radius:10px;">'
           +'<span style="font-size:11px;font-weight:600;color:var(--text-3);">결제수단</span>'
@@ -6249,20 +6249,20 @@ function renderReportSummary() {
   var topLabel = topCat ? (CAT_ICON[topCat] + ' ' + CAT_LABEL[topCat]) : '—';
   el.innerHTML = '<div style="background:linear-gradient(140deg,var(--green),var(--green-dark));border-radius:20px;padding:18px 20px 16px;color:#fff;box-shadow:var(--shadow-green);position:relative;overflow:hidden;">'
     + '<div style="position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;"></div>'
-    + '<div style="font-size:10px;font-weight:700;opacity:.7;letter-spacing:.5px;text-transform:uppercase;">' + y + '年 ' + m + '月 가계부</div>'
+    + '<div style="font-size:10px;font-weight:700;opacity:.7;letter-spacing:.5px;text-transform:uppercase;">' + t('rep.book_title',{y:y,m:m}) + '</div>'
     + '<div style="font-size:32px;font-weight:800;letter-spacing:-2px;margin-top:6px;line-height:1;">¥' + monthTotal.toLocaleString() + '</div>'
-    + '<div style="font-size:11px;opacity:.65;margin-top:5px;">' + monthCnt + '건 지출</div>'
+    + '<div style="font-size:11px;opacity:.65;margin-top:5px;">' + t('rep.month_spent',{n:monthCnt}) + '</div>'
     + '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);">'
     + '<div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 8px;text-align:center;">'
-    + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">건수</div>'
-    + '<div style="font-size:18px;font-weight:800;line-height:1;">' + monthCnt + '<span style="font-size:10px;font-weight:600;opacity:.8;">건</span></div>'
+    + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">' + t('rep.count') + '</div>'
+    + '<div style="font-size:18px;font-weight:800;line-height:1;">' + monthCnt + '<span style="font-size:10px;font-weight:600;opacity:.8;">' + t('rep.unit_cnt') + '</span></div>'
     + '</div>'
     + '<div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 8px;text-align:center;">'
-    + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">일평균</div>'
+    + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">' + t('rep.daily_avg') + '</div>'
     + '<div style="font-size:15px;font-weight:800;line-height:1;">¥' + dayAvg.toLocaleString() + '</div>'
     + '</div>'
     + '<div style="flex:1.5;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 8px;text-align:center;">'
-    + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">최다 카테고리</div>'
+    + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">' + t('rep.top_cat') + '</div>'
     + '<div style="font-size:13px;font-weight:800;line-height:1.2;">' + topLabel + '</div>'
     + '</div>'
     + '</div>'
@@ -6305,8 +6305,8 @@ function renderBars(type) {
         for (var w=0;w<weeks.length;w++) { if (dd>=weeks[w].s&&dd<=weeks[w].e){weeks[w].sum+=r.total;break;} }
       }
     });
-    weeks.forEach(function(wk,i){ labels.push((i+1)+'주'); vals.push(wk.sum); });
-    title = y+'年 '+m+'月 주별 지출';
+    weeks.forEach(function(wk,i){ labels.push(t('rep.week_n',{n:i+1})); vals.push(wk.sum); });
+    title = t('rep.weekly_title',{y:y,m:m});
     hlIdx = Math.min(3, Math.floor((d-1)/7));
 
   } else if (type === 'two') {
@@ -6322,7 +6322,7 @@ function renderBars(type) {
       threeMo.forEach(function(mo){if(ry===mo.y&&rm===mo.m)mo.sum+=r.total;});
     });
     threeMo.forEach(function(mo){ labels.push(mo.m+'月'); vals.push(mo.sum); });
-    title = '최근 3개월 비교';
+    title = t('rep.quarter_title');
     hlIdx = 2;
 
   } else if (type === 'year') {
@@ -6332,7 +6332,7 @@ function renderBars(type) {
       if (parseInt(parts[0])===y) { var mo=parseInt(parts[1]); monthlySums[mo]=(monthlySums[mo]||0)+r.total; }
     });
     for (var mo=1;mo<=12;mo++){ labels.push(mo+'月'); vals.push(monthlySums[mo]||0); }
-    title = y+'年 월별 지출';
+    title = t('rep.monthly_title',{y:y});
     hlIdx = m - 1;
   }
 
@@ -6578,7 +6578,7 @@ function renderPayRanking() {
   // 금액 내림차순 정렬
   var sorted = Object.keys(payTotals).sort(function(a,b){ return payTotals[b]-payTotals[a]; });
 
-  var html = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;padding:14px 0 8px;">💳 결제수단별 지출</div>';
+  var html = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;text-transform:uppercase;padding:14px 0 8px;">'+t('rep.pay_breakdown')+'</div>';
   html += '<div style="background:var(--surface);border-radius:18px;border:0.5px solid var(--border);padding:14px 16px;box-shadow:var(--shadow-sm);margin-bottom:8px;">';
 
   sorted.forEach(function(p, idx) {
@@ -9448,6 +9448,18 @@ var I18N = {
     'home.budget_cta':'今月の予算を設定','home.budget_cta_sub':'目標額を設定して達成率を確認',
     'home.saving_cta':'節約チャンス発見！','home.saving_cta_sub':'3商品をスーパーを変えるだけで月¥1,320節約可能',
     'home.budget_this':'今月の予算','home.budget_remain':'残り','home.budget_over':'超過','home.budget_spent':'支出','home.budget_goal':'目標',
+    // 리포트 + 물가레이더
+    'rep.cat_analysis':'🗂 カテゴリ分析','rep.tap_expand':'· タップで明細を開く',
+    'rep.radar':'📊 物価レーダー','rep.radar_sub':'品目別の価格変動を追跡',
+    'rep.up':'🔴 上昇中','rep.down':'🟢 下落中','rep.sort':'並び替え','rep.sort_desc':'変動↑ 大きい順','rep.sort_asc':'変動↓ 小さい順',
+    'rep.month_spent':'{n}件の支出','rep.count':'件数','rep.daily_avg':'日平均','rep.top_cat':'最多カテゴリ',
+    'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
+    'rep.pay_breakdown':'💳 支払い方法別支出','rep.unit_cnt':'件','rep.book_title':'{y}年 {m}月 家計簿','rep.week_n':'第{n}週',
+    // 달력 잔여
+    'cal.see_detail':'詳しく見る','cal.receipt_count':'レシート数','cal.daily_avg':'1日平均','common.total':'合計',
+    // 가성비 맵 (영수증 모드)
+    'rmap.title':'コスパマップ','rmap.sub':'現在地ベース · レシートピン','rmap.stores':'📍 店舗リスト','rmap.compare':'💰 価格比較',
+    'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
     // 카테고리 라벨 (영수증 기록)
     'cat.all':'すべて','cat.food':'食料品','cat.eat':'外食','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
@@ -9653,6 +9665,15 @@ var I18N = {
     'home.budget_cta':'이달 예산 설정하기','home.budget_cta_sub':'목표 금액을 설정해 달성률을 확인해요',
     'home.saving_cta':'절약 기회 발견!','home.saving_cta_sub':'3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능',
     'home.budget_this':'이달 예산','home.budget_remain':'남음','home.budget_over':'초과','home.budget_spent':'지출','home.budget_goal':'목표',
+    'rep.cat_analysis':'🗂 카테고리 분석','rep.tap_expand':'· 탭해서 내역 펼치기',
+    'rep.radar':'📊 물가 레이더','rep.radar_sub':'품목별 가격 변동 추적',
+    'rep.up':'🔴 오르는 중','rep.down':'🟢 내리는 중','rep.sort':'정렬','rep.sort_desc':'변동↑ 큰 순','rep.sort_asc':'변동↓ 작은 순',
+    'rep.month_spent':'{n}건 지출','rep.count':'건수','rep.daily_avg':'일평균','rep.top_cat':'최다 카테고리',
+    'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
+    'rep.pay_breakdown':'💳 결제수단별 지출','rep.unit_cnt':'건','rep.book_title':'{y}年 {m}月 가계부','rep.week_n':'{n}주',
+    'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
+    'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
+    'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
@@ -9842,6 +9863,15 @@ var I18N = {
     'home.budget_cta':'Set this month’s budget','home.budget_cta_sub':'Set a goal to track your progress',
     'home.saving_cta':'Savings found!','home.saving_cta_sub':'Switch stores for 3 items, save ¥1,320/mo',
     'home.budget_this':"This month's budget",'home.budget_remain':'left','home.budget_over':'over','home.budget_spent':'spent','home.budget_goal':'Goal',
+    'rep.cat_analysis':'🗂 Category Analysis','rep.tap_expand':'· tap to expand',
+    'rep.radar':'📊 Price Radar','rep.radar_sub':'Track price changes by item',
+    'rep.up':'🔴 Rising','rep.down':'🟢 Falling','rep.sort':'Sort','rep.sort_desc':'Change↑ desc','rep.sort_asc':'Change↓ asc',
+    'rep.month_spent':'{n} expenses','rep.count':'Count','rep.daily_avg':'Daily avg','rep.top_cat':'Top category',
+    'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
+    'rep.pay_breakdown':'💳 Spend by payment','rep.unit_cnt':'','rep.book_title':'{y}/{m} Budget','rep.week_n':'W{n}',
+    'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
+    'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
+    'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
@@ -10031,6 +10061,15 @@ var I18N = {
     'home.budget_cta':'设置本月预算','home.budget_cta_sub':'设定目标查看达成率',
     'home.saving_cta':'发现省钱机会！','home.saving_cta_sub':'3件商品换家超市，每月省¥1,320',
     'home.budget_this':'本月预算','home.budget_remain':'剩余','home.budget_over':'超出','home.budget_spent':'支出','home.budget_goal':'目标',
+    'rep.cat_analysis':'🗂 分类分析','rep.tap_expand':'· 点击展开明细',
+    'rep.radar':'📊 物价雷达','rep.radar_sub':'按商品追踪价格变动',
+    'rep.up':'🔴 上涨中','rep.down':'🟢 下跌中','rep.sort':'排序','rep.sort_desc':'变动↑ 由大到小','rep.sort_asc':'变动↓ 由小到大',
+    'rep.month_spent':'{n}笔支出','rep.count':'笔数','rep.daily_avg':'日均','rep.top_cat':'最多类别',
+    'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
+    'rep.pay_breakdown':'💳 按付款方式支出','rep.unit_cnt':'笔','rep.book_title':'{y}年 {m}月 账本','rep.week_n':'第{n}周',
+    'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
+    'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
+    'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
     'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
@@ -16717,7 +16756,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v153';
+window.__APP_VERSION__ = 'v154';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
