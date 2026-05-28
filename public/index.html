@@ -3256,19 +3256,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet" style="max-height:75%;">
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-      <div class="sheet-title">📝 メモ</div>
+      <div class="sheet-title" data-i18n="rcpt.memo.label">📝 メモ</div>
       <div onclick="closeOv('ov-memo')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
     </div>
     <div id="ov-memo-store" style="font-size:12px;color:var(--text-3);margin-bottom:14px;"></div>
     <textarea id="ov-memo-input"
+      data-i18n-placeholder="rcpt.memo.placeholder"
       placeholder="このレシートへのメモ...&#10;(🔒 自分だけが見られます)"
       style="width:100%;min-height:130px;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;font-family:var(--font);color:var(--text-1);background:var(--surface);resize:none;outline:none;box-sizing:border-box;line-height:1.6;transition:border-color .2s;"
       onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px;">
-      <button onclick="closeOv('ov-memo')" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">キャンセル</button>
-      <button onclick="saveMemo()" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">💾 保存</button>
+      <button onclick="closeOv('ov-memo')" data-i18n="btn.cancel" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">キャンセル</button>
+      <button onclick="saveMemo()" data-i18n="rcpt.memo.save" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">💾 保存</button>
     </div>
-    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-3);">🔒 このメモはあなただけが見られます</div>
+    <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-3);" data-i18n="rcpt.memo.private_note">🔒 このメモはあなただけが見られます</div>
   </div>
 </div>
 
@@ -8432,30 +8433,24 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
     itemsHtml = '<div style="font-size:12px;color:#E24B4A;padding:6px 0;">'+t('ocr.recognize_fail')+'</div>';
   }
 
-  // GPT 사용 여부 표시 배지 (하이브리드 구분 포함)
-  var modeBadge = isGpt
-    ? (parsed && parsed.hybrid
-        ? '<span style="background:linear-gradient(90deg,#10a37f,#1a7fd4);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;">⚡ 하이브리드</span>'
-        : '<span style="background:#10a37f;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;">🤖 GPT</span>')
-    : '<span style="background:#8FA89E;color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:8px;">룰 기반</span>';
-
+  var _itemCnt = parsed.items ? parsed.items.length : 0;
   var summaryHtml = ''
-    + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">점포명: <strong>' + (parsed.store||'불명') + '</strong></div>'
-    + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">인식 품목: <strong>' + (parsed.items ? parsed.items.length : 0) + '개</strong></div>'
-    + '<div style="font-size:12px;color:#0F1A17;">합계: <strong>&#165;' + (parsed.total||0).toLocaleString() + '</strong></div>';
+    + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.store')+': <strong>' + (parsed.store||t('ocr.store_unknown')) + '</strong></div>'
+    + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.items')+': <strong>' + t('ocr.debug.count_n',{n:_itemCnt}) + '</strong></div>'
+    + '<div style="font-size:12px;color:#0F1A17;">'+t('ocr.debug.total')+': <strong>&#165;' + (parsed.total||0).toLocaleString() + '</strong></div>';
 
   var html = ''
     + '<div class="sheet-handle"></div>'
-    + '<div class="sheet-title">' + t('ocr.debug.title') + modeBadge + '</div>'
+    + '<div class="sheet-title">' + t('ocr.debug.title') + '</div>'
     + '<div style="background:#E1F5EE;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:0.5px solid rgba(29,158,117,.2);">'
-    + '<div style="font-size:12px;font-weight:800;color:#0F6E56;margin-bottom:8px;">&#128202; 파싱 결과</div>'
+    + '<div style="font-size:12px;font-weight:800;color:#0F6E56;margin-bottom:8px;">&#128202; '+t('ocr.debug.parse_result')+'</div>'
     + summaryHtml
     + '</div>'
-    + '<div style="font-size:11px;font-weight:700;color:#8FA89E;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">인식된 품목 (' + (parsed.items ? parsed.items.length : 0) + '개)</div>'
+    + '<div style="font-size:11px;font-weight:700;color:#8FA89E;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">'+t('ocr.items_recognized')+' (' + t('ocr.debug.count_n',{n:_itemCnt}) + ')</div>'
     + '<div style="background:#fff;border-radius:10px;border:0.5px solid rgba(0,0,0,0.07);padding:8px 12px;margin-bottom:12px;">'
     + itemsHtml
     + '</div>'
-    + '<div style="font-size:11px;font-weight:700;color:#8FA89E;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">API 원본 텍스트 (' + lines.length + '줄)</div>'
+    + '<div style="font-size:11px;font-weight:700;color:#8FA89E;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">'+t('ocr.debug.raw_text')+' (' + t('ocr.debug.lines_n',{n:lines.length}) + ')</div>'
     + '<div style="border:0.5px solid rgba(0,0,0,0.07);border-radius:10px;overflow:hidden;margin-bottom:14px;max-height:220px;overflow-y:auto;">'
     + linesHtml
     + '</div>'
@@ -9498,6 +9493,7 @@ var I18N = {
     // 영수증 카드 액션
     'rcpt.action.edit':'✏️ 編集','rcpt.action.delete':'🗑 削除','rcpt.action.memo':'＋ 追加','rcpt.action.memo_edit':'✏️ 編集',
     'rcpt.memo.label':'📝 メモ','rcpt.memo.private':'(非公開)','rcpt.memo.empty':'まだメモがありません',
+    'rcpt.memo.placeholder':'このレシートへのメモ...\n(🔒 自分だけが見られます)','rcpt.memo.save':'💾 保存','rcpt.memo.private_note':'🔒 このメモはあなただけが見られます',
     'rcpt.pay_label':'決済手段','rcpt.map_btn':'🗺 マップで見る','rcpt.total_label':'合計',
     // 확인 / 다이얼로그
     'confirm.delete':'本当に削除しますか？','confirm.yes':'はい','confirm.no':'いいえ',
@@ -9514,6 +9510,7 @@ var I18N = {
     'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
     'ocr.store_unknown':'不明','ocr.save_budget':'💾 家計簿に保存','ocr.item_unit':'品目',
     'ocr.title':'📷 レシート解析中...','ocr.title_split':'📜 分割レシート解析中...','ocr.checking':'レシートを確認しています','ocr.organizing':'商品を整理しています','ocr.wait':'しばらくお待ちください','ocr.reading_page':'{i}/{n}枚目を読み取り中','ocr.ad_badge':'分析中...',
+    'ocr.debug.parse_result':'解析結果','ocr.debug.store':'店名','ocr.debug.items':'認識品目','ocr.debug.total':'合計','ocr.debug.raw_text':'API元テキスト','ocr.debug.count_n':'{n}件','ocr.debug.lines_n':'{n}行',
     // 편집 모달
     'edit.add_item':'+ 品目追加','edit.total':'合計','edit.total_amount':'合計金額 (¥)','edit.qty':'数量',
     // 편집/수동 모달
@@ -9717,6 +9714,7 @@ var I18N = {
     'pay.cash':'현금','pay.card':'카드','pay.qr':'QR결제','pay.transit':'교통카드',
     'rcpt.action.edit':'✏️ 수정','rcpt.action.delete':'🗑 삭제','rcpt.action.memo':'＋ 추가','rcpt.action.memo_edit':'✏️ 편집',
     'rcpt.memo.label':'📝 메모','rcpt.memo.private':'(비공개)','rcpt.memo.empty':'아직 메모가 없어요',
+    'rcpt.memo.placeholder':'이 영수증에 대한 메모...\n(🔒 나만 볼 수 있어요)','rcpt.memo.save':'💾 저장','rcpt.memo.private_note':'🔒 이 메모는 나만 볼 수 있어요',
     'rcpt.pay_label':'결제수단','rcpt.map_btn':'🗺 지도에서 보기','rcpt.total_label':'합계',
     'confirm.delete':'정말 삭제하시겠습니까?','confirm.yes':'네','confirm.no':'아니오',
     'confirm.delete_private_note':'이 가게의 비공개 메모를 삭제하시겠습니까?<br>(마커 링도 제거됩니다)',
@@ -9730,6 +9728,7 @@ var I18N = {
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
     'ocr.store_unknown':'불명','ocr.save_budget':'💾 가계부에 저장하기','ocr.item_unit':'품목',
     'ocr.title':'📷 영수증 분석 중...','ocr.title_split':'📜 분할 영수증 분석 중...','ocr.checking':'영수증을 확인하고 있어요','ocr.organizing':'품목을 정리하고 있어요','ocr.wait':'잠시만 기다려주세요','ocr.reading_page':'{i}/{n}장 읽고 있어요','ocr.ad_badge':'분석 중...',
+    'ocr.debug.parse_result':'파싱 결과','ocr.debug.store':'점포명','ocr.debug.items':'인식 품목','ocr.debug.total':'합계','ocr.debug.raw_text':'API 원본 텍스트','ocr.debug.count_n':'{n}개','ocr.debug.lines_n':'{n}줄',
     'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
     'edit.title2':'✏️ 영수증 수정','edit.store_name':'가게명','edit.date_label':'날짜','edit.category_label':'카테고리',
     'edit.pay_method':'결제수단','edit.items_label':'품목','edit.save':'💾 수정 저장',
@@ -9923,6 +9922,7 @@ var I18N = {
     'pay.cash':'Cash','pay.card':'Card','pay.qr':'QR Pay','pay.transit':'IC Card',
     'rcpt.action.edit':'✏️ Edit','rcpt.action.delete':'🗑 Delete','rcpt.action.memo':'＋ Add','rcpt.action.memo_edit':'✏️ Edit',
     'rcpt.memo.label':'📝 Memo','rcpt.memo.private':'(Private)','rcpt.memo.empty':'No memo yet',
+    'rcpt.memo.placeholder':'Memo for this receipt...\n(🔒 Only you can see it)','rcpt.memo.save':'💾 Save','rcpt.memo.private_note':'🔒 Only you can see this memo',
     'rcpt.pay_label':'Payment','rcpt.map_btn':'🗺 View on Map','rcpt.total_label':'Total',
     'confirm.delete':'Are you sure to delete?','confirm.yes':'Yes','confirm.no':'No',
     'confirm.delete_private_note':'Delete the private note for this store?<br>(Marker ring will be removed)',
@@ -9936,6 +9936,7 @@ var I18N = {
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
     'ocr.store_unknown':'Unknown','ocr.save_budget':'💾 Save to Budget','ocr.item_unit':'items',
     'ocr.title':'📷 Analyzing receipt...','ocr.title_split':'📜 Analyzing split receipt...','ocr.checking':'Reading your receipt','ocr.organizing':'Organizing items','ocr.wait':'Please wait a moment','ocr.reading_page':'Reading page {i}/{n}','ocr.ad_badge':'Analyzing...',
+    'ocr.debug.parse_result':'Parse result','ocr.debug.store':'Store','ocr.debug.items':'Items','ocr.debug.total':'Total','ocr.debug.raw_text':'API raw text','ocr.debug.count_n':'{n}','ocr.debug.lines_n':'{n} lines',
     'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
     'edit.title2':'✏️ Edit Receipt','edit.store_name':'Store','edit.date_label':'Date','edit.category_label':'Category',
     'edit.pay_method':'Payment','edit.items_label':'Items','edit.save':'💾 Save Changes',
@@ -10129,6 +10130,7 @@ var I18N = {
     'pay.cash':'现金','pay.card':'信用卡','pay.qr':'扫码支付','pay.transit':'交通卡',
     'rcpt.action.edit':'✏️ 编辑','rcpt.action.delete':'🗑 删除','rcpt.action.memo':'＋ 添加','rcpt.action.memo_edit':'✏️ 编辑',
     'rcpt.memo.label':'📝 备注','rcpt.memo.private':'(私密)','rcpt.memo.empty':'还没有备注',
+    'rcpt.memo.placeholder':'对这张票据的备注...\n(🔒 仅自己可见)','rcpt.memo.save':'💾 保存','rcpt.memo.private_note':'🔒 这条备注仅你可见',
     'rcpt.pay_label':'付款方式','rcpt.map_btn':'🗺 在地图查看','rcpt.total_label':'合计',
     'confirm.delete':'确定要删除吗？','confirm.yes':'是','confirm.no':'否',
     'confirm.delete_private_note':'删除该店的私密备注吗？<br>(图钉环也会消失)',
@@ -10142,6 +10144,7 @@ var I18N = {
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
     'ocr.store_unknown':'未知','ocr.save_budget':'💾 保存到账本','ocr.item_unit':'件',
     'ocr.title':'📷 正在分析票据...','ocr.title_split':'📜 正在分析分割票据...','ocr.checking':'正在确认票据','ocr.organizing':'正在整理商品','ocr.wait':'请稍候','ocr.reading_page':'正在读取第 {i}/{n} 张','ocr.ad_badge':'分析中...',
+    'ocr.debug.parse_result':'解析结果','ocr.debug.store':'店名','ocr.debug.items':'识别商品','ocr.debug.total':'合计','ocr.debug.raw_text':'API原始文本','ocr.debug.count_n':'{n}件','ocr.debug.lines_n':'{n}行',
     'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
     'edit.title2':'✏️ 编辑票据','edit.store_name':'店名','edit.date_label':'日期','edit.category_label':'类别',
     'edit.pay_method':'付款方式','edit.items_label':'商品','edit.save':'💾 保存修改',
@@ -16817,7 +16820,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v159';
+window.__APP_VERSION__ = 'v160';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
