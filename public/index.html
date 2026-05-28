@@ -947,7 +947,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 절약 배너 -->
     <div class="alert-banner" onclick="openOv('ov-saving')">
       <span style="font-size:18px;flex-shrink:0;">💡</span>
-      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">절약 기회 발견!</div><div style="font-size:11px;color:var(--text-2);margin-top:2px;">3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능</div></div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);" data-i18n="home.saving_cta">절약 기회 발견!</div><div style="font-size:11px;color:var(--text-2);margin-top:2px;" data-i18n="home.saving_cta_sub">3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능</div></div>
       <span style="font-size:16px;color:var(--yellow);">›</span>
     </div>
 
@@ -5411,8 +5411,9 @@ function renderHome() {
   var foodAmt  = monthReceipts.filter(function(r){return r.cat==='food';}).reduce(function(a,r){return a+r.total;},0);
   var eatAmt   = monthReceipts.filter(function(r){return r.cat==='eat'; }).reduce(function(a,r){return a+r.total;},0);
 
-  // ── 1. 절약 명언 + 오늘 지출 ──
-  var QUOTES = [
+  // ── 1. 절약 명언 + 오늘 지출 (언어별 세트) ──
+  var QUOTES = _QUOTES_BY_LANG[_currentLang] || _QUOTES_BY_LANG.ja;
+  var _UNUSED_QUOTES = [
     { q:'작은 절약이 큰 부를 만든다', a:'벤자민 프랭클린' },
     { q:'돈을 쓰기 전에 한 번 더 생각하라', a:'워런 버핏' },
     { q:'부자는 돈을 쓰는 게 아니라 돈을 모은다', a:'토머스 스탠리' },
@@ -5431,11 +5432,11 @@ function renderHome() {
   var greetEl = document.getElementById('home-greet');
   if (greetEl) {
     greetEl.innerHTML = '<div class="greet-band" style="flex-direction:column;align-items:flex-start;gap:6px;">'
-      +'<div style="font-size:13px;font-weight:700;color:var(--text-1);line-height:1.45;">'+quote.q+'</div>'
-      +'<div style="font-size:12px;font-weight:600;color:var(--text-2);">오늘의 지출 : '
+      +'<div style="font-size:13px;font-weight:700;color:var(--text-1);line-height:1.45;">'+_esc(quote.q)+'</div>'
+      +'<div style="font-size:12px;font-weight:600;color:var(--text-2);">'+t('home.today_label')+' : '
       +(todayAmt>0
         ? '<span style="color:var(--green);font-weight:800;">¥'+todayAmt.toLocaleString()+'</span>'
-        : '<span style="color:var(--text-3);">기록 없음</span>'
+        : '<span style="color:var(--text-3);">'+t('home.no_record')+'</span>'
       )
       +'</div>'
       +'</div>';
@@ -5523,8 +5524,8 @@ function renderHome() {
   if(budgetEl){
     if(budget<=0){
       budgetEl.innerHTML='<div class="budget-wrap" onclick="openBudgetSet()" style="display:flex;align-items:center;justify-content:space-between;">'
-        +'<div><div style="font-size:13px;font-weight:700;color:var(--text-2);">이달 예산 설정하기</div>'
-        +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;">목표 금액을 설정해 달성률을 확인해요</div></div>'
+        +'<div><div style="font-size:13px;font-weight:700;color:var(--text-2);">'+t('home.budget_cta')+'</div>'
+        +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('home.budget_cta_sub')+'</div></div>'
         +'<div style="font-size:24px;">🎯</div></div>';
     } else {
       var pct=Math.min(Math.round(totalAmt/budget*100),100);
@@ -5553,7 +5554,7 @@ function renderHome() {
   var _homeAdHtml = '<div id="ad-slot-home-list" style="margin:0 16px 8px;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div></div>';
   var html='';
   if(recent.length===0){
-    html='<div style="text-align:center;padding:30px 20px;color:var(--text-3);font-size:13px;">아직 영수증이 없어요<br>📷 카메라 버튼으로 스캔해보세요!</div>';
+    html='<div style="text-align:center;padding:30px 20px;color:var(--text-3);font-size:13px;">'+t('home.no_receipts_yet')+'</div>';
   } else {
     var homeCardCnt=0;
     order.forEach(function(date){
@@ -9443,6 +9444,9 @@ var I18N = {
     'home.see_all':'すべて表示','home.count_unit':'件',
     'home.period.weekly':'今週','home.period.monthly':'今月','home.period.quarter':'3ヶ月','home.period.yearly':'1年',
     'home.budget.set':'予算を設定','home.budget.left':'残り','home.budget.over':'超過',
+    'home.no_record':'記録なし','home.no_receipts_yet':'まだレシートがありません<br>📷 カメラボタンでスキャンしてみよう！',
+    'home.budget_cta':'今月の予算を設定','home.budget_cta_sub':'目標額を設定して達成率を確認',
+    'home.saving_cta':'節約チャンス発見！','home.saving_cta_sub':'3商品をスーパーを変えるだけで月¥1,320節約可能',
     // 카테고리 라벨 (영수증 기록)
     'cat.all':'すべて','cat.food':'食料品','cat.eat':'外食','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
@@ -9643,6 +9647,9 @@ var I18N = {
     'home.see_all':'전체 보기','home.count_unit':'건',
     'home.period.weekly':'주간','home.period.monthly':'월간','home.period.quarter':'3개월','home.period.yearly':'연간',
     'home.budget.set':'예산 설정','home.budget.left':'남음','home.budget.over':'초과',
+    'home.no_record':'기록 없음','home.no_receipts_yet':'아직 영수증이 없어요<br>📷 카메라 버튼으로 스캔해보세요!',
+    'home.budget_cta':'이달 예산 설정하기','home.budget_cta_sub':'목표 금액을 설정해 달성률을 확인해요',
+    'home.saving_cta':'절약 기회 발견!','home.saving_cta_sub':'3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
@@ -9827,6 +9834,9 @@ var I18N = {
     'home.see_all':'See all','home.count_unit':'',
     'home.period.weekly':'Week','home.period.monthly':'Month','home.period.quarter':'3M','home.period.yearly':'Year',
     'home.budget.set':'Set Budget','home.budget.left':'left','home.budget.over':'over',
+    'home.no_record':'No record','home.no_receipts_yet':'No receipts yet<br>📷 Tap the camera button to scan!',
+    'home.budget_cta':'Set this month’s budget','home.budget_cta_sub':'Set a goal to track your progress',
+    'home.saving_cta':'Savings found!','home.saving_cta_sub':'Switch stores for 3 items, save ¥1,320/mo',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
@@ -10011,6 +10021,9 @@ var I18N = {
     'home.see_all':'查看全部','home.count_unit':'笔',
     'home.period.weekly':'周','home.period.monthly':'月','home.period.quarter':'3月','home.period.yearly':'年',
     'home.budget.set':'设置预算','home.budget.left':'剩余','home.budget.over':'超出',
+    'home.no_record':'暂无记录','home.no_receipts_yet':'还没有票据<br>📷 点击相机按钮扫描吧！',
+    'home.budget_cta':'设置本月预算','home.budget_cta_sub':'设定目标查看达成率',
+    'home.saving_cta':'发现省钱机会！','home.saving_cta_sub':'3件商品换家超市，每月省¥1,320',
     'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
@@ -11848,6 +11861,42 @@ function _initAds() {
 /* ══════════════════════════════
    테마 색상
 ══════════════════════════════ */
+// 절약 명언 (언어별) — 홈 상단 명언 카드. 날짜 기준 순환.
+var _QUOTES_BY_LANG = {
+  ja: [
+    { q:'小さな節約が大きな富を生む' }, { q:'お金を使う前にもう一度考えよう' },
+    { q:'富裕層はお金を使うより貯める' }, { q:'今日の節約が明日の自由' },
+    { q:'必要なものと欲しいものを区別しよう' }, { q:'毎日少しずつで人生が変わる' },
+    { q:'買う前に本当に必要か問いかけよう' }, { q:'貯金は未来の自分への贈り物' },
+    { q:'お金は感情でなく計画で使おう' }, { q:'塵も積もれば山となる' },
+    { q:'無駄遣いをやめれば夢が近づく' }, { q:'支出を知ることが節約の第一歩' },
+  ],
+  ko: [
+    { q:'작은 절약이 큰 부를 만든다' }, { q:'돈을 쓰기 전에 한 번 더 생각하라' },
+    { q:'부자는 돈을 쓰는 게 아니라 모은다' }, { q:'오늘의 절약이 내일의 자유다' },
+    { q:'필요한 것과 원하는 것을 구분하라' }, { q:'매일 조금씩 아끼면 인생이 바뀐다' },
+    { q:'소비하기 전 진짜 필요한지 물어봐라' }, { q:'저축은 나중의 나를 위한 선물이다' },
+    { q:'돈은 감정이 아닌 계획으로 써라' }, { q:'티끌 모아 태산' },
+    { q:'낭비를 멈추면 꿈이 가까워진다' }, { q:'지출을 아는 것이 절약의 첫걸음' },
+  ],
+  en: [
+    { q:'Small savings build great wealth' }, { q:'Think twice before you spend' },
+    { q:'The rich save more than they spend' }, { q:"Today's saving is tomorrow's freedom" },
+    { q:'Tell needs apart from wants' }, { q:'Save a little daily, change your life' },
+    { q:'Ask if you truly need it before buying' }, { q:'Savings are a gift to future you' },
+    { q:'Spend by plan, not by emotion' }, { q:'Many drops make an ocean' },
+    { q:'Cut waste and your dreams draw near' }, { q:'Knowing your spending is step one' },
+  ],
+  zh: [
+    { q:'积少成多，小钱成大富' }, { q:'花钱之前再想一想' },
+    { q:'富人不是花钱而是攒钱' }, { q:'今天的节约是明天的自由' },
+    { q:'分清需要和想要' }, { q:'每天省一点，人生会改变' },
+    { q:'购买前先问是否真的需要' }, { q:'储蓄是给未来自己的礼物' },
+    { q:'用计划而非情绪花钱' }, { q:'积土成山' },
+    { q:'停止浪费，梦想更近' }, { q:'了解支出是节约的第一步' },
+  ]
+};
+
 var THEMES = {
   green:   { name: '에메랄드', color: '#00644D', dark: '#004132', light: '#E0ECEA', mid: '#7FB2A6', grad: 'linear-gradient(140deg,#388674 0%,#00644D 55%,#004132 100%)' },
   blue:    { name: '오션블루', color: '#0279F7', dark: '#014FA1', light: '#E1EFFE', mid: '#80BCFB', grad: 'linear-gradient(140deg,#3A97F9 0%,#0279F7 55%,#014FA1 100%)' },
@@ -16658,7 +16707,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v148';
+window.__APP_VERSION__ = 'v149';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
