@@ -6732,7 +6732,7 @@ function openMonthDetail() {
     catTotals[r.cat] = (catTotals[r.cat]||0) + r.total;
   });
   var catSorted = Object.keys(catTotals).sort(function(a,b){ return catTotals[b]-catTotals[a]; });
-  var catHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin:14px 0 8px;">카테고리별</div>';
+  var catHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin:14px 0 8px;">'+t('mdet.by_category')+'</div>';
   catSorted.forEach(function(cat) {
     var pct = Math.round(catTotals[cat]/total*100);
     var barW = Math.max(pct, 3);
@@ -6754,7 +6754,7 @@ function openMonthDetail() {
     storeCnt[r.store]    = (storeCnt[r.store]||0) + 1;
   });
   var storesSorted = Object.keys(storeTotals).sort(function(a,b){ return storeCnt[b]-storeCnt[a]; }).slice(0,3);
-  var storeHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin:16px 0 8px;">자주 간 가게 TOP 3</div>'
+  var storeHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin:16px 0 8px;">'+t('mdet.top_stores')+'</div>'
     +'<div style="background:var(--bg);border-radius:14px;overflow:hidden;">';
   storesSorted.forEach(function(s, i) {
     var medals = ['🥇','🥈','🥉'];
@@ -6762,7 +6762,7 @@ function openMonthDetail() {
       +'<div style="display:flex;align-items:center;gap:8px;">'
       +'<span style="font-size:16px;">'+medals[i]+'</span>'
       +'<div><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+s+'</div>'
-      +'<div style="font-size:11px;color:var(--text-3);margin-top:1px;">'+storeCnt[s]+'회 방문</div></div></div>'
+      +'<div style="font-size:11px;color:var(--text-3);margin-top:1px;">'+t('mdet.visits',{n:storeCnt[s]})+'</div></div></div>'
       +'<span style="font-size:13px;font-weight:800;color:var(--green);">¥'+storeTotals[s].toLocaleString()+'</span>'
       +'</div>';
   });
@@ -6775,7 +6775,7 @@ function openMonthDetail() {
   });
   var topDay = Object.keys(dayTotals).sort(function(a,b){ return dayTotals[b]-dayTotals[a]; })[0];
   var topDayReceipts = monthReceipts.filter(function(r){ return r.date===topDay; });
-  var topDayHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin:16px 0 8px;">최고 지출일</div>'
+  var topDayHtml = '<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.4px;text-transform:uppercase;margin:16px 0 8px;">'+t('mdet.top_day')+'</div>'
     +'<div style="background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:14px;padding:14px 16px;color:#fff;box-shadow:var(--shadow-green);">'
     +'<div style="font-size:13px;opacity:.8;margin-bottom:2px;">'+topDay+'</div>'
     +'<div style="font-size:22px;font-weight:800;letter-spacing:-1px;margin-bottom:8px;">¥'+dayTotals[topDay].toLocaleString()+'</div>'
@@ -6795,14 +6795,14 @@ function openMonthDetail() {
   var zeroDays = daysInMonth - days;
   var summaryFooter = '<div style="display:flex;gap:8px;margin-top:14px;">'
     +'<div style="flex:1;background:var(--green-light);border-radius:12px;padding:12px;text-align:center;">'
-    +'<div style="font-size:20px;font-weight:800;color:var(--green);">'+days+'일</div>'
-    +'<div style="font-size:11px;color:var(--text-2);margin-top:2px;font-weight:600;">지출 있는 날</div></div>'
+    +'<div style="font-size:20px;font-weight:800;color:var(--green);">'+t('mdet.days_n',{n:days})+'</div>'
+    +'<div style="font-size:11px;color:var(--text-2);margin-top:2px;font-weight:600;">'+t('mdet.spend_days')+'</div></div>'
     +'<div style="flex:1;background:var(--bg);border-radius:12px;padding:12px;text-align:center;border:0.5px solid var(--border);">'
-    +'<div style="font-size:20px;font-weight:800;color:var(--text-2);">'+zeroDays+'일</div>'
-    +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:600;">지출 없는 날</div></div>'
+    +'<div style="font-size:20px;font-weight:800;color:var(--text-2);">'+t('mdet.days_n',{n:zeroDays})+'</div>'
+    +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:600;">'+t('mdet.no_spend_days')+'</div></div>'
     +'<div style="flex:1;background:var(--bg);border-radius:12px;padding:12px;text-align:center;border:0.5px solid var(--border);">'
     +'<div style="font-size:20px;font-weight:800;color:var(--text-2);">¥'+Math.round(total/days).toLocaleString()+'</div>'
-    +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:600;">일 평균</div></div>'
+    +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;font-weight:600;">'+t('mdet.daily_avg')+'</div></div>'
     +'</div><div style="height:8px;"></div>';
 
   document.getElementById('mdet-content').innerHTML = summaryFooter + catHtml + storeHtml + rankHtml + topDayHtml;
@@ -9589,6 +9589,7 @@ var I18N = {
     'rep.week_daily_title':'{y}年 {m}月 今週の日別支出','home.week_daily':'今週の日別支出','home.item_count':'{n}品目','home.date':'{y}年 {m}月 {d}日 ({dow})','home.weekdays_sun':'日,月,火,水,木,金,土',
     'rep.pay_breakdown':'💳 支払い方法別支出','rep.unit_cnt':'件','rep.book_title':'{y}年 {m}月 家計簿','rep.week_n':'第{n}週',
     'hist.title':'履歴','hist.month':'{y}年 {m}月','hist.total':'合計 ¥{amt} ({n}件)','rep.mon_short':'{m}月','cat.cnt_unit':'件','mdet.count_n':'{n}件','mdet.detail_title':'{y}年 {m}月 支出詳細',
+    'mdet.by_category':'カテゴリ別','mdet.top_stores':'よく行く店 TOP 3','mdet.visits':'{n}回訪問','mdet.top_day':'最高支出日','mdet.spend_days':'支出あり','mdet.no_spend_days':'支出なし','mdet.daily_avg':'1日平均','mdet.days_n':'{n}日',
     'pay.label.cash':'現金','pay.label.credit':'クレジットカード','pay.label.ic':'交通系IC','pay.label.qr':'QR決済','pay.label.debit':'デビットカード',
     'rank.nth':'{n}位','rep.weekdays':'月,火,水,木,金,土,日','rep.no_data':'データがありません','rep.detail_view':'詳細を見る ›',
     'radar.empty_title':'データがまだありません','radar.empty_sub':'レシートを撮影すると自動で追跡されます',
@@ -9823,6 +9824,7 @@ var I18N = {
     'rep.week_daily_title':'{y}年 {m}月 이번 주 일별 지출','home.week_daily':'이번 주 일별 지출','home.item_count':'{n}품목','home.date':'{y}年 {m}月 {d}日 ({dow})','home.weekdays_sun':'일,월,화,수,목,금,토',
     'rep.pay_breakdown':'💳 결제수단별 지출','rep.unit_cnt':'건','rep.book_title':'{y}年 {m}月 가계부','rep.week_n':'{n}주',
     'hist.title':'내역','hist.month':'{y}年 {m}月','hist.total':'총 ¥{amt} ({n}건)','rep.mon_short':'{m}月','cat.cnt_unit':'건','mdet.count_n':'{n}건','mdet.detail_title':'{y}年 {m}月 지출 상세',
+    'mdet.by_category':'카테고리별','mdet.top_stores':'자주 간 가게 TOP 3','mdet.visits':'{n}회 방문','mdet.top_day':'최고 지출일','mdet.spend_days':'지출 있는 날','mdet.no_spend_days':'지출 없는 날','mdet.daily_avg':'일 평균','mdet.days_n':'{n}일',
     'pay.label.cash':'현금','pay.label.credit':'신용카드','pay.label.ic':'IC카드','pay.label.qr':'QR결제','pay.label.debit':'체크카드',
     'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요','rep.detail_view':'상세 보기 ›',
     'radar.empty_title':'아직 데이터가 없어요','radar.empty_sub':'영수증을 촬영하면 자동으로 추적됩니다',
@@ -10039,6 +10041,7 @@ var I18N = {
     'rep.week_daily_title':'{mon} {y} · This week','home.week_daily':'This week by day','home.item_count':'{n} items','home.date':'{dow}, {mon} {d}, {y}','home.weekdays_sun':'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
     'rep.pay_breakdown':'💳 Spend by payment','rep.unit_cnt':'','rep.book_title':'{y}/{m} Budget','rep.week_n':'W{n}',
     'hist.title':'History','hist.month':'{mon} {y}','hist.total':'Total ¥{amt} ({n})','rep.mon_short':'{mon}','cat.cnt_unit':'','mdet.count_n':'{n} items','mdet.detail_title':'{mon} {y} Spending',
+    'mdet.by_category':'By category','mdet.top_stores':'Top 3 stores','mdet.visits':'{n} visits','mdet.top_day':'Top spending day','mdet.spend_days':'Days with spending','mdet.no_spend_days':'No-spend days','mdet.daily_avg':'Daily avg','mdet.days_n':'{n} days',
     'pay.label.cash':'Cash','pay.label.credit':'Credit','pay.label.ic':'IC Card','pay.label.qr':'QR Pay','pay.label.debit':'Debit',
     'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data','rep.detail_view':'View detail ›',
     'radar.empty_title':'No data yet','radar.empty_sub':'Tracked automatically when you scan receipts',
@@ -10255,6 +10258,7 @@ var I18N = {
     'rep.week_daily_title':'{y}年 {m}月 本周每日支出','home.week_daily':'本周每日支出','home.item_count':'{n}件','home.date':'{y}年{m}月{d}日 ({dow})','home.weekdays_sun':'日,一,二,三,四,五,六',
     'rep.pay_breakdown':'💳 按付款方式支出','rep.unit_cnt':'笔','rep.book_title':'{y}年 {m}月 账本','rep.week_n':'第{n}周',
     'hist.title':'记录','hist.month':'{y}年 {m}月','hist.total':'共 ¥{amt} ({n}笔)','rep.mon_short':'{m}月','cat.cnt_unit':'笔','mdet.count_n':'{n}笔','mdet.detail_title':'{y}年 {m}月 支出明细',
+    'mdet.by_category':'按分类','mdet.top_stores':'常去店铺 TOP 3','mdet.visits':'{n}次到访','mdet.top_day':'最高支出日','mdet.spend_days':'有支出天数','mdet.no_spend_days':'无支出天数','mdet.daily_avg':'日均','mdet.days_n':'{n}天',
     'pay.label.cash':'现金','pay.label.credit':'信用卡','pay.label.ic':'交通卡','pay.label.qr':'QR支付','pay.label.debit':'借记卡',
     'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据','rep.detail_view':'查看详情 ›',
     'radar.empty_title':'还没有数据','radar.empty_sub':'拍摄票据后将自动追踪',
@@ -17033,7 +17037,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v173';
+window.__APP_VERSION__ = 'v174';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
