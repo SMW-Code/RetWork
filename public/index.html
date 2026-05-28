@@ -10249,7 +10249,12 @@ var _currentLang = _detectLang();
 // t(key, {name:'value'}) — 텍스트 안의 {name} 을 value 로 치환
 function t(key, params){
   var dict = I18N[_currentLang] || I18N.ja;
-  var s = dict[key] || (I18N.ja && I18N.ja[key]) || (I18N.ko && I18N.ko[key]) || key;
+  // 빈 문자열('')도 유효한 번역값 — falsy로 오인해 다른 언어로 fallback 하지 않도록 in 체크
+  var s;
+  if (dict && key in dict) s = dict[key];
+  else if (I18N.ja && key in I18N.ja) s = I18N.ja[key];
+  else if (I18N.ko && key in I18N.ko) s = I18N.ko[key];
+  else s = key;
   if (params && typeof s === 'string' && s.indexOf('{') >= 0) {
     s = s.replace(/\{(\w+)\}/g, function(_, k){
       return params[k] != null ? params[k] : '';
@@ -16820,7 +16825,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v160';
+window.__APP_VERSION__ = 'v161';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
