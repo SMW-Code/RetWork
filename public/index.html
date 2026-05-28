@@ -9442,6 +9442,7 @@ var I18N = {
     'rsd.times':'{n}回','rsd.top_items':'🛍 よく買う品目','rsd.item_stat':'{c}回 · ¥{avg}/個',
     'rsd.monthly':'📈 月別支出（直近6ヶ月）','rsd.recent':'🧾 最近のレシート ({a}/{b})','rsd.item_count':'{n}個 商品',
     'rsd.see_all':'全{n}件を見る →',
+    'theme.custom':'カスタム','theme.invalid':'カラーコードを確認してください','theme.pick':'好きな色を選ぶ',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9618,6 +9619,7 @@ var I18N = {
     'rsd.times':'{n}회','rsd.top_items':'🛍 자주 산 품목','rsd.item_stat':'{c}회 · ¥{avg}/1개',
     'rsd.monthly':'📈 월별 지출 (최근 6개월)','rsd.recent':'🧾 최근 영수증 ({a}/{b})','rsd.item_count':'{n}개 상품',
     'rsd.see_all':'전체 {n}건 보기 →',
+    'theme.custom':'커스텀','theme.invalid':'색상 코드를 확인해주세요','theme.pick':'원하는 색 선택',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9793,6 +9795,7 @@ var I18N = {
     'rsd.times':'{n}','rsd.top_items':'🛍 Frequently bought','rsd.item_stat':'{c}x · ¥{avg}/ea',
     'rsd.monthly':'📈 Monthly (last 6 months)','rsd.recent':'🧾 Recent receipts ({a}/{b})','rsd.item_count':'{n} items',
     'rsd.see_all':'See all {n} →',
+    'theme.custom':'Custom','theme.invalid':'Please check the color code','theme.pick':'Pick your color',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9968,6 +9971,7 @@ var I18N = {
     'rsd.times':'{n}次','rsd.top_items':'🛍 常买商品','rsd.item_stat':'{c}次 · ¥{avg}/个',
     'rsd.monthly':'📈 月支出（近6个月）','rsd.recent':'🧾 最近票据 ({a}/{b})','rsd.item_count':'{n}件商品',
     'rsd.see_all':'查看全部 {n} 笔 →',
+    'theme.custom':'自定义','theme.invalid':'请检查颜色代码','theme.pick':'选择喜欢的颜色',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -11797,35 +11801,80 @@ function toggleDarkMode() {
 }
 
 function applyTheme(key, silent) {
-  var t = THEMES[key];
-  if (!t) return;
+  var th = THEMES[key];
+  if (!th) return;
   _currentTheme = key;
   var r = document.documentElement;
-  r.style.setProperty('--green',       t.color);
-  r.style.setProperty('--green-dark',  t.dark);
-  r.style.setProperty('--green-light', t.light);
-  r.style.setProperty('--green-mid',   t.mid);
-  r.style.setProperty('--shadow-green','0 6px 24px '+t.dark+'4D, 0 2px 8px '+t.dark+'26');
+  r.style.setProperty('--green',       th.color);
+  r.style.setProperty('--green-dark',  th.dark);
+  r.style.setProperty('--green-light', th.light);
+  r.style.setProperty('--green-mid',   th.mid);
+  r.style.setProperty('--shadow-green','0 6px 24px '+th.dark+'4D, 0 2px 8px '+th.dark+'26');
   // チリつも 테마도 동기화
-  r.style.setProperty('--gold',        t.color);
-  r.style.setProperty('--gold-dark',   t.dark);
-  r.style.setProperty('--gold-light',  t.light);
-  r.style.setProperty('--gold-shadow', '0 6px 24px '+t.dark+'4D, 0 2px 8px '+t.dark+'26');
+  r.style.setProperty('--gold',        th.color);
+  r.style.setProperty('--gold-dark',   th.dark);
+  r.style.setProperty('--gold-light',  th.light);
+  r.style.setProperty('--gold-shadow', '0 6px 24px '+th.dark+'4D, 0 2px 8px '+th.dark+'26');
   // 요약 카드 그라디언트
-  document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = t.grad; });
+  document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = th.grad; });
   // 알파 변형 (글로우 / 보더 / 약한 배경 등에서 쓰임 — 하드코딩 초록색을 대체)
-  r.style.setProperty('--theme-a05', t.color + '0D');  //  5% alpha (배경 매우 옅음)
-  r.style.setProperty('--theme-a10', t.color + '1A');  // 10% alpha
-  r.style.setProperty('--theme-a15', t.color + '26');  // 15% alpha
-  r.style.setProperty('--theme-a18', t.color + '2E');  // 18%
-  r.style.setProperty('--theme-a30', t.color + '4D');  // 30%
-  r.style.setProperty('--theme-a50', t.color + '80');  // 50%
+  r.style.setProperty('--theme-a05', th.color + '0D');  //  5% alpha (배경 매우 옅음)
+  r.style.setProperty('--theme-a10', th.color + '1A');  // 10% alpha
+  r.style.setProperty('--theme-a15', th.color + '26');  // 15% alpha
+  r.style.setProperty('--theme-a18', th.color + '2E');  // 18%
+  r.style.setProperty('--theme-a30', th.color + '4D');  // 30%
+  r.style.setProperty('--theme-a50', th.color + '80');  // 50%
   localStorage.setItem('receiptiq_theme', key);
   renderThemeSwatches();
   // 모바일 상단 status bar 색상도 테마에 맞게
   _updateMobileBarColor();
   if (!silent) showToast(t('toast.theme_changed'));
 }
+
+/* ── 커스텀 테마: 메인 hex 하나로 dark/light/mid/grad 자동 파생 ── */
+function _hexToRgb(hex){
+  hex = String(hex||'').replace('#','').trim();
+  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  if (!/^[0-9a-fA-F]{6}$/.test(hex)) return null;
+  return { r: parseInt(hex.slice(0,2),16), g: parseInt(hex.slice(2,4),16), b: parseInt(hex.slice(4,6),16) };
+}
+function _rgbToHex(r,g,b){
+  var c = function(v){ v = Math.max(0, Math.min(255, Math.round(v))); return ('0'+v.toString(16)).slice(-2); };
+  return '#' + c(r) + c(g) + c(b);
+}
+// 메인색에서 테마 5속성 파생 (수동 계산과 동일 규칙)
+function _deriveTheme(hex, name){
+  var rgb = _hexToRgb(hex);
+  if (!rgb) return null;
+  var r = rgb.r, g = rgb.g, b = rgb.b;
+  var dark   = _rgbToHex(r*0.65, g*0.65, b*0.65);
+  var light  = _rgbToHex(r+(255-r)*0.88, g+(255-g)*0.88, b+(255-b)*0.88);
+  var mid    = _rgbToHex(r+(255-r)*0.50, g+(255-g)*0.50, b+(255-b)*0.50);
+  var gstart = _rgbToHex(r+(255-r)*0.22, g+(255-g)*0.22, b+(255-b)*0.22);
+  var main   = _rgbToHex(r,g,b);
+  return {
+    name: name || 'カスタム',
+    color: main, dark: dark, light: light, mid: mid,
+    grad: 'linear-gradient(140deg,'+gstart+' 0%,'+main+' 55%,'+dark+' 100%)'
+  };
+}
+// 커스텀 색 적용 + 저장
+function applyCustomColor(hex){
+  var th = _deriveTheme(hex, t('theme.custom'));
+  if (!th) { showToast(t('theme.invalid')); return; }
+  THEMES.custom = th;
+  localStorage.setItem('receiptiq_custom_color', th.color);
+  applyTheme('custom');
+}
+// 앱 시작 시 저장된 커스텀 색 복원 (THEMES.custom 등록)
+function _initCustomTheme(){
+  var saved = localStorage.getItem('receiptiq_custom_color');
+  if (saved) {
+    var th = _deriveTheme(saved, (typeof t==='function'?t('theme.custom'):'커스텀'));
+    if (th) THEMES.custom = th;
+  }
+}
+_initCustomTheme();
 
 /* ── 모바일 status bar 색상은 고정 (흰색) ──
    동적으로 테마색 따라가게 했더니 PWA install 시점 캐시 / 시스템 렌더링 갭으로 초록선 잔존 문제.
@@ -12403,16 +12452,32 @@ async function _touchLastSeen() {
 function renderThemeSwatches() {
   var el = document.getElementById('theme-swatches');
   if (!el) return;
-  el.innerHTML = Object.entries(THEMES).map(function(pair) {
-    var key = pair[0], t = pair[1];
+  var html = Object.entries(THEMES).map(function(pair) {
+    var key = pair[0], th = pair[1];
     var active = key === _currentTheme;
     return '<div onclick="applyTheme(\''+key+'\')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;">'
-      +'<div style="width:36px;height:36px;border-radius:50%;background:'+t.color+';transition:all .2s;margin:0 auto;'
-      +(active ? 'box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px '+t.color+';transform:scale(1.12);' : 'opacity:0.75;')
+      +'<div style="width:36px;height:36px;border-radius:50%;background:'+th.color+';transition:all .2s;margin:0 auto;'
+      +(active ? 'box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px '+th.color+';transform:scale(1.12);' : 'opacity:0.75;')
       +'"></div>'
-      +'<div style="font-size:9px;font-weight:'+(active?'800':'600')+';color:'+(active?t.color:'var(--text-3)')+';text-align:center;">'+t.name+'</div>'
+      +'<div style="font-size:9px;font-weight:'+(active?'800':'600')+';color:'+(active?th.color:'var(--text-3)')+';text-align:center;">'+th.name+'</div>'
       +'</div>';
   }).join('');
+
+  // ── 커스텀 색상 선택 스와치 (무지개 + 컬러 피커) ──
+  var customActive = _currentTheme === 'custom';
+  var customColor = (THEMES.custom && THEMES.custom.color) || '#888888';
+  var swatchBg = customActive
+    ? customColor
+    : 'conic-gradient(from 0deg,#ff0000,#ff9900,#ffee00,#33dd33,#00cccc,#3366ff,#9933ff,#ff3399,#ff0000)';
+  html += '<div onclick="document.getElementById(\'theme-custom-input\').click()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;position:relative;">'
+    +'<div style="width:36px;height:36px;border-radius:50%;background:'+swatchBg+';transition:all .2s;margin:0 auto;display:flex;align-items:center;justify-content:center;'
+    +(customActive ? 'box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px '+customColor+';transform:scale(1.12);' : 'opacity:0.9;')
+    +'">'+(customActive?'':'<span style="font-size:15px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">🎨</span>')+'</div>'
+    +'<div style="font-size:9px;font-weight:'+(customActive?'800':'600')+';color:'+(customActive?customColor:'var(--text-3)')+';text-align:center;">'+t('theme.custom')+'</div>'
+    +'<input type="color" id="theme-custom-input" value="'+customColor+'" oninput="applyCustomColor(this.value)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">'
+    +'</div>';
+
+  el.innerHTML = html;
 }
 
 /* ── 온보딩 ── */
@@ -16326,7 +16391,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v143';
+window.__APP_VERSION__ = 'v144';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
