@@ -12445,7 +12445,14 @@ async function _sdLoadGooglePlacesInfo(sData) {
     var place = results[0];
     var placeId = place.id;
     if (_sdPlacesCache[placeId]) {
-      _sdRenderPlacesInfo(_sdPlacesCache[placeId], sData);
+      var cached = _sdPlacesCache[placeId];
+      // 캐시된 website 도 새 sData / _sdSData 에 동기화 (재오픈 시 버튼 활성화 유지)
+      if (cached.website) {
+        sData.website = cached.website;
+        _sdSData.website = cached.website;
+      }
+      _sdRenderPlacesInfo(cached, sData);
+      if (typeof _sdRenderSideActions === 'function') _sdRenderSideActions();
       return;
     }
 
@@ -12506,7 +12513,16 @@ function _sdLoadGooglePlacesInfoLegacy(sData) {
       _sdRenderPlacesInfoFallback(sData); return;
     }
     var placeId = results[0].place_id;
-    if (_sdPlacesCache[placeId]) { _sdRenderPlacesInfo(_sdPlacesCache[placeId], sData); return; }
+    if (_sdPlacesCache[placeId]) {
+      var cached = _sdPlacesCache[placeId];
+      if (cached.website) {
+        sData.website = cached.website;
+        _sdSData.website = cached.website;
+      }
+      _sdRenderPlacesInfo(cached, sData);
+      if (typeof _sdRenderSideActions === 'function') _sdRenderSideActions();
+      return;
+    }
     service.getDetails({
       placeId: placeId,
       fields: ['name', 'opening_hours', 'rating', 'user_ratings_total', 'formatted_phone_number', 'website', 'price_level', 'geometry']
@@ -15612,7 +15628,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v126';
+window.__APP_VERSION__ = 'v127';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
