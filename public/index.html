@@ -787,14 +787,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 슬라이드 1 -->
       <div class="onb-slide">
         <div class="onb-illus" style="background:var(--green-light);">🧾</div>
-        <div class="onb-title">ReceiptIQ에 오신 걸 환영해요!</div>
-        <div class="onb-desc">영수증 한 장으로 시작하는<br>일본 생활 스마트 가계부예요.<br>AI가 다 알아서 입력해줘요.</div>
+        <div class="onb-title" data-i18n="onb1.title">ReceiptIQへようこそ！</div>
+        <div class="onb-desc" data-i18n="onb1.desc">レシート1枚から始まる<br>日本生活のスマート家計簿。<br>AIが自動で入力します。</div>
       </div>
       <!-- 슬라이드 2 -->
       <div class="onb-slide">
         <div class="onb-illus" style="background:var(--blue-bg);">📷</div>
-        <div class="onb-title">찍으면 바로 자동 입력!</div>
-        <div class="onb-desc">영수증 사진을 찍으면<br>AI가 가게명 · 품목 · 금액을<br>자동으로 인식해서 기록해줘요.</div>
+        <div class="onb-title" data-i18n="onb2.title">撮るだけで自動入力！</div>
+        <div class="onb-desc" data-i18n="onb2.desc">レシート写真を撮ると<br>AIが店名・品目・金額を<br>自動で認識して記録します。</div>
       </div>
       <!-- 슬라이드 3 -->
       <div class="onb-slide">
@@ -805,8 +805,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 슬라이드 4 -->
       <div class="onb-slide">
         <div class="onb-illus" style="background:var(--purple-bg);">🗺️</div>
-        <div class="onb-title">주변 가격 비교까지!</div>
-        <div class="onb-desc">같은 상품이 어느 가게가 더 싼지<br>커뮤니티 데이터와 지도로<br>한번에 확인할 수 있어요.</div>
+        <div class="onb-title" data-i18n="onb4.title">周辺の価格比較まで！</div>
+        <div class="onb-desc" data-i18n="onb4.desc">同じ商品がどの店で安いか<br>コミュニティデータと地図で<br>一目で確認できます。</div>
       </div>
     </div>
   </div>
@@ -817,8 +817,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="onb-dot"></div>
   </div>
   <div class="onb-footer">
-    <button class="onb-btn-main" id="onb-main-btn" onclick="onbNext()">다음</button>
-    <div class="onb-btn-skip" onclick="onbSkipToAuth()">건너뛰기</div>
+    <button class="onb-btn-main" id="onb-main-btn" onclick="onbNext()" data-i18n="btn.next2">次へ</button>
+    <div class="onb-btn-skip" onclick="onbSkipToAuth()" data-i18n="btn.skip">スキップ</div>
   </div>
 </div>
 
@@ -833,12 +833,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 탭 전환 -->
     <div style="display:flex;width:100%;background:var(--surface);border-radius:12px;padding:3px;margin-bottom:20px;border:0.5px solid var(--border);">
       <button id="auth-tab-login" onclick="switchAuthTab('login')"
-        style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--green);color:#fff;transition:all .2s;">
-        로그인
+        style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--green);color:#fff;transition:all .2s;" data-i18n="auth.login">
+        ログイン
       </button>
       <button id="auth-tab-signup" onclick="switchAuthTab('signup')"
-        style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text-3);transition:all .2s;">
-        회원가입
+        style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text-3);transition:all .2s;" data-i18n="auth.signup">
+        新規登録
       </button>
     </div>
 
@@ -846,9 +846,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div id="auth-error" style="font-size:12px;color:var(--red);margin-bottom:10px;text-align:center;display:none;width:100%;padding:8px 12px;background:var(--surface);border-radius:10px;border:0.5px solid var(--border);box-sizing:border-box;"></div>
 
     <!-- 공통: 이메일 / 비밀번호 -->
-    <input id="auth-email" type="email" placeholder="이메일" autocomplete="email"
+    <input id="auth-email" type="email" placeholder="メールアドレス" data-i18n-placeholder="auth.email" autocomplete="email"
       style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:13px 16px;font-size:14px;font-family:var(--font);margin-bottom:10px;outline:none;background:#fff;box-sizing:border-box;">
-    <input id="auth-password" type="password" placeholder="비밀번호" autocomplete="current-password"
+    <input id="auth-password" type="password" placeholder="パスワード" data-i18n-placeholder="auth.password" autocomplete="current-password"
       style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:13px 16px;font-size:14px;font-family:var(--font);margin-bottom:10px;outline:none;background:#fff;box-sizing:border-box;">
 
     <!-- 회원가입 전용 추가 정보 -->
@@ -859,7 +859,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </select>
       <!-- 성별 -->
       <div style="margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:7px;letter-spacing:.3px;">성별</div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:7px;letter-spacing:.3px;" data-i18n="auth.gender">性別</div>
         <div style="display:flex;gap:8px;">
           <button id="auth-gender-m" onclick="selectGender('M')"
             style="flex:1;padding:11px;border:1px solid var(--border-mid);border-radius:12px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:#fff;color:var(--text-2);transition:all .18s;">
@@ -922,9 +922,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="s-amount" id="home-total">¥ 0</div>
       <div class="s-sub" id="home-sub"></div>
       <div class="s-row">
-        <div class="s-mini"><div class="s-mini-lbl">식료품</div><div class="s-mini-val" id="home-food">¥0</div></div>
-        <div class="s-mini"><div class="s-mini-lbl">식사</div><div class="s-mini-val" id="home-eat">¥0</div></div>
-        <div class="s-mini"><div class="s-mini-lbl">기타</div><div class="s-mini-val" id="home-other">¥0</div></div>
+        <div class="s-mini"><div class="s-mini-lbl" data-i18n="cat.food">食料品</div><div class="s-mini-val" id="home-food">¥0</div></div>
+        <div class="s-mini"><div class="s-mini-lbl" data-i18n="cat.eat">外食</div><div class="s-mini-val" id="home-eat">¥0</div></div>
+        <div class="s-mini"><div class="s-mini-lbl" data-i18n="cat.other">その他</div><div class="s-mini-val" id="home-other">¥0</div></div>
       </div>
       <!-- 주간 스파크라인 -->
       <div id="home-spark"></div>
@@ -949,7 +949,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
 
     <!-- 날짜별 그룹 영수증 -->
-    <div class="sec-title">최근 영수증</div>
+    <div class="sec-title" data-i18n="home.recent">最近のレシート</div>
     <div id="home-receipts"></div>
     <div class="spacer"></div>
   </div>
@@ -1006,10 +1006,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 지출 추이 -->
       <div style="padding:14px 16px 6px;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;" data-i18n="home.trend">📈 支出推移</div>
       <div class="period-bar">
-        <div class="chip active" onclick="switchPeriod(this,'week')">주간</div>
-        <div class="chip" onclick="switchPeriod(this,'month')">월간</div>
-        <div class="chip" onclick="switchPeriod(this,'two')">3개월</div>
-        <div class="chip" onclick="switchPeriod(this,'year')">연간</div>
+        <div class="chip active" onclick="switchPeriod(this,'week')" data-i18n="home.period.weekly">今週</div>
+        <div class="chip" onclick="switchPeriod(this,'month')" data-i18n="home.period.monthly">今月</div>
+        <div class="chip" onclick="switchPeriod(this,'two')" data-i18n="home.period.quarter">3ヶ月</div>
+        <div class="chip" onclick="switchPeriod(this,'year')" data-i18n="home.period.yearly">1年</div>
       </div>
       <div class="bar-card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -1086,8 +1086,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <span class="cal-btn" onclick="changeMonth(1)">›</span>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border);">
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div>식료품</div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange);"></div>식사</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div><span data-i18n="cat.food">食料品</span></div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange);"></div><span data-i18n="cat.eat">外食</span></div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div>생활용품</div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div>의약품</div>
       </div>
@@ -3204,13 +3204,25 @@ var CAT_ICON = {
   beauty:'💇', drink:'🍺', edu:'📚',
   fuel:'⛽', park:'🅿️'
 };
-var CAT_LABEL = {
-  food:'식료품', eat:'식사',   life:'생활용품', med:'의약품',
-  cafe:'카페',   shop:'쇼핑',  ent:'오락·레저', tra:'교통',
-  travel:'여행', fixed:'고정비', hobby:'취미',   other:'기타',
-  beauty:'미용', drink:'술·유흥', edu:'교육',
-  fuel:'주유', park:'주차'
+// CAT_LABEL — Proxy 를 통해 i18n 키 → 현재 언어 텍스트로 자동 변환
+// 기존 코드의 CAT_LABEL[c] 접근은 그대로 작동하면서 자동 번역됨
+var _CAT_LABEL_KEYS = {
+  food:'cat.food', eat:'cat.eat', life:'cat.life', med:'cat.med',
+  cafe:'cat.cafe', shop:'cat.shop', ent:'cat.ent', tra:'cat.tra',
+  travel:'cat.travel', fixed:'cat.fixed', hobby:'cat.hobby', other:'cat.other',
+  beauty:'cat.beauty', drink:'cat.drink', edu:'cat.edu',
+  fuel:'cat.other', park:'cat.tra'
 };
+var CAT_LABEL = (typeof Proxy === 'function')
+  ? new Proxy(_CAT_LABEL_KEYS, {
+      get: function(target, prop) {
+        var key = target[prop];
+        return key ? t(key) : '';
+      }
+    })
+  // Proxy 미지원 (legacy 브라우저) — 일본어 기본값 fallback
+  : { food:'食料品', eat:'外食', life:'生活雑貨', med:'医療・健康', cafe:'カフェ', shop:'ショッピング', ent:'娯楽', tra:'交通', travel:'旅行', fixed:'固定費', hobby:'趣味', other:'その他', beauty:'美容', drink:'飲み会', edu:'教育', fuel:'その他', park:'交通' };
+function _catLabel(c){ return CAT_LABEL[c] || ''; }
 
 // 지불 방법
 var PAY_ICON  = { cash:'💴', credit:'💳', ic:'🚃', qr:'📱', debit:'🏦' };
@@ -5619,7 +5631,7 @@ function _openCatDrop() {
   list.innerHTML = '';
   _CAT_LIST.forEach(function(cat) {
     var icon  = cat === 'all' ? '✨' : CAT_ICON[cat];
-    var label = cat === 'all' ? '전체' : CAT_LABEL[cat];
+    var label = cat === 'all' ? t('cat.all') : CAT_LABEL[cat];
     var isSel = cat === _currentCatFilter;
     var el = document.createElement('button');
     el.style.cssText = 'display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:20px;border:1.5px solid '
@@ -9288,7 +9300,39 @@ var I18N = {
     'ct.reward.title':'🎁 チリワード','ct.reward.sub':'ポイント獲得 & 抽選',
     // 가게 상세 모달 추가
     'sd.no_address':'住所情報なし','sd.no_rating':'評価なし',
-    // 동적 토스트 (변수 치환은 {name} 형태)
+    // 온보딩 슬라이드 1~4
+    'onb1.title':'ReceiptIQへようこそ！','onb1.desc':'レシート1枚から始まる<br>日本生活のスマート家計簿。<br>AIが自動で入力します。',
+    'onb2.title':'撮るだけで自動入力！','onb2.desc':'レシート写真を撮ると<br>AIが店名・品目・金額を<br>自動で認識して記録します。',
+    'onb4.title':'周辺の価格比較まで！','onb4.desc':'同じ商品がどの店で安いか<br>コミュニティデータと地図で<br>一目で確認できます。',
+    'btn.next2':'次へ','btn.skip':'スキップ',
+    // 인증 화면
+    'auth.login':'ログイン','auth.signup':'新規登録',
+    'auth.email':'メールアドレス','auth.password':'パスワード',
+    'auth.gender':'性別','auth.male':'男性','auth.female':'女性','auth.other':'その他',
+    'auth.birth':'生年','auth.nickname':'ニックネーム',
+    'auth.login_btn':'ログイン','auth.signup_btn':'新規登録',
+    'auth.google':'Googleでログイン','auth.terms_agree':'利用規約とプライバシーポリシーに同意します',
+    // 홈 / 가계부
+    'home.recent':'最近のレシート','home.no_data':'まだデータがありません',
+    'home.scan_first':'レシートを撮影して始めましょう',
+    'home.see_all':'すべて表示','home.count_unit':'件',
+    'home.period.weekly':'今週','home.period.monthly':'今月','home.period.quarter':'3ヶ月','home.period.yearly':'1年',
+    'home.budget.set':'予算を設定','home.budget.left':'残り','home.budget.over':'超過',
+    // 카테고리 라벨 (영수증 기록)
+    'cat.all':'すべて','cat.food':'食料品','cat.eat':'外食','cat.cafe':'カフェ','cat.life':'生活雑貨',
+    'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
+    'cat.travel':'旅行','cat.fixed':'固定費','cat.hobby':'趣味','cat.beauty':'美容',
+    'cat.drink':'飲み会','cat.edu':'教育','cat.other':'その他',
+    // 결제수단
+    'pay.cash':'現金','pay.card':'カード','pay.qr':'QR決済','pay.transit':'交通系IC',
+    // 영수증 카드 액션
+    'rcpt.action.edit':'✏️ 編集','rcpt.action.delete':'🗑 削除','rcpt.action.memo':'＋ 追加','rcpt.action.memo_edit':'✏️ 編集',
+    'rcpt.memo.label':'📝 メモ','rcpt.memo.private':'(非公開)','rcpt.memo.empty':'まだメモがありません',
+    'rcpt.pay_label':'決済手段','rcpt.map_btn':'🗺 マップで見る','rcpt.total_label':'合計',
+    // 확인 / 다이얼로그
+    'confirm.delete':'本当に削除しますか？','confirm.yes':'はい','confirm.no':'いいえ',
+    'confirm.delete_private_note':'この店の非公開メモを削除しますか？<br>(マーカーリングも消えます)',
+    'toast.private_deleted':'🗑 非公開メモを削除しました',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
     'toast.daily_limit':'今日の視聴上限（{n}回）に達しました',
     'toast.exchange_done':'✅ {name} と交換しました！',
@@ -9395,6 +9439,32 @@ var I18N = {
     'ct.talk.search.placeholder':'게시물 검색...','ct.talk.write':'글쓰기',
     'ct.reward.title':'🎁 치리워드','ct.reward.sub':'포인트 적립 & 드로우',
     'sd.no_address':'주소 정보 없음','sd.no_rating':'평가 없음',
+    'onb1.title':'ReceiptIQ에 오신 걸 환영해요!','onb1.desc':'영수증 한 장으로 시작하는<br>일본 생활 스마트 가계부예요.<br>AI가 다 알아서 입력해줘요.',
+    'onb2.title':'찍으면 바로 자동 입력!','onb2.desc':'영수증 사진을 찍으면<br>AI가 가게명 · 품목 · 금액을<br>자동으로 인식해서 기록해줘요.',
+    'onb4.title':'주변 가격 비교까지!','onb4.desc':'같은 상품이 어느 가게가 더 싼지<br>커뮤니티 데이터와 지도로<br>한번에 확인할 수 있어요.',
+    'btn.next2':'다음','btn.skip':'건너뛰기',
+    'auth.login':'로그인','auth.signup':'회원가입',
+    'auth.email':'이메일','auth.password':'비밀번호',
+    'auth.gender':'성별','auth.male':'남자','auth.female':'여자','auth.other':'기타',
+    'auth.birth':'출생년도','auth.nickname':'닉네임',
+    'auth.login_btn':'로그인','auth.signup_btn':'회원가입',
+    'auth.google':'Google로 로그인','auth.terms_agree':'이용약관과 개인정보 처리방침에 동의합니다',
+    'home.recent':'최근 영수증','home.no_data':'아직 데이터가 없어요',
+    'home.scan_first':'영수증을 찍어서 시작해보세요',
+    'home.see_all':'전체 보기','home.count_unit':'건',
+    'home.period.weekly':'주간','home.period.monthly':'월간','home.period.quarter':'3개월','home.period.yearly':'연간',
+    'home.budget.set':'예산 설정','home.budget.left':'남음','home.budget.over':'초과',
+    'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
+    'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
+    'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
+    'cat.drink':'술/회식','cat.edu':'교육','cat.other':'기타',
+    'pay.cash':'현금','pay.card':'카드','pay.qr':'QR결제','pay.transit':'교통카드',
+    'rcpt.action.edit':'✏️ 수정','rcpt.action.delete':'🗑 삭제','rcpt.action.memo':'＋ 추가','rcpt.action.memo_edit':'✏️ 편집',
+    'rcpt.memo.label':'📝 메모','rcpt.memo.private':'(비공개)','rcpt.memo.empty':'아직 메모가 없어요',
+    'rcpt.pay_label':'결제수단','rcpt.map_btn':'🗺 지도에서 보기','rcpt.total_label':'합계',
+    'confirm.delete':'정말 삭제하시겠습니까?','confirm.yes':'네','confirm.no':'아니오',
+    'confirm.delete_private_note':'이 가게의 비공개 메모를 삭제하시겠습니까?<br>(마커 링도 제거됩니다)',
+    'toast.private_deleted':'🗑 비공개 메모 삭제됨',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
     'toast.exchange_done':'✅ {name} 으로 교환했어요!',
@@ -9501,6 +9571,32 @@ var I18N = {
     'ct.talk.search.placeholder':'Search posts...','ct.talk.write':'Write post',
     'ct.reward.title':'🎁 Chiri-ward','ct.reward.sub':'Earn points & lottery',
     'sd.no_address':'No address','sd.no_rating':'No rating',
+    'onb1.title':'Welcome to ReceiptIQ!','onb1.desc':'A smart budget app for life in Japan,<br>starting from a single receipt.<br>AI handles the entry for you.',
+    'onb2.title':'Snap & auto-entry!','onb2.desc':'Take a photo of a receipt and<br>AI recognizes store · items · total<br>then records it automatically.',
+    'onb4.title':'Compare prices nearby!','onb4.desc':'Find where the same item is cheaper<br>via community data on the map<br>— all in one place.',
+    'btn.next2':'Next','btn.skip':'Skip',
+    'auth.login':'Login','auth.signup':'Sign Up',
+    'auth.email':'Email','auth.password':'Password',
+    'auth.gender':'Gender','auth.male':'Male','auth.female':'Female','auth.other':'Other',
+    'auth.birth':'Birth Year','auth.nickname':'Nickname',
+    'auth.login_btn':'Login','auth.signup_btn':'Sign Up',
+    'auth.google':'Sign in with Google','auth.terms_agree':'I agree to the Terms of Service and Privacy Policy',
+    'home.recent':'Recent Receipts','home.no_data':'No data yet',
+    'home.scan_first':'Take a receipt photo to begin',
+    'home.see_all':'See all','home.count_unit':'',
+    'home.period.weekly':'Week','home.period.monthly':'Month','home.period.quarter':'3M','home.period.yearly':'Year',
+    'home.budget.set':'Set Budget','home.budget.left':'left','home.budget.over':'over',
+    'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
+    'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
+    'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
+    'cat.drink':'Drinks','cat.edu':'Education','cat.other':'Other',
+    'pay.cash':'Cash','pay.card':'Card','pay.qr':'QR Pay','pay.transit':'IC Card',
+    'rcpt.action.edit':'✏️ Edit','rcpt.action.delete':'🗑 Delete','rcpt.action.memo':'＋ Add','rcpt.action.memo_edit':'✏️ Edit',
+    'rcpt.memo.label':'📝 Memo','rcpt.memo.private':'(Private)','rcpt.memo.empty':'No memo yet',
+    'rcpt.pay_label':'Payment','rcpt.map_btn':'🗺 View on Map','rcpt.total_label':'Total',
+    'confirm.delete':'Are you sure to delete?','confirm.yes':'Yes','confirm.no':'No',
+    'confirm.delete_private_note':'Delete the private note for this store?<br>(Marker ring will be removed)',
+    'toast.private_deleted':'🗑 Private note deleted',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
     'toast.exchange_done':'✅ Exchanged for {name}!',
@@ -9607,6 +9703,32 @@ var I18N = {
     'ct.talk.search.placeholder':'搜索帖子...','ct.talk.write':'写帖子',
     'ct.reward.title':'🎁 奖励','ct.reward.sub':'积分获取 & 抽奖',
     'sd.no_address':'无地址信息','sd.no_rating':'无评价',
+    'onb1.title':'欢迎使用 ReceiptIQ！','onb1.desc':'从一张票据开始的<br>日本生活智能记账本。<br>AI 自动帮你记录。',
+    'onb2.title':'拍照即自动录入！','onb2.desc':'拍下票据，<br>AI 自动识别店名·商品·金额<br>并记录下来。',
+    'onb4.title':'附近价格比较！','onb4.desc':'同样的商品哪家更便宜，<br>通过社区数据和地图<br>一目了然。',
+    'btn.next2':'下一步','btn.skip':'跳过',
+    'auth.login':'登录','auth.signup':'注册',
+    'auth.email':'邮箱','auth.password':'密码',
+    'auth.gender':'性别','auth.male':'男','auth.female':'女','auth.other':'其他',
+    'auth.birth':'出生年','auth.nickname':'昵称',
+    'auth.login_btn':'登录','auth.signup_btn':'注册',
+    'auth.google':'使用 Google 登录','auth.terms_agree':'我同意使用条款和隐私政策',
+    'home.recent':'最近票据','home.no_data':'暂无数据',
+    'home.scan_first':'拍下票据开始使用',
+    'home.see_all':'查看全部','home.count_unit':'笔',
+    'home.period.weekly':'周','home.period.monthly':'月','home.period.quarter':'3月','home.period.yearly':'年',
+    'home.budget.set':'设置预算','home.budget.left':'剩余','home.budget.over':'超出',
+    'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
+    'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
+    'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
+    'cat.drink':'聚会','cat.edu':'教育','cat.other':'其他',
+    'pay.cash':'现金','pay.card':'信用卡','pay.qr':'扫码支付','pay.transit':'交通卡',
+    'rcpt.action.edit':'✏️ 编辑','rcpt.action.delete':'🗑 删除','rcpt.action.memo':'＋ 添加','rcpt.action.memo_edit':'✏️ 编辑',
+    'rcpt.memo.label':'📝 备注','rcpt.memo.private':'(私密)','rcpt.memo.empty':'还没有备注',
+    'rcpt.pay_label':'付款方式','rcpt.map_btn':'🗺 在地图查看','rcpt.total_label':'合计',
+    'confirm.delete':'确定要删除吗？','confirm.yes':'是','confirm.no':'否',
+    'confirm.delete_private_note':'删除该店的私密备注吗？<br>(图钉环也会消失)',
+    'toast.private_deleted':'🗑 私密备注已删除',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
     'toast.exchange_done':'✅ 已兑换为 {name}！',
@@ -15741,7 +15863,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v130';
+window.__APP_VERSION__ = 'v131';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
