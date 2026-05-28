@@ -5384,7 +5384,7 @@ function renderHome() {
   document.getElementById('home-eat').textContent   = '¥'+eatAmt.toLocaleString();
   document.getElementById('home-other').textContent = '¥'+(totalAmt-foodAmt-eatAmt).toLocaleString();
   var labelEl = document.getElementById('home-label');
-  if (labelEl) labelEl.textContent = m+'月 합계 지출 · '+monthReceipts.length+'건';
+  if (labelEl) labelEl.textContent = t('home.month_total', {m: m, n: monthReceipts.length});
   var subEl = document.getElementById('home-sub');
   if (subEl) {
     if (prevAmt===0) { subEl.textContent=''; }
@@ -5705,7 +5705,7 @@ function _selectCat(cat) {
   var label  = isAll ? '전체' : CAT_LABEL[cat];
   var btnEl  = document.getElementById('cat-wheel-btn');
   document.getElementById('cat-wheel-label').textContent = icon + label;
-  document.getElementById('cat-wheel-hint').textContent  = isAll ? '카테고리 선택' : '필터 적용 중';
+  document.getElementById('cat-wheel-hint').textContent  = isAll ? t('catwheel.hint') : t('catwheel.filtering');
   if (btnEl) {
     btnEl.style.background = isAll ? 'var(--green-light)' : 'var(--green)';
     btnEl.style.color      = isAll ? 'var(--green)'       : '#fff';
@@ -8343,7 +8343,7 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
       itemsHtml += '</div>';
     }
   } else {
-    itemsHtml = '<div style="font-size:12px;color:#E24B4A;padding:6px 0;">&#9888; 품목 인식 실패</div>';
+    itemsHtml = '<div style="font-size:12px;color:#E24B4A;padding:6px 0;">'+t('ocr.recognize_fail')+'</div>';
   }
 
   // GPT 사용 여부 표시 배지 (하이브리드 구분 포함)
@@ -8360,7 +8360,7 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
 
   var html = ''
     + '<div class="sheet-handle"></div>'
-    + '<div class="sheet-title">&#128269; OCR 분석 결과' + modeBadge + '</div>'
+    + '<div class="sheet-title">' + t('ocr.debug.title') + modeBadge + '</div>'
     + '<div style="background:#E1F5EE;border-radius:12px;padding:12px 14px;margin-bottom:10px;border:0.5px solid rgba(29,158,117,.2);">'
     + '<div style="font-size:12px;font-weight:800;color:#0F6E56;margin-bottom:8px;">&#128202; 파싱 결과</div>'
     + summaryHtml
@@ -8373,8 +8373,8 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
     + '<div style="border:0.5px solid rgba(0,0,0,0.07);border-radius:10px;overflow:hidden;margin-bottom:14px;max-height:220px;overflow-y:auto;">'
     + linesHtml
     + '</div>'
-    + '<button class="save-btn" onclick="window._parsedResult && showOcrResult(window._previewSrc, window._parsedResult)">&#9989; 다음 &#8594; 저장 화면</button>'
-    + '<div style="text-align:center;font-size:12px;font-weight:600;color:#8FA89E;cursor:pointer;padding:10px;" onclick="closeOv(\'ov-ocr\')">취소</div>';
+    + '<button class="save-btn" onclick="window._parsedResult && showOcrResult(window._previewSrc, window._parsedResult)">'+t('ocr.debug.next')+'</button>'
+    + '<div style="text-align:center;font-size:12px;font-weight:600;color:#8FA89E;cursor:pointer;padding:10px;" onclick="closeOv(\'ov-ocr\')">'+t('btn.cancel')+'</div>';
 
   document.getElementById('ocr-content').innerHTML = html;
   openOv('ov-ocr');
@@ -8640,13 +8640,13 @@ function showOcrResult(previewSrc, result) {
   // ── 품목 목록 HTML 빌더 (삭제/추가 후 재사용) ──
   function buildItemsHtml(items) {
     if (!items || items.length === 0)
-      return '<div style="text-align:center;padding:16px;font-size:12px;color:var(--text-3);">품목 없음. 아래 + 버튼으로 추가해주세요.</div>';
+      return '<div style="text-align:center;padding:16px;font-size:12px;color:var(--text-3);">'+t('ocr.no_items')+'</div>';
     return items.map(function(item, idx){
       return '<div style="display:flex;align-items:center;gap:6px;padding:9px 0;border-bottom:0.5px solid var(--border);">'
         +'<div style="flex:1;min-width:0;">'
         +'<div contenteditable="true" id="in-name-'+idx+'" style="font-size:13px;font-weight:600;color:var(--text-1);outline:none;padding:2px 0;border-bottom:1px dashed var(--border-mid);" onblur="syncOcrItems()">'+_esc(item.name)+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:5px;">'
-        +'<span style="font-size:10px;color:var(--text-3);">수량</span>'
+        +'<span style="font-size:10px;color:var(--text-3);">'+t('ocr.qty')+'</span>'
         +'<input type="number" id="in-qty-'+idx+'" value="'+(item.qty||1)+'" min="1" max="99" style="width:38px;font-size:12px;border:0.5px solid var(--border-mid);border-radius:6px;padding:2px 4px;text-align:center;background:var(--bg);" oninput="syncOcrItems()">'
         +'</div></div>'
         +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
@@ -8672,44 +8672,44 @@ function showOcrResult(previewSrc, result) {
 
   document.getElementById('ocr-content').innerHTML =
     '<div class="sheet-handle"></div>'
-    +'<div class="sheet-title">✅ 인식 결과 확인'
-    +(result.multiPage ? ' <span style="font-size:11px;font-weight:700;color:#fff;background:var(--green);padding:2px 8px;border-radius:10px;vertical-align:middle;">📜 분할촬영</span>' : '')
+    +'<div class="sheet-title">'+t('ocr.result.title')
+    +(result.multiPage ? ' <span style="font-size:11px;font-weight:700;color:#fff;background:var(--green);padding:2px 8px;border-radius:10px;vertical-align:middle;">'+t('ocr.result.multipage')+'</span>' : '')
     +'</div>'
     +noApiNote
-    +'<img src="'+previewSrc+'" class="ocr-preview" alt="영수증">'
+    +'<img src="'+previewSrc+'" class="ocr-preview" alt="receipt">'
     +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px;">'
-    +'<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;">가게 이름</div>'
+    +'<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;">'+t('ocr.store_name')+'</div>'
     +'<div style="font-size:15px;font-weight:800;color:var(--text-1);" contenteditable="true" id="ocr-store">'+_esc(result.store)+'</div>'
     +'</div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">인식된 품목 (<span id=\'item-count\'>'+window._ocrItems.length+'</span>개)</div>'
-    +'<button onclick="addOcrItem()" style="background:var(--green);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">+ 품목 추가</button>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.items_recognized')+' (<span id=\'item-count\'>'+window._ocrItems.length+'</span>)</div>'
+    +'<button onclick="addOcrItem()" style="background:var(--green);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">'+t('ocr.add_item')+'</button>'
     +'</div>'
     +'<div style="background:var(--surface);border-radius:12px;border:0.5px solid var(--border);padding:0 14px;margin-bottom:12px;" id="ocr-items-list">'+itemsHtml+'</div>'
-    +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;text-transform:uppercase;">카테고리 선택</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.select_category')+'</div>'
     +'<div class="cat-select" id="ocr-cat-select">'+catHtml+'</div>'
     // 소계/세금/합계 섹션
   +(result.subtotal > 0 ?
     '<div style="background:var(--bg);border-radius:12px;padding:10px 14px;margin-bottom:10px;border:0.5px solid var(--border);">'
     + '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);padding:4px 0;font-weight:600;">'
-    +   '<span>小計 (소계)</span><span>¥'+result.subtotal.toLocaleString()+'</span></div>'
+    +   '<span>'+t('ocr.subtotal')+'</span><span>¥'+result.subtotal.toLocaleString()+'</span></div>'
     + (result.tax8 > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);padding:4px 0;">'
     +   '<span>消費税 8%</span><span>¥'+result.tax8.toLocaleString()+'</span></div>' : '')
     + (result.tax10 > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);padding:4px 0;">'
     +   '<span>消費税 10%</span><span>¥'+result.tax10.toLocaleString()+'</span></div>' : '')
     + '</div>' : '')
   +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--green-light);border-radius:12px;margin-bottom:4px;border:0.5px solid rgba(29,158,117,.2);">'
-    +'<div><span style="font-size:13px;font-weight:700;color:var(--green-dark);">合計 (합계)</span>'
-    +(result.totalItems > 0 ? '<span style="font-size:11px;color:var(--green);margin-left:8px;">'+result.totalItems+'品目</span>' : '')
+    +'<div><span style="font-size:13px;font-weight:700;color:var(--green-dark);">'+t('ocr.total')+'</span>'
+    +(result.totalItems > 0 ? '<span style="font-size:11px;color:var(--green);margin-left:8px;">'+result.totalItems+t('ocr.item_unit')+'</span>' : '')
     +'</div>'
     +'<span id="ocr-total-disp" style="font-size:22px;font-weight:900;color:var(--green);letter-spacing:-1px;">¥'+result.total.toLocaleString()+'</span>'
     +'</div>'
-    +'<button class="save-btn" onclick="saveOcrResult()">💾 가계부에 저장하기</button>'
+    +'<button class="save-btn" onclick="saveOcrResult()">'+t('ocr.save_budget')+'</button>'
     +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
     +'<span>📍 チリつもに公開する</span>'
     +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>'
     +'</button>'
-    +'<div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;" onclick="closeOv(\'ov-ocr\')">취소</div>';
+    +'<div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;" onclick="closeOv(\'ov-ocr\')">'+t('btn.cancel')+'</div>';
 
   // 현재 선택 카테고리 저장용
   window._ocrResult = result;
@@ -9390,6 +9390,19 @@ var I18N = {
     'confirm.delete':'本当に削除しますか？','confirm.yes':'はい','confirm.no':'いいえ',
     'confirm.delete_private_note':'この店の非公開メモを削除しますか？<br>(マーカーリングも消えます)',
     'toast.private_deleted':'🗑 非公開メモを削除しました',
+    // 홈 메인 라벨 (월 합계 지출 · N건)
+    'home.month_total':'{m}月 合計支出 · {n}件',
+    // OCR 결과 저장 화면
+    'ocr.result.title':'✅ 認識結果の確認','ocr.result.multipage':'📜 分割撮影',
+    'ocr.store_name':'店名','ocr.items_recognized':'認識された品目','ocr.add_item':'+ 品目追加',
+    'ocr.select_category':'カテゴリ選択','ocr.no_items':'品目なし。下の + ボタンで追加してください。',
+    'ocr.qty':'数量','ocr.subtotal':'小計','ocr.tax':'税','ocr.total':'合計',
+    'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
+    'ocr.store_unknown':'不明','ocr.save_budget':'💾 家計簿に保存','ocr.item_unit':'品目',
+    // 편집 모달
+    'edit.add_item':'+ 品目追加','edit.total':'合計','edit.total_amount':'合計金額 (¥)','edit.qty':'数量',
+    // 카테고리 휠
+    'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
     'toast.daily_limit':'今日の視聴上限（{n}回）に達しました',
     'toast.exchange_done':'✅ {name} と交換しました！',
@@ -9522,6 +9535,15 @@ var I18N = {
     'confirm.delete':'정말 삭제하시겠습니까?','confirm.yes':'네','confirm.no':'아니오',
     'confirm.delete_private_note':'이 가게의 비공개 메모를 삭제하시겠습니까?<br>(마커 링도 제거됩니다)',
     'toast.private_deleted':'🗑 비공개 메모 삭제됨',
+    'home.month_total':'{m}月 합계 지출 · {n}건',
+    'ocr.result.title':'✅ 인식 결과 확인','ocr.result.multipage':'📜 분할촬영',
+    'ocr.store_name':'가게 이름','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
+    'ocr.select_category':'카테고리 선택','ocr.no_items':'품목 없음. 아래 + 버튼으로 추가해주세요.',
+    'ocr.qty':'수량','ocr.subtotal':'소계','ocr.tax':'세금','ocr.total':'합계',
+    'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
+    'ocr.store_unknown':'불명','ocr.save_budget':'💾 가계부에 저장하기','ocr.item_unit':'품목',
+    'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
+    'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
     'toast.exchange_done':'✅ {name} 으로 교환했어요!',
@@ -9654,6 +9676,15 @@ var I18N = {
     'confirm.delete':'Are you sure to delete?','confirm.yes':'Yes','confirm.no':'No',
     'confirm.delete_private_note':'Delete the private note for this store?<br>(Marker ring will be removed)',
     'toast.private_deleted':'🗑 Private note deleted',
+    'home.month_total':'{m}/ Total spend · {n}',
+    'ocr.result.title':'✅ Confirm Recognition','ocr.result.multipage':'📜 Multi-shot',
+    'ocr.store_name':'Store Name','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
+    'ocr.select_category':'Select Category','ocr.no_items':'No items. Tap + below to add.',
+    'ocr.qty':'Qty','ocr.subtotal':'Subtotal','ocr.tax':'Tax','ocr.total':'Total',
+    'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
+    'ocr.store_unknown':'Unknown','ocr.save_budget':'💾 Save to Budget','ocr.item_unit':'items',
+    'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
+    'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
     'toast.exchange_done':'✅ Exchanged for {name}!',
@@ -9786,6 +9817,15 @@ var I18N = {
     'confirm.delete':'确定要删除吗？','confirm.yes':'是','confirm.no':'否',
     'confirm.delete_private_note':'删除该店的私密备注吗？<br>(图钉环也会消失)',
     'toast.private_deleted':'🗑 私密备注已删除',
+    'home.month_total':'{m}月 总支出 · {n}笔',
+    'ocr.result.title':'✅ 确认识别结果','ocr.result.multipage':'📜 分段拍摄',
+    'ocr.store_name':'店名','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
+    'ocr.select_category':'选择类别','ocr.no_items':'无商品。点击下方 + 添加。',
+    'ocr.qty':'数量','ocr.subtotal':'小计','ocr.tax':'税','ocr.total':'合计',
+    'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
+    'ocr.store_unknown':'未知','ocr.save_budget':'💾 保存到账本','ocr.item_unit':'件',
+    'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
+    'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
     'toast.exchange_done':'✅ 已兑换为 {name}！',
@@ -16143,7 +16183,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v133';
+window.__APP_VERSION__ = 'v134';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
