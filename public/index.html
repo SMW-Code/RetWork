@@ -5464,8 +5464,8 @@ function renderHome() {
     else {
       var diff = totalAmt-prevAmt;
       subEl.textContent = diff<=0
-        ? '전월 대비 ▼ ¥'+Math.abs(diff).toLocaleString()+' 절약 중 🎉'
-        : '전월 대비 ▲ ¥'+diff.toLocaleString()+' 증가';
+        ? t('home.vs_prev_save', {amt: Math.abs(diff).toLocaleString()})
+        : t('home.vs_prev_up',   {amt: diff.toLocaleString()});
     }
   }
 
@@ -9496,6 +9496,7 @@ var I18N = {
     'toast.private_deleted':'🗑 非公開メモを削除しました',
     // 홈 메인 라벨 (월 합계 지출 · N건)
     'home.month_total':'{m}月 合計支出 · {n}件',
+    'home.vs_prev_save':'前月比 ▼ ¥{amt} 節約中 🎉','home.vs_prev_up':'前月比 ▲ ¥{amt} 増加',
     // OCR 결과 저장 화면
     'ocr.result.title':'✅ 認識結果の確認','ocr.result.multipage':'📜 分割撮影',
     'ocr.store_name':'店名','ocr.items_recognized':'認識された品目','ocr.add_item':'+ 品目追加',
@@ -9709,6 +9710,7 @@ var I18N = {
     'confirm.delete_private_note':'이 가게의 비공개 메모를 삭제하시겠습니까?<br>(마커 링도 제거됩니다)',
     'toast.private_deleted':'🗑 비공개 메모 삭제됨',
     'home.month_total':'{m}月 합계 지출 · {n}건',
+    'home.vs_prev_save':'전월 대비 ▼ ¥{amt} 절약 중 🎉','home.vs_prev_up':'전월 대비 ▲ ¥{amt} 증가',
     'ocr.result.title':'✅ 인식 결과 확인','ocr.result.multipage':'📜 분할촬영',
     'ocr.store_name':'가게 이름','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
     'ocr.select_category':'카테고리 선택','ocr.no_items':'품목 없음. 아래 + 버튼으로 추가해주세요.',
@@ -9911,6 +9913,7 @@ var I18N = {
     'confirm.delete_private_note':'Delete the private note for this store?<br>(Marker ring will be removed)',
     'toast.private_deleted':'🗑 Private note deleted',
     'home.month_total':'{m}/ Total spend · {n}',
+    'home.vs_prev_save':'▼ ¥{amt} saved vs last month 🎉','home.vs_prev_up':'▲ ¥{amt} more than last month',
     'ocr.result.title':'✅ Confirm Recognition','ocr.result.multipage':'📜 Multi-shot',
     'ocr.store_name':'Store Name','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
     'ocr.select_category':'Select Category','ocr.no_items':'No items. Tap + below to add.',
@@ -10113,6 +10116,7 @@ var I18N = {
     'confirm.delete_private_note':'删除该店的私密备注吗？<br>(图钉环也会消失)',
     'toast.private_deleted':'🗑 私密备注已删除',
     'home.month_total':'{m}月 总支出 · {n}笔',
+    'home.vs_prev_save':'较上月 ▼ ¥{amt} 节省中 🎉','home.vs_prev_up':'较上月 ▲ ¥{amt} 增加',
     'ocr.result.title':'✅ 确认识别结果','ocr.result.multipage':'📜 分段拍摄',
     'ocr.store_name':'店名','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
     'ocr.select_category':'选择类别','ocr.no_items':'无商品。点击下方 + 添加。',
@@ -16793,7 +16797,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v156';
+window.__APP_VERSION__ = 'v157';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
