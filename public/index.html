@@ -7573,14 +7573,17 @@ function _sdRenderPrivateNote(cur) {
   var displayN = hover || rating || 0;
 
   // 별 10개 (1~10 인덱스) — 클릭/호버 인터랙션
+  // ❗ hover/클릭은 innerHTML 을 다시 그리지 않고 제자리에서 색만 바꾼다.
+  //   (모바일 터치: 합성 mouseover 가 요소를 교체하면 이어지는 click 이 사라진 요소에
+  //    도달하지 못해 별점 선택이 안 되는 버그 방지)
   var starsHtml = '';
   for (var i = 1; i <= 10; i++) {
     var active = i <= displayN;
-    starsHtml += '<span '
+    starsHtml += '<span class="sd-star" data-idx="'+i+'" '
       + 'onclick="sdSetPrivateRating('+i+')" '
       + 'onmouseover="sdHoverPrivateRating('+i+')" '
       + 'onmouseout="sdHoverPrivateRating(0)" '
-      + 'style="cursor:pointer;font-size:22px;color:'+(active?'#C8B273':'#ddd')+';transition:color .12s;user-select:none;line-height:1;">'
+      + 'style="cursor:pointer;font-size:24px;padding:2px;color:'+(active?'#C8B273':'#ddd')+';transition:color .12s;user-select:none;line-height:1;">'
       + (active ? '★' : '☆')
       + '</span>';
   }
@@ -7618,7 +7621,7 @@ function _sdRenderPrivateNote(cur) {
       +   '<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">평가 / 評価 (1~10)</div>'
       +   '<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:8px;flex-wrap:wrap;">'+starsHtml+'</div>'
       // 별점 라벨 (선택된 등급의 의미)
-      +   '<div style="font-size:12px;font-weight:600;padding:8px 11px;border-radius:10px;margin-bottom:12px;text-align:center;line-height:1.5;'+labelStyle+'">'
+      +   '<div id="sd-rating-label" style="font-size:12px;font-weight:600;padding:8px 11px;border-radius:10px;margin-bottom:12px;text-align:center;line-height:1.5;'+labelStyle+'">'
       +     _esc(labelText)
       +   '</div>'
       // 메모 입력
@@ -7657,21 +7660,41 @@ function sdTogglePrivatePanel() {
   });
 }
 
+// 별/라벨을 innerHTML 재생성 없이 제자리에서 갱신 (터치 클릭 보존의 핵심)
+function _sdPaintStars(displayN) {
+  var stars = document.querySelectorAll('#sd-private-wrap .sd-star');
+  for (var i = 0; i < stars.length; i++) {
+    var active = (i + 1) <= displayN;
+    stars[i].style.color = active ? '#C8B273' : '#ddd';
+    stars[i].textContent = active ? '★' : '☆';
+  }
+  var lbl = document.getElementById('sd-rating-label');
+  if (lbl) {
+    var labelText = displayN > 0 ? _ratingLabel(displayN) : (_sdPrivateRating ? '' : '평가를 선택하세요 / 評価を選んでください');
+    lbl.textContent = labelText;
+    if (displayN > 0) {
+      lbl.style.background = 'rgba(200,178,115,.12)';
+      lbl.style.border = '1px solid #C8B273';
+      lbl.style.color = 'var(--text-1)';
+    } else {
+      lbl.style.background = 'var(--bg)';
+      lbl.style.border = '1px dashed var(--border-mid)';
+      lbl.style.color = 'var(--text-3)';
+    }
+  }
+}
+
 function sdSetPrivateRating(n) {
   _sdPrivateRating = (_sdPrivateRating === n) ? null : n; // 같은 별 클릭 시 해제
   _sdPrivateHover = null;
-  // 메모 텍스트 보존하면서 별점만 갱신
-  var noteEl = document.getElementById('sd-private-note');
-  var keptNote = noteEl ? noteEl.value : '';
-  _sdRenderPrivateNote({ rating: _sdPrivateRating, note: keptNote, updated_at: null });
+  // ❗ innerHTML 재생성 금지 — 제자리에서 별 색만 갱신 (클릭 이벤트 손실 방지)
+  _sdPaintStars(_sdPrivateRating || 0);
 }
 
 function sdHoverPrivateRating(n) {
   _sdPrivateHover = n || null;
-  // 가벼운 갱신 — 별 색상 + 라벨만
-  var noteEl = document.getElementById('sd-private-note');
-  var keptNote = noteEl ? noteEl.value : '';
-  _sdRenderPrivateNote({ rating: _sdPrivateRating, note: keptNote, updated_at: null });
+  // 제자리에서 별 색만 갱신 (hover 우선, 없으면 확정 별점)
+  _sdPaintStars(_sdPrivateHover || _sdPrivateRating || 0);
 }
 
 async function sdSavePrivateNote() {
@@ -16883,7 +16906,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v163';
+window.__APP_VERSION__ = 'v164';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
