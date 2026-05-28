@@ -952,7 +952,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
 
     <!-- 날짜별 그룹 영수증 -->
-    <div class="sec-title" data-i18n="home.recent">最近のレシート</div>
+    <div class="sec-title" data-i18n="home.recent" style="margin-top:18px;padding-bottom:4px;">最近のレシート</div>
     <div id="home-receipts"></div>
     <div class="spacer"></div>
   </div>
@@ -17045,7 +17045,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v176';
+window.__APP_VERSION__ = 'v177';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
