@@ -1576,7 +1576,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
                     </div>
                   </div>
                   <!-- 설치하기 버튼 -->
-                  <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">설치하기</button>
+                  <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="ad.install">インストール</button>
                 </div>
               </div>
             </div>
@@ -1738,7 +1738,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
               </div>
             </div>
           </div>
-          <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">설치하기</button>
+          <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="ad.install">インストール</button>
         </div>
       </div>
     </div>
@@ -1748,20 +1748,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <button id="confirm-action-btn" onclick="adStartFullscreen()"
         style="width:100%;padding:17px;background:linear-gradient(135deg,#1BBF8A,#0D7A5F);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);margin-bottom:10px;box-shadow:0 6px 20px rgba(13,122,95,.4);display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-.2px;animation:ad-btn-pulse 2s ease-in-out infinite;">
         <span style="font-size:18px;">▶️</span>
-        <span id="confirm-action-label">광고 보고 가계부에 무료 저장</span>
+        <span id="confirm-action-label" data-i18n="ad.save_free">広告を見て家計簿に無料保存</span>
       </button>
       <!-- 치리 공개 옵션 — 외식 카테고리(eat/cafe/drink) + 'save' 컨텍스트일 때만 노출. showAdModal에서 동적 제어 -->
       <button id="confirm-publish-btn" onclick="adGoPublishChiri()" style="display:none;width:100%;padding:15px;background:linear-gradient(135deg,#F4B940,#D48E1A);color:#fff;border:none;border-radius:16px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;box-shadow:0 6px 18px rgba(212,142,26,.35);align-items:center;justify-content:center;gap:8px;letter-spacing:-.2px;">
         <span style="font-size:16px;">📍</span>
-        <span>광고 보고 가계부저장 + 치리모드 공개</span>
+        <span data-i18n="ad.publish_btn">広告を見て保存＋チリモード公開</span>
         <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
       </button>
       <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border-mid);border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;opacity:.85;" onclick="openPremium()">
         <div>
-          <div style="font-size:12px;font-weight:700;color:var(--text-2);">✨ 프리미엄 구독시 광고 없이 사용</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">¥320 / 월 · 무제한 스캔</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);" data-i18n="ad.premium_title">✨ プレミアムで広告なし</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;" data-i18n="ad.premium_sub">¥320/月 · スキャン無制限</div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--green);">자세히 ›</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green);"><span data-i18n="ad.detail">詳細</span> ›</div>
       </div>
     </div>
   </div>
@@ -1798,8 +1798,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="sp-avatar-edit">✏️</div>
       </div>
       <div style="flex:1;min-width:0;">
-        <div style="font-size:16px;font-weight:800;color:#fff;" id="sp-nickname-display">사용자님</div>
-        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;">무료 플랜</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;" id="sp-nickname-display">ユーザー</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;" data-i18n="sp.free_plan">無料プラン</div>
         <div style="font-size:12px;font-weight:800;color:var(--gold);margin-top:5px;display:flex;align-items:center;gap:3px;">✨ <span id="sp-coin-balance">0</span> チリ</div>
       </div>
       <div class="sp-close" onclick="closeOv('ov-settings')">✕</div>
@@ -9350,6 +9350,11 @@ var I18N = {
     'rcpt.title':'レシート','rcpt.store':'店舗','rcpt.date':'日付','rcpt.total':'合計','rcpt.items':'品目','rcpt.tax':'税','rcpt.memo':'メモ','rcpt.category':'カテゴリ',
     // 광고/저장 모달
     'ad.watching':'広告再生中...','ad.skip':'広告をスキップ','ad.save':'広告を見て保存','ad.publish':'チリつもに公開','ad.skipBtn':'スキップ',
+    'ad.save_free':'広告を見て家計簿に無料保存','ad.save_publish':'広告を見て保存＋チズに公開','ad.to_private':'広告を見てプライベートモードへ',
+    'ad.publish_btn':'広告を見て保存＋チリモード公開','ad.install':'インストール',
+    'ad.premium_title':'✨ プレミアムで広告なし','ad.premium_sub':'¥320/月 · スキャン無制限','ad.detail':'詳細',
+    'ad.reward_get':'広告を見てチリ獲得','ad.loading':'広告を読み込み中...',
+    'plan.user':'{name}さん','sp.free_plan':'無料プラン',
     // 가게/맵
     'map.search':'店舗を検索...','map.filter':'フィルター','map.ranking':'ランキング','map.private':'プライベート','map.public':'公開',
     'map.private.toast':'🔒 プライベートモード','map.public.toast':'🌐 公開モード',
@@ -9572,6 +9577,11 @@ var I18N = {
     'scan.title':'영수증 스캔','scan.camera':'카메라','scan.gallery':'갤러리','scan.cancel':'취소',
     'rcpt.title':'영수증','rcpt.store':'가게','rcpt.date':'날짜','rcpt.total':'합계','rcpt.items':'품목','rcpt.tax':'세금','rcpt.memo':'메모','rcpt.category':'카테고리',
     'ad.watching':'광고 재생 중...','ad.skip':'광고 건너뛰기','ad.save':'광고 보고 저장','ad.publish':'치리츠모에 공개','ad.skipBtn':'건너뛰기',
+    'ad.save_free':'광고 보고 가계부에 무료 저장','ad.save_publish':'광고 보고 저장 + 치즈에 공개','ad.to_private':'광고 보고 프라이빗 모드 전환',
+    'ad.publish_btn':'광고 보고 가계부저장 + 치리모드 공개','ad.install':'설치하기',
+    'ad.premium_title':'✨ 프리미엄 구독시 광고 없이 사용','ad.premium_sub':'¥320 / 월 · 무제한 스캔','ad.detail':'자세히',
+    'ad.reward_get':'광고 보고 치리 받기','ad.loading':'광고 불러오는 중...',
+    'plan.user':'{name}님','sp.free_plan':'무료 플랜',
     'map.search':'가게 검색...','map.filter':'필터','map.ranking':'랭킹','map.private':'프라이빗','map.public':'공개',
     'map.private.toast':'🔒 프라이빗 모드','map.public.toast':'🌐 공개 모드',
     'sd.menus':'메뉴','sd.photos':'사진','sd.comments':'댓글','sd.private':'🔒 내 비공개 메모',
@@ -9751,6 +9761,11 @@ var I18N = {
     'scan.title':'Scan Receipt','scan.camera':'Camera','scan.gallery':'Gallery','scan.cancel':'Cancel',
     'rcpt.title':'Receipt','rcpt.store':'Store','rcpt.date':'Date','rcpt.total':'Total','rcpt.items':'Items','rcpt.tax':'Tax','rcpt.memo':'Memo','rcpt.category':'Category',
     'ad.watching':'Playing ad...','ad.skip':'Skip Ad','ad.save':'Watch ad & save','ad.publish':'Publish to Chiri','ad.skipBtn':'Skip',
+    'ad.save_free':'Watch ad & save free','ad.save_publish':'Watch ad & save + publish','ad.to_private':'Watch ad → Private mode',
+    'ad.publish_btn':'Watch ad: save + publish to Chiri','ad.install':'Install',
+    'ad.premium_title':'✨ Go Premium, no ads','ad.premium_sub':'¥320/mo · unlimited scans','ad.detail':'Details',
+    'ad.reward_get':'Watch ad & earn chiri','ad.loading':'Loading ad...',
+    'plan.user':'{name}','sp.free_plan':'Free plan',
     'map.search':'Search store...','map.filter':'Filter','map.ranking':'Ranking','map.private':'Private','map.public':'Public',
     'map.private.toast':'🔒 Private mode','map.public.toast':'🌐 Public mode',
     'sd.menus':'Menus','sd.photos':'Photos','sd.comments':'Comments','sd.private':'🔒 My private note',
@@ -9930,6 +9945,11 @@ var I18N = {
     'scan.title':'扫描票据','scan.camera':'相机','scan.gallery':'相册','scan.cancel':'取消',
     'rcpt.title':'票据','rcpt.store':'店铺','rcpt.date':'日期','rcpt.total':'合计','rcpt.items':'商品','rcpt.tax':'税','rcpt.memo':'备注','rcpt.category':'类别',
     'ad.watching':'广告播放中...','ad.skip':'跳过广告','ad.save':'看广告保存','ad.publish':'公开到 Chiri','ad.skipBtn':'跳过',
+    'ad.save_free':'看广告免费保存到账本','ad.save_publish':'看广告保存 + 公开到地图','ad.to_private':'看广告 → 私密模式',
+    'ad.publish_btn':'看广告：保存 + 公开到Chiri','ad.install':'安装',
+    'ad.premium_title':'✨ 升级高级版免广告','ad.premium_sub':'¥320/月 · 无限扫描','ad.detail':'详情',
+    'ad.reward_get':'看广告领积分','ad.loading':'广告加载中...',
+    'plan.user':'{name}','sp.free_plan':'免费版',
     'map.search':'搜索店铺...','map.filter':'筛选','map.ranking':'排行','map.private':'私密','map.public':'公开',
     'map.private.toast':'🔒 私密模式','map.public.toast':'🌐 公开模式',
     'sd.menus':'菜单','sd.photos':'照片','sd.comments':'评论','sd.private':'🔒 我的私密备注',
@@ -12784,13 +12804,13 @@ function showAdModal(callback, context) {
   var mainLabel = document.getElementById('confirm-action-label');
   var pubBtn    = document.getElementById('confirm-publish-btn');
   if (_adContext === 'chiri') {
-    if (mainLabel) mainLabel.textContent = '광고 보고 가계부저장 + 치리모드 공개';
+    if (mainLabel) mainLabel.textContent = t('ad.publish_btn');
     if (pubBtn)    pubBtn.style.display = 'none';
   } else if (_adContext === 'private') {
-    if (mainLabel) mainLabel.textContent = '광고 보고 프라이빗 모드 전환';
+    if (mainLabel) mainLabel.textContent = t('ad.to_private');
     if (pubBtn)    pubBtn.style.display = 'none';
   } else {
-    if (mainLabel) mainLabel.textContent = '광고 보고 가계부에 무료 저장';
+    if (mainLabel) mainLabel.textContent = t('ad.save_free');
     if (pubBtn) {
       var cat = window._ocrResult && window._ocrResult.cat;
       pubBtn.style.display = (typeof _shouldShowChiriPublish === 'function' && _shouldShowChiriPublish(cat)) ? 'flex' : 'none';
@@ -16638,7 +16658,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v147';
+window.__APP_VERSION__ = 'v148';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
