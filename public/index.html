@@ -961,7 +961,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- ══ HISTORY + REPORT ══ -->
 <div class="screen" id="screen-history">
   <div class="hdr">
-    <div><div class="hdr-title">내역</div></div>
+    <div><div class="hdr-title" data-i18n="hist.title">내역</div></div>
     <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
   </div>
   <!-- 년/월 네비게이터 (지출내역 + 리포트 공통) -->
@@ -5601,9 +5601,15 @@ var currentFilter = 'all';
 var histYear  = new Date().getFullYear();
 var histMonth = new Date().getMonth() + 1;
 
+var _EN_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function _monName(m) { return _EN_MONTHS[(m - 1 + 12) % 12] || ''; }
+function _dayLabel(m, d) {
+  return (_currentLang === 'en') ? (_monName(m) + ' ' + d) : (m + '月 ' + d + '日');
+}
+
 function updateHistMonthLabel() {
   var el = document.getElementById('hist-month-label');
-  if (el) el.textContent = histYear + '年 ' + histMonth + '月';
+  if (el) el.textContent = t('hist.month', { y: histYear, m: histMonth, mon: _monName(histMonth) });
   // 미래 월은 › 버튼 흐리게
   var now = new Date();
   var isNow = histYear === now.getFullYear() && histMonth === now.getMonth() + 1;
@@ -5641,7 +5647,7 @@ function renderHistory(cat) {
   if (cat !== 'all') filtered = filtered.filter(function(r){ return r.cat === cat; });
   filtered = filtered.slice().sort(function(a,b){return b.date.localeCompare(a.date);});
   var totalAmt  = filtered.reduce(function(a,r){return a+r.total;},0);
-  document.getElementById('h-total').innerHTML = '총 <strong style="color:var(--green);">¥'+totalAmt.toLocaleString()+'</strong> ('+filtered.length+'건)';
+  document.getElementById('h-total').innerHTML = t('hist.total', { amt: '<strong style="color:var(--green);">'+totalAmt.toLocaleString()+'</strong>', n: filtered.length });
 
   // 날짜별 그룹핑
   var groups = {};
@@ -5655,7 +5661,7 @@ function renderHistory(cat) {
   var histCardCnt=0, histAdDone=false;
   dates.forEach(function(date) {
     var parts = date.split('-');
-    var label = parts[1]+'月 '+parseInt(parts[2])+'日';
+    var label = _dayLabel(parseInt(parts[1]), parseInt(parts[2]));
     html += '<div class="hgroup"><div class="date-lbl">'+label+'</div>';
     groups[date].forEach(function(r) {
       histCardCnt++;
@@ -5677,7 +5683,7 @@ function renderHistory(cat) {
       if (r.address) {
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
           +'<span style="font-size:11px;color:var(--text-3);">📍 '+_esc(r.address)+'</span>'
-          +'<button onclick="event.stopPropagation();flyToStoreFromHistory('+JSON.stringify(r.address)+','+JSON.stringify(r.store)+','+JSON.stringify(String(r.lat))+','+JSON.stringify(String(r.lng))+')" style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">🗺 지도에서 보기</button>'
+          +'<button onclick="event.stopPropagation();flyToStoreFromHistory('+JSON.stringify(r.address)+','+JSON.stringify(r.store)+','+JSON.stringify(String(r.lat))+','+JSON.stringify(String(r.lng))+')" style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">'+t('rcpt.map_btn')+'</button>'
           +'</div>';
       }
       r.items.forEach(function(item){
@@ -5686,7 +5692,7 @@ function renderHistory(cat) {
       html += '<div class="d-row" style="font-weight:800;border-top:0.5px solid var(--border);padding-top:6px;margin-top:2px;"><span>'+t('common.total')+'</span><span style="color:var(--green);">¥'+r.total.toLocaleString()+'</span></div>';
       if (r.pay) {
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:7px 10px;background:'+PAY_BG[r.pay]+';border-radius:10px;">'
-          +'<span style="font-size:11px;font-weight:600;color:var(--text-3);">결제수단</span>'
+          +'<span style="font-size:11px;font-weight:600;color:var(--text-3);">'+t('rcpt.pay_label')+'</span>'
           +'<span style="font-size:12px;font-weight:700;color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>'
           +'</div>';
       }
@@ -5694,16 +5700,16 @@ function renderHistory(cat) {
       var memoText = r.memo ? r.memo.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>') : '';
       html += '<div style="margin-top:10px;border-top:0.5px solid var(--border);padding-top:10px;">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-        +'<span style="font-size:11px;font-weight:700;color:var(--text-3);">📝 メモ <span style="font-size:10px;font-weight:500;">(非公開)</span></span>'
-        +'<button onclick="event.stopPropagation();openMemo(\''+r.id+'\')" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light,#E8F5E9);color:var(--green);cursor:pointer;">'+(r.memo?'✏️ 編集':'＋ 追加')+'</button>'
+        +'<span style="font-size:11px;font-weight:700;color:var(--text-3);">'+t('rcpt.memo.label')+' <span style="font-size:10px;font-weight:500;">'+t('rcpt.memo.private')+'</span></span>'
+        +'<button onclick="event.stopPropagation();openMemo(\''+r.id+'\')" style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light,#E8F5E9);color:var(--green);cursor:pointer;">'+(r.memo?t('rcpt.action.memo_edit'):t('rcpt.action.memo'))+'</button>'
         +'</div>'
         +(r.memo
           ? '<div style="font-size:12px;color:var(--text-1);background:var(--surface);border-radius:10px;padding:9px 12px;line-height:1.65;border:0.5px solid var(--border-mid,#e0e0e0);">'+memoText+'</div>'
-          : '<div style="font-size:12px;color:var(--text-3);font-style:italic;padding:2px 0;">まだメモがありません</div>')
+          : '<div style="font-size:12px;color:var(--text-3);font-style:italic;padding:2px 0;">'+t('rcpt.memo.empty')+'</div>')
         +'</div>';
       html += '<div style="margin-top:10px;display:flex;gap:8px;justify-content:flex-end;">'
-        +'<button onclick="event.stopPropagation();openEditReceipt(\''+r.id+'\')" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;">✏️ 수정</button>'
-        +'<button onclick="event.stopPropagation();confirmDeleteReceipt(\''+r.id+'\')" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid var(--red,#FF4D4F);background:transparent;color:var(--red,#FF4D4F);cursor:pointer;">🗑 삭제</button>'
+        +'<button onclick="event.stopPropagation();openEditReceipt(\''+r.id+'\')" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;">'+t('rcpt.action.edit')+'</button>'
+        +'<button onclick="event.stopPropagation();confirmDeleteReceipt(\''+r.id+'\')" style="font-size:11px;font-weight:700;padding:6px 14px;border-radius:8px;border:1px solid var(--red,#FF4D4F);background:transparent;color:var(--red,#FF4D4F);cursor:pointer;">'+t('rcpt.action.delete')+'</button>'
         +'</div>';
       html += '</div></div>';
     });
@@ -6673,9 +6679,9 @@ function openMonthDetail() {
   var days  = new Set(monthReceipts.map(function(r){ return r.date; })).size;
 
   // 제목 + 히어로 카드
-  document.getElementById('mdet-title').textContent    = calYear+'년 '+calMonth+'월 지출 상세';
+  document.getElementById('mdet-title').textContent    = t('mdet.detail_title', { y: calYear, m: calMonth, mon: _monName(calMonth) });
   document.getElementById('mdet-total-amt').textContent = '¥'+total.toLocaleString();
-  document.getElementById('mdet-sub').textContent       = '총 '+monthReceipts.length+'건';
+  document.getElementById('mdet-sub').textContent       = t('mdet.count_n', { n: monthReceipts.length });
 
   // ① 카테고리별 분석
   var catTotals = {};
@@ -9455,6 +9461,7 @@ var I18N = {
     'rep.month_spent':'{n}件の支出','rep.count':'件数','rep.daily_avg':'日平均','rep.top_cat':'最多カテゴリ',
     'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
     'rep.pay_breakdown':'💳 支払い方法別支出','rep.unit_cnt':'件','rep.book_title':'{y}年 {m}月 家計簿','rep.week_n':'第{n}週',
+    'hist.title':'履歴','hist.month':'{y}年 {m}月','hist.total':'合計 ¥{amt} ({n}件)','rep.mon_short':'{m}月','cat.cnt_unit':'件','mdet.count_n':'{n}件','mdet.detail_title':'{y}年 {m}月 支出詳細',
     // 달력 잔여
     'cal.see_detail':'詳しく見る','cal.receipt_count':'レシート数','cal.daily_avg':'1日平均','common.total':'合計',
     // 가성비 맵 (영수증 모드)
@@ -9671,6 +9678,7 @@ var I18N = {
     'rep.month_spent':'{n}건 지출','rep.count':'건수','rep.daily_avg':'일평균','rep.top_cat':'최다 카테고리',
     'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
     'rep.pay_breakdown':'💳 결제수단별 지출','rep.unit_cnt':'건','rep.book_title':'{y}年 {m}月 가계부','rep.week_n':'{n}주',
+    'hist.title':'내역','hist.month':'{y}年 {m}月','hist.total':'총 ¥{amt} ({n}건)','rep.mon_short':'{m}月','cat.cnt_unit':'건','mdet.count_n':'{n}건','mdet.detail_title':'{y}年 {m}月 지출 상세',
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
@@ -9869,6 +9877,7 @@ var I18N = {
     'rep.month_spent':'{n} expenses','rep.count':'Count','rep.daily_avg':'Daily avg','rep.top_cat':'Top category',
     'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
     'rep.pay_breakdown':'💳 Spend by payment','rep.unit_cnt':'','rep.book_title':'{y}/{m} Budget','rep.week_n':'W{n}',
+    'hist.title':'History','hist.month':'{mon} {y}','hist.total':'Total ¥{amt} ({n})','rep.mon_short':'{mon}','cat.cnt_unit':'','mdet.count_n':'{n} items','mdet.detail_title':'{mon} {y} Spending',
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
@@ -10067,6 +10076,7 @@ var I18N = {
     'rep.month_spent':'{n}笔支出','rep.count':'笔数','rep.daily_avg':'日均','rep.top_cat':'最多类别',
     'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
     'rep.pay_breakdown':'💳 按付款方式支出','rep.unit_cnt':'笔','rep.book_title':'{y}年 {m}月 账本','rep.week_n':'第{n}周',
+    'hist.title':'记录','hist.month':'{y}年 {m}月','hist.total':'共 ¥{amt} ({n}笔)','rep.mon_short':'{m}月','cat.cnt_unit':'笔','mdet.count_n':'{n}笔','mdet.detail_title':'{y}年 {m}月 支出明细',
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
@@ -10232,6 +10242,12 @@ function applyLang(lang){
   if (sel) sel.value = lang;
   // 테마 스와치 이름(JS 생성)도 즉시 재렌더 (data-i18n 아님)
   if (typeof renderThemeSwatches === 'function') { try { renderThemeSwatches(); } catch(e){} }
+  // JS로 동적 생성된 본문도 즉시 재렌더 (data-i18n 아님)
+  try { if (typeof updateHistMonthLabel === 'function') updateHistMonthLabel(); } catch(e){}
+  try { if (typeof renderHistory === 'function') renderHistory(typeof currentFilter !== 'undefined' ? currentFilter : 'all'); } catch(e){}
+  try { if (typeof renderReportSummary === 'function') renderReportSummary(); } catch(e){}
+  try { if (typeof renderCatBreakdown === 'function') renderCatBreakdown(); } catch(e){}
+  try { if (typeof renderHome === 'function') renderHome(); } catch(e){}
 }
 /* ══════════════════════════════
    i18n CMS — Supabase 어드민 편집 가능한 번역 override 레이어
@@ -16756,7 +16772,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v154';
+window.__APP_VERSION__ = 'v155';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
