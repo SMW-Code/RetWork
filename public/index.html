@@ -3335,7 +3335,16 @@ function _catLabel(c){ return CAT_LABEL[c] || ''; }
 
 // 지불 방법
 var PAY_ICON  = { cash:'💴', credit:'💳', ic:'🚃', qr:'📱', debit:'🏦' };
-var PAY_LABEL = { cash:'현금', credit:'신용카드', ic:'IC카드', qr:'QR결제', debit:'체크카드' };
+var _PAY_LABEL_KEYS = { cash:'pay.label.cash', credit:'pay.label.credit', ic:'pay.label.ic', qr:'pay.label.qr', debit:'pay.label.debit' };
+var PAY_LABEL = (typeof Proxy === 'function')
+  ? new Proxy(_PAY_LABEL_KEYS, {
+      get: function(target, prop) {
+        var key = target[prop];
+        return key ? t(key) : '';
+      }
+    })
+  // Proxy 미지원 (legacy) — 일본어 fallback
+  : { cash:'現金', credit:'クレジットカード', ic:'交通系IC', qr:'QR決済', debit:'デビットカード' };
 var PAY_COLOR = { cash:'#8BA49A', credit:'#3B82F6', ic:'#16A87A', qr:'#F07340', debit:'#8B5CF6' };
 var PAY_BG    = { cash:'#F5F5F5', credit:'#EBF3FF', ic:'#E0F5EE', qr:'#FEF0E8', debit:'#F0EDFF' };
 
@@ -5316,7 +5325,7 @@ function renderRadar() {
   });
 
   if (data.length === 0) {
-    el.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--text-3);font-size:13px;">データがまだありません<br><span style="font-size:11px;">レシートを撮影すると自動で追跡されます</span></div>';
+    el.innerHTML = '<div style="text-align:center;padding:24px 16px;color:var(--text-3);font-size:13px;">'+t('radar.empty_title')+'<br><span style="font-size:11px;">'+t('radar.empty_sub')+'</span></div>';
     return;
   }
 
@@ -5464,7 +5473,7 @@ function renderHome() {
   var dow = now.getDay();
   var monday = new Date(now); monday.setHours(0,0,0,0);
   monday.setDate(now.getDate()-(dow===0?6:dow-1));
-  var dayNames=['월','화','수','목','금','토','일'];
+  var dayNames=t('rep.weekdays').split(',');
   var daySums=[0,0,0,0,0,0,0];
   DB.forEach(function(r){
     var d=new Date(r.date+'T00:00:00');
@@ -6289,7 +6298,7 @@ function renderBars(type) {
     var monday = new Date(refDate);
     monday.setHours(0,0,0,0);
     monday.setDate(d - (dow === 0 ? 6 : dow - 1));
-    var dayNames = ['월','화','수','목','금','토','일'];
+    var dayNames = t('rep.weekdays').split(',');
     var daySums = {};
     DB.forEach(function(r) {
       var parts = r.date.split('-');
@@ -6396,7 +6405,7 @@ function renderCatBreakdown() {
 
   if (activeCats.length === 0) {
     document.getElementById('donut-chart').innerHTML = '';
-    document.getElementById('donut-legend').innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:16px 0;">데이터가 없어요</div>';
+    document.getElementById('donut-legend').innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:16px 0;">'+t('rep.no_data')+'</div>';
     document.getElementById('cat-breakdown').innerHTML = '';
     return;
   }
@@ -6596,7 +6605,7 @@ function renderPayRanking() {
     var color = PAY_COLOR[p] || '#8BA49A';
     var bg    = PAY_BG[p]   || '#F5F5F5';
     var rankBadge = idx === 0
-      ? '<span style="font-size:9px;font-weight:800;background:'+color+';color:#fff;border-radius:20px;padding:2px 6px;margin-left:6px;">1위</span>'
+      ? '<span style="font-size:9px;font-weight:800;background:'+color+';color:#fff;border-radius:20px;padding:2px 6px;margin-left:6px;">'+t('rank.nth',{n:1})+'</span>'
       : '';
 
     html += '<div style="margin-bottom:'+(idx<sorted.length-1?'14':'0')+'px;">'
@@ -6609,7 +6618,7 @@ function renderPayRanking() {
       +   '</div>'
       +   '<div style="text-align:right;">'
       +     '<span style="font-size:13px;font-weight:800;color:var(--text-1);">¥'+amt.toLocaleString()+'</span>'
-      +     '<span style="font-size:11px;color:var(--text-3);margin-left:4px;">'+cnt+'건 · '+pct+'%</span>'
+      +     '<span style="font-size:11px;color:var(--text-3);margin-left:4px;">'+cnt+t('rep.unit_cnt')+' · '+pct+'%</span>'
       +   '</div>'
       + '</div>'
       // 프로그레스 바
@@ -9462,6 +9471,9 @@ var I18N = {
     'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
     'rep.pay_breakdown':'💳 支払い方法別支出','rep.unit_cnt':'件','rep.book_title':'{y}年 {m}月 家計簿','rep.week_n':'第{n}週',
     'hist.title':'履歴','hist.month':'{y}年 {m}月','hist.total':'合計 ¥{amt} ({n}件)','rep.mon_short':'{m}月','cat.cnt_unit':'件','mdet.count_n':'{n}件','mdet.detail_title':'{y}年 {m}月 支出詳細',
+    'pay.label.cash':'現金','pay.label.credit':'クレジットカード','pay.label.ic':'交通系IC','pay.label.qr':'QR決済','pay.label.debit':'デビットカード',
+    'rank.nth':'{n}位','rep.weekdays':'月,火,水,木,金,土,日','rep.no_data':'データがありません',
+    'radar.empty_title':'データがまだありません','radar.empty_sub':'レシートを撮影すると自動で追跡されます',
     // 달력 잔여
     'cal.see_detail':'詳しく見る','cal.receipt_count':'レシート数','cal.daily_avg':'1日平均','common.total':'合計',
     // 가성비 맵 (영수증 모드)
@@ -9679,6 +9691,9 @@ var I18N = {
     'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
     'rep.pay_breakdown':'💳 결제수단별 지출','rep.unit_cnt':'건','rep.book_title':'{y}年 {m}月 가계부','rep.week_n':'{n}주',
     'hist.title':'내역','hist.month':'{y}年 {m}月','hist.total':'총 ¥{amt} ({n}건)','rep.mon_short':'{m}月','cat.cnt_unit':'건','mdet.count_n':'{n}건','mdet.detail_title':'{y}年 {m}月 지출 상세',
+    'pay.label.cash':'현금','pay.label.credit':'신용카드','pay.label.ic':'IC카드','pay.label.qr':'QR결제','pay.label.debit':'체크카드',
+    'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요',
+    'radar.empty_title':'아직 데이터가 없어요','radar.empty_sub':'영수증을 촬영하면 자동으로 추적됩니다',
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
@@ -9878,6 +9893,9 @@ var I18N = {
     'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
     'rep.pay_breakdown':'💳 Spend by payment','rep.unit_cnt':'','rep.book_title':'{y}/{m} Budget','rep.week_n':'W{n}',
     'hist.title':'History','hist.month':'{mon} {y}','hist.total':'Total ¥{amt} ({n})','rep.mon_short':'{mon}','cat.cnt_unit':'','mdet.count_n':'{n} items','mdet.detail_title':'{mon} {y} Spending',
+    'pay.label.cash':'Cash','pay.label.credit':'Credit','pay.label.ic':'IC Card','pay.label.qr':'QR Pay','pay.label.debit':'Debit',
+    'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data',
+    'radar.empty_title':'No data yet','radar.empty_sub':'Tracked automatically when you scan receipts',
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
@@ -10077,6 +10095,9 @@ var I18N = {
     'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
     'rep.pay_breakdown':'💳 按付款方式支出','rep.unit_cnt':'笔','rep.book_title':'{y}年 {m}月 账本','rep.week_n':'第{n}周',
     'hist.title':'记录','hist.month':'{y}年 {m}月','hist.total':'共 ¥{amt} ({n}笔)','rep.mon_short':'{m}月','cat.cnt_unit':'笔','mdet.count_n':'{n}笔','mdet.detail_title':'{y}年 {m}月 支出明细',
+    'pay.label.cash':'现金','pay.label.credit':'信用卡','pay.label.ic':'交通卡','pay.label.qr':'QR支付','pay.label.debit':'借记卡',
+    'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据',
+    'radar.empty_title':'还没有数据','radar.empty_sub':'拍摄票据后将自动追踪',
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
@@ -16772,7 +16793,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v155';
+window.__APP_VERSION__ = 'v156';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
