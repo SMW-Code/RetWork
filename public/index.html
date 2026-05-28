@@ -9517,6 +9517,7 @@ var I18N = {
     'rsd.monthly':'📈 月別支出（直近6ヶ月）','rsd.recent':'🧾 最近のレシート ({a}/{b})','rsd.item_count':'{n}個 商品',
     'rsd.see_all':'全{n}件を見る →',
     'theme.custom':'カスタム','theme.invalid':'カラーコードを確認してください','theme.pick':'好きな色を選ぶ',
+    'theme.name.green':'エメラルド','theme.name.blue':'オーシャンブルー','theme.name.purple':'パープル','theme.name.coral':'コーラル','theme.name.rose':'ローズピンク','theme.name.gold':'ゴールド','theme.name.indigo':'インディゴ','theme.name.cyan':'シアン','theme.name.lime':'ライム','theme.name.magenta':'マゼンタ',
     'cc.title':'🎨 カスタムカラー','cc.hue':'色相','cc.sat':'彩度','cc.val':'明度',
     'cc.code_mode':'⌨ コードで入力','cc.slider_mode':'🎚 スライダーで','cc.apply':'設定','cc.code_ph':'#RRGGBB',
     'cc.text_color':'文字色','cc.text_auto':'自動','cc.text_white':'⚪ 白','cc.text_black':'⚫ 黒',
@@ -9706,6 +9707,7 @@ var I18N = {
     'rsd.monthly':'📈 월별 지출 (최근 6개월)','rsd.recent':'🧾 최근 영수증 ({a}/{b})','rsd.item_count':'{n}개 상품',
     'rsd.see_all':'전체 {n}건 보기 →',
     'theme.custom':'커스텀','theme.invalid':'색상 코드를 확인해주세요','theme.pick':'원하는 색 선택',
+    'theme.name.green':'에메랄드','theme.name.blue':'오션블루','theme.name.purple':'퍼플','theme.name.coral':'코랄','theme.name.rose':'로즈핑크','theme.name.gold':'골드','theme.name.indigo':'인디고','theme.name.cyan':'사이언','theme.name.lime':'라임','theme.name.magenta':'마젠타',
     'cc.title':'🎨 커스텀 색상','cc.hue':'색조','cc.sat':'채도','cc.val':'명도',
     'cc.code_mode':'⌨ 코드로 입력','cc.slider_mode':'🎚 슬라이더로','cc.apply':'설정','cc.code_ph':'#RRGGBB',
     'cc.text_color':'글자색','cc.text_auto':'자동','cc.text_white':'⚪ 흰색','cc.text_black':'⚫ 검정',
@@ -9894,6 +9896,7 @@ var I18N = {
     'rsd.monthly':'📈 Monthly (last 6 months)','rsd.recent':'🧾 Recent receipts ({a}/{b})','rsd.item_count':'{n} items',
     'rsd.see_all':'See all {n} →',
     'theme.custom':'Custom','theme.invalid':'Please check the color code','theme.pick':'Pick your color',
+    'theme.name.green':'Emerald','theme.name.blue':'Ocean Blue','theme.name.purple':'Purple','theme.name.coral':'Coral','theme.name.rose':'Rose Pink','theme.name.gold':'Gold','theme.name.indigo':'Indigo','theme.name.cyan':'Cyan','theme.name.lime':'Lime','theme.name.magenta':'Magenta',
     'cc.title':'🎨 Custom Color','cc.hue':'Hue','cc.sat':'Saturation','cc.val':'Brightness',
     'cc.code_mode':'⌨ Enter code','cc.slider_mode':'🎚 Sliders','cc.apply':'Apply','cc.code_ph':'#RRGGBB',
     'cc.text_color':'Text color','cc.text_auto':'Auto','cc.text_white':'⚪ White','cc.text_black':'⚫ Black',
@@ -10082,6 +10085,7 @@ var I18N = {
     'rsd.monthly':'📈 月支出（近6个月）','rsd.recent':'🧾 最近票据 ({a}/{b})','rsd.item_count':'{n}件商品',
     'rsd.see_all':'查看全部 {n} 笔 →',
     'theme.custom':'自定义','theme.invalid':'请检查颜色代码','theme.pick':'选择喜欢的颜色',
+    'theme.name.green':'翡翠绿','theme.name.blue':'海洋蓝','theme.name.purple':'紫色','theme.name.coral':'珊瑚色','theme.name.rose':'玫瑰粉','theme.name.gold':'金色','theme.name.indigo':'靛蓝','theme.name.cyan':'青色','theme.name.lime':'青柠','theme.name.magenta':'品红',
     'cc.title':'🎨 自定义颜色','cc.hue':'色相','cc.sat':'饱和度','cc.val':'明度',
     'cc.code_mode':'⌨ 输入代码','cc.slider_mode':'🎚 滑块','cc.apply':'设置','cc.code_ph':'#RRGGBB',
     'cc.text_color':'文字颜色','cc.text_auto':'自动','cc.text_white':'⚪ 白','cc.text_black':'⚫ 黑',
@@ -12779,7 +12783,7 @@ function renderThemeSwatches() {
       +'<div style="width:36px;height:36px;border-radius:50%;background:'+th.color+';transition:all .2s;margin:0 auto;'
       +(active ? 'box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px '+th.color+';transform:scale(1.12);' : 'opacity:0.75;')
       +'"></div>'
-      +'<div style="font-size:9px;font-weight:'+(active?'800':'600')+';color:'+(active?th.color:'var(--text-3)')+';text-align:center;">'+th.name+'</div>'
+      +'<div style="font-size:9px;font-weight:'+(active?'800':'600')+';color:'+(active?th.color:'var(--text-3)')+';text-align:center;">'+t('theme.name.'+key)+'</div>'
       +'</div>';
   }).join('');
 
@@ -16711,7 +16715,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v151';
+window.__APP_VERSION__ = 'v152';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
