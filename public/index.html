@@ -6817,7 +6817,7 @@ function selectDay(y,m,d){
   var entries=((calMap[y+'-'+m])||{})[d]||[];
   var detail=document.getElementById('cal-detail');
   if(entries.length>0){
-    document.getElementById('cal-detail-title').textContent=y+'/'+m+'/'+d+' 지출 내역';
+    document.getElementById('cal-detail-title').textContent=t('cal.day_detail',{y:y,m:m,d:d});
     var total=0; var html='';
     entries.forEach(function(r){
       total+=r.total;
@@ -6826,7 +6826,7 @@ function selectDay(y,m,d){
         +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px;"><div style="width:6px;height:6px;border-radius:50%;background:'+CAT_COLOR[r.cat]+';"></div><span style="font-size:10px;font-weight:600;color:var(--text-3);">'+CAT_LABEL[r.cat]+'</span></div></div>'
         +'<div style="text-align:right;"><div style="font-size:14px;font-weight:800;">¥'+r.total.toLocaleString()+'</div>'
-        +'<div style="font-size:10px;color:var(--text-3);">탭해서 이동 ›</div></div></div>';
+        +'<div style="font-size:10px;color:var(--text-3);">'+t('cal.tap_go')+'</div></div></div>';
     });
     document.getElementById('cal-entries').innerHTML=html;
     document.getElementById('cal-total').textContent='¥'+total.toLocaleString();
@@ -9594,6 +9594,7 @@ var I18N = {
     'radar.empty_title':'データがまだありません','radar.empty_sub':'レシートを撮影すると自動で追跡されます',
     // 달력 잔여
     'cal.see_detail':'詳しく見る','cal.receipt_count':'レシート数','cal.daily_avg':'1日平均','common.total':'合計',
+    'cal.day_detail':'{y}/{m}/{d} 支出明細','cal.tap_go':'タップで移動 ›',
     // 가성비 맵 (영수증 모드)
     'rmap.title':'コスパマップ','rmap.sub':'現在地ベース · レシートピン','rmap.stores':'📍 店舗リスト','rmap.compare':'💰 価格比較',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
@@ -9826,6 +9827,7 @@ var I18N = {
     'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요','rep.detail_view':'상세 보기 ›',
     'radar.empty_title':'아직 데이터가 없어요','radar.empty_sub':'영수증을 촬영하면 자동으로 추적됩니다',
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
+    'cal.day_detail':'{y}/{m}/{d} 지출 내역','cal.tap_go':'탭해서 이동 ›',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
@@ -10041,6 +10043,7 @@ var I18N = {
     'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data','rep.detail_view':'View detail ›',
     'radar.empty_title':'No data yet','radar.empty_sub':'Tracked automatically when you scan receipts',
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
+    'cal.day_detail':'{y}/{m}/{d} spending','cal.tap_go':'Tap to view ›',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
@@ -10256,6 +10259,7 @@ var I18N = {
     'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据','rep.detail_view':'查看详情 ›',
     'radar.empty_title':'还没有数据','radar.empty_sub':'拍摄票据后将自动追踪',
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
+    'cal.day_detail':'{y}/{m}/{d} 支出明细','cal.tap_go':'点击查看 ›',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
     'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
@@ -17029,7 +17033,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v172';
+window.__APP_VERSION__ = 'v173';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
