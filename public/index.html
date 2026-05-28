@@ -1584,18 +1584,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <div style="background:var(--gold-light);border:1px solid rgba(232,160,32,.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;">
       <div>
-        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">👥 友達を招待して✨チリもらう</div>
-        <div style="font-size:11px;color:var(--gold-dark);opacity:.7;margin-top:3px;">友達が登録完了で 2,000チリ</div>
+        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);" data-i18n="rw.invite">👥 友達を招待して✨チリもらう</div>
+        <div style="font-size:11px;color:var(--gold-dark);opacity:.7;margin-top:3px;" data-i18n="rw.invite_sub">友達が登録完了で 2,000チリ</div>
       </div>
-      <div style="font-size:12px;font-weight:700;color:var(--gold);">공유 ›</div>
+      <div style="font-size:12px;font-weight:700;color:var(--gold);"><span data-i18n="common.share">共有</span> ›</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.4px;">チリつもドロー</div>
+    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.4px;" data-i18n="rw.draw">チリつもドロー</div>
     <div style="background:var(--surface);border-radius:14px;padding:16px;border:0.5px solid var(--border);margin-bottom:10px;">
       <div style="font-size:14px;font-weight:800;color:var(--text-1);margin-bottom:4px;">🍔 マクドナルド ビッグマックセット</div>
       <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">参加85人 · 2人当選 · 残り 12:00:00</div>
       <div style="display:flex;align-items:center;justify-content:space-between;">
         <div style="background:var(--gold-light);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gold-dark);">✨ 170チリ</div>
-        <button style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">参加する</button>
+        <button style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="rw.join">参加する</button>
       </div>
     </div>
 
@@ -1603,14 +1603,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="margin-top:20px;padding-bottom:16px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
-          <div style="font-size:13px;font-weight:800;color:var(--text-1);">チリストア</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">チリで商品に交換しよう</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text-1);" data-i18n="rw.store">チリストア</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="rw.store_sub">チリで商品に交換しよう</div>
         </div>
         <div style="background:var(--gold-light);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:var(--gold-dark);">✨ <span id="ct-store-coin">0</span></div>
       </div>
       <!-- 동적 렌더링 컨테이너 — JS의 renderCtStore()에서 store_items 테이블로부터 로드 -->
       <div id="ct-store-items" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--text-3);">로딩 중...</div>
+        <div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--text-3);" data-i18n="common.loading">読み込み中...</div>
       </div>
     </div>
   </div>
@@ -9417,6 +9417,10 @@ var I18N = {
     // 리워드 / 출석
     'rw.draw':'チリつもドロー','rw.attendance':'出席チェック','rw.checkin_btn':'出席する',
     'rw.streak':'連続出席','rw.day':'日','rw.reward_3':'3日','rw.reward_7':'7日','rw.reward_15':'15日','rw.reward_30':'30日',
+    'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 2,000チリ',
+    'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
+    'common.loading':'読み込み中...','common.share':'共有',
+    'sd.menu_cards':'🍽️ メニューカード','sd.add_card':'メニュー<br>カード<br>追加',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9571,6 +9575,10 @@ var I18N = {
     'ctw.add_photo':'사진 추가','ctw.photo_hint':'선택 · 최대 5장',
     'rw.draw':'치리츠모 드로우','rw.attendance':'출석 체크','rw.checkin_btn':'출석하기',
     'rw.streak':'연속 출석','rw.day':'일','rw.reward_3':'3일','rw.reward_7':'7일','rw.reward_15':'15일','rw.reward_30':'30일',
+    'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 2,000치리',
+    'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
+    'common.loading':'로딩 중...','common.share':'공유',
+    'sd.menu_cards':'🍽️ 메뉴 카드','sd.add_card':'메뉴<br>카드<br>추가',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9724,6 +9732,10 @@ var I18N = {
     'ctw.add_photo':'Add Photo','ctw.photo_hint':'Optional · up to 5',
     'rw.draw':'Chiri Draw','rw.attendance':'Check-in','rw.checkin_btn':'Check in',
     'rw.streak':'Streak','rw.day':'d','rw.reward_3':'3d','rw.reward_7':'7d','rw.reward_15':'15d','rw.reward_30':'30d',
+    'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'2,000 chiri when a friend signs up',
+    'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
+    'common.loading':'Loading...','common.share':'Share',
+    'sd.menu_cards':'🍽️ Menu Cards','sd.add_card':'Add<br>Menu<br>Card',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9877,6 +9889,10 @@ var I18N = {
     'ctw.add_photo':'添加照片','ctw.photo_hint':'可选 · 最多5张',
     'rw.draw':'Chiri 抽奖','rw.attendance':'签到','rw.checkin_btn':'签到',
     'rw.streak':'连续签到','rw.day':'天','rw.reward_3':'3天','rw.reward_7':'7天','rw.reward_15':'15天','rw.reward_30':'30天',
+    'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 2,000 积分',
+    'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
+    'common.loading':'加载中...','common.share':'分享',
+    'sd.menu_cards':'🍽️ 菜单卡','sd.add_card':'添加<br>菜单<br>卡',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -13370,8 +13386,8 @@ async function _sdLoadStoreComments(){
 function _sdRenderMenus(cards,loaded){
   var wrap=document.getElementById('sd-menus-wrap'); if(!wrap) return;
   var h='<div style="display:flex;align-items:center;justify-content:space-between;padding:0 16px 6px;">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">🍽️ メニューカード</div>'
-    +(loaded?'':'<div style="font-size:11px;color:var(--text-3);">로딩 중...</div>')
+    +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('sd.menu_cards')+'</div>'
+    +(loaded?'':'<div style="font-size:11px;color:var(--text-3);">'+t('common.loading')+'</div>')
     +'</div>';
   h+='<div class="sd-menu-scroll">';
   cards.forEach(function(c, idx){
@@ -13415,7 +13431,7 @@ function _sdRenderMenus(cards,loaded){
   });
   h+='<div class="sd-add-card" onclick="sdOpenAddCard()">'
     +'<span style="font-size:34px;color:var(--green);line-height:1;">+</span>'
-    +'<span style="font-size:11px;color:var(--text-2);line-height:1.3;">メニュー<br>カード<br>追加</span>'
+    +'<span style="font-size:11px;color:var(--text-2);line-height:1.3;">'+t('sd.add_card')+'</span>'
     +'</div>';
   h+='</div>';
   wrap.innerHTML=h;
@@ -16235,7 +16251,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v136';
+window.__APP_VERSION__ = 'v137';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
