@@ -1865,6 +1865,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="sg">
         <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🌐</span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
         <div class="si"><span style="font-size:15px;width:22px;text-align:center;">💴</span><span class="si-lbl" data-i18n="settings.currency">통화</span><span class="si-val">¥ JPY</span></div>
+        <div class="si"><span style="font-size:15px;width:22px;text-align:center;">📅</span><span class="si-lbl" data-i18n="settings.week_start">주 시작 요일</span><select id="week-start-select" onchange="setWeekStart(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;"><option value="0" data-i18n="week.sun">일요일</option><option value="1" data-i18n="week.mon">월요일</option></select></div>
       </div>
       <div class="sg">
         <div class="si" onclick="toggleThemeAccordion()" style="cursor:pointer;">
@@ -6646,6 +6647,13 @@ function renderPayRanking() {
    달력
 ══════════════════════════════ */
 var calYear=2026, calMonth=5;
+// 주 시작 요일 (0=일요일, 1=월요일) — 설정에서 변경
+var _weekStart = (function(){ var v=parseInt(localStorage.getItem('riq_week_start')||'0',10); return (v===1)?1:0; })();
+function setWeekStart(v){
+  _weekStart = (parseInt(v,10)===1) ? 1 : 0;
+  localStorage.setItem('riq_week_start', String(_weekStart));
+  if (typeof renderCalendar === 'function') renderCalendar(calYear, calMonth);
+}
 function buildCalData() {
   var map = {};
   DB.forEach(function(r){
@@ -6661,17 +6669,24 @@ function buildCalData() {
 function renderCalendar(y,m) {
   calYear=y; calMonth=m;
   document.getElementById('cal-label').textContent=t('hist.month',{y:y,m:m,mon:_monName(m)});
-  // 요일 헤더 — 현재 언어로 (일=빨강, 토=파랑)
+  // 설정의 주 시작 요일 동기화
+  var wsSel = document.getElementById('week-start-select');
+  if (wsSel) wsSel.value = String(_weekStart);
+  // 요일 헤더 — 현재 언어로 + 주 시작 요일 반영 (일=빨강, 토=파랑)
   var dowEl = document.getElementById('cal-dow');
   if (dowEl) {
-    var dows = t('home.weekdays_sun').split(','); // 0=일 ~ 6=토
-    dowEl.innerHTML = dows.map(function(name, i){
-      var color = i===0 ? 'color:var(--red);' : (i===6 ? 'color:var(--blue);' : '');
-      return '<div class="dow" style="'+color+'">'+name+'</div>';
+    var dows = t('home.weekdays_sun').split(','); // 인덱스 0=일 ~ 6=토
+    var order = [];
+    for (var wi=0; wi<7; wi++) order.push((_weekStart + wi) % 7);
+    dowEl.innerHTML = order.map(function(realDow){
+      var color = realDow===0 ? 'color:var(--red);' : (realDow===6 ? 'color:var(--blue);' : '');
+      return '<div class="dow" style="'+color+'">'+(dows[realDow]||'')+'</div>';
     }).join('');
   }
   var calMap = buildCalData();
   var first=new Date(y,m-1,1).getDay();
+  // 주 시작 요일에 맞춘 첫 칸 오프셋
+  var firstCol = (first - _weekStart + 7) % 7;
   var total=new Date(y,m,0).getDate();
   var monthData=(calMap[y+'-'+m])||{};
   var monthTotal=0; var monthCnt=0;
@@ -6680,7 +6695,7 @@ function renderCalendar(y,m) {
   document.getElementById('cal-month-cnt').textContent=monthCnt+t('rep.unit_cnt');
   document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/total).toLocaleString():0);
   var html=''; var today=new Date();
-  for(var i=0;i<first;i++) html+='<div class="cal-day empty">0</div>';
+  for(var i=0;i<firstCol;i++) html+='<div class="cal-day empty">0</div>';
   for(var d=1;d<=total;d++){
     var dow=(first+d-1)%7;
     var isToday=(y===today.getFullYear()&&m===today.getMonth()+1&&d===today.getDate());
@@ -9451,6 +9466,7 @@ var I18N = {
     // 설정
     'settings.dark':'ダークモード','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
     'settings.lang':'言語','settings.currency':'通貨','settings.theme':'テーマカラー',
+    'settings.week_start':'週の開始曜日','week.sun':'日曜日','week.mon':'月曜日',
     'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.logout':'ログアウト',
     'settings.profile':'プロフィール','settings.notif.title':'通知','settings.account':'アカウント','settings.legal':'規約・お問い合わせ',
     // 공통 버튼
@@ -9714,6 +9730,7 @@ var I18N = {
     'plan.free':'무료 플랜','plan.premium':'프리미엄',
     'settings.dark':'다크모드','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
     'settings.lang':'언어','settings.currency':'통화','settings.theme':'테마 색상',
+    'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일',
     'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.logout':'로그아웃',
     'settings.profile':'프로필','settings.notif.title':'알림','settings.account':'계정','settings.legal':'약관 · 문의',
     'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도',
@@ -9928,6 +9945,7 @@ var I18N = {
     'plan.free':'Free plan','plan.premium':'Premium',
     'settings.dark':'Dark Mode','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
     'settings.lang':'Language','settings.currency':'Currency','settings.theme':'Theme Color',
+    'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday',
     'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.logout':'Logout',
     'settings.profile':'Profile','settings.notif.title':'Notifications','settings.account':'Account','settings.legal':'Legal & Contact',
     'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry',
@@ -10142,6 +10160,7 @@ var I18N = {
     'plan.free':'免费版','plan.premium':'高级版',
     'settings.dark':'深色模式','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
     'settings.lang':'语言','settings.currency':'货币','settings.theme':'主题颜色',
+    'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一',
     'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.logout':'登出',
     'settings.profile':'个人信息','settings.notif.title':'通知','settings.account':'账户','settings.legal':'条款与联系',
     'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试',
@@ -17010,7 +17029,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v171';
+window.__APP_VERSION__ = 'v172';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
