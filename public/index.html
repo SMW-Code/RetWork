@@ -3062,10 +3062,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 공개 버튼 -->
     <button onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
-      <span>📍 チズに公開する</span>
+      <span data-i18n="chiri.publish_btn">📍 チズに公開する</span>
       <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
     </button>
-    <div onclick="closeOv('ov-chiri-publish')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;">キャンセル</div>
+    <div onclick="closeOv('ov-chiri-publish')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -3074,54 +3074,54 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet" style="max-height:88%;">
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div class="sheet-title">✏️ 영수증 수정</div>
+      <div class="sheet-title" data-i18n="edit.title2">✏️ レシート編集</div>
       <div onclick="closeOv('ov-edit')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
     </div>
 
     <!-- 가게명 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;">가게명</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.store_name">店名</div>
       <input id="edit-store" type="text" style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">
     </div>
 
     <!-- 날짜 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;">날짜</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.date_label">日付</div>
       <input id="edit-date" type="date" style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">
     </div>
 
     <!-- 카테고리 -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;">카테고리</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.category_label">カテゴリ</div>
       <div class="cat-select" id="edit-cat-select" style="gap:6px;padding:0;"></div>
     </div>
 
     <!-- 결제수단 -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;">결제수단</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="edit.pay_method">支払い方法</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;" id="edit-pay-select">
-        <div class="pay-chip-sel" data-pay="cash"   onclick="selectEditPay(this)">💴 현금</div>
-        <div class="pay-chip-sel" data-pay="credit" onclick="selectEditPay(this)">💳 신용카드</div>
-        <div class="pay-chip-sel" data-pay="debit"  onclick="selectEditPay(this)">🏦 체크카드</div>
-        <div class="pay-chip-sel" data-pay="ic"     onclick="selectEditPay(this)">🚃 IC카드</div>
-        <div class="pay-chip-sel" data-pay="qr"     onclick="selectEditPay(this)">📱 QR결제</div>
+        <div class="pay-chip-sel" data-pay="cash"   onclick="selectEditPay(this)" data-i18n="pay.cash2">💴 現金</div>
+        <div class="pay-chip-sel" data-pay="credit" onclick="selectEditPay(this)" data-i18n="pay.credit">💳 クレジット</div>
+        <div class="pay-chip-sel" data-pay="debit"  onclick="selectEditPay(this)" data-i18n="pay.debit">🏦 デビット</div>
+        <div class="pay-chip-sel" data-pay="ic"     onclick="selectEditPay(this)" data-i18n="pay.ic">🚃 IC카드</div>
+        <div class="pay-chip-sel" data-pay="qr"     onclick="selectEditPay(this)" data-i18n="pay.qr2">📱 QR決済</div>
       </div>
     </div>
 
     <!-- 품목 목록 -->
     <div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;">품목</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="edit.items_label">品目</div>
       <div id="edit-items-list"></div>
-      <button onclick="editAddItem()" style="width:100%;border:1.5px dashed var(--border-mid);border-radius:12px;padding:9px;font-size:12px;font-weight:700;color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--font);margin-top:4px;">+ 품목 추가</button>
+      <button onclick="editAddItem()" style="width:100%;border:1.5px dashed var(--border-mid);border-radius:12px;padding:9px;font-size:12px;font-weight:700;color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--font);margin-top:4px;" data-i18n="edit.add_item">+ 品目追加</button>
     </div>
 
     <!-- 합계 -->
     <div style="background:var(--green-light);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-size:13px;font-weight:700;color:var(--text-2);">합계</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text-2);" data-i18n="edit.total">合計</span>
       <span id="edit-total-disp" style="font-size:18px;font-weight:800;color:var(--green);">¥0</span>
     </div>
 
-    <button class="save-btn" onclick="saveEditReceipt()">💾 수정 저장</button>
+    <button class="save-btn" onclick="saveEditReceipt()" data-i18n="edit.save">💾 修正を保存</button>
   </div>
 </div>
 
@@ -3130,50 +3130,50 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet" style="max-height:90%;">
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <div class="sheet-title">✏️ 수동 기입</div>
+      <div class="sheet-title" data-i18n="manual.title">✏️ 手動入力</div>
       <div onclick="closeOv('ov-manual')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
     </div>
 
     <!-- 가게명 -->
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.store">店名 / 支出先</div>
-      <input id="manual-store" type="text" placeholder="예) 주유소, 편의점..." style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+      <input id="manual-store" type="text" placeholder="例) ガソリンスタンド、コンビニ..." data-i18n-placeholder="manual.store_placeholder" style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
     </div>
 
     <!-- 날짜 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;">날짜</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.date_label">日付</div>
       <input id="manual-date" type="date" style="width:100%;border:1px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
     </div>
 
     <!-- 카테고리 -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;">카테고리</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.category_label">カテゴリ</div>
       <div class="cat-select" id="manual-cat-select" style="gap:6px;padding:0;"></div>
     </div>
 
     <!-- 결제수단 -->
     <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;">결제수단</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="edit.pay_method">支払い方法</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;" id="manual-pay-select">
-        <div class="pay-chip-sel" data-pay="cash"   onclick="selectManualPay(this)">💴 현금</div>
-        <div class="pay-chip-sel" data-pay="credit" onclick="selectManualPay(this)">💳 신용카드</div>
-        <div class="pay-chip-sel" data-pay="debit"  onclick="selectManualPay(this)">🏦 체크카드</div>
-        <div class="pay-chip-sel" data-pay="ic"     onclick="selectManualPay(this)">🚃 IC카드</div>
-        <div class="pay-chip-sel" data-pay="qr"     onclick="selectManualPay(this)">📱 QR결제</div>
+        <div class="pay-chip-sel" data-pay="cash"   onclick="selectManualPay(this)" data-i18n="pay.cash2">💴 現金</div>
+        <div class="pay-chip-sel" data-pay="credit" onclick="selectManualPay(this)" data-i18n="pay.credit">💳 クレジット</div>
+        <div class="pay-chip-sel" data-pay="debit"  onclick="selectManualPay(this)" data-i18n="pay.debit">🏦 デビット</div>
+        <div class="pay-chip-sel" data-pay="ic"     onclick="selectManualPay(this)" data-i18n="pay.ic">🚃 IC카드</div>
+        <div class="pay-chip-sel" data-pay="qr"     onclick="selectManualPay(this)" data-i18n="pay.qr2">📱 QR決済</div>
       </div>
     </div>
 
     <!-- 품목 -->
     <div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;">품목 <span style="font-weight:500;color:var(--text-3);">(선택사항)</span></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;"><span data-i18n="edit.items_label">品目</span> <span style="font-weight:500;color:var(--text-3);" data-i18n="manual.optional">(任意)</span></div>
       <div id="manual-items-list"></div>
-      <button onclick="manualAddItem()" style="width:100%;border:1.5px dashed var(--border-mid);border-radius:12px;padding:9px;font-size:12px;font-weight:700;color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--font);margin-top:4px;">+ 품목 추가</button>
+      <button onclick="manualAddItem()" style="width:100%;border:1.5px dashed var(--border-mid);border-radius:12px;padding:9px;font-size:12px;font-weight:700;color:var(--text-3);background:transparent;cursor:pointer;font-family:var(--font);margin-top:4px;" data-i18n="edit.add_item">+ 品目追加</button>
     </div>
 
     <!-- 합계 -->
     <div style="background:var(--green-light);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-      <span style="font-size:13px;font-weight:700;color:var(--text-2);">합계 금액 (¥)</span>
+      <span style="font-size:13px;font-weight:700;color:var(--text-2);" data-i18n="edit.total_amount">合計金額 (¥)</span>
       <input id="manual-total" type="number" placeholder="0" oninput="updateManualTotal()"
         style="width:120px;border:none;background:transparent;font-size:18px;font-weight:800;color:var(--green);text-align:right;outline:none;font-family:var(--font);">
     </div>
@@ -9401,6 +9401,14 @@ var I18N = {
     'ocr.store_unknown':'不明','ocr.save_budget':'💾 家計簿に保存','ocr.item_unit':'品目',
     // 편집 모달
     'edit.add_item':'+ 品目追加','edit.total':'合計','edit.total_amount':'合計金額 (¥)','edit.qty':'数量',
+    // 편집/수동 모달
+    'edit.title2':'✏️ レシート編集','edit.store_name':'店名','edit.date_label':'日付','edit.category_label':'カテゴリ',
+    'edit.pay_method':'支払い方法','edit.items_label':'品目','edit.save':'💾 修正を保存',
+    'manual.title':'✏️ 手動入力','manual.store_placeholder':'例) ガソリンスタンド、コンビニ...','manual.optional':'(任意)','manual.save':'💾 保存',
+    'pay.credit':'💳 クレジット','pay.debit':'🏦 デビット','pay.ic':'🚃 IC카드',
+    'pay.cash2':'💴 現金','pay.qr2':'📱 QR決済',
+    // 치리 공개 모달
+    'chiri.publish_title':'📍 チズに公開','chiri.publish_btn':'📍 チズに公開する','chiri.comment_ph':'一言コメント（任意）',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9543,6 +9551,12 @@ var I18N = {
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
     'ocr.store_unknown':'불명','ocr.save_budget':'💾 가계부에 저장하기','ocr.item_unit':'품목',
     'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
+    'edit.title2':'✏️ 영수증 수정','edit.store_name':'가게명','edit.date_label':'날짜','edit.category_label':'카테고리',
+    'edit.pay_method':'결제수단','edit.items_label':'품목','edit.save':'💾 수정 저장',
+    'manual.title':'✏️ 수동 기입','manual.store_placeholder':'예) 주유소, 편의점...','manual.optional':'(선택사항)','manual.save':'💾 저장',
+    'pay.credit':'💳 신용카드','pay.debit':'🏦 체크카드','pay.ic':'🚃 IC카드',
+    'pay.cash2':'💴 현금','pay.qr2':'📱 QR결제',
+    'chiri.publish_title':'📍 치즈에 공개','chiri.publish_btn':'📍 치즈에 공개하기','chiri.comment_ph':'한줄 코멘트 (선택)',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9684,6 +9698,12 @@ var I18N = {
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
     'ocr.store_unknown':'Unknown','ocr.save_budget':'💾 Save to Budget','ocr.item_unit':'items',
     'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
+    'edit.title2':'✏️ Edit Receipt','edit.store_name':'Store','edit.date_label':'Date','edit.category_label':'Category',
+    'edit.pay_method':'Payment','edit.items_label':'Items','edit.save':'💾 Save Changes',
+    'manual.title':'✏️ Manual Entry','manual.store_placeholder':'e.g. Gas station, Konbini...','manual.optional':'(optional)','manual.save':'💾 Save',
+    'pay.credit':'💳 Credit','pay.debit':'🏦 Debit','pay.ic':'🚃 IC Card',
+    'pay.cash2':'💴 Cash','pay.qr2':'📱 QR Pay',
+    'chiri.publish_title':'📍 Publish to Map','chiri.publish_btn':'📍 Publish to Map','chiri.comment_ph':'One-line comment (optional)',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9825,6 +9845,12 @@ var I18N = {
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
     'ocr.store_unknown':'未知','ocr.save_budget':'💾 保存到账本','ocr.item_unit':'件',
     'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
+    'edit.title2':'✏️ 编辑票据','edit.store_name':'店名','edit.date_label':'日期','edit.category_label':'类别',
+    'edit.pay_method':'付款方式','edit.items_label':'商品','edit.save':'💾 保存修改',
+    'manual.title':'✏️ 手动录入','manual.store_placeholder':'例) 加油站、便利店...','manual.optional':'(可选)','manual.save':'💾 保存',
+    'pay.credit':'💳 信用卡','pay.debit':'🏦 借记卡','pay.ic':'🚃 IC卡',
+    'pay.cash2':'💴 现金','pay.qr2':'📱 扫码支付',
+    'chiri.publish_title':'📍 公开到地图','chiri.publish_btn':'📍 公开到地图','chiri.comment_ph':'一句评论（可选）',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -16183,7 +16209,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v134';
+window.__APP_VERSION__ = 'v135';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
