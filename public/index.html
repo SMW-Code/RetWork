@@ -1143,8 +1143,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="map-panel" id="map-store-list">
     <!-- 패널 탭 토글 -->
     <div style="display:flex;gap:6px;margin-bottom:12px;">
-      <button id="mpanel-tab-stores" onclick="switchMapPanel('stores')" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">📍 가게 목록</button>
-      <button id="mpanel-tab-compare" onclick="switchMapPanel('compare')" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);">💰 가격 비교</button>
+      <button id="mpanel-tab-stores" onclick="switchMapPanel('stores')" data-i18n="rmap.stores" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">📍 가게 목록</button>
+      <button id="mpanel-tab-compare" onclick="switchMapPanel('compare')" data-i18n="rmap.compare" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);">💰 가격 비교</button>
     </div>
     <!-- 가게 목록 -->
     <div id="mpanel-stores">
@@ -1153,11 +1153,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 가격 비교 -->
     <div id="mpanel-compare" style="display:none;">
       <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button id="pctab-mine"    onclick="switchPcTab('mine')"    style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">🧾 내 가게</button>
-        <button id="pctab-nearby" onclick="switchPcTab('nearby')"  style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);">📡 주변 미방문</button>
+        <button id="pctab-mine"    onclick="switchPcTab('mine')"    data-i18n="rmap.pc_mine" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">🧾 내 가게</button>
+        <button id="pctab-nearby" onclick="switchPcTab('nearby')"  data-i18n="rmap.pc_nearby" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);">📡 주변 미방문</button>
       </div>
       <div id="pc-mine">
-        <div style="font-size:11px;color:var(--text-3);background:var(--bg-2);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.6;">
+        <div data-i18n="rmap.pc_info" style="font-size:11px;color:var(--text-3);background:var(--bg-2);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.6;">
           💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.
         </div>
         <input class="pc-search" id="pc-search-input" placeholder="品目を検索..." data-i18n-placeholder="rmap.search_ph" oninput="renderPriceComparison(this.value)">
@@ -9598,6 +9598,7 @@ var I18N = {
     'cal.day_detail':'{y}/{m}/{d} 支出明細','cal.tap_go':'タップで移動 ›',
     // 가성비 맵 (영수증 모드)
     'rmap.title':'コスパマップ','rmap.sub':'現在地ベース · レシートピン','rmap.stores':'📍 店舗リスト','rmap.compare':'💰 価格比較',
+    'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
     // 카테고리 라벨 (영수증 기록)
     'cat.all':'すべて','cat.food':'食料品','cat.eat':'外食','cat.cafe':'カフェ','cat.life':'生活雑貨',
@@ -9831,6 +9832,7 @@ var I18N = {
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'cal.day_detail':'{y}/{m}/{d} 지출 내역','cal.tap_go':'탭해서 이동 ›',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
+    'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
@@ -10048,6 +10050,7 @@ var I18N = {
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'cal.day_detail':'{y}/{m}/{d} spending','cal.tap_go':'Tap to view ›',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
+    'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
@@ -10265,6 +10268,7 @@ var I18N = {
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'cal.day_detail':'{y}/{m}/{d} 支出明细','cal.tap_go':'点击查看 ›',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
+    'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
     'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
@@ -10577,7 +10581,7 @@ function initGoogleMap() {
       icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#378ADD', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
       title: '내 위치'
     });
-    document.getElementById('map-sub').textContent = '내 위치 기반 · 영수증 핀';
+    document.getElementById('map-sub').textContent = t('rmap.sub');
   }, function() {});
 
   _map = new google.maps.Map(document.getElementById('google-map'), {
@@ -10941,7 +10945,7 @@ function renderPriceComparison(filter) {
 
   if (comparisons.length === 0) {
     el.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">'
-      + (kw ? '"'+kw+'" 검색 결과 없음' : '같은 물건을 여러 가게에서 사면 비교가 나타나요') + '</div>';
+      + (kw ? t('rmap.search_no_result',{kw:kw}) : t('rmap.pc_empty')) + '</div>';
     return;
   }
 
@@ -11366,13 +11370,13 @@ function renderMapPins() {
     }
     var hasPin = s.lat && s.lng;
     var pinBtn = hasPin
-      ? '<button onclick="event.stopPropagation();startManualPin(\'' + s.name.replace(/'/g,"\\'") + '\')" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;white-space:nowrap;">✏️ 위치 수정</button>'
-      : '<button onclick="event.stopPropagation();startManualPin(\'' + s.name.replace(/'/g,"\\'") + '\')" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">📍 위치 설정</button>';
+      ? '<button onclick="event.stopPropagation();startManualPin(\'' + s.name.replace(/'/g,"\\'") + '\')" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;white-space:nowrap;">'+t('rmap.edit_loc')+'</button>'
+      : '<button onclick="event.stopPropagation();startManualPin(\'' + s.name.replace(/'/g,"\\'") + '\')" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">'+t('rmap.set_loc')+'</button>';
     // 가게 상세 데이터 (펼침 영역용)
     var sId = 'sc-' + encodeURIComponent(s.name).replace(/%/g,'_');
     var sRecs = DB.filter(function(r){ return r.store === s.name; });
     var sLastDate = sRecs.reduce(function(mx,r){ return (r.date||'')>mx?(r.date||''):mx; },'');
-    var sLastStr = sLastDate ? (function(){ var p=sLastDate.split('-'); return parseInt(p[1])+'월 '+parseInt(p[2])+'일'; })() : '';
+    var sLastStr = sLastDate ? (function(){ var p=sLastDate.split('-'); return _dayLabel(parseInt(p[1]),parseInt(p[2])); })() : '';
     var sAvg = s.count > 0 ? Math.round(s.total / s.count) : 0;
     var sItemMap = {};
     sRecs.forEach(function(r){
@@ -11423,7 +11427,7 @@ function renderMapPins() {
       + '<div style="display:flex;align-items:center;gap:12px;width:100%;">'
       + '<div class="shop-score" style="background:var(--green-light);color:var(--green);">' + s.count + '회</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.name + '</div>'
-      + '<div style="font-size:11px;color:var(--text-3);margin-top:2px;">합계 ¥' + s.total.toLocaleString() + (hasPin ? ' · 📍 탭해서 이동' : ' · 위치 미등록') + '</div></div>'
+      + '<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('rmap.total')+' ¥' + s.total.toLocaleString() + (hasPin ? ' · '+t('rmap.tap_go') : ' · '+t('rmap.no_pin')) + '</div></div>'
       + (hasPin ? '<span id="'+sId+'-chev" style="font-size:10px;color:var(--text-3);flex-shrink:0;">▼</span>' : '')
       + pinBtn
       + '</div>'
@@ -17037,7 +17041,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v174';
+window.__APP_VERSION__ = 'v175';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
