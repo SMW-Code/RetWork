@@ -668,6 +668,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .saving-price.cheap{color:var(--green);}
 .saving-badge{display:inline-block;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;margin-top:3px;}
 .saving-total{background:var(--green-light);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px;border:0.5px solid rgba(29,158,117,.2);}
+/* 다크모드 — 절약 모달 가독성 보정 */
+[data-dark="1"] .saving-item{background:var(--surface);border-color:var(--border-mid);}
+[data-dark="1"] .saving-stores{border-color:var(--border-mid);}
+[data-dark="1"] .saving-store{background:rgba(255,255,255,.05);}
+[data-dark="1"] .saving-store:first-child{border-right-color:var(--border-mid);}
+[data-dark="1"] .saving-store-name{color:var(--text-1);}
+[data-dark="1"] .saving-total{background:var(--theme-a18);border-color:var(--border-mid);}
 
 /* 가게 상세 */
 .receipt-history-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);}
@@ -2103,7 +2110,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="sheet-sub"><span data-i18n="saving.sub">マイレシート分析</span> · イオン vs 業務スーパー</div>
     <div class="saving-item">
       <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🥛 牛乳 1L</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
-      <div style="font-size:11px;color:var(--text-3);margin-top:4px;" data-i18n="saving.based">月12回購入基準</div>
+      <div style="font-size:11px;color:var(--text-2);margin-top:4px;" data-i18n="saving.based">月12回購入基準</div>
       <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥198</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥158</div><div class="saving-badge">-¥40</div></div></div>
     </div>
     <div class="saving-item">
@@ -2111,10 +2118,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥168</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥128</div><div class="saving-badge">-¥40</div></div></div>
     </div>
     <div class="saving-total">
-      <div><div style="font-size:12px;font-weight:700;color:var(--green-dark);" data-i18n="saving.total">合計節約見込み額</div><div style="font-size:11px;color:var(--green);margin-top:2px;"><span data-i18n="saving.annual">年間節約見込み額</span>: ¥15,840</div></div>
+      <div><div style="font-size:12px;font-weight:800;color:var(--text-1);" data-i18n="saving.total">合計節約見込み額</div><div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;"><span data-i18n="saving.annual">年間節約見込み額</span>: ¥15,840</div></div>
       <div style="font-size:28px;font-weight:900;color:var(--green);">¥1,320<span style="font-size:13px;font-weight:600;">/月</span></div>
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:14px;cursor:pointer;" onclick="closeOv('ov-saving')" data-i18n="btn.close">閉じる</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-2);margin-top:14px;cursor:pointer;" onclick="closeOv('ov-saving')" data-i18n="btn.close">閉じる</div>
   </div>
 </div>
 
@@ -17045,7 +17052,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v181';
+window.__APP_VERSION__ = 'v182';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
