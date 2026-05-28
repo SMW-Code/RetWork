@@ -1807,12 +1807,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div id="profile-edit-panel" style="display:none;background:linear-gradient(to bottom,rgba(12,107,82,.08),transparent);padding:16px 20px 4px;border-bottom:0.5px solid var(--border);">
       <!-- 닉네임 -->
       <div style="margin-bottom:14px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:2px;">닉네임</div>
-        <input id="nickname-input" class="nick-input" type="text" maxlength="12" placeholder="닉네임 입력 (최대 12자)">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:2px;" data-i18n="prof.nickname">닉네임</div>
+        <input id="nickname-input" class="nick-input" type="text" maxlength="12" placeholder="닉네임 입력 (최대 12자)" data-i18n-placeholder="prof.nickname_ph">
       </div>
       <!-- 아바타 선택 -->
       <div style="margin-bottom:12px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:8px;">아바타 선택</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:8px;" data-i18n="prof.avatar">아바타 선택</div>
 
         <!-- 사진 업로드 버튼 -->
         <label id="avatar-upload-btn" style="display:flex;align-items:center;gap:10px;background:var(--surface);border:1.5px dashed var(--green-mid);border-radius:14px;padding:11px 14px;cursor:pointer;margin-bottom:10px;transition:all .15s;">
@@ -1821,18 +1821,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <img id="avatar-preview-img" style="display:none;width:100%;height:100%;object-fit:cover;" alt="">
           </div>
           <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text-1);">사진 업로드</div>
-            <div style="font-size:11px;color:var(--text-3);margin-top:2px;">갤러리에서 이미지 선택</div>
+            <div style="font-size:13px;font-weight:700;color:var(--text-1);" data-i18n="prof.photo_upload">사진 업로드</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="prof.photo_sub">갤러리에서 이미지 선택</div>
           </div>
           <input type="file" accept="image/*" style="display:none;" onchange="handleAvatarImage(this)">
         </label>
 
         <!-- 이모지 그리드 -->
-        <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">또는 이모지 선택</div>
+        <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;" data-i18n="prof.or_emoji">또는 이모지 선택</div>
         <div class="avatar-picker" id="avatar-picker-grid"></div>
       </div>
       <!-- 저장 버튼 -->
-      <button onclick="saveProfile()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:14px;">✅ 저장</button>
+      <button onclick="saveProfile()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:14px;" data-i18n="prof.save">✅ 저장</button>
     </div>
 
     <div class="sp-body">
@@ -1840,7 +1840,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="si" style="flex-direction:column;align-items:flex-start;gap:12px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:15px;width:22px;text-align:center;">🔄</span>
-            <span class="si-lbl">モード切替</span>
+            <span class="si-lbl" data-i18n="prof.mode_switch">モード切替</span>
           </div>
           <div style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;">
             <span id="mode-lbl-receipt" data-i18n="mode.receipt" style="font-size:13px;font-weight:800;color:var(--green);transition:all .25s;white-space:nowrap;">🧾 ReceiptIQ</span>
@@ -9427,6 +9427,10 @@ var I18N = {
     'md.prev':'◀ 前へ','md.next':'次へ ▶','md.login_to_rate':'🔒 ログイン後に評価できます',
     'md.my_rating':'✅ マイ評価','md.one_per_user':'1ユーザーにつき1件のみ',
     'common.anon':'匿名','btn.submit':'登録',
+    // 프로필 편집
+    'prof.nickname':'ニックネーム','prof.nickname_ph':'ニックネーム入力（最大12文字）',
+    'prof.avatar':'アバター選択','prof.photo_upload':'写真をアップロード','prof.photo_sub':'ギャラリーから画像を選択',
+    'prof.or_emoji':'または絵文字を選択','prof.save':'✅ 保存','prof.mode_switch':'モード切替',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9590,6 +9594,9 @@ var I18N = {
     'md.prev':'◀ 이전','md.next':'다음 ▶','md.login_to_rate':'🔒 로그인 후 평가할 수 있어요',
     'md.my_rating':'✅ 내 평가','md.one_per_user':'한 사용자당 1개만 작성 가능',
     'common.anon':'익명','btn.submit':'등록',
+    'prof.nickname':'닉네임','prof.nickname_ph':'닉네임 입력 (최대 12자)',
+    'prof.avatar':'아바타 선택','prof.photo_upload':'사진 업로드','prof.photo_sub':'갤러리에서 이미지 선택',
+    'prof.or_emoji':'또는 이모지 선택','prof.save':'✅ 저장','prof.mode_switch':'모드 전환',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9752,6 +9759,9 @@ var I18N = {
     'md.prev':'◀ Prev','md.next':'Next ▶','md.login_to_rate':'🔒 Log in to rate',
     'md.my_rating':'✅ My rating','md.one_per_user':'1 per user only',
     'common.anon':'Anonymous','btn.submit':'Submit',
+    'prof.nickname':'Nickname','prof.nickname_ph':'Enter nickname (max 12)',
+    'prof.avatar':'Choose Avatar','prof.photo_upload':'Upload Photo','prof.photo_sub':'Pick image from gallery',
+    'prof.or_emoji':'Or pick an emoji','prof.save':'✅ Save','prof.mode_switch':'Switch Mode',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9914,6 +9924,9 @@ var I18N = {
     'md.prev':'◀ 上一页','md.next':'下一页 ▶','md.login_to_rate':'🔒 登录后可评价',
     'md.my_rating':'✅ 我的评价','md.one_per_user':'每位用户限1条',
     'common.anon':'匿名','btn.submit':'提交',
+    'prof.nickname':'昵称','prof.nickname_ph':'输入昵称（最多12字）',
+    'prof.avatar':'选择头像','prof.photo_upload':'上传照片','prof.photo_sub':'从相册选择图片',
+    'prof.or_emoji':'或选择表情','prof.save':'✅ 保存','prof.mode_switch':'切换模式',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -16272,7 +16285,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v138';
+window.__APP_VERSION__ = 'v139';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
