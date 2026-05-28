@@ -7598,8 +7598,8 @@ function _sdRenderPrivateNote(cur) {
   var savedHint = cur.updated_at
     ? '<span style="font-size:10px;color:var(--text-3);font-weight:500;margin-left:6px;">'+(cur.updated_at||'').slice(5,16).replace('T',' ')+'</span>'
     : '';
-  var existsBadge = _sdPrivateExists
-    ? '<span style="background:#C8B273;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:8px;margin-left:6px;">'+(rating || '')+'</span>'
+  var existsBadge = (_sdPrivateExists && rating)
+    ? '<span style="display:inline-flex;align-items:center;gap:2px;background:#C8B273;color:#fff;font-size:13px;font-weight:800;padding:3px 10px;border-radius:10px;margin-left:8px;line-height:1;box-shadow:0 1px 3px rgba(200,178,115,.5);">★ '+rating+'<span style="font-size:10px;font-weight:600;opacity:.85;">/10</span></span>'
     : '';
 
   var headerHtml =
@@ -16906,7 +16906,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v164';
+window.__APP_VERSION__ = 'v165';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
