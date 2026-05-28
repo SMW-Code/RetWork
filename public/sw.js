@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v142';
+const CACHE_NAME = 'receiptiq-v143';
 // manifest.json은 인라인 Blob URL로 처리됨 (Vercel 방화벽 차단 회피)
 const STATIC_CACHE = ['/icons/icon.png', '/icons/icon.svg'];
 
