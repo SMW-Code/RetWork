@@ -1621,26 +1621,26 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- チリつも 글쓰기 오버레이 -->
 <div id="ct-write-ov" style="display:none;position:absolute;inset:0;z-index:350;flex-direction:column;background:var(--bg);">
   <div style="background:var(--gold);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
-    <button onclick="ctCloseWrite()" style="background:rgba(255,255,255,.1);border:none;border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">← 戻る</button>
-    <div style="font-size:15px;font-weight:800;color:#fff;">投稿を書く</div>
-    <button onclick="ctSubmitPost()" style="background:var(--gold);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">投稿する</button>
+    <button onclick="ctCloseWrite()" style="background:rgba(255,255,255,.1);border:none;border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="ctw.back">← 戻る</button>
+    <div style="font-size:15px;font-weight:800;color:#fff;" data-i18n="ctw.title">投稿を書く</div>
+    <button onclick="ctSubmitPost()" style="background:var(--gold);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ctw.submit">投稿する</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;">
-    <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:8px;">カテゴリ <span style="color:var(--red);">*</span></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:8px;"><span data-i18n="ctw.category">カテゴリ</span> <span style="color:var(--red);">*</span></div>
     <div id="ct-write-cats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px;"></div>
-    <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">タイトル <span style="color:var(--red);">*</span></div>
-    <input id="ct-write-title" type="text" maxlength="50" placeholder="タイトルを入力してください"
+    <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;"><span data-i18n="ctw.post_title">タイトル</span> <span style="color:var(--red);">*</span></div>
+    <input id="ct-write-title" type="text" maxlength="50" placeholder="タイトルを入力してください" data-i18n-placeholder="ctw.title_ph"
       style="width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--border-mid);background:#fff;font-size:14px;font-weight:600;font-family:var(--font);outline:none;color:var(--text-1);margin-bottom:18px;"
       onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-mid)'">
-    <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">内容 <span style="color:var(--red);">*</span></div>
-    <textarea id="ct-write-content" maxlength="500" placeholder="節約のヒントや体験談をシェアしよう！"
+    <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;"><span data-i18n="ctw.content">内容</span> <span style="color:var(--red);">*</span></div>
+    <textarea id="ct-write-content" maxlength="500" placeholder="節約のヒントや体験談をシェアしよう！" data-i18n-placeholder="ctw.content_ph"
       style="width:100%;padding:11px 14px;border-radius:12px;border:1.5px solid var(--border-mid);background:#fff;font-size:14px;font-family:var(--font);outline:none;color:var(--text-1);resize:none;height:150px;line-height:1.6;"
       onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border-mid)'"></textarea>
     <label style="display:flex;align-items:center;gap:12px;background:#fff;border:1.5px dashed var(--border-mid);border-radius:12px;padding:13px 14px;cursor:pointer;margin-top:12px;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
       <div style="flex:1;">
-        <div style="font-size:13px;font-weight:700;color:var(--text-2);">写真を追加</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:1px;" id="ct-write-img-name">任意 · 最大5枚</div>
+        <div style="font-size:13px;font-weight:700;color:var(--text-2);" data-i18n="ctw.add_photo">写真を追加</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;" id="ct-write-img-name" data-i18n="ctw.photo_hint">任意 · 最大5枚</div>
       </div>
       <input type="file" accept="image/*" multiple style="display:none;" onchange="ctWritePickImg(this)">
     </label>
@@ -9409,6 +9409,14 @@ var I18N = {
     'pay.cash2':'💴 現金','pay.qr2':'📱 QR決済',
     // 치리 공개 모달
     'chiri.publish_title':'📍 チズに公開','chiri.publish_btn':'📍 チズに公開する','chiri.comment_ph':'一言コメント（任意）',
+    // 치리톡 글쓰기 모달
+    'ctw.back':'← 戻る','ctw.title':'投稿を書く','ctw.submit':'投稿する',
+    'ctw.category':'カテゴリ','ctw.post_title':'タイトル','ctw.title_ph':'タイトルを入力してください',
+    'ctw.content':'内容','ctw.content_ph':'節約のヒントや体験談をシェアしよう！',
+    'ctw.add_photo':'写真を追加','ctw.photo_hint':'任意 · 最大5枚',
+    // 리워드 / 출석
+    'rw.draw':'チリつもドロー','rw.attendance':'出席チェック','rw.checkin_btn':'出席する',
+    'rw.streak':'連続出席','rw.day':'日','rw.reward_3':'3日','rw.reward_7':'7日','rw.reward_15':'15日','rw.reward_30':'30日',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9557,6 +9565,12 @@ var I18N = {
     'pay.credit':'💳 신용카드','pay.debit':'🏦 체크카드','pay.ic':'🚃 IC카드',
     'pay.cash2':'💴 현금','pay.qr2':'📱 QR결제',
     'chiri.publish_title':'📍 치즈에 공개','chiri.publish_btn':'📍 치즈에 공개하기','chiri.comment_ph':'한줄 코멘트 (선택)',
+    'ctw.back':'← 뒤로','ctw.title':'글쓰기','ctw.submit':'게시',
+    'ctw.category':'카테고리','ctw.post_title':'제목','ctw.title_ph':'제목을 입력해주세요',
+    'ctw.content':'내용','ctw.content_ph':'절약 팁이나 경험담을 공유해보세요!',
+    'ctw.add_photo':'사진 추가','ctw.photo_hint':'선택 · 최대 5장',
+    'rw.draw':'치리츠모 드로우','rw.attendance':'출석 체크','rw.checkin_btn':'출석하기',
+    'rw.streak':'연속 출석','rw.day':'일','rw.reward_3':'3일','rw.reward_7':'7일','rw.reward_15':'15일','rw.reward_30':'30일',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9704,6 +9718,12 @@ var I18N = {
     'pay.credit':'💳 Credit','pay.debit':'🏦 Debit','pay.ic':'🚃 IC Card',
     'pay.cash2':'💴 Cash','pay.qr2':'📱 QR Pay',
     'chiri.publish_title':'📍 Publish to Map','chiri.publish_btn':'📍 Publish to Map','chiri.comment_ph':'One-line comment (optional)',
+    'ctw.back':'← Back','ctw.title':'Write Post','ctw.submit':'Post',
+    'ctw.category':'Category','ctw.post_title':'Title','ctw.title_ph':'Enter a title',
+    'ctw.content':'Content','ctw.content_ph':'Share savings tips or experiences!',
+    'ctw.add_photo':'Add Photo','ctw.photo_hint':'Optional · up to 5',
+    'rw.draw':'Chiri Draw','rw.attendance':'Check-in','rw.checkin_btn':'Check in',
+    'rw.streak':'Streak','rw.day':'d','rw.reward_3':'3d','rw.reward_7':'7d','rw.reward_15':'15d','rw.reward_30':'30d',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9851,6 +9871,12 @@ var I18N = {
     'pay.credit':'💳 信用卡','pay.debit':'🏦 借记卡','pay.ic':'🚃 IC卡',
     'pay.cash2':'💴 现金','pay.qr2':'📱 扫码支付',
     'chiri.publish_title':'📍 公开到地图','chiri.publish_btn':'📍 公开到地图','chiri.comment_ph':'一句评论（可选）',
+    'ctw.back':'← 返回','ctw.title':'写帖子','ctw.submit':'发布',
+    'ctw.category':'类别','ctw.post_title':'标题','ctw.title_ph':'请输入标题',
+    'ctw.content':'内容','ctw.content_ph':'分享省钱技巧或经验吧！',
+    'ctw.add_photo':'添加照片','ctw.photo_hint':'可选 · 最多5张',
+    'rw.draw':'Chiri 抽奖','rw.attendance':'签到','rw.checkin_btn':'签到',
+    'rw.streak':'连续签到','rw.day':'天','rw.reward_3':'3天','rw.reward_7':'7天','rw.reward_15':'15天','rw.reward_30':'30天',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -16209,7 +16235,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v135';
+window.__APP_VERSION__ = 'v136';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
