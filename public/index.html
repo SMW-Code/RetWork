@@ -338,8 +338,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .budget-track{height:8px;background:rgba(0,0,0,.06);border-radius:20px;overflow:hidden;margin:8px 0 6px;}
 .budget-fill{height:100%;border-radius:20px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 
-.alert-banner{margin:10px 16px 0;background:var(--yellow-bg);border:0.5px solid rgba(245,190,94,.5);border-radius:14px;padding:7px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow-xs);}
-[data-dark="1"] .alert-banner{background:rgba(245,190,94,.12);border-color:rgba(245,190,94,.3);}
+.alert-banner{margin:10px 16px 0;background:var(--green);border:1.5px solid #C8B273;border-radius:14px;padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow-sm);}
+[data-dark="1"] .alert-banner{background:var(--green);border-color:#C8B273;}
 .alert-banner:active{transform:scale(.98);}
 .receipt-row{background:var(--surface);margin:0 16px 8px;border-radius:14px;padding:8px 15px;border:0.5px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm);}
 .receipt-row:hover{box-shadow:var(--shadow-md);}
@@ -947,8 +947,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 절약 배너 -->
     <div class="alert-banner" onclick="openOv('ov-saving')">
       <span style="font-size:18px;flex-shrink:0;">💡</span>
-      <div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);" data-i18n="home.saving_cta">절약 기회 발견!</div><div style="font-size:11px;color:var(--text-2);margin-top:2px;" data-i18n="home.saving_cta_sub">3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능</div></div>
-      <span style="font-size:16px;color:var(--yellow);">›</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;" data-i18n="home.saving_cta">절약 기회 발견!</div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;" data-i18n="home.saving_cta_sub">3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능</div></div>
+      <span style="font-size:16px;color:#C8B273;">›</span>
     </div>
 
     <!-- 날짜별 그룹 영수증 -->
@@ -17045,7 +17045,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v179';
+window.__APP_VERSION__ = 'v180';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
