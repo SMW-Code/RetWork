@@ -7329,7 +7329,15 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
   var body = JSON.stringify({ base64Image: base64Image });
 
   fetch('/api/vision', { method:'POST', headers:{'Content-Type':'application/json'}, body:body })
-    .then(function(res){ return res.json(); })
+    .then(function(res){
+      // Vercel Attack Challenge Mode 등으로 HTML(challenge) 이 오면 JSON 파싱 실패 → 명확한 안내
+      var ct = res.headers.get('content-type') || '';
+      var mitigated = res.headers.get('x-vercel-mitigated');
+      if (mitigated === 'challenge' || ct.indexOf('text/html') >= 0) {
+        throw new Error('__VERCEL_CHALLENGE__');
+      }
+      return res.json();
+    })
     .then(function(data) {
       if (data.error) { showOcrError(previewSrc, data.error.message); return; }
       var rawText = '';
@@ -7345,6 +7353,10 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
       showOcrDebugHybrid(previewSrc, rawText, base64Image);
     })
     .catch(function(err) {
+      if (err && err.message === '__VERCEL_CHALLENGE__') {
+        showOcrError(previewSrc, '접속 보안 검증(Vercel)에 막혔어요. 잠시 후 다시 시도하거나, 다른 네트워크/브라우저로 접속해 주세요.');
+        return;
+      }
       showOcrError(previewSrc, err.message);
     });
 }
@@ -16131,7 +16143,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v132';
+window.__APP_VERSION__ = 'v133';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
