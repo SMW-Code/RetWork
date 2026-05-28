@@ -7311,15 +7311,29 @@ function showOcrDebugHybrid(previewSrc, rawText, base64Image) {
 
 // 하이브리드 파싱 핵심 함수: rawText + 이미지 base64 를 GPT-4o에 동시 전달
 /* ══════════════════════════════
-   비공개 메모 (가게별, 본인만 보임)
+   비공개 메모 (가게별, 본인만 보임) — 10단계 별점 + 아코디언 UI
 ══════════════════════════════ */
-var SENTIMENT_OPTS = [
-  { key:'love',          icon:'❤️', label:'또 가고 싶음',  color:'#E63946' },
-  { key:'recommend',     icon:'👍', label:'강추',         color:'#1BBF8A' },
-  { key:'neutral',       icon:'😐', label:'평범',         color:'#888' },
-  { key:'disappointing', icon:'👎', label:'비추천',       color:'#E0A030' },
-  { key:'avoid',         icon:'🚫', label:'다시는 안 감',  color:'#7a0000' }
-];
+
+// 10단계 별점 레벨별 평가 텍스트
+var RATING_LEVELS = {
+  10: { ja:'最高（人生のお気に入り、噂したくなる）',     ko:'강추 (인생 맛집/멋집, 주변에 소문내고 다님)',     en:'Best — favorite of my life',                zh:'极力推荐 — 人生中的最爱' },
+  9:  { ja:'大満足（必ず再訪、知人を連れて行きたい）',   ko:'대만족 (무조건 재방문, 지인 데려오고 싶음)',     en:'Excellent — will revisit & bring friends',  zh:'非常满意 — 一定再来，想带朋友' },
+  8:  { ja:'満足（期待以上！気持ちよくお金を使えた）',   ko:'만족 (기대 이상! 기분 좋게 돈 쓰고 감)',         en:'Great — exceeded expectations',             zh:'满意 — 超出期待，花得开心' },
+  7:  { ja:'おすすめ（平均以上、誰が行っても失敗しない）', ko:'추천할 만함 (평균 이상, 누가 가도 실패는 안 함)', en:'Recommendable — above average',             zh:'值得推荐 — 高于平均' },
+  6:  { ja:'無難（想像通り、好き嫌い分かれない）',       ko:'무난함 (딱 생각한 만큼, 무난해서 호불호 없음)',   en:'Solid — exactly as expected',               zh:'还行 — 与想象一致' },
+  5:  { ja:'普通（あればまた行く、なくても困らない）',   ko:'평범함 (그냥저냥 보통, 있으면 가고 없으면 안 감)', en:'Average — okay but nothing special',        zh:'一般 — 有就去，没就算' },
+  4:  { ja:'物足りない（2%足りない、致命的な欠点あり）', ko:'아쉬움 (2% 부족함, 한두 가지 치명적인 단점이 있음)', en:'Lacking — 1-2 critical issues',            zh:'不足 — 有1-2个致命缺点' },
+  3:  { ja:'残念（お金がもったいない気がしてきた）',     ko:'실망 (돈 아까운 생각이 들기 시작함)',           en:'Disappointing — money felt wasted',         zh:'失望 — 觉得不值' },
+  2:  { ja:'不快（サービス・衛生に問題あり）',           ko:'불쾌 (서비스나 위생 등 서비스 마인드에 문제 있음)', en:'Unpleasant — service/hygiene issues',       zh:'不快 — 服务或卫生有问题' },
+  1:  { ja:'二度と行かない（周りに止めたいレベル）',     ko:'다시는 안 감 (주변에 뜯어말리고 싶은 수준)',     en:'Never again — would warn others',           zh:'再也不去 — 想劝阻周围人' }
+};
+
+function _ratingLabel(rating){
+  if (!rating || rating < 1 || rating > 10) return '';
+  var lang = (typeof _currentLang === 'string' ? _currentLang : 'ja');
+  var entry = RATING_LEVELS[rating];
+  return (entry && entry[lang]) || (entry && entry.ja) || '';
+}
 
 async function _sdLoadPrivateNote() {
   var wrap = document.getElementById('sd-private-wrap');
@@ -7332,69 +7346,165 @@ async function _sdLoadPrivateNote() {
   }
   wrap.style.display = '';
   if (!_sb || !_currentUser || !_sdName) return;
-  var current = { sentiment: null, note: '' };
+  var current = { rating: null, note: '', updated_at: null };
   try {
     var res = await _sb.from('private_store_notes')
-      .select('sentiment,note,updated_at')
+      .select('rating,sentiment,note,updated_at')
       .eq('user_id', _currentUser.id)
       .eq('store_name', _sdName)
       .maybeSingle();
-    if (res.data) current = res.data;
+    if (res.data) {
+      current.rating = res.data.rating || null;
+      current.note = res.data.note || '';
+      current.updated_at = res.data.updated_at || null;
+    }
   } catch(e) { /* 무시 */ }
-  _sdPrivateSentiment = current.sentiment || null;
+  _sdPrivateRating = current.rating;
+  _sdPrivateExists = !!(current.rating || current.note);
+  _sdPrivateOpen = _sdPrivateOpen || false; // 아코디언 열림 상태 유지
   _sdRenderPrivateNote(current);
 }
+
+// 아코디언 열림 상태 + 별점 hover 상태
+var _sdPrivateRating = null;
+var _sdPrivateOpen   = false;
+var _sdPrivateHover  = null;
+var _sdPrivateExists = false;
 
 function _sdRenderPrivateNote(cur) {
   var wrap = document.getElementById('sd-private-wrap');
   if (!wrap) return;
-  var chips = SENTIMENT_OPTS.map(function(s) {
-    var active = (cur.sentiment === s.key);
-    return '<button onclick="sdToggleSentiment(\''+s.key+'\')" data-sent="'+s.key+'" style="flex:1;min-width:80px;padding:9px 6px;border:1.5px solid '+(active?s.color:'var(--border-mid)')+';border-radius:14px;background:'+(active?s.color:'var(--surface)')+';color:'+(active?'#fff':'var(--text-2)')+';font-size:11px;font-weight:'+(active?'800':'600')+';cursor:pointer;font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:3px;">'
-      + '<span style="font-size:18px;">'+s.icon+'</span>'
-      + '<span>'+s.label+'</span>'
-      + '</button>';
-  }).join('');
-  wrap.innerHTML = '<div style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:4px;">🔒 내 비공개 메모</div>'
-    + '<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">나만 볼 수 있는 평가와 메모를 저장하세요</div>'
-    + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">'+chips+'</div>'
-    + '<textarea id="sd-private-note" rows="3" maxlength="500" placeholder="개인 메모 (선택, 최대 500자)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:12px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;resize:vertical;margin-bottom:10px;">'+_esc(cur.note||'')+'</textarea>'
-    + '<button onclick="sdSavePrivateNote()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--text-1);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🔒 비공개 저장</button>'
-    + (cur.updated_at ? '<div style="font-size:10px;color:var(--text-3);margin-top:6px;text-align:center;">마지막 저장: '+(cur.updated_at||'').slice(0,16).replace('T',' ')+'</div>' : '');
+  var rating = _sdPrivateRating || cur.rating || null;
+  var hover  = _sdPrivateHover;
+  var displayN = hover || rating || 0;
+
+  // 별 10개 (1~10 인덱스) — 클릭/호버 인터랙션
+  var starsHtml = '';
+  for (var i = 1; i <= 10; i++) {
+    var active = i <= displayN;
+    starsHtml += '<span '
+      + 'onclick="sdSetPrivateRating('+i+')" '
+      + 'onmouseover="sdHoverPrivateRating('+i+')" '
+      + 'onmouseout="sdHoverPrivateRating(0)" '
+      + 'style="cursor:pointer;font-size:22px;color:'+(active?'#C8B273':'#ddd')+';transition:color .12s;user-select:none;line-height:1;">'
+      + (active ? '★' : '☆')
+      + '</span>';
+  }
+  // 별점 라벨 (hover 우선, 없으면 rating)
+  var labelText = displayN > 0 ? _ratingLabel(displayN) : (rating ? '' : '평가를 선택하세요 / 評価を選んでください');
+  var labelStyle = displayN > 0
+    ? 'background:rgba(200,178,115,.12);border:1px solid #C8B273;color:var(--text-1);'
+    : 'background:var(--bg);border:1px dashed var(--border-mid);color:var(--text-3);';
+
+  // 아코디언 헤더 (항상 표시) — 클릭하면 토글
+  var caret = _sdPrivateOpen ? '▲' : '▼';
+  var savedHint = cur.updated_at
+    ? '<span style="font-size:10px;color:var(--text-3);font-weight:500;margin-left:6px;">'+(cur.updated_at||'').slice(5,16).replace('T',' ')+'</span>'
+    : '';
+  var existsBadge = _sdPrivateExists
+    ? '<span style="background:#C8B273;color:#fff;font-size:9px;font-weight:800;padding:1px 7px;border-radius:8px;margin-left:6px;">'+(rating || '')+'</span>'
+    : '';
+
+  var headerHtml =
+    '<button onclick="sdTogglePrivatePanel()" style="width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid '+(_sdPrivateExists?'#C8B273':'var(--border-mid)')+';border-radius:14px;padding:12px 14px;cursor:pointer;font-family:var(--font);color:var(--text-1);">'
+    +   '<span style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:800;">'
+    +     '🔒 내 비공개 메모 / 🔒 マイ非公開メモ'
+    +     existsBadge
+    +     savedHint
+    +   '</span>'
+    +   '<span style="font-size:11px;color:var(--text-3);">'+caret+'</span>'
+    + '</button>';
+
+  // 아코디언 본체 (열렸을 때만)
+  var bodyHtml = '';
+  if (_sdPrivateOpen) {
+    bodyHtml =
+      '<div style="margin-top:10px;padding:14px;border:1px solid var(--border-mid);border-radius:14px;background:var(--surface);">'
+      // 별점 10개
+      +   '<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">평가 / 評価 (1~10)</div>'
+      +   '<div style="display:flex;align-items:center;justify-content:center;gap:2px;margin-bottom:8px;flex-wrap:wrap;">'+starsHtml+'</div>'
+      // 별점 라벨 (선택된 등급의 의미)
+      +   '<div style="font-size:12px;font-weight:600;padding:8px 11px;border-radius:10px;margin-bottom:12px;text-align:center;line-height:1.5;'+labelStyle+'">'
+      +     _esc(labelText)
+      +   '</div>'
+      // 메모 입력
+      +   '<textarea id="sd-private-note" rows="3" maxlength="500" placeholder="개인 메모 (선택, 최대 500자) / 個人メモ" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:12px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;resize:vertical;margin-bottom:10px;">'+_esc(cur.note||'')+'</textarea>'
+      // 버튼 3개 영역
+      +   '<div style="display:flex;gap:6px;">';
+
+    if (_sdPrivateExists) {
+      // 기존 메모 있음 → 삭제 + 수정(저장)
+      bodyHtml +=
+            '<button onclick="sdDeletePrivateNote()" style="flex:1;padding:11px;border:1px solid var(--red,#FF4D4F);border-radius:12px;background:transparent;color:var(--red,#FF4D4F);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑 삭제</button>'
+          + '<button onclick="sdSavePrivateNote()" style="flex:2;padding:11px;border:none;border-radius:12px;background:var(--text-1);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">✏️ 수정 저장</button>';
+    } else {
+      // 신규 → 저장만
+      bodyHtml +=
+            '<button onclick="sdSavePrivateNote()" style="flex:1;padding:11px;border:none;border-radius:12px;background:#C8B273;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🔒 비공개 저장</button>';
+    }
+
+    bodyHtml += '</div></div>';
+  }
+
+  wrap.innerHTML = headerHtml + bodyHtml;
 }
 
-var _sdPrivateSentiment = null;
+function sdTogglePrivatePanel() {
+  _sdPrivateOpen = !_sdPrivateOpen;
+  // 같은 cur 로 재렌더 (DB 재조회 없이)
+  _sdLoadPrivateNote();
+}
 
-function sdToggleSentiment(key) {
-  _sdPrivateSentiment = (_sdPrivateSentiment === key) ? null : key;
-  // 시각적 토글
-  document.querySelectorAll('[data-sent]').forEach(function(btn){
-    var k = btn.dataset.sent;
-    var s = SENTIMENT_OPTS.find(function(x){ return x.key === k; });
-    var active = (k === _sdPrivateSentiment);
-    btn.style.background = active ? s.color : 'var(--surface)';
-    btn.style.color = active ? '#fff' : 'var(--text-2)';
-    btn.style.borderColor = active ? s.color : 'var(--border-mid)';
-    btn.style.fontWeight = active ? '800' : '600';
-  });
+function sdSetPrivateRating(n) {
+  _sdPrivateRating = (_sdPrivateRating === n) ? null : n; // 같은 별 클릭 시 해제
+  _sdPrivateHover = null;
+  // 메모 텍스트 보존하면서 별점만 갱신
+  var noteEl = document.getElementById('sd-private-note');
+  var keptNote = noteEl ? noteEl.value : '';
+  _sdRenderPrivateNote({ rating: _sdPrivateRating, note: keptNote, updated_at: null });
+}
+
+function sdHoverPrivateRating(n) {
+  _sdPrivateHover = n || null;
+  // 가벼운 갱신 — 별 색상 + 라벨만
+  var noteEl = document.getElementById('sd-private-note');
+  var keptNote = noteEl ? noteEl.value : '';
+  _sdRenderPrivateNote({ rating: _sdPrivateRating, note: keptNote, updated_at: null });
 }
 
 async function sdSavePrivateNote() {
   if (!_sb || !_currentUser || !_sdName) { showToast(t('toast.login_required')); return; }
-  var note = document.getElementById('sd-private-note').value.trim();
-  // 현재 선택 sentiment 가져오기 (data-sent의 active 상태)
-  var activeBtn = document.querySelector('[data-sent][style*="rgb(255, 255, 255)"]'); // active 버튼
-  // 더 안전한 방식: _sdPrivateSentiment 활용
-  if (!_sdPrivateSentiment && !note) { showToast(t('toast.sentiment_or_note')); return; }
+  var noteEl = document.getElementById('sd-private-note');
+  var note = noteEl ? noteEl.value.trim() : '';
+  if (!_sdPrivateRating && !note) { showToast(t('toast.sentiment_or_note')); return; }
   var res = await _sb.from('private_store_notes').upsert({
     user_id: _currentUser.id,
     store_name: _sdName,
-    sentiment: _sdPrivateSentiment,
+    rating: _sdPrivateRating,
     note: note || null
   }, { onConflict: 'user_id,store_name' });
   if (res.error) { showToast(t('toast.save_fail', {msg: res.error.message})); return; }
   showToast(t('toast.private_saved'));
-  _privateNoteStores[_sdName] = true; // 캐시 즉시 갱신
+  _privateNoteStores[_sdName] = true; // 캐시 즉시 갱신 (마커 링)
+  if (typeof ctRenderPricePins === 'function') { try { ctRenderPricePins(); } catch(e){} }
+  await _sdLoadPrivateNote();
+}
+
+async function sdDeletePrivateNote() {
+  if (!_sb || !_currentUser || !_sdName) return;
+  // confirm 대체: 토스트로 한 번에 처리 (모달 흐름 깨지지 않게)
+  if (!confirm('이 가게의 비공개 메모를 삭제하시겠습니까? (마커 링도 제거됩니다)')) return;
+  var res = await _sb.from('private_store_notes')
+    .delete()
+    .eq('user_id', _currentUser.id)
+    .eq('store_name', _sdName);
+  if (res.error) { showToast(t('toast.save_fail', {msg: res.error.message})); return; }
+  showToast('🗑 비공개 메모 삭제됨');
+  delete _privateNoteStores[_sdName];
+  _sdPrivateRating = null;
+  _sdPrivateExists = false;
+  // 마커 재렌더 → 골드 링 사라짐
+  if (typeof ctRenderPricePins === 'function') { try { ctRenderPricePins(); } catch(e){} }
   await _sdLoadPrivateNote();
 }
 
@@ -15631,7 +15741,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v129';
+window.__APP_VERSION__ = 'v130';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
