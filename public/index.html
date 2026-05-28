@@ -1895,6 +1895,56 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 커스텀 색상 (HSV) 모달 ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-custom-color" onclick="if(event.target===this)closeOv('ov-custom-color')">
+  <div class="sheet" style="max-width:460px;">
+    <div class="sheet-handle"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <button onclick="closeOv('ov-custom-color')" style="background:var(--bg-2);border:none;border-radius:10px;padding:7px 12px;font-size:14px;color:var(--text-2);cursor:pointer;font-family:var(--font);">←</button>
+      <div class="sheet-title" style="margin:0;" data-i18n="cc.title">🎨 カスタムカラー</div>
+      <div onclick="closeOv('ov-custom-color')" style="width:30px;height:30px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:var(--text-3);">✕</div>
+    </div>
+
+    <!-- 미리보기 -->
+    <div id="cc-preview" style="height:84px;border-radius:16px;background:#808080;border:1px solid var(--border-mid);display:flex;align-items:flex-end;justify-content:flex-end;padding:8px 12px;margin-bottom:6px;transition:background .12s;"></div>
+    <div id="cc-hex-label" style="text-align:center;font-size:15px;font-weight:800;color:var(--text-1);letter-spacing:1px;margin-bottom:14px;font-family:var(--font);">#808080</div>
+
+    <!-- 슬라이더 모드 -->
+    <div id="cc-slider-mode">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;" data-i18n="cc.hue">色相</div>
+        <input type="range" id="cc-hue" min="0" max="360" value="180" oninput="_ccUpdate()"
+          style="width:100%;height:14px;border-radius:8px;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;" data-i18n="cc.sat">彩度</div>
+        <input type="range" id="cc-sat" min="0" max="100" value="50" oninput="_ccUpdate()"
+          style="width:100%;height:14px;border-radius:8px;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;">
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;" data-i18n="cc.val">明度</div>
+        <input type="range" id="cc-val" min="0" max="100" value="50" oninput="_ccUpdate()"
+          style="width:100%;height:14px;border-radius:8px;-webkit-appearance:none;appearance:none;outline:none;cursor:pointer;">
+      </div>
+    </div>
+
+    <!-- 코드 입력 모드 -->
+    <div id="cc-code-mode" style="display:none;margin-bottom:16px;">
+      <input type="text" id="cc-code-input" maxlength="7" placeholder="#RRGGBB" data-i18n-placeholder="cc.code_ph" oninput="_ccFromCode(this.value)"
+        style="width:100%;padding:14px 16px;border:1.5px solid var(--border-mid);border-radius:12px;font-size:18px;font-weight:800;letter-spacing:2px;text-align:center;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;text-transform:uppercase;box-sizing:border-box;">
+    </div>
+
+    <!-- 모드 전환 -->
+    <button id="cc-mode-btn" onclick="_ccToggleMode()" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:10px;background:var(--surface);color:var(--text-2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-bottom:12px;" data-i18n="cc.code_mode">⌨ コードで入力</button>
+
+    <!-- 취소 / 설정 -->
+    <div style="display:flex;gap:8px;">
+      <button onclick="closeOv('ov-custom-color')" style="flex:1;padding:13px;border:1px solid var(--border-mid);border-radius:12px;background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="btn.cancel">キャンセル</button>
+      <button onclick="_ccApply()" style="flex:2;padding:13px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="cc.apply">設定</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 예산 설정 모달 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-budget" onclick="closeOvOutside(event,'ov-budget')">
   <div class="sheet">
@@ -9443,6 +9493,8 @@ var I18N = {
     'rsd.monthly':'📈 月別支出（直近6ヶ月）','rsd.recent':'🧾 最近のレシート ({a}/{b})','rsd.item_count':'{n}個 商品',
     'rsd.see_all':'全{n}件を見る →',
     'theme.custom':'カスタム','theme.invalid':'カラーコードを確認してください','theme.pick':'好きな色を選ぶ',
+    'cc.title':'🎨 カスタムカラー','cc.hue':'色相','cc.sat':'彩度','cc.val':'明度',
+    'cc.code_mode':'⌨ コードで入力','cc.slider_mode':'🎚 スライダーで','cc.apply':'設定','cc.code_ph':'#RRGGBB',
     // 카테고리 휠
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
@@ -9620,6 +9672,8 @@ var I18N = {
     'rsd.monthly':'📈 월별 지출 (최근 6개월)','rsd.recent':'🧾 최근 영수증 ({a}/{b})','rsd.item_count':'{n}개 상품',
     'rsd.see_all':'전체 {n}건 보기 →',
     'theme.custom':'커스텀','theme.invalid':'색상 코드를 확인해주세요','theme.pick':'원하는 색 선택',
+    'cc.title':'🎨 커스텀 색상','cc.hue':'색조','cc.sat':'채도','cc.val':'명도',
+    'cc.code_mode':'⌨ 코드로 입력','cc.slider_mode':'🎚 슬라이더로','cc.apply':'설정','cc.code_ph':'#RRGGBB',
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
@@ -9796,6 +9850,8 @@ var I18N = {
     'rsd.monthly':'📈 Monthly (last 6 months)','rsd.recent':'🧾 Recent receipts ({a}/{b})','rsd.item_count':'{n} items',
     'rsd.see_all':'See all {n} →',
     'theme.custom':'Custom','theme.invalid':'Please check the color code','theme.pick':'Pick your color',
+    'cc.title':'🎨 Custom Color','cc.hue':'Hue','cc.sat':'Saturation','cc.val':'Brightness',
+    'cc.code_mode':'⌨ Enter code','cc.slider_mode':'🎚 Sliders','cc.apply':'Apply','cc.code_ph':'#RRGGBB',
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
@@ -9972,6 +10028,8 @@ var I18N = {
     'rsd.monthly':'📈 月支出（近6个月）','rsd.recent':'🧾 最近票据 ({a}/{b})','rsd.item_count':'{n}件商品',
     'rsd.see_all':'查看全部 {n} 笔 →',
     'theme.custom':'自定义','theme.invalid':'请检查颜色代码','theme.pick':'选择喜欢的颜色',
+    'cc.title':'🎨 自定义颜色','cc.hue':'色相','cc.sat':'饱和度','cc.val':'明度',
+    'cc.code_mode':'⌨ 输入代码','cc.slider_mode':'🎚 滑块','cc.apply':'设置','cc.code_ph':'#RRGGBB',
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
@@ -11876,6 +11934,102 @@ function _initCustomTheme(){
 }
 _initCustomTheme();
 
+/* ── HSV 커스텀 색상 모달 ── */
+var _ccHSV = { h:180, s:50, v:50 };
+var _ccHex = '#808080';
+var _ccMode = 'slider';
+
+function _hsvToRgb(h, s, v){
+  s/=100; v/=100;
+  var c = v*s, x = c*(1-Math.abs((h/60)%2-1)), m = v-c, r,g,b;
+  if (h<60)      { r=c; g=x; b=0; }
+  else if (h<120){ r=x; g=c; b=0; }
+  else if (h<180){ r=0; g=c; b=x; }
+  else if (h<240){ r=0; g=x; b=c; }
+  else if (h<300){ r=x; g=0; b=c; }
+  else           { r=c; g=0; b=x; }
+  return _rgbToHex((r+m)*255, (g+m)*255, (b+m)*255);
+}
+function _rgbToHsv(r,g,b){
+  r/=255; g/=255; b/=255;
+  var max=Math.max(r,g,b), min=Math.min(r,g,b), d=max-min, h=0;
+  if (d!==0){
+    if (max===r) h=((g-b)/d)%6;
+    else if (max===g) h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60; if(h<0) h+=360;
+  }
+  return { h:Math.round(h), s:Math.round(max===0?0:d/max*100), v:Math.round(max*100) };
+}
+
+function openCustomColor(){
+  // 기존 커스텀 색이 있으면 그 값에서 시작, 없으면 중간값
+  if (THEMES.custom && THEMES.custom.color) {
+    var rgb = _hexToRgb(THEMES.custom.color);
+    _ccHSV = rgb ? _rgbToHsv(rgb.r,rgb.g,rgb.b) : { h:180, s:50, v:50 };
+  } else {
+    _ccHSV = { h:180, s:50, v:50 };
+  }
+  _ccMode = 'slider';
+  document.getElementById('cc-slider-mode').style.display = '';
+  document.getElementById('cc-code-mode').style.display = 'none';
+  var mb = document.getElementById('cc-mode-btn'); if (mb) mb.textContent = t('cc.code_mode');
+  document.getElementById('cc-hue').value = _ccHSV.h;
+  document.getElementById('cc-sat').value = _ccHSV.s;
+  document.getElementById('cc-val').value = _ccHSV.v;
+  _ccUpdate();
+  openOv('ov-custom-color');
+}
+
+function _ccUpdate(){
+  _ccHSV.h = +document.getElementById('cc-hue').value;
+  _ccHSV.s = +document.getElementById('cc-sat').value;
+  _ccHSV.v = +document.getElementById('cc-val').value;
+  _ccHex = _hsvToRgb(_ccHSV.h, _ccHSV.s, _ccHSV.v);
+  document.getElementById('cc-preview').style.background = _ccHex;
+  document.getElementById('cc-hex-label').textContent = _ccHex.toUpperCase();
+  // 슬라이더 트랙 배경 (현재 색조/명도 반영)
+  var satEl = document.getElementById('cc-sat');
+  var valEl = document.getElementById('cc-val');
+  if (satEl) satEl.style.background = 'linear-gradient(90deg,'+_hsvToRgb(_ccHSV.h,0,_ccHSV.v)+','+_hsvToRgb(_ccHSV.h,100,_ccHSV.v)+')';
+  if (valEl) valEl.style.background = 'linear-gradient(90deg,#000000,'+_hsvToRgb(_ccHSV.h,_ccHSV.s,100)+')';
+  var ci = document.getElementById('cc-code-input'); if (ci && _ccMode==='code') ci.value = _ccHex.toUpperCase();
+}
+
+function _ccToggleMode(){
+  var mb = document.getElementById('cc-mode-btn');
+  if (_ccMode === 'slider'){
+    _ccMode = 'code';
+    document.getElementById('cc-slider-mode').style.display = 'none';
+    document.getElementById('cc-code-mode').style.display = '';
+    document.getElementById('cc-code-input').value = _ccHex.toUpperCase();
+    if (mb) mb.textContent = t('cc.slider_mode');
+  } else {
+    _ccMode = 'slider';
+    document.getElementById('cc-slider-mode').style.display = '';
+    document.getElementById('cc-code-mode').style.display = 'none';
+    if (mb) mb.textContent = t('cc.code_mode');
+  }
+}
+
+function _ccFromCode(v){
+  var rgb = _hexToRgb(v);
+  if (!rgb) return;
+  _ccHSV = _rgbToHsv(rgb.r, rgb.g, rgb.b);
+  _ccHex = _rgbToHex(rgb.r, rgb.g, rgb.b);
+  // 슬라이더도 동기화 (모드 복귀 시 일관)
+  document.getElementById('cc-hue').value = _ccHSV.h;
+  document.getElementById('cc-sat').value = _ccHSV.s;
+  document.getElementById('cc-val').value = _ccHSV.v;
+  document.getElementById('cc-preview').style.background = _ccHex;
+  document.getElementById('cc-hex-label').textContent = _ccHex.toUpperCase();
+}
+
+function _ccApply(){
+  applyCustomColor(_ccHex);
+  closeOv('ov-custom-color');
+}
+
 /* ── 모바일 status bar 색상은 고정 (흰색) ──
    동적으로 테마색 따라가게 했더니 PWA install 시점 캐시 / 시스템 렌더링 갭으로 초록선 잔존 문제.
    대신 앱 헤더(.hdr / .ct-hdr) 자체를 흰색으로 통일해서 status bar 와 앱 사이 색 차이를 없앰. */
@@ -12452,7 +12606,8 @@ async function _touchLastSeen() {
 function renderThemeSwatches() {
   var el = document.getElementById('theme-swatches');
   if (!el) return;
-  var html = Object.entries(THEMES).map(function(pair) {
+  // 프리셋 스와치 (custom 키는 제외 — 아래에서 전용 스와치로 렌더)
+  var html = Object.entries(THEMES).filter(function(pair){ return pair[0] !== 'custom'; }).map(function(pair) {
     var key = pair[0], th = pair[1];
     var active = key === _currentTheme;
     return '<div onclick="applyTheme(\''+key+'\')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;">'
@@ -12463,18 +12618,18 @@ function renderThemeSwatches() {
       +'</div>';
   }).join('');
 
-  // ── 커스텀 색상 선택 스와치 (무지개 + 컬러 피커) ──
+  // ── 커스텀 색상 스와치 (탭하면 HSV 모달 열림) ──
   var customActive = _currentTheme === 'custom';
   var customColor = (THEMES.custom && THEMES.custom.color) || '#888888';
-  var swatchBg = customActive
+  var swatchBg = (customActive || (THEMES.custom && THEMES.custom.color))
     ? customColor
     : 'conic-gradient(from 0deg,#ff0000,#ff9900,#ffee00,#33dd33,#00cccc,#3366ff,#9933ff,#ff3399,#ff0000)';
-  html += '<div onclick="document.getElementById(\'theme-custom-input\').click()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;position:relative;">'
+  var showIcon = !(THEMES.custom && THEMES.custom.color);
+  html += '<div onclick="openCustomColor()" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;">'
     +'<div style="width:36px;height:36px;border-radius:50%;background:'+swatchBg+';transition:all .2s;margin:0 auto;display:flex;align-items:center;justify-content:center;'
     +(customActive ? 'box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px '+customColor+';transform:scale(1.12);' : 'opacity:0.9;')
-    +'">'+(customActive?'':'<span style="font-size:15px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">🎨</span>')+'</div>'
+    +'">'+(showIcon?'<span style="font-size:15px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.4));">🎨</span>':'')+'</div>'
     +'<div style="font-size:9px;font-weight:'+(customActive?'800':'600')+';color:'+(customActive?customColor:'var(--text-3)')+';text-align:center;">'+t('theme.custom')+'</div>'
-    +'<input type="color" id="theme-custom-input" value="'+customColor+'" oninput="applyCustomColor(this.value)" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;">'
     +'</div>';
 
   el.innerHTML = html;
@@ -16391,7 +16546,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v144';
+window.__APP_VERSION__ = 'v145';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
