@@ -241,22 +241,20 @@
       <div style="font-size:12px;opacity:.8;font-weight:700;">💡 가게만 바꿔도</div>
       <div class="big" style="margin-top:4px;">월 ¥4,820 절약 가능</div>
       <div style="font-size:11px;opacity:.75;margin-top:3px;">절약 가능 품목 <b>15개</b> · 연간 약 <b>¥57,840</b> 💰</div>
-      <!-- 절약액 큰 순 TOP 4 -->
+      <!-- 절약액 큰 순 TOP 3 -->
       <div style="background:rgba(255,255,255,.12);border-radius:12px;padding:4px 12px;margin-top:12px;">
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);">
           <span style="font-size:12.5px;">🧴 샴푸 → <b>OKストア</b></span><span style="font-weight:800;color:#FFD54F;">−¥320</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);">
           <span style="font-size:12.5px;">🥚 계란 → <b>業務スーパー</b></span><span style="font-weight:800;color:#FFD54F;">−¥200</span></div>
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.12);">
-          <span style="font-size:12.5px;">🥛 우유 → <b>ライフ</b></span><span style="font-weight:800;color:#FFD54F;">−¥160</span></div>
         <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;">
-          <span style="font-size:12.5px;">🍞 식빵 → <b>オーケー</b></span><span style="font-weight:800;color:#FFD54F;">−¥120</span></div>
+          <span style="font-size:12.5px;">🥛 우유 → <b>ライフ</b></span><span style="font-weight:800;color:#FFD54F;">−¥160</span></div>
       </div>
-      <!-- 나머지 펼치기 -->
-      <button style="width:100%;margin-top:10px;padding:11px;border:1px solid rgba(255,255,255,.4);border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:800;font-family:var(--font);">
-        외 11개 품목 ¥4,020 더 보기 ›
+      <!-- 나머지 → 풀스크린 전체 페이지 -->
+      <button onclick="document.getElementById('savefull').style.display='flex'" style="width:100%;margin-top:10px;padding:11px;border:1px solid rgba(255,255,255,.4);border-radius:12px;background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:800;font-family:var(--font);">
+        외 12개 품목 ¥4,140 더 보기 ›
       </button>
-      <div style="font-size:10px;opacity:.6;margin-top:8px;text-align:center;">절약액 큰 순 · ¥50 미만 차이는 제외</div>
+      <div style="font-size:10px;opacity:.6;margin-top:8px;text-align:center;">절약액 큰 순 · 차이 ¥50 미만은 제외</div>
     </div>
 
     <!-- ⑦ 결제수단 -->
@@ -304,6 +302,37 @@
     <div class="note">※ 모든 수치는 디자인 확인용 더미 데이터입니다.</div>
 
   </div>
+
+  <!-- 풀스크린: 절약 가능 품목 전체 -->
+  <div id="savefull" style="display:none;position:absolute;inset:0;background:var(--bg);flex-direction:column;z-index:50;">
+    <div style="background:var(--surface);padding:14px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);">
+      <div onclick="document.getElementById('savefull').style.display='none'" style="width:34px;height:34px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--t2);cursor:pointer;">←</div>
+      <div style="flex:1;"><div style="font-size:16px;font-weight:900;">절약 가능 품목 전체</div><div style="font-size:11px;color:var(--t3);">15개 품목 · 월 ¥4,820 절약 가능</div></div>
+    </div>
+    <div style="flex:1;overflow-y:auto;padding:14px 16px 30px;">
+      <!-- 요약 띠 -->
+      <div style="background:linear-gradient(145deg,var(--p),var(--p-dark));color:#fff;border-radius:16px;padding:16px;text-align:center;margin-bottom:14px;">
+        <div style="font-size:11px;opacity:.8;font-weight:700;">전체 적용 시 월 절약</div>
+        <div style="font-size:30px;font-weight:900;color:#FFD54F;margin-top:2px;">¥4,820</div>
+        <div style="font-size:11px;opacity:.8;margin-top:2px;">연간 약 ¥57,840 💰</div>
+      </div>
+      <div style="font-size:11px;font-weight:800;color:var(--t3);letter-spacing:.4px;margin:2px 2px 8px;">절약액 큰 순</div>
+      <div class="card" style="padding:6px 14px;">
+        <div class="irow"><div class="l"><div class="ic">🧴</div><div><div class="nm">샴푸</div><div class="sub">¥980 → OKストア ¥660</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥320</span></div>
+        <div class="irow"><div class="l"><div class="ic">🥚</div><div><div class="nm">계란 10구</div><div class="sub">¥248 → 業務スーパー ¥198 (월 4회)</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥200</span></div>
+        <div class="irow"><div class="l"><div class="ic">🥛</div><div><div class="nm">우유 1L</div><div class="sub">¥208 → ライフ ¥188 (월 8회)</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥160</span></div>
+        <div class="irow"><div class="l"><div class="ic">🍞</div><div><div class="nm">식빵</div><div class="sub">¥168 → オーケー ¥138 (월 4회)</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥120</span></div>
+        <div class="irow"><div class="l"><div class="ic">🧻</div><div><div class="nm">화장지 12롤</div><div class="sub">¥398 → OKストア ¥298</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥100</span></div>
+        <div class="irow"><div class="l"><div class="ic">🍙</div><div><div class="nm">즉석밥 3개입</div><div class="sub">¥298 → 業務スーパー ¥218</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥80</span></div>
+        <div class="irow"><div class="l"><div class="ic">☕</div><div><div class="nm">인스턴트 커피</div><div class="sub">¥598 → ライフ ¥528</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥70</span></div>
+        <div class="irow"><div class="l"><div class="ic">🧴</div><div><div class="nm">주방세제</div><div class="sub">¥248 → OKストア ¥188</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥60</span></div>
+        <div class="irow"><div class="l"><div class="ic">🍫</div><div><div class="nm">초콜릿</div><div class="sub">¥158 → 業務スーパー ¥108</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">−¥50</span></div>
+      </div>
+      <div style="text-align:center;font-size:11px;color:var(--t3);margin-top:14px;">· · · 외 6개 더 · · ·</div>
+      <div style="text-align:center;font-size:10px;color:var(--t3);margin-top:14px;">차이 ¥50 미만 품목은 자동 제외 (설정에서 변경 가능)</div>
+    </div>
+  </div>
+
 </div>
 </body>
 </html>
