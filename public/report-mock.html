@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex">
+<title>월별 리포트 — 디자인 목업</title>
+<style>
+  :root{
+    --p:#5B21B6; --p-dark:#3A0CA3; --p-light:#EDE7FB;
+    --gold:#C8B273; --gold-bg:#FBF6E9;
+    --bg:#EEECEA; --surface:#FFFFFF;
+    --t1:#1A1A2E; --t2:#6B6B85; --t3:#9A9AB0; --border:#E8E6E3;
+    --red:#E0524D; --redbg:#FCEBEA; --green:#1DA67A; --greenbg:#E3F6EF;
+    --font:-apple-system,BlinkMacSystemFont,'Segoe UI','Hiragino Sans','Noto Sans KR',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#d9d7d5;font-family:var(--font);color:var(--t1);-webkit-font-smoothing:antialiased;padding:20px 0 60px;}
+  .phone{max-width:430px;margin:0 auto;background:var(--bg);min-height:90vh;border-radius:26px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.25);}
+  .hdr{background:var(--surface);padding:16px 18px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;}
+  .hdr .mnav{display:flex;align-items:center;gap:14px;}
+  .hdr .mbtn{width:30px;height:30px;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;color:var(--t2);font-size:14px;}
+  .hdr h1{font-size:17px;font-weight:900;}
+  .hdr .sub{font-size:11px;color:var(--t3);font-weight:600;}
+  .wrap{padding:14px 16px 30px;display:flex;flex-direction:column;gap:14px;}
+  .sectlbl{font-size:11px;font-weight:800;color:var(--t3);letter-spacing:.5px;text-transform:uppercase;margin:6px 2px 0;}
+  .card{background:var(--surface);border-radius:18px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+  .ctitle{font-size:13px;font-weight:800;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
+
+  /* hero */
+  .hero{background:linear-gradient(145deg,var(--p),var(--p-dark));border-radius:22px;padding:20px;color:#fff;position:relative;overflow:hidden;}
+  .hero .glow{position:absolute;right:-40px;top:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.08);}
+  .hero .lbl{font-size:10px;opacity:.7;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+  .hero .amt{font-size:38px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;}
+  .hero .delta{display:inline-flex;align-items:center;gap:4px;margin-top:10px;background:rgba(255,255,255,.16);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;}
+  .hero .budget{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);}
+  .bbar{height:8px;border-radius:5px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px;}
+  .bbar>div{height:100%;border-radius:5px;background:#fff;}
+  .brow{display:flex;justify-content:space-between;font-size:11px;opacity:.85;margin-top:7px;}
+
+  /* insight chip */
+  .insight{background:var(--p-light);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;}
+  .insight .ico{font-size:18px;}
+  .insight .txt{font-size:12.5px;font-weight:600;color:var(--p-dark);line-height:1.5;}
+
+  /* category bars */
+  .catrow{margin-bottom:11px;}
+  .catrow:last-child{margin-bottom:0;}
+  .cathead{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;margin-bottom:5px;}
+  .cathead .nm{font-weight:700;}
+  .cathead .vl{font-weight:800;}
+  .cathead .vl small{font-size:10px;color:var(--t3);font-weight:600;margin-left:4px;}
+  .track{height:8px;border-radius:5px;background:var(--bg);overflow:hidden;}
+  .track>div{height:100%;border-radius:5px;}
+
+  /* compare */
+  .cmp{display:flex;gap:8px;}
+  .cmp .col{flex:1;text-align:center;background:var(--bg);border-radius:12px;padding:11px 6px;}
+  .cmp .col .h{font-size:10px;color:var(--t3);font-weight:700;}
+  .cmp .col .v{font-size:16px;font-weight:900;margin-top:4px;}
+  .cmp .col .d{font-size:10px;font-weight:700;margin-top:3px;}
+  .up{color:var(--red);} .down{color:var(--green);}
+
+  /* item list */
+  .irow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+  .irow:last-child{border-bottom:none;}
+  .irow .l{display:flex;align-items:center;gap:9px;}
+  .irow .ic{width:30px;height:30px;border-radius:8px;background:var(--p-light);display:flex;align-items:center;justify-content:center;font-size:15px;}
+  .irow .nm{font-size:13px;font-weight:700;}
+  .irow .sub{font-size:10px;color:var(--t3);margin-top:1px;}
+  .irow .pr{font-size:13px;font-weight:800;}
+  .pill{font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;}
+
+  /* weekday */
+  .wk{display:flex;align-items:flex-end;justify-content:space-between;height:90px;gap:6px;margin-top:6px;}
+  .wk .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;}
+  .wk .bar{width:100%;border-radius:6px 6px 0 0;background:var(--p-light);}
+  .wk .bar.hi{background:linear-gradient(180deg,var(--p),var(--p-dark));}
+  .wk .d{font-size:10px;color:var(--t3);font-weight:700;}
+
+  /* save card */
+  .savecard{background:var(--p);border:3px solid var(--gold);border-radius:18px;padding:16px;color:#fff;}
+  .savecard .big{font-size:26px;font-weight:900;color:#FFD54F;}
+
+  /* badges */
+  .badges{display:flex;gap:8px;flex-wrap:wrap;}
+  .badge{flex:1;min-width:90px;background:var(--bg);border-radius:12px;padding:11px 8px;text-align:center;}
+  .badge .e{font-size:24px;}
+  .badge .n{font-size:11px;font-weight:800;margin-top:3px;}
+  .badge .s{font-size:9px;color:var(--t3);margin-top:1px;}
+
+  .sharebtn{width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);margin-top:2px;}
+  .note{text-align:center;font-size:10px;color:var(--t3);padding:8px 0 0;}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <div class="hdr">
+    <div class="mnav">
+      <div class="mbtn">‹</div>
+      <div><h1>2026年 5月 리포트</h1><div class="sub">月別レポート · デモ</div></div>
+      <div class="mbtn">›</div>
+    </div>
+    <div class="mbtn" style="background:var(--p-light);color:var(--p);">⤓</div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- ① 핵심 요약 (Hero) -->
+    <div class="hero">
+      <div class="glow"></div>
+      <div class="lbl">이달 총지출 · 14건</div>
+      <div class="amt">¥58,341</div>
+      <div class="delta">▼ ¥4,200 · 전월보다 절약 🎉</div>
+      <div class="budget">
+        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;">
+          <span>예산 ¥150,000</span><span>39% 남음</span>
+        </div>
+        <div class="bbar"><div style="width:39%;"></div></div>
+        <div class="brow"><span>¥58,341 지출</span><span>¥91,659 남음</span></div>
+      </div>
+    </div>
+
+    <!-- ② 이달 한 줄 인사이트 -->
+    <div class="insight">
+      <span class="ico">💡</span>
+      <div class="txt">이달은 <b>외식비가 지난달보다 ¥6,200 줄었어요.</b> 대신 식료품이 ¥2,000 늘었네요. 집밥 비중이 커진 한 달! 👍</div>
+    </div>
+
+    <!-- ③ 카테고리 분석 -->
+    <div class="sectlbl">카테고리</div>
+    <div class="card">
+      <div class="ctitle">🗂 어디에 썼나</div>
+      <div class="catrow"><div class="cathead"><span class="nm">🍱 식료품</span><span class="vl">¥24,800 <small>43%</small></span></div><div class="track"><div style="width:43%;background:#5B21B6;"></div></div></div>
+      <div class="catrow"><div class="cathead"><span class="nm">🍽 외식</span><span class="vl">¥15,200 <small>26%</small></span></div><div class="track"><div style="width:26%;background:#F07340;"></div></div></div>
+      <div class="catrow"><div class="cathead"><span class="nm">🛍 쇼핑</span><span class="vl">¥11,000 <small>19%</small></span></div><div class="track"><div style="width:19%;background:#E30884;"></div></div></div>
+      <div class="catrow"><div class="cathead"><span class="nm">☕ 카페</span><span class="vl">¥4,341 <small>7%</small></span></div><div class="track"><div style="width:7%;background:#16A87A;"></div></div></div>
+      <div class="catrow"><div class="cathead"><span class="nm">🚃 교통</span><span class="vl">¥3,000 <small>5%</small></span></div><div class="track"><div style="width:5%;background:#266586;"></div></div></div>
+    </div>
+
+    <!-- ④ 전월 비교 -->
+    <div class="sectlbl">전월 비교</div>
+    <div class="card">
+      <div class="ctitle">📈 지난달과 비교</div>
+      <div class="cmp">
+        <div class="col"><div class="h">총지출</div><div class="v">¥58,341</div><div class="d down">▼ 6.7%</div></div>
+        <div class="col"><div class="h">외식</div><div class="v">¥15,200</div><div class="d down">▼ 29%</div></div>
+        <div class="col"><div class="h">식료품</div><div class="v">¥24,800</div><div class="d up">▲ 8.8%</div></div>
+        <div class="col"><div class="h">일평균</div><div class="v">¥1,882</div><div class="d down">▼ 6.7%</div></div>
+      </div>
+    </div>
+
+    <!-- ⑤ 품목 인사이트 (차별화) -->
+    <div class="sectlbl">품목 분석</div>
+    <div class="card">
+      <div class="ctitle">🛒 자주 산 품목 TOP</div>
+      <div class="irow"><div class="l"><div class="ic">🥛</div><div><div class="nm">우유 1L</div><div class="sub">8회 구매 · 평균 ¥208</div></div></div><div class="pr">¥1,664</div></div>
+      <div class="irow"><div class="l"><div class="ic">🍞</div><div><div class="nm">식빵</div><div class="sub">5회 구매 · 평균 ¥168</div></div></div><div class="pr">¥840</div></div>
+      <div class="irow"><div class="l"><div class="ic">🥚</div><div><div class="nm">계란 10구</div><div class="sub">4회 구매 · 평균 ¥223</div></div></div><div class="pr">¥892</div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">📊 내 장바구니 물가</div>
+      <div class="irow"><div class="l"><div class="ic">🥚</div><div><div class="nm">계란 10구</div><div class="sub">¥198 → ¥248</div></div></div><span class="pill" style="background:var(--redbg);color:var(--red);">▲ +25%</span></div>
+      <div class="irow"><div class="l"><div class="ic">🍙</div><div><div class="nm">즉석밥</div><div class="sub">¥158 → ¥138</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">▼ −13%</span></div>
+      <div class="irow"><div class="l"><div class="ic">🥛</div><div><div class="nm">우유 1L</div><div class="sub">¥208 → ¥208</div></div></div><span class="pill" style="background:var(--bg);color:var(--t3);">— 유지</span></div>
+    </div>
+
+    <!-- ⑥ 절약 인사이트 -->
+    <div class="sectlbl">절약 기회</div>
+    <div class="savecard">
+      <div style="font-size:12px;opacity:.8;font-weight:700;">💡 가게만 바꿔도</div>
+      <div class="big" style="margin-top:4px;">월 ¥1,320 절약 가능</div>
+      <div style="font-size:12px;opacity:.9;margin-top:8px;line-height:1.6;">
+        · 우유 → <b>業務スーパー</b> (¥50 더 쌈)<br>
+        · 계란 → <b>オーケー</b> (¥40 더 쌈)<br>
+        · 식빵 → <b>ライフ</b> (¥30 더 쌈)
+      </div>
+      <div style="font-size:11px;opacity:.7;margin-top:10px;">연간 환산 약 <b>¥15,840</b> 절약 💰</div>
+    </div>
+
+    <!-- ⑦ 결제수단 -->
+    <div class="sectlbl">결제수단</div>
+    <div class="card">
+      <div class="ctitle">💳 어떻게 결제했나</div>
+      <div class="catrow"><div class="cathead"><span class="nm">💳 신용카드</span><span class="vl">¥38,000 <small>65%</small></span></div><div class="track"><div style="width:65%;background:#3B82F6;"></div></div></div>
+      <div class="catrow"><div class="cathead"><span class="nm">💴 현금</span><span class="vl">¥14,341 <small>25%</small></span></div><div class="track"><div style="width:25%;background:#8BA49A;"></div></div></div>
+      <div class="catrow"><div class="cathead"><span class="nm">📱 QR결제</span><span class="vl">¥6,000 <small>10%</small></span></div><div class="track"><div style="width:10%;background:#F07340;"></div></div></div>
+    </div>
+
+    <!-- ⑧ 요일 패턴 -->
+    <div class="sectlbl">소비 패턴</div>
+    <div class="card">
+      <div class="ctitle">📅 요일별 지출</div>
+      <div class="wk">
+        <div class="b"><div class="bar" style="height:30%;"></div><div class="d">월</div></div>
+        <div class="b"><div class="bar" style="height:45%;"></div><div class="d">화</div></div>
+        <div class="b"><div class="bar" style="height:25%;"></div><div class="d">수</div></div>
+        <div class="b"><div class="bar" style="height:55%;"></div><div class="d">목</div></div>
+        <div class="b"><div class="bar hi" style="height:100%;"></div><div class="d">금</div></div>
+        <div class="b"><div class="bar" style="height:70%;"></div><div class="d">토</div></div>
+        <div class="b"><div class="bar" style="height:40%;"></div><div class="d">일</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--t2);text-align:center;margin-top:10px;">🔥 <b>금요일</b>에 가장 많이 써요 (주말 직전 장보기)</div>
+    </div>
+
+    <!-- ⑨ 예측 -->
+    <div class="insight" style="background:#FFF6E9;">
+      <span class="ico">🔮</span>
+      <div class="txt" style="color:#8a6d1f;">현재 페이스라면 <b>월말 예상 지출 ¥72,000</b> — 예산 안에서 끝날 것 같아요 ✅</div>
+    </div>
+
+    <!-- ⑩ 뱃지 / 공유 -->
+    <div class="sectlbl">이달의 성과</div>
+    <div class="card">
+      <div class="badges">
+        <div class="badge"><div class="e">🏆</div><div class="n">절약왕</div><div class="s">전월比 절약</div></div>
+        <div class="badge"><div class="e">🔥</div><div class="n">3개월 연속</div><div class="s">예산 달성</div></div>
+        <div class="badge"><div class="e">🍳</div><div class="n">집밥러</div><div class="s">외식 ↓29%</div></div>
+      </div>
+      <button class="sharebtn">📤 이달 리포트 공유하기</button>
+    </div>
+
+    <div class="note">※ 모든 수치는 디자인 확인용 더미 데이터입니다.</div>
+
+  </div>
+</div>
+</body>
+</html>
