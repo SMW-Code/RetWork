@@ -15725,7 +15725,11 @@ async function adminSaveLocalAd() {
     try {
       var path = 'store-items/localad_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.jpg';
       var up = await _sb.storage.from('store-photos').upload(path, blob, { upsert:false, contentType:'image/jpeg' });
-      if (up.error) { showToast('이미지 업로드 실패: '+up.error.message); return; }
+      if (up.error) {
+        console.error('[localad upload]', up.error);
+        showToast('이미지 업로드 실패: '+(up.error.message||up.error.error||JSON.stringify(up.error)));
+        return;
+      }
       imageUrl = _sb.storage.from('store-photos').getPublicUrl(path).data.publicUrl;
     } catch(e) { showToast('이미지 오류: '+(e.message||e)); return; }
   }
@@ -17587,7 +17591,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v187';
+window.__APP_VERSION__ = 'v188';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
