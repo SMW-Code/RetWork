@@ -2356,6 +2356,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div style="font-size:12px;font-weight:800;color:var(--text-1);">언어 시트</div>
           <div style="font-size:10px;color:var(--text-3);margin-top:2px;">번역 편집·즉시 반영</div>
         </div>
+        <div onclick="openAdminAds()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
+          <div style="font-size:28px;margin-bottom:4px;">📺</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text-1);">광고 관리</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">영역별 수익·로컬 광고</div>
+        </div>
       </div>
 
       <div style="margin-top:14px;padding:10px;background:var(--bg-2);border-radius:10px;font-size:11px;color:var(--text-3);text-align:center;">
@@ -2965,6 +2970,108 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
 
       <button onclick="adminSaveItem()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 광고 관리 (영역별 수익 + 로컬 광고) ══ -->
+<div class="overlay" id="ov-admin-ads" style="z-index:960;" onclick="if(event.target===this)closeOv('ov-admin-ads')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:560px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">📺 광고 관리</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">영역별 수익 · 로컬 배너 광고</div>
+        </div>
+        <div onclick="closeOv('ov-admin-ads')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+
+      <!-- 영역별 노출/클릭 + 수익 -->
+      <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📊 영역별 성과 (로컬 광고)</div>
+      <div id="adm-ad-stats" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+        <div style="font-size:12px;color:var(--text-3);text-align:center;padding:14px;">불러오는 중…</div>
+      </div>
+
+      <!-- 월별 수익 수동 입력 -->
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:8px;">💰 수익 입력 (수동 · AdSense 실수익 반영용)</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px;">
+          <input id="adm-rev-month" type="month" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
+          <select id="adm-rev-source" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
+            <option value="adsense">AdSense</option>
+            <option value="local">로컬 광고</option>
+            <option value="other">기타</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <select id="adm-rev-zone" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
+            <option value="all">전체</option><option value="home">홈</option><option value="store">가게상세</option>
+            <option value="map">치리맵</option><option value="reward">리워드</option><option value="feed">치리톡</option><option value="modal">모달</option>
+          </select>
+          <input id="adm-rev-amount" type="number" min="0" placeholder="금액 (¥)" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
+          <button onclick="adminSaveAdRevenue()" style="padding:9px 14px;border:none;border-radius:8px;background:var(--green);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">저장</button>
+        </div>
+        <div id="adm-rev-list" style="margin-top:8px;font-size:11px;color:var(--text-2);"></div>
+      </div>
+
+      <!-- 로컬 광고 관리 -->
+      <button onclick="adminOpenAdForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:12px;">+ 로컬 광고 등록</button>
+      <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📋 등록된 로컬 광고</div>
+      <div id="adm-localad-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 로컬 광고 추가/수정 폼 ══ -->
+<div class="overlay" id="ov-admin-ad-form" style="z-index:970;" onclick="if(event.target===this)closeOv('ov-admin-ad-form')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div id="adm-ad-form-title" style="font-size:17px;font-weight:900;color:var(--text-1);">+ 로컬 광고 등록</div>
+        <div onclick="closeOv('ov-admin-ad-form')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+
+      <!-- 배너 이미지 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">배너 이미지 (필수)</div>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:1.5px dashed var(--border-mid);border-radius:12px;cursor:pointer;background:var(--bg);">
+          <div id="adm-ad-img-preview" style="width:80px;height:48px;border-radius:8px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-3);flex-shrink:0;overflow:hidden;">🖼️</div>
+          <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text-1);">이미지 선택</div><div style="font-size:10px;color:var(--text-3);margin-top:2px;">가로형 배너 권장</div></div>
+          <input type="file" accept="image/*" style="display:none;" onchange="adminHandleAdImage(this)">
+        </label>
+      </div>
+
+      <input id="adm-ad-title" type="text" maxlength="60" placeholder="광고주/메모 (필수, 내부 식별용)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);margin-bottom:8px;box-sizing:border-box;">
+      <input id="adm-ad-link" type="url" placeholder="클릭 시 이동 URL (https://...)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);margin-bottom:8px;box-sizing:border-box;">
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">노출 영역</div>
+          <select id="adm-ad-zone" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
+            <option value="home">홈</option><option value="map">치리맵</option><option value="store">가게상세</option>
+            <option value="reward">리워드(치리스토어)</option><option value="feed">치리톡</option><option value="modal">저장 모달</option>
+          </select>
+        </div>
+        <div style="flex:0.6;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">정렬</div>
+          <input id="adm-ad-sort" type="number" value="0" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">시작일 (선택)</div>
+          <input id="adm-ad-start" type="date" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>
+        <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">종료일 (선택)</div>
+          <input id="adm-ad-end" type="date" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>
+      </div>
+
+      <label style="display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);cursor:pointer;font-size:12px;font-weight:700;margin-bottom:14px;">
+        <input type="checkbox" id="adm-ad-active" checked> 활성 (노출)
+      </label>
+
+      <button onclick="adminSaveLocalAd()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
     </div>
   </div>
 </div>
@@ -4033,8 +4140,8 @@ function renderCtStoreFull() {
   // 더보기 버튼 표시 여부
   var moreBtn = document.getElementById('ct-store-full-more');
   if (moreBtn) moreBtn.style.display = (shown < items.length) ? '' : 'none';
-  // 승인 시 광고 주입
-  if (typeof AD_CONFIG !== 'undefined' && AD_CONFIG.enabled) {
+  // 광고 카드 주입 (로컬 광고 우선 → AdSense). 광고 슬롯 위치마다 시도
+  if (typeof _injectAd === 'function') {
     for (var j = CT_STORE_AD_EVERY - 1; j < shown; j += CT_STORE_AD_EVERY) {
       _injectAd('ct-store-ad-' + j, 'store');
     }
@@ -12187,11 +12294,63 @@ var AD_CONFIG = {
   }
 };
 
-/* 광고 컨테이너에 AdSense ins 태그 동적 주입 */
+/* ── 로컬(자체) 광고 ── */
+var _localAdsByZone = {};   // { zone: [ad, ...] }  활성 + 기간 내
+var _localAdRR = {};        // zone별 라운드로빈 인덱스
+
+async function _loadLocalAds() {
+  if (!_sb) return;
+  try {
+    var res = await _sb.from('local_ads')
+      .select('id,title,image_url,link_url,zone,is_active,start_at,end_at,sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending:true });
+    if (res.error || !res.data) return;
+    var now = Date.now();
+    var byZone = {};
+    res.data.forEach(function(a){
+      if (a.start_at && new Date(a.start_at).getTime() > now) return; // 시작 전
+      if (a.end_at   && new Date(a.end_at).getTime()   < now) return; // 종료됨
+      if (!a.image_url) return;
+      (byZone[a.zone] = byZone[a.zone] || []).push(a);
+    });
+    _localAdsByZone = byZone;
+  } catch(e) { /* noop */ }
+}
+
+// zone 에 노출할 로컬 광고 1개 선택 (여러 개면 순회)
+function _pickLocalAd(zone) {
+  var list = _localAdsByZone[zone];
+  if (!list || !list.length) return null;
+  var i = (_localAdRR[zone] || 0) % list.length;
+  _localAdRR[zone] = i + 1;
+  return list[i];
+}
+
+function _localAdClick(id, url) {
+  if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: id, p_kind: 'click' }); } catch(e){} }
+  if (url) window.open(url, '_blank', 'noopener');
+}
+
+function _renderLocalAd(c, ad) {
+  c.innerHTML = '<div onclick="_localAdClick(\''+ad.id+'\',\''+(ad.link_url||'').replace(/'/g,"\\'")+'\')" '
+    + 'style="position:relative;width:100%;cursor:pointer;line-height:0;">'
+    + '<img src="'+ad.image_url+'" alt="'+_esc(ad.title||'')+'" style="width:100%;display:block;object-fit:cover;">'
+    + '<span style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.45);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px;line-height:1.4;">'+t('rw.ad')+'</span>'
+    + '</div>';
+  if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: ad.id, p_kind: 'imp' }); } catch(e){} }
+}
+
+/* 광고 컨테이너에 광고 주입 — 로컬 광고 우선, 없으면 AdSense */
 function _injectAd(containerId, slotKey) {
-  if (!AD_CONFIG.enabled) return;
   var c = document.getElementById(containerId);
-  if (!c || c.querySelector('ins.adsbygoogle')) return; // 중복 방지
+  if (!c) return;
+  // 1) 로컬(자체) 광고 우선
+  var local = _pickLocalAd(slotKey);
+  if (local) { _renderLocalAd(c, local); return; }
+  // 2) AdSense (승인 후)
+  if (!AD_CONFIG.enabled) return;
+  if (c.querySelector('ins.adsbygoogle')) return; // 중복 방지
   var ph = c.querySelector('[id^="ad-placeholder"]');
   if (ph) ph.style.display = 'none';
   var ins = document.createElement('ins');
@@ -12207,14 +12366,15 @@ function _injectAd(containerId, slotKey) {
 
 /* 앱 진입 시 항시 광고 슬롯 초기화 */
 function _initAds() {
-  // 홈 배너: 비활성 시 영역 축소
+  var hasLocal = function(z){ return !!(_localAdsByZone[z] && _localAdsByZone[z].length); };
+  // 홈 배너: AdSense 활성 또는 로컬 홈 광고 있을 때만 노출
   var homeAd = document.getElementById('ad-slot-home');
-  if (homeAd) homeAd.style.display = AD_CONFIG.enabled ? '' : 'none';
-  // 가게 상세 플레이스홀더: 비활성 시 숨김
+  if (homeAd) homeAd.style.display = (AD_CONFIG.enabled || hasLocal('home')) ? '' : 'none';
+  // 가게 상세 플레이스홀더
   var storePh = document.getElementById('ad-placeholder-store');
-  if (storePh) storePh.style.display = AD_CONFIG.enabled ? '' : 'none';
+  if (storePh) storePh.style.display = (AD_CONFIG.enabled || hasLocal('store')) ? '' : 'none';
   var storeSlot = document.getElementById('ad-slot-store');
-  if (storeSlot) storeSlot.style.minHeight = AD_CONFIG.enabled ? '100px' : '0';
+  if (storeSlot) storeSlot.style.minHeight = (AD_CONFIG.enabled || hasLocal('store')) ? '100px' : '0';
   _injectAd('ad-slot-home', 'home');
   // 치리맵 하단 배너 — 승인 후 실광고 주입 (미승인 시 플레이스홀더 유지)
   _injectAd('ct-map-ad', 'map');
@@ -13445,7 +13605,12 @@ function showApp() {
   renderCatBreakdown();
   renderReportSummary();
   _updateTodayLabel();
-  _initAds();
+  // 로컬 광고 먼저 로드 후 슬롯 주입 (로컬 광고 우선 노출)
+  if (typeof _loadLocalAds === 'function') {
+    _loadLocalAds().then(function(){ _initAds(); });
+  } else {
+    _initAds();
+  }
 }
 
 function showAuthError(msg) {
@@ -15325,6 +15490,168 @@ function openAdminDashboard() {
   _loadAdminStats();
 }
 
+/* ══════════════════════════════
+   어드민: 광고 관리 (local_ads + ad_revenue)
+══════════════════════════════ */
+var _ADZONE_LABEL = { home:'홈', store:'가게상세', map:'치리맵', reward:'리워드', feed:'치리톡', modal:'모달' };
+var _admAdImgFile = null;
+var _admEditAdId  = null;
+
+function openAdminAds() {
+  if (!_isAdmin) { showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  openOv('ov-admin-ads');
+  var mEl = document.getElementById('adm-rev-month');
+  if (mEl && !mEl.value) { var d = new Date(); mEl.value = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+  loadAdminAdStats(); loadLocalAdList(); loadAdRevenue();
+}
+
+async function loadAdminAdStats() {
+  var el = document.getElementById('adm-ad-stats'); if (!el || !_sb) return;
+  var res = await _sb.from('local_ads').select('zone,impressions,clicks');
+  if (res.error) { el.innerHTML = '<div style="font-size:11px;color:var(--red);padding:10px;">'+res.error.message+'</div>'; return; }
+  var agg = {};
+  (res.data||[]).forEach(function(a){ var z = agg[a.zone] = agg[a.zone] || {imp:0,clk:0}; z.imp += a.impressions||0; z.clk += a.clicks||0; });
+  var zones = Object.keys(agg);
+  if (!zones.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px;">아직 로컬 광고 노출 데이터가 없어요</div>'; return; }
+  el.innerHTML = zones.map(function(z){
+    var imp = agg[z].imp, clk = agg[z].clk, ctr = imp>0 ? (clk/imp*100).toFixed(1) : '0.0';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:8px 12px;">'
+      +'<span style="font-size:12px;font-weight:800;color:var(--text-1);">'+(_ADZONE_LABEL[z]||z)+'</span>'
+      +'<span style="font-size:11px;color:var(--text-2);">👁 '+imp.toLocaleString()+' · 👆 '+clk.toLocaleString()+' · CTR '+ctr+'%</span>'
+      +'</div>';
+  }).join('');
+}
+
+async function loadAdRevenue() {
+  var el = document.getElementById('adm-rev-list'); if (!el || !_sb) return;
+  var res = await _sb.from('ad_revenue').select('month,zone,source,amount_jpy').order('month',{ascending:false}).limit(12);
+  if (res.error || !res.data || !res.data.length) { el.innerHTML = ''; return; }
+  var total = res.data.reduce(function(s,r){ return s + Number(r.amount_jpy||0); }, 0);
+  el.innerHTML = '<div style="font-weight:800;color:var(--text-1);margin-bottom:4px;">최근 합계 ¥'+total.toLocaleString()+'</div>'
+    + res.data.map(function(r){ return '<div>'+r.month+' · '+(_ADZONE_LABEL[r.zone]||r.zone)+' · '+r.source+' — ¥'+Number(r.amount_jpy||0).toLocaleString()+'</div>'; }).join('');
+}
+
+async function adminSaveAdRevenue() {
+  if (!_sb) return;
+  var month  = document.getElementById('adm-rev-month').value;
+  var zone   = document.getElementById('adm-rev-zone').value;
+  var source = document.getElementById('adm-rev-source').value;
+  var amount = parseFloat(document.getElementById('adm-rev-amount').value || '0');
+  if (!month) { showToast('월을 선택하세요'); return; }
+  var res = await _sb.from('ad_revenue').upsert({ month:month, zone:zone, source:source, amount_jpy:amount }, { onConflict:'month,zone,source' });
+  if (res.error) { showToast('저장 실패: '+res.error.message); return; }
+  showToast('💰 수익 저장됨'); document.getElementById('adm-rev-amount').value=''; loadAdRevenue();
+}
+
+async function loadLocalAdList() {
+  var el = document.getElementById('adm-localad-list'); if (!el || !_sb) return;
+  var res = await _sb.from('local_ads').select('*').order('zone',{ascending:true}).order('sort_order',{ascending:true});
+  if (res.error) { el.innerHTML = '<div style="font-size:11px;color:var(--red);">'+res.error.message+'</div>'; return; }
+  var rows = res.data || [];
+  if (!rows.length) { el.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:14px;">등록된 광고가 없어요</div>'; return; }
+  el.innerHTML = rows.map(function(a){
+    var on = a.is_active;
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:8px;">'
+      +'<div style="width:64px;height:40px;border-radius:6px;background:var(--bg-2);overflow:hidden;flex-shrink:0;">'+(a.image_url?'<img src="'+a.image_url+'" style="width:100%;height:100%;object-fit:cover;">':'')+'</div>'
+      +'<div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:800;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_esc(a.title)+'</div>'
+      +'<div style="font-size:10px;color:var(--text-3);">'+(_ADZONE_LABEL[a.zone]||a.zone)+' · 👁'+(a.impressions||0)+' 👆'+(a.clicks||0)+'</div></div>'
+      +'<button onclick="adminToggleLocalAd(\''+a.id+'\','+(!on)+')" style="font-size:10px;font-weight:800;padding:5px 9px;border-radius:8px;border:1px solid '+(on?'var(--green)':'var(--border-mid)')+';background:'+(on?'var(--green-light)':'var(--bg)')+';color:'+(on?'var(--green)':'var(--text-3)')+';cursor:pointer;">'+(on?'ON':'OFF')+'</button>'
+      +'<button onclick="adminOpenAdForm(\''+a.id+'\')" style="font-size:10px;font-weight:800;padding:5px 9px;border-radius:8px;border:1px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;">수정</button>'
+      +'<button onclick="adminDeleteLocalAd(\''+a.id+'\')" style="font-size:10px;font-weight:800;padding:5px 9px;border-radius:8px;border:1px solid var(--red);background:transparent;color:var(--red);cursor:pointer;">삭제</button>'
+      +'</div>';
+  }).join('');
+}
+
+function adminHandleAdImage(input) {
+  var f = input.files && input.files[0]; if (!f) return;
+  _admAdImgFile = f;
+  var pv = document.getElementById('adm-ad-img-preview');
+  if (pv) { var r = new FileReader(); r.onload = function(e){ pv.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">'; }; r.readAsDataURL(f); }
+}
+
+async function adminOpenAdForm(id) {
+  _admEditAdId = id || null;
+  _admAdImgFile = null;
+  ['adm-ad-title','adm-ad-link','adm-ad-start','adm-ad-end'].forEach(function(x){ var e=document.getElementById(x); if(e) e.value=''; });
+  document.getElementById('adm-ad-sort').value = '0';
+  document.getElementById('adm-ad-zone').value = 'home';
+  document.getElementById('adm-ad-active').checked = true;
+  document.getElementById('adm-ad-img-preview').innerHTML = '🖼️';
+  var t1 = document.getElementById('adm-ad-form-title');
+  if (id && _sb) {
+    t1.textContent = '✏️ 로컬 광고 수정';
+    var res = await _sb.from('local_ads').select('*').eq('id', id).maybeSingle();
+    if (res.data) { var a = res.data;
+      document.getElementById('adm-ad-title').value = a.title || '';
+      document.getElementById('adm-ad-link').value  = a.link_url || '';
+      document.getElementById('adm-ad-zone').value  = a.zone || 'home';
+      document.getElementById('adm-ad-sort').value  = a.sort_order || 0;
+      document.getElementById('adm-ad-active').checked = !!a.is_active;
+      if (a.start_at) document.getElementById('adm-ad-start').value = a.start_at.slice(0,10);
+      if (a.end_at)   document.getElementById('adm-ad-end').value   = a.end_at.slice(0,10);
+      if (a.image_url) document.getElementById('adm-ad-img-preview').innerHTML = '<img src="'+a.image_url+'" style="width:100%;height:100%;object-fit:cover;">';
+    }
+  } else { t1.textContent = '+ 로컬 광고 등록'; }
+  openOv('ov-admin-ad-form');
+}
+
+async function adminSaveLocalAd() {
+  if (!_sb) return;
+  var title = document.getElementById('adm-ad-title').value.trim();
+  if (!title) { showToast('광고주/메모를 입력하세요'); return; }
+  var imageUrl = null;
+  if (_admAdImgFile) {
+    try {
+      var ext = (_admAdImgFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      var path = 'local-ads/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+      var up = await _sb.storage.from('store-photos').upload(path, _admAdImgFile, { upsert:false, contentType:_admAdImgFile.type||'image/jpeg' });
+      if (up.error) { showToast('이미지 업로드 실패: '+up.error.message); return; }
+      imageUrl = _sb.storage.from('store-photos').getPublicUrl(path).data.publicUrl;
+    } catch(e) { showToast('이미지 오류'); return; }
+  }
+  var startV = document.getElementById('adm-ad-start').value;
+  var endV   = document.getElementById('adm-ad-end').value;
+  var payload = {
+    title: title,
+    link_url: document.getElementById('adm-ad-link').value.trim() || null,
+    zone: document.getElementById('adm-ad-zone').value,
+    sort_order: parseInt(document.getElementById('adm-ad-sort').value||'0',10),
+    is_active: document.getElementById('adm-ad-active').checked,
+    start_at: startV ? new Date(startV).toISOString() : null,
+    end_at:   endV   ? new Date(endV).toISOString()   : null
+  };
+  if (imageUrl) payload.image_url = imageUrl;
+  var res;
+  if (_admEditAdId) { res = await _sb.from('local_ads').update(payload).eq('id', _admEditAdId); }
+  else {
+    if (!imageUrl) { showToast('배너 이미지를 선택하세요'); return; }
+    res = await _sb.from('local_ads').insert(payload);
+  }
+  if (res.error) { showToast('저장 실패: '+res.error.message); return; }
+  showToast('💾 광고 저장됨');
+  closeOv('ov-admin-ad-form');
+  _admAdImgFile = null; _admEditAdId = null;
+  loadLocalAdList(); loadAdminAdStats();
+  if (typeof _loadLocalAds === 'function') _loadLocalAds();
+}
+
+async function adminToggleLocalAd(id, next) {
+  if (!_sb) return;
+  var res = await _sb.from('local_ads').update({ is_active: next }).eq('id', id);
+  if (res.error) { showToast('변경 실패'); return; }
+  loadLocalAdList();
+  if (typeof _loadLocalAds === 'function') _loadLocalAds();
+}
+
+async function adminDeleteLocalAd(id) {
+  if (!_sb) return;
+  if (!confirm('이 광고를 삭제할까요?')) return;
+  var res = await _sb.from('local_ads').delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패'); return; }
+  showToast('🗑 삭제됨'); loadLocalAdList(); loadAdminAdStats();
+  if (typeof _loadLocalAds === 'function') _loadLocalAds();
+}
+
 /* ── 어드민: 통계 카드 상세 모달 ── */
 var _admDetailType = null;     // 'users' | 'receipts' | 'stores' | 'pins'
 var _admDetailData = [];       // 현재 로드된 전체 데이터
@@ -17140,7 +17467,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v185';
+window.__APP_VERSION__ = 'v186';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
