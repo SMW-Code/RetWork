@@ -3033,34 +3033,44 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div onclick="closeOv('ov-admin-ad-form')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
 
-      <!-- 배너 이미지 -->
+      <!-- ① 노출 영역 (먼저 선택 → 권장 프레임 비율 결정) -->
       <div style="margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">배너 이미지 (필수)</div>
-        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:1.5px dashed var(--border-mid);border-radius:12px;cursor:pointer;background:var(--bg);">
-          <div id="adm-ad-img-preview" style="width:80px;height:48px;border-radius:8px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--text-3);flex-shrink:0;overflow:hidden;">🖼️</div>
-          <div style="flex:1;min-width:0;"><div style="font-size:12px;font-weight:700;color:var(--text-1);">이미지 선택</div><div style="font-size:10px;color:var(--text-3);margin-top:2px;">가로형 배너 권장</div></div>
-          <input type="file" accept="image/*" style="display:none;" onchange="adminHandleAdImage(this)">
-        </label>
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">① 노출 영역 (먼저 선택)</div>
+        <select id="adm-ad-zone" onchange="adOnZoneChange()" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);">
+          <option value="home">홈 (가로 배너)</option>
+          <option value="map">치리맵 (가로 배너)</option>
+          <option value="store">가게상세 (가로 배너)</option>
+          <option value="reward">리워드/치리스토어 (정사각 카드)</option>
+          <option value="feed">치리톡 (가로형)</option>
+          <option value="modal">저장 모달 (가로 배너)</option>
+        </select>
+      </div>
+
+      <!-- ② 배너 이미지 — 영역 비율 프레임 안에서 위치/크기 조정 -->
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);">② 배너 이미지 (필수) <span id="adm-ad-size-hint" style="font-weight:500;color:var(--text-3);"></span></div>
+          <label style="font-size:11px;font-weight:800;color:var(--gold-dark);cursor:pointer;background:var(--gold-light);padding:5px 10px;border-radius:8px;">📁 파일 선택<input type="file" accept="image/*" style="display:none;" onchange="adminHandleAdImage(this)"></label>
+        </div>
+        <div id="adm-ad-frame" style="position:relative;width:100%;height:120px;background:var(--bg-2);background-repeat:no-repeat;border:2px dashed var(--border-mid);border-radius:10px;overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;cursor:grab;"
+             onpointerdown="adCropDown(event)" onpointermove="adCropMove(event)" onpointerup="adCropUp(event)" onpointerleave="adCropUp(event)">
+          <div id="adm-ad-frame-empty" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-3);font-size:12px;gap:4px;pointer-events:none;"><span style="font-size:26px;">🖼️</span><span>영역 선택 후 이미지를 올려주세요</span></div>
+        </div>
+        <div id="adm-ad-zoom-row" style="display:none;align-items:center;gap:8px;margin-top:8px;">
+          <span style="font-size:13px;">🔍</span>
+          <input id="adm-ad-zoom" type="range" min="100" max="300" value="100" oninput="adCropZoom(this.value)" style="flex:1;accent-color:var(--gold);">
+          <span style="font-size:10px;color:var(--text-3);white-space:nowrap;">드래그=위치</span>
+        </div>
       </div>
 
       <input id="adm-ad-title" type="text" maxlength="60" placeholder="광고주/메모 (필수, 내부 식별용)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);margin-bottom:8px;box-sizing:border-box;">
       <input id="adm-ad-link" type="url" placeholder="클릭 시 이동 URL (https://...)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);margin-bottom:8px;box-sizing:border-box;">
 
       <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <div style="flex:1;">
-          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">노출 영역</div>
-          <select id="adm-ad-zone" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
-            <option value="home">홈</option><option value="map">치리맵</option><option value="store">가게상세</option>
-            <option value="reward">리워드(치리스토어)</option><option value="feed">치리톡</option><option value="modal">저장 모달</option>
-          </select>
-        </div>
         <div style="flex:0.6;">
-          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">정렬</div>
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">정렬 순서</div>
           <input id="adm-ad-sort" type="number" value="0" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
         </div>
-      </div>
-
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
         <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">시작일 (선택)</div>
           <input id="adm-ad-start" type="date" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>
         <div style="flex:1;"><div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">종료일 (선택)</div>
@@ -15562,21 +15572,123 @@ async function loadLocalAdList() {
   }).join('');
 }
 
+/* ── 로컬 광고 이미지 크롭 (영역 비율 프레임 + 줌/드래그) ── */
+var _adZoneFrames = {
+  home:  { ar:3.2,  tw:640, th:200, label:'가로 배너 (약 16:5)' },
+  map:   { ar:4.0,  tw:640, th:160, label:'가로 배너 (약 4:1)' },
+  store: { ar:3.2,  tw:640, th:200, label:'가로 배너 (약 16:5)' },
+  reward:{ ar:1.0,  tw:600, th:600, label:'정사각 카드 (1:1)' },
+  feed:  { ar:1.91, tw:640, th:335, label:'가로형 (1.91:1)' },
+  modal: { ar:3.2,  tw:640, th:200, label:'가로 배너 (약 16:5)' }
+};
+var _adCrop = null;   // { img, natW, natH, fw, fh, baseW, baseH, dispW, dispH, x, y, zoom }
+var _adDrag = null;
+
+function adOnZoneChange() {
+  var zone = (document.getElementById('adm-ad-zone')||{}).value || 'home';
+  var z = _adZoneFrames[zone] || _adZoneFrames.home;
+  var hint = document.getElementById('adm-ad-size-hint');
+  if (hint) hint.textContent = '· ' + z.label;
+  var frame = document.getElementById('adm-ad-frame');
+  if (frame) {
+    var fw = frame.clientWidth || 300;
+    frame.style.height = Math.round(fw / z.ar) + 'px';
+  }
+  if (_adCrop && _adCrop.img) _adInitCropFit();   // 이미지 있으면 새 비율로 재맞춤
+}
+
 function adminHandleAdImage(input) {
   var f = input.files && input.files[0]; if (!f) return;
-  _admAdImgFile = f;
-  var pv = document.getElementById('adm-ad-img-preview');
-  if (pv) { var r = new FileReader(); r.onload = function(e){ pv.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">'; }; r.readAsDataURL(f); }
+  var img = new Image();
+  img.onload = function(){
+    _adCrop = { img:img, natW:img.naturalWidth, natH:img.naturalHeight, x:0, y:0, zoom:1 };
+    var fe = document.getElementById('adm-ad-frame-empty'); if (fe) fe.style.display = 'none';
+    var zr = document.getElementById('adm-ad-zoom-row'); if (zr) zr.style.display = 'flex';
+    var zs = document.getElementById('adm-ad-zoom'); if (zs) zs.value = 100;
+    var frame = document.getElementById('adm-ad-frame');
+    if (frame) frame.style.backgroundImage = 'url('+img.src+')';
+    _adInitCropFit();
+  };
+  var r = new FileReader();
+  r.onload = function(e){ img.src = e.target.result; };
+  r.readAsDataURL(f);
+}
+
+function _adInitCropFit() {
+  var frame = document.getElementById('adm-ad-frame'); if (!frame || !_adCrop) return;
+  var fw = frame.clientWidth, fh = frame.clientHeight;
+  _adCrop.fw = fw; _adCrop.fh = fh;
+  var arI = _adCrop.natW / _adCrop.natH, arF = fw / fh;
+  if (arI > arF) { _adCrop.baseH = fh; _adCrop.baseW = fh * arI; }
+  else           { _adCrop.baseW = fw; _adCrop.baseH = fw / arI; }
+  _adCrop.zoom = 1;
+  var zs = document.getElementById('adm-ad-zoom'); if (zs) zs.value = 100;
+  _adCrop.dispW = _adCrop.baseW; _adCrop.dispH = _adCrop.baseH;
+  _adCrop.x = (fw - _adCrop.dispW) / 2; _adCrop.y = (fh - _adCrop.dispH) / 2;
+  _adClampCrop(); _adApplyCrop();
+}
+function _adClampCrop() {
+  _adCrop.x = Math.min(0, Math.max(_adCrop.fw - _adCrop.dispW, _adCrop.x));
+  _adCrop.y = Math.min(0, Math.max(_adCrop.fh - _adCrop.dispH, _adCrop.y));
+}
+function _adApplyCrop() {
+  var frame = document.getElementById('adm-ad-frame'); if (!frame || !_adCrop) return;
+  frame.style.backgroundSize = _adCrop.dispW+'px '+_adCrop.dispH+'px';
+  frame.style.backgroundPosition = _adCrop.x+'px '+_adCrop.y+'px';
+}
+function adCropZoom(v) {
+  if (!_adCrop) return;
+  var nz = (parseInt(v,10)||100) / 100;
+  var cx = (_adCrop.fw/2 - _adCrop.x) / _adCrop.dispW;  // 현재 중심 비율 유지
+  var cy = (_adCrop.fh/2 - _adCrop.y) / _adCrop.dispH;
+  _adCrop.zoom = nz;
+  _adCrop.dispW = _adCrop.baseW * nz; _adCrop.dispH = _adCrop.baseH * nz;
+  _adCrop.x = _adCrop.fw/2 - cx * _adCrop.dispW;
+  _adCrop.y = _adCrop.fh/2 - cy * _adCrop.dispH;
+  _adClampCrop(); _adApplyCrop();
+}
+function adCropDown(e) {
+  if (!_adCrop) return;
+  _adDrag = { sx:e.clientX, sy:e.clientY, ox:_adCrop.x, oy:_adCrop.y };
+  var fr = document.getElementById('adm-ad-frame');
+  if (fr) { fr.style.cursor = 'grabbing'; try { fr.setPointerCapture(e.pointerId); } catch(_){} }
+}
+function adCropMove(e) {
+  if (!_adDrag || !_adCrop) return;
+  _adCrop.x = _adDrag.ox + (e.clientX - _adDrag.sx);
+  _adCrop.y = _adDrag.oy + (e.clientY - _adDrag.sy);
+  _adClampCrop(); _adApplyCrop();
+}
+function adCropUp() { _adDrag = null; var fr = document.getElementById('adm-ad-frame'); if (fr) fr.style.cursor = 'grab'; }
+
+function _adExportCropBlob() {
+  return new Promise(function(resolve){
+    if (!_adCrop || !_adCrop.dispW) { resolve(null); return; }
+    var zone = (document.getElementById('adm-ad-zone')||{}).value || 'home';
+    var zf = _adZoneFrames[zone] || _adZoneFrames.home;
+    var scaleX = _adCrop.natW / _adCrop.dispW, scaleY = _adCrop.natH / _adCrop.dispH;
+    var sx = (-_adCrop.x) * scaleX, sy = (-_adCrop.y) * scaleY;
+    var sw = _adCrop.fw * scaleX, sh = _adCrop.fh * scaleY;
+    try {
+      var cv = document.createElement('canvas'); cv.width = zf.tw; cv.height = zf.th;
+      var ctx = cv.getContext('2d');
+      ctx.drawImage(_adCrop.img, sx, sy, sw, sh, 0, 0, zf.tw, zf.th);
+      cv.toBlob(function(b){ resolve(b); }, 'image/jpeg', 0.85);
+    } catch(e) { resolve(null); }
+  });
 }
 
 async function adminOpenAdForm(id) {
   _admEditAdId = id || null;
-  _admAdImgFile = null;
+  _adCrop = null; _adDrag = null;
   ['adm-ad-title','adm-ad-link','adm-ad-start','adm-ad-end'].forEach(function(x){ var e=document.getElementById(x); if(e) e.value=''; });
   document.getElementById('adm-ad-sort').value = '0';
   document.getElementById('adm-ad-zone').value = 'home';
   document.getElementById('adm-ad-active').checked = true;
-  document.getElementById('adm-ad-img-preview').innerHTML = '🖼️';
+  var frame = document.getElementById('adm-ad-frame');
+  if (frame) { frame.style.backgroundImage = 'none'; }
+  var fe = document.getElementById('adm-ad-frame-empty'); if (fe) fe.style.display = 'flex';
+  var zr = document.getElementById('adm-ad-zoom-row'); if (zr) zr.style.display = 'none';
   var t1 = document.getElementById('adm-ad-form-title');
   if (id && _sb) {
     t1.textContent = '✏️ 로컬 광고 수정';
@@ -15589,10 +15701,18 @@ async function adminOpenAdForm(id) {
       document.getElementById('adm-ad-active').checked = !!a.is_active;
       if (a.start_at) document.getElementById('adm-ad-start').value = a.start_at.slice(0,10);
       if (a.end_at)   document.getElementById('adm-ad-end').value   = a.end_at.slice(0,10);
-      if (a.image_url) document.getElementById('adm-ad-img-preview').innerHTML = '<img src="'+a.image_url+'" style="width:100%;height:100%;object-fit:cover;">';
+      // 기존 이미지: 프레임에 cover 로 미리보기 (새로 올리지 않으면 그대로 유지)
+      if (a.image_url && frame) {
+        frame.style.backgroundImage = 'url('+a.image_url+')';
+        frame.style.backgroundSize = 'cover';
+        frame.style.backgroundPosition = 'center';
+        if (fe) fe.style.display = 'none';
+      }
     }
   } else { t1.textContent = '+ 로컬 광고 등록'; }
   openOv('ov-admin-ad-form');
+  // 모달 표시 후 프레임 폭이 잡히면 비율 적용
+  setTimeout(adOnZoneChange, 30);
 }
 
 async function adminSaveLocalAd() {
@@ -15600,14 +15720,14 @@ async function adminSaveLocalAd() {
   var title = document.getElementById('adm-ad-title').value.trim();
   if (!title) { showToast('광고주/메모를 입력하세요'); return; }
   var imageUrl = null;
-  if (_admAdImgFile) {
+  var blob = await _adExportCropBlob();   // 크롭된 이미지 (새로 올린 경우만 존재)
+  if (blob) {
     try {
-      var ext = (_admAdImgFile.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
-      var path = 'local-ads/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
-      var up = await _sb.storage.from('store-photos').upload(path, _admAdImgFile, { upsert:false, contentType:_admAdImgFile.type||'image/jpeg' });
+      var path = 'store-items/localad_' + Date.now() + '_' + Math.random().toString(36).slice(2,7) + '.jpg';
+      var up = await _sb.storage.from('store-photos').upload(path, blob, { upsert:false, contentType:'image/jpeg' });
       if (up.error) { showToast('이미지 업로드 실패: '+up.error.message); return; }
       imageUrl = _sb.storage.from('store-photos').getPublicUrl(path).data.publicUrl;
-    } catch(e) { showToast('이미지 오류'); return; }
+    } catch(e) { showToast('이미지 오류: '+(e.message||e)); return; }
   }
   var startV = document.getElementById('adm-ad-start').value;
   var endV   = document.getElementById('adm-ad-end').value;
@@ -17467,7 +17587,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v186';
+window.__APP_VERSION__ = 'v187';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
