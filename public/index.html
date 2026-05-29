@@ -344,6 +344,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .mracc.open .mracc-peek{display:none;}
 .mr-irow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
 .mr-irow:last-child{border-bottom:none;}
+/* 아코디언 = 배경과 구분되는 카드(테두리+은은한 음영), 펼치면 헤더 아래 구분선 */
+.mracc{border:1px solid var(--border-mid);}
+.mracc.open{border-color:var(--green);box-shadow:var(--shadow-sm);}
+.mracc.open .mracc-body{border-top:1px solid var(--border);padding-top:12px !important;margin-top:10px !important;}
+[data-dark="1"] .mracc{background:#23233A;}
+/* 월별 리포트 본문 스크롤바 숨김 */
+#mr-body{scrollbar-width:none;-ms-overflow-style:none;}
+#mr-body::-webkit-scrollbar{width:0;height:0;display:none;}
 .budget-fill{height:100%;border-radius:20px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 
 .alert-banner{margin:10px 16px 0;background:var(--green);border:3px solid #C8B273;border-radius:14px;padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow-sm);}
@@ -17780,7 +17788,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v191';
+window.__APP_VERSION__ = 'v192';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
