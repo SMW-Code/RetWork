@@ -336,6 +336,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .budget-wrap{margin:10px 16px 0;background:var(--surface);border-radius:14px;padding:8px 15px;border:.5px solid var(--border);box-shadow:var(--shadow-sm);cursor:pointer;transition:transform .15s;}
 .budget-wrap:active{transform:scale(.98);}
 .budget-track{height:8px;background:rgba(0,0,0,.06);border-radius:20px;overflow:hidden;margin:8px 0 6px;}
+/* 월별 리포트 아코디언 카드 */
+.mracc-body{max-height:0;overflow:hidden;transition:max-height .35s ease;}
+.mracc.open .mracc-body{max-height:1200px;}
+.mracc .mracc-caret{transition:transform .25s;display:inline-block;}
+.mracc.open .mracc-caret{transform:rotate(180deg);}
+.mracc.open .mracc-peek{display:none;}
+.mr-irow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--border);}
+.mr-irow:last-child{border-bottom:none;}
 .budget-fill{height:100%;border-radius:20px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 
 .alert-banner{margin:10px 16px 0;background:var(--green);border:3px solid #C8B273;border-radius:14px;padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow-sm);}
@@ -943,6 +951,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 이달 예산 카드 -->
     <div id="home-budget"></div>
 
+    <!-- 월별 리포트 진입 -->
+    <div onclick="openMonthReport()" style="margin:12px 16px 0;background:linear-gradient(135deg,var(--green),var(--green-dark));border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;box-shadow:var(--shadow-sm);">
+      <span style="font-size:20px;">🧾</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;" data-i18n="mr.title">🧾 월별 리포트</div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;" data-i18n="home.report_sub">단골·물가·절약·습관 한눈에</div></div>
+      <span style="font-size:16px;color:rgba(255,255,255,.9);">›</span>
+    </div>
+
     <!-- 홈 배너 광고 (승인 후 자동 표시) -->
     <div id="ad-slot-home" style="display:none;margin:0 0 14px;border-radius:14px;overflow:hidden;background:var(--bg);border:0.5px solid var(--border);min-height:80px;">
       <div id="ad-placeholder-home" style="display:flex;align-items:center;justify-content:center;gap:6px;color:var(--text-3);min-height:80px;">
@@ -1114,7 +1129,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <span style="font-size:15px;font-weight:800;color:var(--green);" id="cal-total"></span>
       </div>
     </div>
-    <div class="month-summary" onclick="openMonthDetail()" style="cursor:pointer;transition:box-shadow .15s;">
+    <div class="month-summary" onclick="openMonthReport()" style="cursor:pointer;transition:box-shadow .15s;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;" data-i18n="cal.month_summary">今月のまとめ</div>
         <div style="font-size:11px;font-weight:700;color:var(--green);"><span data-i18n="cal.see_detail">詳しく見る</span> ›</div>
@@ -2167,6 +2182,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <div id="mdet-content"></div>
   </div>
+</div>
+
+<!-- ══ 월별 리포트 (종합 인사이트 전체화면) ══ -->
+<div id="ov-month-report" style="display:none;position:absolute;inset:0;z-index:380;flex-direction:column;background:var(--bg);">
+  <div style="background:var(--surface);padding:12px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:.5px solid var(--border);">
+    <div onclick="document.getElementById('ov-month-report').style.display='none'" style="width:34px;height:34px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text-2);cursor:pointer;flex-shrink:0;">←</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:12px;">
+      <div onclick="mrChangeMonth(-1)" style="font-size:16px;color:var(--text-3);cursor:pointer;padding:4px 8px;">‹</div>
+      <div style="font-size:16px;font-weight:900;color:var(--text-1);" id="mr-month-label">2026年 5月</div>
+      <div onclick="mrChangeMonth(1)" style="font-size:16px;color:var(--text-3);cursor:pointer;padding:4px 8px;" id="mr-next">›</div>
+    </div>
+    <div onclick="mrShare()" style="width:34px;height:34px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--green);cursor:pointer;flex-shrink:0;">⤓</div>
+  </div>
+  <div id="mr-body" style="flex:1;overflow-y:auto;padding:14px 16px 36px;"></div>
 </div>
 
 <!-- ══ 이미지 전체화면 뷰어 ══ -->
@@ -7010,6 +7039,162 @@ function openMonthDetail() {
   document.getElementById('mdet-content').innerHTML = summaryFooter + catHtml + storeHtml + rankHtml + topDayHtml;
   openOv('ov-month-detail');
 }
+
+/* ══════════════════════════════
+   월별 리포트 (종합 인사이트 — 내 데이터)
+══════════════════════════════ */
+var _mrY = 0, _mrM = 0;
+var MR_SUPER_CATS  = ['food','life','shop','med','beauty','other','fuel'];
+var MR_DINING_CATS = ['eat','cafe','drink'];
+
+function openMonthReport(){
+  var now = new Date();
+  _mrY = (typeof calYear !== 'undefined' && calYear) ? calYear : now.getFullYear();
+  _mrM = (typeof calMonth !== 'undefined' && calMonth) ? calMonth : now.getMonth()+1;
+  document.getElementById('ov-month-report').style.display = 'flex';
+  renderMonthReport();
+}
+function mrChangeMonth(dir){
+  var now = new Date();
+  _mrM += dir; if(_mrM<1){_mrM=12;_mrY--;} if(_mrM>12){_mrM=1;_mrY++;}
+  if(_mrY>now.getFullYear() || (_mrY===now.getFullYear() && _mrM>now.getMonth()+1)){
+    _mrM-=dir; if(_mrM<1){_mrM=12;_mrY--;} if(_mrM>12){_mrM=1;_mrY++;} return;
+  }
+  renderMonthReport();
+}
+function mrShare(){
+  var u='https://retwork.jp';
+  if(navigator.share) navigator.share({title:'RetWork', text:t('mr.title'), url:u}).catch(function(){});
+  else { try{ navigator.clipboard.writeText(u); }catch(e){} showToast('🔗 '+u); }
+}
+function _mrAcc(title, peek, body){
+  return '<div class="card mracc" onclick="this.classList.toggle(\'open\')" style="cursor:pointer;margin-bottom:10px;">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;font-weight:800;">'+title+'</span><span class="mracc-caret" style="font-size:12px;color:var(--text-3);">▼</span></div>'
+    +'<div class="mracc-peek" style="font-size:11px;color:var(--text-3);margin-top:6px;">'+peek+'</div>'
+    +'<div class="mracc-body" style="margin-top:6px;">'+body+'</div></div>';
+}
+function _mrLbl(txt){ return '<div style="font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.5px;margin:4px 2px 8px;">'+txt+'</div>'; }
+
+function renderMonthReport(){
+  var el = document.getElementById('mr-body'); if(!el) return;
+  var y=_mrY, m=_mrM, now=new Date();
+  document.getElementById('mr-month-label').textContent = t('hist.month',{y:y,m:m,mon:_monName(m)});
+  var nb=document.getElementById('mr-next'); if(nb) nb.style.opacity=(y===now.getFullYear()&&m===now.getMonth()+1)?'.3':'1';
+
+  var key=y+'-'+String(m).padStart(2,'0');
+  var pm=m===1?12:m-1, py=m===1?y-1:y, pkey=py+'-'+String(pm).padStart(2,'0');
+  var cur=DB.filter(function(r){return r.date.startsWith(key);});
+  var prev=DB.filter(function(r){return r.date.startsWith(pkey);});
+
+  if(cur.length===0){ el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text-3);font-size:13px;">'+t('mr.empty')+'</div>'; return; }
+
+  var total=cur.reduce(function(a,r){return a+r.total;},0);
+  var prevTotal=prev.reduce(function(a,r){return a+r.total;},0);
+  var daysInMonth=new Date(y,m,0).getDate();
+  var avg=Math.round(total/daysInMonth);
+  function catSum(list){var o={};list.forEach(function(r){o[r.cat]=(o[r.cat]||0)+r.total;});return o;}
+  var cc=catSum(cur), pc=catSum(prev);
+  var html='';
+
+  // 히어로
+  var budget=parseInt(localStorage.getItem('receiptiq_budget')||'0');
+  var deltaHtml='';
+  if(prevTotal>0){var d=total-prevTotal; deltaHtml='<div style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;background:rgba(255,255,255,.16);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;">'+(d<=0?'▼ ¥'+Math.abs(d).toLocaleString():'▲ ¥'+d.toLocaleString())+'</div>';}
+  html+='<div style="background:linear-gradient(145deg,var(--green),var(--green-dark));border-radius:20px;padding:20px;color:#fff;position:relative;overflow:hidden;margin-bottom:14px;">'
+    +'<div style="position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.07);"></div>'
+    +'<div style="font-size:10px;opacity:.7;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">'+t('mr.total_label')+' · '+t('rep.month_spent',{n:cur.length})+'</div>'
+    +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">¥'+total.toLocaleString()+'</div>'+deltaHtml;
+  if(budget>0){var pctLeft=Math.max(0,Math.round((budget-total)/budget*100)); var spentPct=Math.min(100,Math.round(total/budget*100));
+    html+='<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>¥'+budget.toLocaleString()+'</span><span>'+t('mr.budget_left',{n:pctLeft})+'</span></div><div style="height:8px;border-radius:5px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px;"><div style="height:100%;border-radius:5px;background:#fff;width:'+spentPct+'%;"></div></div></div>';
+  }
+  html+='</div>';
+
+  // 한 줄 인사이트
+  var insightTxt;
+  if(prev.length===0){ insightTxt=t('mr.insight_first'); }
+  else { var bestCat=null,bestDelta=0; Object.keys(cc).forEach(function(c){var d=(cc[c]||0)-(pc[c]||0); if(Math.abs(d)>Math.abs(bestDelta)){bestDelta=d;bestCat=c;}});
+    insightTxt = bestCat ? (bestDelta>0?t('mr.insight_up',{cat:CAT_LABEL[bestCat]||bestCat,amt:Math.abs(bestDelta).toLocaleString()}):t('mr.insight_down',{cat:CAT_LABEL[bestCat]||bestCat,amt:Math.abs(bestDelta).toLocaleString()})) : t('mr.insight_first'); }
+  html+='<div style="background:var(--green-light);border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;"><span style="font-size:18px;">💡</span><div style="font-size:12.5px;font-weight:600;color:var(--green-dark);line-height:1.5;">'+_esc(insightTxt)+'</div></div>';
+
+  // 카테고리
+  var catSorted=Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];});
+  var catBars=catSorted.map(function(c){var pct=total>0?Math.round(cc[c]/total*100):0;var color=(typeof CAT_COLOR!=='undefined'&&CAT_COLOR[c])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">¥'+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
+  html+=_mrLbl(t('mr.sec_category'))+'<div class="card" style="margin-bottom:14px;">'+catBars+'</div>';
+
+  // 전월 비교
+  html+=_mrLbl(t('mr.sec_compare'));
+  if(prev.length===0){ html+='<div class="card" style="margin-bottom:14px;text-align:center;color:var(--text-3);font-size:12px;padding:18px;">'+t('mr.no_prev')+'</div>'; }
+  else{ function pctd(c,p){if(!p)return '';var d=Math.round((c-p)/p*100);return d<=0?'<span style="color:var(--green);">▼ '+Math.abs(d)+'%</span>':'<span style="color:var(--red);">▲ '+d+'%</span>';}
+    var pAvg=Math.round(prevTotal/new Date(py,pm,0).getDate());
+    function col(h,v,dd){return '<div style="flex:1;text-align:center;background:var(--bg);border-radius:12px;padding:11px 6px;"><div style="font-size:10px;color:var(--text-3);font-weight:700;">'+h+'</div><div style="font-size:15px;font-weight:900;margin-top:4px;">¥'+v.toLocaleString()+'</div><div style="font-size:10px;font-weight:700;margin-top:3px;">'+dd+'</div></div>';}
+    html+='<div class="card" style="margin-bottom:14px;"><div style="display:flex;gap:8px;">'+col(t('mr.cmp_total'),total,pctd(total,prevTotal))+col(t('mr.cmp_eat'),cc.eat||0,pctd(cc.eat||0,pc.eat||0))+col(t('mr.cmp_food'),cc.food||0,pctd(cc.food||0,pc.food||0))+col(t('mr.cmp_avg'),avg,pctd(avg,pAvg))+'</div></div>';
+  }
+
+  // 품목 집계
+  function itemAgg(list){var mm={};list.forEach(function(r){(r.items||[]).forEach(function(it){if(!it.name||!it.price)return;var k=it.name;if(!mm[k])mm[k]={cnt:0,sum:0};mm[k].cnt+=(it.qty||1);mm[k].sum+=it.price;});});return mm;}
+  var ci=itemAgg(cur), pi=itemAgg(prev);
+
+  html+=_mrLbl(t('mr.sec_items'));
+  var topItems=Object.keys(ci).map(function(k){return {n:k,cnt:ci[k].cnt,avg:Math.round(ci[k].sum/ci[k].cnt),sum:ci[k].sum};}).sort(function(a,b){return b.cnt-a.cnt;}).slice(0,3);
+  if(topItems.length){var medal=['🥇','🥈','🥉'];
+    var b1=topItems.map(function(it,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(it.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.buy_n',{n:it.cnt,avg:it.avg.toLocaleString()})+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+it.sum.toLocaleString()+'</div></div>';}).join('');
+    html+=_mrAcc(t('mr.top_items'), topItems.map(function(it){return _esc(it.n);}).join(' · ')+' …', b1);
+  }
+  var movers=[]; Object.keys(ci).forEach(function(k){if(pi[k]){var ca=Math.round(ci[k].sum/ci[k].cnt),pa=Math.round(pi[k].sum/pi[k].cnt);if(pa>0&&ca!==pa)movers.push({n:k,c:ca,p:pa,pct:Math.round((ca-pa)/pa*100)});}});
+  movers.sort(function(a,b){return Math.abs(b.pct)-Math.abs(a.pct);});
+  if(movers.length){var b2=movers.slice(0,8).map(function(it){var up=it.pct>0;return '<div class="mr-irow"><div><div style="font-size:13px;font-weight:700;">'+_esc(it.n)+'</div><div style="font-size:10px;color:var(--text-3);">¥'+it.p.toLocaleString()+' → ¥'+it.c.toLocaleString()+'</div></div><span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;background:'+(up?'var(--red-bg)':'var(--green-light)')+';color:'+(up?'var(--red)':'var(--green)')+';">'+(up?'▲ +'+it.pct:'▼ '+it.pct)+'%</span></div>';}).join('');
+    html+=_mrAcc(t('mr.basket'), t('mr.basket_peek'), b2);
+  }
+
+  // 단골 가게
+  function storeAgg(cats){var s={};cur.forEach(function(r){if(cats.indexOf(r.cat)<0)return;if(!s[r.store])s[r.store]={cnt:0,sum:0};s[r.store].cnt++;s[r.store].sum+=r.total;});return Object.keys(s).map(function(n){return {n:n,cnt:s[n].cnt,sum:s[n].sum,avg:Math.round(s[n].sum/s[n].cnt)};}).sort(function(a,b){return b.cnt-a.cnt||b.sum-a.sum;});}
+  var supers=storeAgg(MR_SUPER_CATS).slice(0,3), dinings=storeAgg(MR_DINING_CATS).slice(0,3);
+  function storeBody(arr){var medal=['🥇','🥈','🥉'];return arr.map(function(st,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(st.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.visit_n',{n:st.cnt,avg:st.avg.toLocaleString()})+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+st.sum.toLocaleString()+'</div></div>';}).join('');}
+  if(supers.length||dinings.length){
+    html+=_mrLbl(t('mr.sec_stores'));
+    if(supers.length) html+=_mrAcc(t('mr.top_super'), '🥇 '+_esc(supers[0].n)+' …', storeBody(supers));
+    if(dinings.length) html+=_mrAcc(t('mr.top_dining'), '🥇 '+_esc(dinings[0].n)+' …', storeBody(dinings));
+  }
+
+  // 지출 포인트 (최고 지출일 + 재구매주기)
+  var dayT={}; cur.forEach(function(r){dayT[r.date]=(dayT[r.date]||0)+r.total;});
+  var topDay=Object.keys(dayT).sort(function(a,b){return dayT[b]-dayT[a];})[0];
+  var pointBody='';
+  if(topDay){var pp=topDay.split('-'); pointBody+='<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span>🔥</span><div><div style="font-size:13px;font-weight:700;">'+_dayLabel(parseInt(pp[1]),parseInt(pp[2]))+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.top_day')+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+dayT[topDay].toLocaleString()+'</div></div>';}
+  if(topItems.length){var tn=topItems[0].n; var dts=cur.filter(function(r){return (r.items||[]).some(function(it){return it.name===tn;});}).map(function(r){return r.date;}).sort();
+    if(dts.length>=2){var g=0;for(var i=1;i<dts.length;i++){g+=(new Date(dts[i])-new Date(dts[i-1]))/86400000;}var cyc=Math.round(g/(dts.length-1));
+      pointBody+='<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span>🔁</span><div><div style="font-size:13px;font-weight:700;">'+_esc(tn)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.repurchase')+'</div></div></div><span style="font-size:11px;font-weight:700;color:var(--green);">'+t('mr.cycle',{n:cyc})+'</span></div>';}
+  }
+  if(pointBody){ html+=_mrLbl(t('mr.sec_points'))+'<div class="card" style="margin-bottom:14px;">'+pointBody+'</div>'; }
+
+  // 결제수단
+  var payT={},payTotal=0; cur.forEach(function(r){var p=r.pay||'cash';payT[p]=(payT[p]||0)+r.total;payTotal+=r.total;});
+  var paySorted=Object.keys(payT).sort(function(a,b){return payT[b]-payT[a];});
+  if(paySorted.length){var pb=paySorted.map(function(p){var pct=payTotal>0?Math.round(payT[p]/payTotal*100):0;var color=(typeof PAY_COLOR!=='undefined'&&PAY_COLOR[p])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(PAY_ICON[p]||'💳')+' '+(PAY_LABEL[p]||p)+'</span><span style="font-weight:800;">¥'+payT[p].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
+    html+=_mrLbl(t('rep.pay_breakdown'))+'<div class="card" style="margin-bottom:14px;">'+pb+'</div>';
+  }
+
+  // 요일 패턴
+  var dows=t('rep.weekdays').split(',');
+  var dsum=[0,0,0,0,0,0,0]; cur.forEach(function(r){var p=r.date.split('-');var dd=new Date(parseInt(p[0]),parseInt(p[1])-1,parseInt(p[2])).getDay();dsum[dd===0?6:dd-1]+=r.total;});
+  var dmax=Math.max.apply(null,dsum)||1, maxIdx=dsum.indexOf(dmax);
+  var wk='';for(var wi=0;wi<7;wi++){var h=Math.round(dsum[wi]/dmax*100);wk+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:5px;"><div style="width:100%;border-radius:6px 6px 0 0;height:'+Math.max(h,3)+'%;background:'+(wi===maxIdx?'linear-gradient(180deg,var(--green),var(--green-dark))':'var(--green-light)')+';"></div><div style="font-size:10px;color:var(--text-3);font-weight:700;">'+dows[wi]+'</div></div>';}
+  html+=_mrLbl(t('mr.sec_weekday'))+'<div class="card" style="margin-bottom:14px;"><div style="display:flex;align-items:flex-end;justify-content:space-between;height:90px;gap:6px;">'+wk+'</div><div style="font-size:11px;color:var(--text-2);text-align:center;margin-top:10px;">'+t('mr.most_dow',{dow:dows[maxIdx]})+'</div></div>';
+
+  // 예측 (현재 달일 때만)
+  if(y===now.getFullYear()&&m===now.getMonth()+1){var dom=now.getDate();var fc=Math.round(total/dom*daysInMonth);var fOk=budget>0?fc<=budget:true;
+    html+='<div style="background:#FFF6E9;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;"><span style="font-size:18px;">🔮</span><div style="font-size:12.5px;font-weight:600;color:#8a6d1f;line-height:1.5;">'+t('mr.forecast',{amt:fc.toLocaleString()})+(budget>0?'<br>'+(fOk?t('mr.forecast_ok'):t('mr.forecast_over')):'')+'</div></div>';
+  }
+
+  // 커뮤니티 비교 (준비중)
+  html+=_mrLbl(t('mr.sec_community'))+'<div class="card" style="margin-bottom:14px;text-align:center;padding:22px 16px;color:var(--text-3);font-size:12px;line-height:1.6;white-space:pre-line;">'+_esc(t('mr.community_soon'))+'</div>';
+
+  // 공유
+  html+='<button onclick="mrShare()" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);">'+t('mr.share')+'</button>';
+
+  el.innerHTML=html; el.scrollTop=0;
+}
+
 function selectDay(y,m,d){
   document.querySelectorAll('.cal-day').forEach(function(el){el.classList.remove('sel');});
   var first=new Date(y,m-1,1).getDay();
@@ -9794,6 +9979,7 @@ var I18N = {
     'mdet.by_category':'カテゴリ別','mdet.top_stores':'よく行く店 TOP 3','mdet.visits':'{n}回訪問','mdet.top_day':'最高支出日','mdet.spend_days':'支出あり','mdet.no_spend_days':'支出なし','mdet.daily_avg':'1日平均','mdet.days_n':'{n}日',
     'pay.label.cash':'現金','pay.label.credit':'クレジットカード','pay.label.ic':'交通系IC','pay.label.qr':'QR決済','pay.label.debit':'デビットカード',
     'rank.nth':'{n}位','rep.weekdays':'月,火,水,木,金,土,日','rep.no_data':'データがありません','rep.detail_view':'詳細を見る ›',
+    'mr.title':'🧾 月別レポート','mr.empty':'今月のレシートがありません','mr.total_label':'今月の総支出','mr.budget_left':'{n}% 残り','mr.spent':'¥{amt} 支出','mr.remain':'¥{amt} 残り','mr.no_budget':'予算未設定','mr.insight_up':'{cat} が先月より ¥{amt} 増えました','mr.insight_down':'{cat} が先月より ¥{amt} 減りました 🎉','mr.insight_first':'記録スタートの月！今月の支出を残しましょう','mr.sec_category':'カテゴリ','mr.sec_compare':'先月比較','mr.cmp_total':'総支出','mr.cmp_eat':'外食','mr.cmp_food':'食料品','mr.cmp_avg':'1日平均','mr.no_prev':'先月データなし','mr.sec_items':'品目分析','mr.top_items':'🛒 よく買う品目 TOP 3','mr.buy_n':'{n}回 · 平均 ¥{avg}','mr.basket':'📊 マイ物価','mr.basket_peek':'先月比の単価変動','mr.no_basket':'比較できる先月の品目がありません','mr.sec_stores':'よく行く店','mr.top_super':'🛒 よく行くスーパー TOP 3','mr.top_dining':'🍽 よく行く飲食店 TOP 3','mr.visit_n':'{n}回 · 平均 ¥{avg}','mr.new_stores':'新規の店','mr.regular':'常連比率','mr.none':'なし','mr.sec_points':'支出ポイント','mr.top_day':'🔥 最高支出日','mr.repurchase':'🔁 よく再購入','mr.cycle':'平均 {n}日ごと','mr.sec_weekday':'📅 曜日別支出','mr.most_dow':'🔥 {dow} に最も使っています','mr.sec_forecast':'予測','mr.forecast':'このペースだと月末 約 ¥{amt}','mr.forecast_ok':'予算内で収まりそうです ✅','mr.forecast_over':'予算オーバーの見込み ⚠️','mr.sec_community':'価格比較 · おすすめ','mr.community_soon':'🔜 まもなく提供\nコミュニティの価格データが集まると、同じメニューの最安・コスパ・おすすめを表示します','mr.share':'📤 今月のレポートを共有','home.report_sub':'常連·物価·節約·習慣をひと目で',
     'radar.empty_title':'データがまだありません','radar.empty_sub':'レシートを撮影すると自動で追跡されます',
     // 달력 잔여
     'cal.see_detail':'詳しく見る','cal.receipt_count':'レシート数','cal.daily_avg':'1日平均','common.total':'合計',
@@ -10032,6 +10218,7 @@ var I18N = {
     'mdet.by_category':'카테고리별','mdet.top_stores':'자주 간 가게 TOP 3','mdet.visits':'{n}회 방문','mdet.top_day':'최고 지출일','mdet.spend_days':'지출 있는 날','mdet.no_spend_days':'지출 없는 날','mdet.daily_avg':'일 평균','mdet.days_n':'{n}일',
     'pay.label.cash':'현금','pay.label.credit':'신용카드','pay.label.ic':'IC카드','pay.label.qr':'QR결제','pay.label.debit':'체크카드',
     'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요','rep.detail_view':'상세 보기 ›',
+    'mr.title':'🧾 월별 리포트','mr.empty':'이번 달 영수증이 없어요','mr.total_label':'이달 총지출','mr.budget_left':'{n}% 남음','mr.spent':'¥{amt} 지출','mr.remain':'¥{amt} 남음','mr.no_budget':'예산 미설정','mr.insight_up':'{cat} 지출이 전월보다 ¥{amt} 늘었어요','mr.insight_down':'{cat} 지출이 전월보다 ¥{amt} 줄었어요 🎉','mr.insight_first':'첫 기록의 달! 이번 달 소비를 남겨봐요','mr.sec_category':'카테고리','mr.sec_compare':'전월 비교','mr.cmp_total':'총지출','mr.cmp_eat':'외식','mr.cmp_food':'식료품','mr.cmp_avg':'일평균','mr.no_prev':'전월 데이터 없음','mr.sec_items':'품목 분석','mr.top_items':'🛒 자주 산 품목 TOP 3','mr.buy_n':'{n}회 · 평균 ¥{avg}','mr.basket':'📊 내 장바구니 물가','mr.basket_peek':'전월 대비 단가 변동','mr.no_basket':'비교할 전월 품목이 없어요','mr.sec_stores':'단골 가게','mr.top_super':'🛒 자주 가는 슈퍼 TOP 3','mr.top_dining':'🍽 자주 가는 식당 TOP 3','mr.visit_n':'{n}회 · 평균 ¥{avg}','mr.new_stores':'새로 간 가게','mr.regular':'단골 비율','mr.none':'없음','mr.sec_points':'지출 포인트','mr.top_day':'🔥 최고 지출일','mr.repurchase':'🔁 자주 재구매','mr.cycle':'평균 {n}일마다','mr.sec_weekday':'📅 요일별 지출','mr.most_dow':'🔥 {dow}에 가장 많이 써요','mr.sec_forecast':'예측','mr.forecast':'이 페이스면 월말 예상 ¥{amt}','mr.forecast_ok':'예산 안에서 끝날 것 같아요 ✅','mr.forecast_over':'예산 초과가 예상돼요 ⚠️','mr.sec_community':'가격 비교 · 추천','mr.community_soon':'🔜 곧 제공돼요\n커뮤니티 가격 데이터가 쌓이면 같은 메뉴 최저가·가성비·추천을 보여드려요','mr.share':'📤 이달 리포트 공유','home.report_sub':'단골·물가·절약·습관 한눈에',
     'radar.empty_title':'아직 데이터가 없어요','radar.empty_sub':'영수증을 촬영하면 자동으로 추적됩니다',
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'cal.day_detail':'{y}/{m}/{d} 지출 내역','cal.tap_go':'탭해서 이동 ›',
@@ -10252,6 +10439,7 @@ var I18N = {
     'mdet.by_category':'By category','mdet.top_stores':'Top 3 stores','mdet.visits':'{n} visits','mdet.top_day':'Top spending day','mdet.spend_days':'Days with spending','mdet.no_spend_days':'No-spend days','mdet.daily_avg':'Daily avg','mdet.days_n':'{n} days',
     'pay.label.cash':'Cash','pay.label.credit':'Credit','pay.label.ic':'IC Card','pay.label.qr':'QR Pay','pay.label.debit':'Debit',
     'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data','rep.detail_view':'View detail ›',
+    'mr.title':'🧾 Monthly Report','mr.empty':'No receipts this month','mr.total_label':'This month total','mr.budget_left':'{n}% left','mr.spent':'¥{amt} spent','mr.remain':'¥{amt} left','mr.no_budget':'No budget set','mr.insight_up':'{cat} rose ¥{amt} vs last month','mr.insight_down':'{cat} dropped ¥{amt} vs last month 🎉','mr.insight_first':'First month of tracking! Keep logging your spending','mr.sec_category':'Category','mr.sec_compare':'vs Last month','mr.cmp_total':'Total','mr.cmp_eat':'Eating out','mr.cmp_food':'Groceries','mr.cmp_avg':'Daily avg','mr.no_prev':'No last-month data','mr.sec_items':'Item analysis','mr.top_items':'🛒 Top 3 bought items','mr.buy_n':'{n}x · avg ¥{avg}','mr.basket':'📊 My basket prices','mr.basket_peek':'unit price change vs last month','mr.no_basket':'No comparable items from last month','mr.sec_stores':'Favorite stores','mr.top_super':'🛒 Top 3 supermarkets','mr.top_dining':'🍽 Top 3 restaurants','mr.visit_n':'{n}x · avg ¥{avg}','mr.new_stores':'New stores','mr.regular':'Regular ratio','mr.none':'None','mr.sec_points':'Spending points','mr.top_day':'🔥 Top spending day','mr.repurchase':'🔁 Frequently rebought','mr.cycle':'every {n} days','mr.sec_weekday':'📅 By weekday','mr.most_dow':'🔥 You spend most on {dow}','mr.sec_forecast':'Forecast','mr.forecast':'At this pace, ~¥{amt} by month end','mr.forecast_ok':'Likely within budget ✅','mr.forecast_over':'Budget overrun expected ⚠️','mr.sec_community':'Price compare · Recommend','mr.community_soon':'🔜 Coming soon\nOnce community price data builds up, we will show cheapest same-menu, value scores and recommendations','mr.share':'📤 Share this report','home.report_sub':'Stores·prices·savings·habits at a glance',
     'radar.empty_title':'No data yet','radar.empty_sub':'Tracked automatically when you scan receipts',
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'cal.day_detail':'{y}/{m}/{d} spending','cal.tap_go':'Tap to view ›',
@@ -10472,6 +10660,7 @@ var I18N = {
     'mdet.by_category':'按分类','mdet.top_stores':'常去店铺 TOP 3','mdet.visits':'{n}次到访','mdet.top_day':'最高支出日','mdet.spend_days':'有支出天数','mdet.no_spend_days':'无支出天数','mdet.daily_avg':'日均','mdet.days_n':'{n}天',
     'pay.label.cash':'现金','pay.label.credit':'信用卡','pay.label.ic':'交通卡','pay.label.qr':'QR支付','pay.label.debit':'借记卡',
     'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据','rep.detail_view':'查看详情 ›',
+    'mr.title':'🧾 月度报告','mr.empty':'本月暂无票据','mr.total_label':'本月总支出','mr.budget_left':'剩 {n}%','mr.spent':'¥{amt} 支出','mr.remain':'¥{amt} 剩余','mr.no_budget':'未设预算','mr.insight_up':'{cat} 比上月多 ¥{amt}','mr.insight_down':'{cat} 比上月少 ¥{amt} 🎉','mr.insight_first':'记录的第一个月！记下本月的消费吧','mr.sec_category':'分类','mr.sec_compare':'与上月对比','mr.cmp_total':'总支出','mr.cmp_eat':'外食','mr.cmp_food':'食品','mr.cmp_avg':'日均','mr.no_prev':'无上月数据','mr.sec_items':'商品分析','mr.top_items':'🛒 常买商品 TOP 3','mr.buy_n':'{n}次 · 均价 ¥{avg}','mr.basket':'📊 我的物价','mr.basket_peek':'较上月单价变动','mr.no_basket':'没有可比较的上月商品','mr.sec_stores':'常去店铺','mr.top_super':'🛒 常去超市 TOP 3','mr.top_dining':'🍽 常去餐厅 TOP 3','mr.visit_n':'{n}次 · 均 ¥{avg}','mr.new_stores':'新店铺','mr.regular':'常客比例','mr.none':'无','mr.sec_points':'支出要点','mr.top_day':'🔥 最高支出日','mr.repurchase':'🔁 常复购','mr.cycle':'平均每 {n} 天','mr.sec_weekday':'📅 各星期支出','mr.most_dow':'🔥 {dow} 花得最多','mr.sec_forecast':'预测','mr.forecast':'按此节奏月末约 ¥{amt}','mr.forecast_ok':'预计在预算内 ✅','mr.forecast_over':'预计超出预算 ⚠️','mr.sec_community':'比价 · 推荐','mr.community_soon':'🔜 即将推出\n社区价格数据积累后，将展示同款最低价、性价比与推荐','mr.share':'📤 分享本月报告','home.report_sub':'常去·物价·省钱·习惯一目了然',
     'radar.empty_title':'还没有数据','radar.empty_sub':'拍摄票据后将自动追踪',
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'cal.day_detail':'{y}/{m}/{d} 支出明细','cal.tap_go':'点击查看 ›',
@@ -17591,7 +17780,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v189';
+window.__APP_VERSION__ = 'v190';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
