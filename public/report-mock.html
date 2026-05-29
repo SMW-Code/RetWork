@@ -172,11 +172,14 @@
         <div class="irow"><div class="l"><div class="ic">🥉</div><div><div class="nm">식빵</div><div class="sub">5회 구매 · 평균 ¥168</div></div></div><div class="pr">¥840</div></div>
       </div>
     </div>
-    <div class="card">
-      <div class="ctitle">📊 내 장바구니 물가</div>
-      <div class="irow"><div class="l"><div class="ic">🥚</div><div><div class="nm">계란 10구</div><div class="sub">¥198 → ¥248</div></div></div><span class="pill" style="background:var(--redbg);color:var(--red);">▲ +25%</span></div>
-      <div class="irow"><div class="l"><div class="ic">🍙</div><div><div class="nm">즉석밥</div><div class="sub">¥158 → ¥138</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">▼ −13%</span></div>
-      <div class="irow"><div class="l"><div class="ic">🥛</div><div><div class="nm">우유 1L</div><div class="sub">¥208 → ¥208</div></div></div><span class="pill" style="background:var(--bg);color:var(--t3);">— 유지</span></div>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">📊 내 장바구니 물가</span><span class="caret">▼</span></div>
+      <div class="accpeek">🥚 계란 ▲25% · 🍙 즉석밥 ▼13% …</div>
+      <div class="accbody">
+        <div class="irow"><div class="l"><div class="ic">🥚</div><div><div class="nm">계란 10구</div><div class="sub">¥198 → ¥248</div></div></div><span class="pill" style="background:var(--redbg);color:var(--red);">▲ +25%</span></div>
+        <div class="irow"><div class="l"><div class="ic">🍙</div><div><div class="nm">즉석밥</div><div class="sub">¥158 → ¥138</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">▼ −13%</span></div>
+        <div class="irow"><div class="l"><div class="ic">🥛</div><div><div class="nm">우유 1L</div><div class="sub">¥208 → ¥208</div></div></div><span class="pill" style="background:var(--bg);color:var(--t3);">— 유지</span></div>
+      </div>
     </div>
 
     <!-- ★ 단골 가게 -->
@@ -217,30 +220,39 @@
       <div class="catrow"><div class="cathead"><span class="nm">🛒 슈퍼</span><span class="vl">¥10,800 <small>47%</small></span></div><div class="track"><div style="width:47%;background:#5B21B6;"></div></div></div>
       <div class="catrow"><div class="cathead"><span class="nm">💊 드럭스토어</span><span class="vl">¥3,000 <small>13%</small></span></div><div class="track"><div style="width:13%;background:#16A87A;"></div></div></div>
     </div>
-    <div class="card">
-      <div class="ctitle">⏰ 습관 포착</div>
-      <div class="irow"><div class="l"><div class="ic">🌙</div><div><div class="nm">심야 편의점</div><div class="sub">22시 이후 지출</div></div></div><div class="pr">¥4,000</div></div>
-      <div class="irow"><div class="l"><div class="ic">🔁</div><div><div class="nm">우유 재구매</div><div class="sub">평균 4일마다 구매</div></div></div><span class="pill" style="background:var(--p-light);color:var(--p);">규칙적</span></div>
-      <div class="irow"><div class="l"><div class="ic">⚠️</div><div><div class="nm">충동구매 의심</div><div class="sub">처음 간 ドンキ에서 단발 고액</div></div></div><div class="pr">¥6,800</div></div>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">⏰ 습관 포착</span><span class="caret">▼</span></div>
+      <div class="accpeek">🌙 심야 편의점 · 🔁 재구매 주기 · ⚠️ 충동구매 …</div>
+      <div class="accbody">
+        <div class="irow"><div class="l"><div class="ic">🌙</div><div><div class="nm">심야 편의점</div><div class="sub">22시 이후 지출</div></div></div><div class="pr">¥4,000</div></div>
+        <div class="irow"><div class="l"><div class="ic">🔁</div><div><div class="nm">우유 재구매</div><div class="sub">평균 4일마다 구매</div></div></div><span class="pill" style="background:var(--p-light);color:var(--p);">규칙적</span></div>
+        <div class="irow"><div class="l"><div class="ic">⚠️</div><div><div class="nm">충동구매 의심</div><div class="sub">처음 간 ドンキ에서 단발 고액</div></div></div><div class="pr">¥6,800</div></div>
+      </div>
     </div>
 
     <!-- ★ 비교/가격 (수익+바이럴) -->
     <div class="sectlbl">가격 비교 · 추천</div>
-    <div class="card">
-      <div class="ctitle">💰 같은 메뉴, 더 싼 곳</div>
-      <div class="irow">
-        <div class="l"><div class="ic">🍜</div><div><div class="nm">라멘</div><div class="sub">내 단골 ¥850 · 100m 거리 ¥780</div></div></div>
-        <span class="pill" style="background:var(--greenbg);color:var(--green);">−¥70</span>
-      </div>
-      <div class="irow">
-        <div class="l"><div class="ic">☕</div><div><div class="nm">아메리카노</div><div class="sub">내 단골 ¥420 · 근처 ¥350</div></div></div>
-        <span class="pill" style="background:var(--greenbg);color:var(--green);">−¥70</span>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">💰 같은 메뉴, 더 싼 곳</span><span class="caret">▼</span></div>
+      <div class="accpeek">🍜 라멘 −¥70 · ☕ 아메리카노 −¥70 …</div>
+      <div class="accbody">
+        <div class="irow">
+          <div class="l"><div class="ic">🍜</div><div><div class="nm">라멘</div><div class="sub">내 단골 ¥850 · 100m 거리 ¥780</div></div></div>
+          <span class="pill" style="background:var(--greenbg);color:var(--green);">−¥70</span>
+        </div>
+        <div class="irow">
+          <div class="l"><div class="ic">☕</div><div><div class="nm">아메리카노</div><div class="sub">내 단골 ¥420 · 근처 ¥350</div></div></div>
+          <span class="pill" style="background:var(--greenbg);color:var(--green);">−¥70</span>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="ctitle">⭐ 내 단골 가성비 점수</div>
-      <div class="irow"><div class="l"><div class="ic">🍱</div><div><div class="nm">オーケー 東雲店</div><div class="sub">주변 평균보다 8% 저렴</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">가성비 👍</span></div>
-      <div class="irow"><div class="l"><div class="ic">🍜</div><div><div class="nm">○○ラーメン</div><div class="sub">주변 평균보다 12% 비쌈</div></div></div><span class="pill" style="background:var(--redbg);color:var(--red);">다소 비쌈</span></div>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">⭐ 내 단골 가성비 점수</span><span class="caret">▼</span></div>
+      <div class="accpeek">🍱 オーケー 8%↓ · 🍜 ○○ラーメン 12%↑ …</div>
+      <div class="accbody">
+        <div class="irow"><div class="l"><div class="ic">🍱</div><div><div class="nm">オーケー 東雲店</div><div class="sub">주변 평균보다 8% 저렴</div></div></div><span class="pill" style="background:var(--greenbg);color:var(--green);">가성비 👍</span></div>
+        <div class="irow"><div class="l"><div class="ic">🍜</div><div><div class="nm">○○ラーメン</div><div class="sub">주변 평균보다 12% 비쌈</div></div></div><span class="pill" style="background:var(--redbg);color:var(--red);">다소 비쌈</span></div>
+      </div>
     </div>
     <div class="card" style="background:var(--p-light);">
       <div class="ctitle" style="color:var(--p-dark);">✨ 당신 취향 신규 추천</div>
