@@ -7079,7 +7079,6 @@ function mrShare(){
 function _mrAcc(title, peek, body){
   return '<div class="card mracc" onclick="this.classList.toggle(\'open\')" style="cursor:pointer;margin-bottom:10px;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:13px;font-weight:800;">'+title+'</span><span class="mracc-caret" style="font-size:12px;color:var(--text-3);">▼</span></div>'
-    +'<div class="mracc-peek" style="font-size:11px;color:var(--text-3);margin-top:6px;">'+peek+'</div>'
     +'<div class="mracc-body" style="margin-top:6px;">'+body+'</div></div>';
 }
 function _mrLbl(txt){ return '<div style="font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.5px;margin:4px 2px 8px;">'+txt+'</div>'; }
@@ -17789,7 +17788,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v193';
+window.__APP_VERSION__ = 'v194';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
