@@ -3566,7 +3566,22 @@ var CAT_LABEL = (typeof Proxy === 'function')
 function _catLabel(c){ return CAT_LABEL[c] || ''; }
 
 // 지불 방법
-var PAY_ICON  = { cash:'💴', credit:'💳', ic:'🚃', qr:'📱', debit:'🏦' };
+// 결제수단 아이콘: 단색 라인(Lucide) SVG. currentColor 라 주변 색을 따름
+//  (배지=결제색 PAY_COLOR / 일반 행=var(--text-1)) — 이모지 멀티컬러 제거
+var _PAY_ICON_PATHS = {
+  cash:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+  credit:'<rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+  ic:'<rect width="16" height="16" x="4" y="3" rx="2"/><path d="M4 11h16"/><path d="M12 3v8"/><path d="m8 19-2 3"/><path d="m18 22-2-3"/><path d="M8 15h.01"/><path d="M16 15h.01"/>',
+  qr:'<rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/>',
+  debit:'<line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/>'
+};
+function _paySvgStr(p){
+  var d = _PAY_ICON_PATHS[p] || _PAY_ICON_PATHS.credit;
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:1.05em;height:1.05em;vertical-align:-0.16em;display:inline-block;">'+d+'</svg>';
+}
+var PAY_ICON = (typeof Proxy === 'function')
+  ? new Proxy({}, { get: function(target, prop){ return (typeof prop === 'string') ? _paySvgStr(prop) : undefined; } })
+  : (function(){ var o={}; Object.keys(_PAY_ICON_PATHS).forEach(function(k){ o[k]=_paySvgStr(k); }); return o; })();
 var _PAY_LABEL_KEYS = { cash:'pay.label.cash', credit:'pay.label.credit', ic:'pay.label.ic', qr:'pay.label.qr', debit:'pay.label.debit' };
 var PAY_LABEL = (typeof Proxy === 'function')
   ? new Proxy(_PAY_LABEL_KEYS, {
@@ -4117,8 +4132,17 @@ function ctStoreExchange(id, name, cost) {
 var _ctStoreCache = null; // 마지막 로드된 상품 캐시 (60초)
 var _ctStoreCacheAt = 0;
 
-var _CT_STORE_CAT_BG   = { gift:'#FFF3E0', food:'#FCE4EC', cafe:'#E8F5E9', other:'#F3E5F5' };
-var _CT_STORE_CAT_ICON = { gift:'🎁', food:'🍱', cafe:'☕', other:'📦' };
+// 치리스토어 상품 카테고리 아이콘: 단색 라인(Lucide) SVG, 무이미지 상품의 플레이스홀더
+var _CT_STORE_ICON_PATHS = {
+  gift:'<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+  food:'<path d="M3 2v7c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/>',
+  cafe:'<path d="M10 2v2"/><path d="M14 2v2"/><path d="M6 2v2"/><path d="M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1"/>',
+  other:'<path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"/><path d="M12 22V12"/><polyline points="3.29 7 12 12 20.71 7"/><path d="m7.5 4.27 9 5.15"/>'
+};
+function _ctStoreIconSvg(cat){
+  var d = _CT_STORE_ICON_PATHS[cat] || _CT_STORE_ICON_PATHS.other;
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:46px;height:46px;color:var(--text-3);">'+d+'</svg>';
+}
 var CT_STORE_PREVIEW = 6;        // 리워드 탭에서 미리보기 개수
 var CT_STORE_FULL_INITIAL = 12;  // 전체 페이지 최초 표시 개수 (상품 12 + 광고 1)
 var CT_STORE_PAGE    = 6;        // 전체 페이지에서 더보기 1회당 추가 개수
@@ -4127,11 +4151,10 @@ var _ctStoreFullShown = 0;       // 전체 페이지 현재 표시 상품 개수
 
 // 상품 1개 → 카드 HTML
 function _ctStoreCardHtml(it) {
-  var bg = _CT_STORE_CAT_BG[it.category] || _CT_STORE_CAT_BG.other;
-  var icon = _CT_STORE_CAT_ICON[it.category] || _CT_STORE_CAT_ICON.other;
+  var bg = 'rgba(130,130,150,.10)';
   var imgH = it.image_url
     ? '<img src="'+it.image_url+'" style="width:100%;height:100%;object-fit:cover;" alt="">'
-    : '<span style="font-size:44px;">'+icon+'</span>';
+    : _ctStoreIconSvg(it.category);
   var outOfStock = (it.stock === 0);
   var btnDisabled = outOfStock ? 'disabled style="opacity:.5;cursor:not-allowed;"' : '';
   var btnLabel = outOfStock ? t('rw.sold_out') : t('rw.exchange');
@@ -17855,7 +17878,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v204';
+window.__APP_VERSION__ = 'v205';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
