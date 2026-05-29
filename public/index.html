@@ -1522,7 +1522,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div id="ct-attendance-sub" style="font-size:11px;color:rgba(255,255,255,.45);">毎日チェックでチリをゲット</div>
         </div>
         <div id="ct-attendance-reward" style="text-align:right;flex-shrink:0;">
-          <div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+5</div>
+          <div style="font-size:18px;font-weight:900;color:var(--text-1);line-height:1;text-shadow:-1px -1px 0 var(--green),1px -1px 0 var(--green),-1px 1px 0 var(--green),1px 1px 0 var(--green);">+5</div>
           <div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;margin-top:2px;">チリ</div>
         </div>
       </div>
@@ -1541,7 +1541,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <div style="font-size:11px;color:var(--text-3);">動画を見てチリをゲット · <span id="ct-rad-remain-hdr">3</span>回/日</div>
           </div>
           <div style="text-align:right;flex-shrink:0;margin-right:6px;">
-            <div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+50</div>
+            <div style="font-size:18px;font-weight:900;color:var(--text-1);line-height:1;text-shadow:-1px -1px 0 var(--green),1px -1px 0 var(--green),-1px 1px 0 var(--green),1px 1px 0 var(--green);">+50</div>
             <div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;">チリ</div>
           </div>
           <div id="ct-rad-arrow" style="font-size:11px;color:var(--text-3);flex-shrink:0;">▼</div>
@@ -3989,7 +3989,7 @@ function ctUpdateAttendanceCard() {
   } else {
     card.style.opacity = '1';
     if (sub) sub.textContent = todayCount+'/3 回 ・ 連続 '+streak+'日';
-    if (rew) rew.innerHTML = '<div style="font-size:18px;font-weight:900;color:var(--gold);line-height:1;">+5</div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;margin-top:2px;">チリ</div>';
+    if (rew) rew.innerHTML = '<div style="font-size:18px;font-weight:900;color:var(--text-1);line-height:1;text-shadow:-1px -1px 0 var(--green),1px -1px 0 var(--green),-1px 1px 0 var(--green),1px 1px 0 var(--green);">+5</div><div style="font-size:10px;color:rgba(255,255,255,.4);font-weight:600;margin-top:2px;">チリ</div>';
   }
 }
 
@@ -17805,7 +17805,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v196';
+window.__APP_VERSION__ = 'v197';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
