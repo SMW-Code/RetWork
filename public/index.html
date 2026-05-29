@@ -3919,10 +3919,11 @@ var _ctStoreCacheAt = 0;
 
 var _CT_STORE_CAT_BG   = { gift:'#FFF3E0', food:'#FCE4EC', cafe:'#E8F5E9', other:'#F3E5F5' };
 var _CT_STORE_CAT_ICON = { gift:'🎁', food:'🍱', cafe:'☕', other:'📦' };
-var CT_STORE_PREVIEW = 6;      // 리워드 탭에서 미리보기 개수
-var CT_STORE_PAGE    = 6;      // 전체 페이지에서 더보기 1회당 추가 개수
-var CT_STORE_AD_EVERY = 6;     // N개 카드마다 광고 카드 1개 삽입
-var _ctStoreFullShown = 0;     // 전체 페이지 현재 표시 개수
+var CT_STORE_PREVIEW = 6;        // 리워드 탭에서 미리보기 개수
+var CT_STORE_FULL_INITIAL = 12;  // 전체 페이지 최초 표시 개수 (상품 12 + 광고 1)
+var CT_STORE_PAGE    = 6;        // 전체 페이지에서 더보기 1회당 추가 개수
+var CT_STORE_AD_EVERY = 6;       // N개 상품마다 광고 카드 1개 삽입
+var _ctStoreFullShown = 0;       // 전체 페이지 현재 표시 상품 개수
 
 // 상품 1개 → 카드 HTML
 function _ctStoreCardHtml(it) {
@@ -4002,7 +4003,7 @@ async function renderCtStore() {
 
 /* ── 치리스토어 전체 페이지 (더보기 → 풀스크린, 6개씩 증가) ── */
 function openCtStoreFull() {
-  _ctStoreFullShown = CT_STORE_PREVIEW;
+  _ctStoreFullShown = CT_STORE_FULL_INITIAL;
   var ov = document.getElementById('ov-ct-store-full');
   if (ov) ov.style.display = 'flex';
   renderCtStoreFull();
@@ -17139,7 +17140,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v184';
+window.__APP_VERSION__ = 'v185';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
