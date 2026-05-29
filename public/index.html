@@ -12377,15 +12377,15 @@ function _injectAd(containerId, slotKey) {
 /* 앱 진입 시 항시 광고 슬롯 초기화 */
 function _initAds() {
   var hasLocal = function(z){ return !!(_localAdsByZone[z] && _localAdsByZone[z].length); };
-  // 홈 배너: AdSense 활성 또는 로컬 홈 광고 있을 때만 노출
+  // 홈 상단 큰 배너(ad-slot-home)는 AdSense 전용. 로컬 'home' 광고는 영수증 리스트 안(ad-slot-home-list)에만 노출.
   var homeAd = document.getElementById('ad-slot-home');
-  if (homeAd) homeAd.style.display = (AD_CONFIG.enabled || hasLocal('home')) ? '' : 'none';
+  if (homeAd) homeAd.style.display = AD_CONFIG.enabled ? '' : 'none';
   // 가게 상세 플레이스홀더
   var storePh = document.getElementById('ad-placeholder-store');
   if (storePh) storePh.style.display = (AD_CONFIG.enabled || hasLocal('store')) ? '' : 'none';
   var storeSlot = document.getElementById('ad-slot-store');
   if (storeSlot) storeSlot.style.minHeight = (AD_CONFIG.enabled || hasLocal('store')) ? '100px' : '0';
-  _injectAd('ad-slot-home', 'home');
+  if (AD_CONFIG.enabled) _injectAd('ad-slot-home', 'home');
   // 치리맵 하단 배너 — 승인 후 실광고 주입 (미승인 시 플레이스홀더 유지)
   _injectAd('ct-map-ad', 'map');
 }
@@ -17591,7 +17591,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v188';
+window.__APP_VERSION__ = 'v189';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
