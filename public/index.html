@@ -6618,10 +6618,14 @@ function renderBars(type) {
       +'</div>';
   });
   document.getElementById('bars').innerHTML = html;
-  // 하이라이트 막대 기본 표시
+  // 하이라이트 막대 기본 표시 — 해당 막대에 지출이 있을 때만.
+  // 없으면 이전 기간 마커가 남지 않도록 숨김 (기간/월 변경 시 매번 재평가)
   if (hlIdx >= 0 && vals[hlIdx] > 0) {
     var hlEl = document.getElementById('bars').children[hlIdx];
     if (hlEl) showBarTip(hlEl, vals[hlIdx]);
+  } else {
+    var _tip = document.getElementById('bar-tip');
+    if (_tip) _tip.style.display = 'none';
   }
 }
 
@@ -17788,7 +17792,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v194';
+window.__APP_VERSION__ = 'v195';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
