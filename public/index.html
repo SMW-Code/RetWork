@@ -1313,6 +1313,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
   </div>
 
+  <!-- 지도 하단 광고 띠 (Google 표기를 가리지 않도록 지도 바깥, 탭바 위) -->
+  <div id="ct-map-ad" style="flex-shrink:0;display:flex;align-items:center;justify-content:center;min-height:56px;background:var(--surface);border-top:0.5px solid var(--border);overflow:hidden;">
+    <div id="ad-placeholder-map" style="display:flex;align-items:center;gap:6px;color:var(--text-3);font-size:11px;font-weight:600;">
+      <span style="font-size:15px;">📢</span><span data-i18n="ad.label">広告</span>
+    </div>
+  </div>
+
   <!-- 필터 바텀시트 -->
   <div id="ct-filter-sheet" style="display:none;position:absolute;bottom:0;left:0;right:0;
        background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;z-index:100;
@@ -12101,6 +12108,7 @@ var AD_CONFIG = {
     store:  'XXXXXXXXXX',  // 가게 상세 배너   (반응형)
     feed:   'XXXXXXXXXX',  // チリトーク 인피드 (반응형)
     reward: 'XXXXXXXXXX',  // リワード 광고시청 (반응형)
+    map:    'XXXXXXXXXX',  // 치리맵 하단 배너   (반응형)
   }
 };
 
@@ -12133,6 +12141,8 @@ function _initAds() {
   var storeSlot = document.getElementById('ad-slot-store');
   if (storeSlot) storeSlot.style.minHeight = AD_CONFIG.enabled ? '100px' : '0';
   _injectAd('ad-slot-home', 'home');
+  // 치리맵 하단 배너 — 승인 후 실광고 주입 (미승인 시 플레이스홀더 유지)
+  _injectAd('ct-map-ad', 'map');
 }
 
 /* ══════════════════════════════
@@ -17052,7 +17062,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v182';
+window.__APP_VERSION__ = 'v183';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
