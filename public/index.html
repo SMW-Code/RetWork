@@ -3532,11 +3532,16 @@ var _CAT_ICON_PATHS = {
   // square-parking
   park:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>'
 };
+// 흑/백 단색 (모드별): currentColor=var(--text-1) → 라이트=검정 / 다크=흰색, CSS 변수라 모드 전환 시 즉시 반영
 function _catSvgStr(cat){
   var p = _CAT_ICON_PATHS[cat] || _CAT_ICON_PATHS.other;
-  var col = (typeof CAT_COLOR !== 'undefined' && CAT_COLOR[cat]) ? CAT_COLOR[cat] : '#9E9E9E';
-  return '<svg viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.18em;display:inline-block;">'+p+'</svg>';
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.18em;display:inline-block;color:var(--text-1);">'+p+'</svg>';
 }
+// 지도 마커/InfoWindow 핀(data-URI SVG <text>)용 — SVG 문자열은 못 쓰므로 이모지 유지
+var CAT_EMOJI = {
+  food:'🛒', eat:'🍜', life:'🏠', med:'💊', cafe:'☕', shop:'👜', ent:'🎮', tra:'🚗',
+  travel:'✈️', fixed:'💳', hobby:'🎨', other:'📦', beauty:'💇', drink:'🍺', edu:'📚', fuel:'⛽', park:'🅿️'
+};
 var CAT_ICON = (typeof Proxy === 'function')
   ? new Proxy({}, { get: function(target, prop){ return (typeof prop === 'string') ? _catSvgStr(prop) : undefined; } })
   : (function(){ var o={}; Object.keys(_CAT_ICON_PATHS).forEach(function(k){ o[k]=_catSvgStr(k); }); return o; })();
@@ -5867,7 +5872,7 @@ function renderHome() {
         homeCardCnt++;
         var payBadge=r.pay?'<span style="font-size:10px;color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>':'';
         html+='<div class="receipt-row" onclick="goToHistoryEntry(\''+r.cat+'\',\''+r.id+'\')"'+(r.memo?' style="border:1.5px solid var(--green);"':'')+'>'
-          +'<div class="r-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
+          +'<div class="r-icon" style="background:rgba(130,130,150,.12);">'+CAT_ICON[r.cat]+'</div>'
           +'<div style="flex:1;min-width:0;">'
           +'<div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
           +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px;flex-wrap:wrap;">'
@@ -5967,7 +5972,7 @@ function renderHistory(cat) {
       histCardCnt++;
       html += '<div class="h-entry" id="he-'+r.id+'"'+(r.memo?' style="border:1.5px solid var(--green);"':'')+'>'
         +'<div class="h-head" onclick="toggleEntry(this)">'
-        +'<div class="h-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
+        +'<div class="h-icon" style="background:rgba(130,130,150,.12);">'+CAT_ICON[r.cat]+'</div>'
         +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
         +'<div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap;">'
         +'<span style="font-size:11px;color:var(--text-3);">'+CAT_LABEL[r.cat]+' · '+r.items.length+t('ocr.item_unit')+'</span>'
@@ -6509,7 +6514,7 @@ function buildCatDetailHtml(cat) {
     var parts = r.date.split('-');
     var dateStr = parts[1]+'/'+parts[2];
     html += '<div class="cat-acc-item" onclick="goToHistoryEntry(\''+r.cat+'\',\''+r.id+'\')">'
-      +'<div style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;background:'+(CAT_BG[r.cat]||'#eee')+';flex-shrink:0;">'+(CAT_ICON[r.cat]||'📦')+'</div>'
+      +'<div style="width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;background:rgba(130,130,150,.12);flex-shrink:0;">'+(CAT_ICON[r.cat]||'📦')+'</div>'
       +'<div style="flex:1;min-width:0;">'
       +'<div style="font-size:13px;font-weight:700;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+r.store+'</div>'
       +'<div style="font-size:10px;color:var(--text-3);margin-top:1px;">'+dateStr+' · '+t('home.item_count',{n:r.items.length})+'</div>'
@@ -6751,7 +6756,7 @@ function renderCatBreakdown() {
     var isSel = cat === _selectedReportCat;
     html += '<div class="cat-acc'+(isSel?' open':'')+'" id="cacc-'+cat+'">'
       +'<div class="cat-acc-head" onclick="selectReportCat(\''+cat+'\')">'
-      +'<div class="cat-icon" style="background:'+(CAT_BG[cat]||'#eee')+';">'+(CAT_ICON[cat]||'📦')+'</div>'
+      +'<div class="cat-icon" style="background:rgba(130,130,150,.12);">'+(CAT_ICON[cat]||'📦')+'</div>'
       +'<div class="cat-info">'
       +'<div class="cat-name" style="'+(isSel?'color:var(--green);font-weight:800;':'')+'">'+( CAT_LABEL[cat]||cat)+'</div>'
       +'<div class="cat-bar-bg"><div class="cat-bar-fill" style="width:'+pct+'%;background:'+(CAT_COLOR[cat]||'#ccc')+'"></div></div>'
@@ -7275,7 +7280,7 @@ function selectDay(y,m,d){
     entries.forEach(function(r){
       total+=r.total;
       html+='<div class="cal-entry" onclick="goToHistoryEntry(\''+r.cat+'\',\''+r.id+'\')">'
-        +'<div class="c-icon" style="background:'+CAT_BG[r.cat]+';">'+CAT_ICON[r.cat]+'</div>'
+        +'<div class="c-icon" style="background:rgba(130,130,150,.12);">'+CAT_ICON[r.cat]+'</div>'
         +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px;"><div style="width:6px;height:6px;border-radius:50%;background:'+CAT_COLOR[r.cat]+';"></div><span style="font-size:10px;font-weight:600;color:var(--text-3);">'+CAT_LABEL[r.cat]+'</span></div></div>'
         +'<div style="text-align:right;"><div style="font-size:14px;font-weight:800;">¥'+r.total.toLocaleString()+'</div>'
@@ -11512,7 +11517,7 @@ function buildStoreInfoContent(s, fullscreen) {
     return '<div style="position:relative;padding:14px 42px 14px 15px;min-width:170px;max-width:240px;">'
       + closeBtn
       + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">'
-      +   '<div style="width:32px;height:32px;border-radius:9px;background:'+(CAT_BG[s.cat]||'#eee')+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+catIcon+'</div>'
+      +   '<div style="width:32px;height:32px;border-radius:9px;background:rgba(130,130,150,.12);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">'+catIcon+'</div>'
       +   '<div style="font-size:14px;font-weight:800;color:var(--text-1);line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;">'+s.name+'</div>'
       + '</div>'
       + '<div style="display:flex;gap:10px;">'
@@ -11792,7 +11797,7 @@ function renderMapPins() {
   var storeCards = [];
   Object.values(stores).forEach(function(s) {
     if (s.lat && s.lng) {
-      var emoji = CAT_ICON[s.cat] || '📦';
+      var emoji = CAT_EMOJI[s.cat] || '📦';
       var _pinColor = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#16A87A';
       var svgPin = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
         '<svg xmlns="http://www.w3.org/2000/svg" width="44" height="56" viewBox="0 0 44 56">'
@@ -11813,7 +11818,7 @@ function renderMapPins() {
           if (_activeInfoWindow) { _activeInfoWindow.close(); _activeInfoWindow = null; }
           // 영수증 모드 — 치리 메뉴카드 모달 대신, 가계부 정보 InfoWindow + 해당 스토어 카드로 스크롤
           var avg = storeData.count > 0 ? Math.round(storeData.total / storeData.count) : 0;
-          var emoji = CAT_ICON[storeData.cat] || '🏪';
+          var emoji = CAT_EMOJI[storeData.cat] || '🏪';
           // 현재 테마 색 (CSS var 대신 직접 hex 추출 — Google Maps InfoWindow 내부에서 var() 미상속 가능성 대비)
           var _themeC = (THEMES[_currentTheme] && THEMES[_currentTheme].color) || '#16A87A';
           var content = '<div style="font-family:var(--font),sans-serif;min-width:220px;padding:14px 16px 16px;box-sizing:border-box;">'
@@ -17850,7 +17855,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v203';
+window.__APP_VERSION__ = 'v204';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
