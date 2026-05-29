@@ -91,6 +91,16 @@
 
   .sharebtn{width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);margin-top:2px;}
   .note{text-align:center;font-size:10px;color:var(--t3);padding:8px 0 0;}
+
+  /* 아코디언 카드 (랭킹 TOP3 등 — 기본 접힘) */
+  .acc .acchead{display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+  .acc .acchead .lft{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:800;}
+  .acc .acchead .caret{font-size:12px;color:var(--t3);transition:transform .25s;}
+  .acc .accpeek{font-size:11px;color:var(--t3);margin-top:6px;}
+  .acc .accbody{max-height:0;overflow:hidden;transition:max-height .3s ease;}
+  .acc.open .accbody{max-height:600px;}
+  .acc.open .acchead .caret{transform:rotate(180deg);}
+  .acc.open .accpeek{display:none;}
 </style>
 </head>
 <body>
@@ -153,11 +163,14 @@
 
     <!-- ⑤ 품목 인사이트 (차별화) -->
     <div class="sectlbl">품목 분석</div>
-    <div class="card">
-      <div class="ctitle">🛒 자주 산 품목 TOP</div>
-      <div class="irow"><div class="l"><div class="ic">🥛</div><div><div class="nm">우유 1L</div><div class="sub">8회 구매 · 평균 ¥208</div></div></div><div class="pr">¥1,664</div></div>
-      <div class="irow"><div class="l"><div class="ic">🍞</div><div><div class="nm">식빵</div><div class="sub">5회 구매 · 평균 ¥168</div></div></div><div class="pr">¥840</div></div>
-      <div class="irow"><div class="l"><div class="ic">🥚</div><div><div class="nm">계란 10구</div><div class="sub">4회 구매 · 평균 ¥223</div></div></div><div class="pr">¥892</div></div>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">🛒 자주 산 품목 TOP 3</span><span class="caret">▼</span></div>
+      <div class="accpeek">🥛 우유 · 🍞 식빵 · 🥚 계란 …</div>
+      <div class="accbody">
+        <div class="irow"><div class="l"><div class="ic">🥇</div><div><div class="nm">우유 1L</div><div class="sub">8회 구매 · 평균 ¥208</div></div></div><div class="pr">¥1,664</div></div>
+        <div class="irow"><div class="l"><div class="ic">🥈</div><div><div class="nm">계란 10구</div><div class="sub">4회 구매 · 평균 ¥223</div></div></div><div class="pr">¥892</div></div>
+        <div class="irow"><div class="l"><div class="ic">🥉</div><div><div class="nm">식빵</div><div class="sub">5회 구매 · 평균 ¥168</div></div></div><div class="pr">¥840</div></div>
+      </div>
     </div>
     <div class="card">
       <div class="ctitle">📊 내 장바구니 물가</div>
@@ -168,20 +181,26 @@
 
     <!-- ★ 단골 가게 -->
     <div class="sectlbl">단골 가게</div>
-    <div class="card">
-      <div class="ctitle">🛒 자주 가는 슈퍼 TOP 3</div>
-      <div class="irow"><div class="l"><div class="ic">🥇</div><div><div class="nm">オーケー 東雲店</div><div class="sub">8회 방문 · 평균 ¥3,100</div></div></div><div class="pr">¥24,800</div></div>
-      <div class="irow"><div class="l"><div class="ic">🥈</div><div><div class="nm">業務スーパー</div><div class="sub">3회 방문 · 평균 ¥2,400</div></div></div><div class="pr">¥7,200</div></div>
-      <div class="irow"><div class="l"><div class="ic">🥉</div><div><div class="nm">ライフ 神保町</div><div class="sub">2회 방문 · 평균 ¥1,900</div></div></div><div class="pr">¥3,800</div></div>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">🛒 자주 가는 슈퍼 TOP 3</span><span class="caret">▼</span></div>
+      <div class="accpeek">🥇 オーケー 東雲店 (8회) …</div>
+      <div class="accbody">
+        <div class="irow"><div class="l"><div class="ic">🥇</div><div><div class="nm">オーケー 東雲店</div><div class="sub">8회 방문 · 평균 ¥3,100</div></div></div><div class="pr">¥24,800</div></div>
+        <div class="irow"><div class="l"><div class="ic">🥈</div><div><div class="nm">業務スーパー</div><div class="sub">3회 방문 · 평균 ¥2,400</div></div></div><div class="pr">¥7,200</div></div>
+        <div class="irow"><div class="l"><div class="ic">🥉</div><div><div class="nm">ライフ 神保町</div><div class="sub">2회 방문 · 평균 ¥1,900</div></div></div><div class="pr">¥3,800</div></div>
+      </div>
     </div>
-    <div class="card">
-      <div class="ctitle">🍽 자주 가는 식당 TOP 3</div>
-      <div class="irow"><div class="l"><div class="ic">🥇</div><div><div class="nm">浅草割烹天とよ</div><div class="sub">4회 방문 · 평균 ¥4,180</div></div></div><div class="pr">¥16,720</div></div>
-      <div class="irow"><div class="l"><div class="ic">🥈</div><div><div class="nm">スターバックス</div><div class="sub">6회 방문 · 평균 ¥620</div></div></div><div class="pr">¥3,720</div></div>
-      <div class="irow"><div class="l"><div class="ic">🥉</div><div><div class="nm">鳥貴族</div><div class="sub">2회 방문 · 평균 ¥3,500</div></div></div><div class="pr">¥7,000</div></div>
-      <div style="display:flex;gap:8px;margin-top:12px;">
-        <div class="cmp" style="flex:1;"><div class="col"><div class="h">새로 간 가게</div><div class="v">4곳</div></div></div>
-        <div class="cmp" style="flex:1;"><div class="col"><div class="h">단골 비율</div><div class="v">70%</div></div></div>
+    <div class="card acc" onclick="this.classList.toggle('open')">
+      <div class="acchead"><span class="lft">🍽 자주 가는 식당 TOP 3</span><span class="caret">▼</span></div>
+      <div class="accpeek">🥇 浅草割烹天とよ (4회) …</div>
+      <div class="accbody">
+        <div class="irow"><div class="l"><div class="ic">🥇</div><div><div class="nm">浅草割烹天とよ</div><div class="sub">4회 방문 · 평균 ¥4,180</div></div></div><div class="pr">¥16,720</div></div>
+        <div class="irow"><div class="l"><div class="ic">🥈</div><div><div class="nm">スターバックス</div><div class="sub">6회 방문 · 평균 ¥620</div></div></div><div class="pr">¥3,720</div></div>
+        <div class="irow"><div class="l"><div class="ic">🥉</div><div><div class="nm">鳥貴族</div><div class="sub">2회 방문 · 평균 ¥3,500</div></div></div><div class="pr">¥7,000</div></div>
+        <div style="display:flex;gap:8px;margin-top:12px;">
+          <div class="cmp" style="flex:1;"><div class="col"><div class="h">새로 간 가게</div><div class="v">4곳</div></div></div>
+          <div class="cmp" style="flex:1;"><div class="col"><div class="h">단골 비율</div><div class="v">70%</div></div></div>
+        </div>
       </div>
     </div>
 
