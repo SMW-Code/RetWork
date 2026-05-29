@@ -1632,6 +1632,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ── 치리스토어 전체 페이지 (더보기 → 풀스크린) ── -->
+<div id="ov-ct-store-full" style="display:none;position:absolute;inset:0;z-index:360;flex-direction:column;background:var(--bg);">
+  <div style="background:var(--surface);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-bottom:.5px solid var(--border);">
+    <button onclick="closeCtStoreFull()" style="background:var(--bg-2);border:none;border-radius:10px;width:34px;height:34px;font-size:16px;color:var(--text-2);cursor:pointer;flex-shrink:0;">←</button>
+    <div style="flex:1;font-size:16px;font-weight:900;color:var(--text-1);" data-i18n="rw.store_title">🛍 チリストア</div>
+    <div style="background:var(--gold-light);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:var(--gold-dark);">✨ <span id="ct-store-full-coin">0</span></div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:16px;">
+    <div id="ct-store-full-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"></div>
+    <button id="ct-store-full-more" onclick="ctStoreFullMore()" style="display:none;margin-top:14px;width:100%;padding:14px;border-radius:14px;border:1px solid var(--gold);background:var(--gold-light);color:var(--gold-dark);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="rw.see_more">もっと見る</button>
+    <div style="height:20px;"></div>
+  </div>
+</div>
+
 <!-- チリつも 설정 화면 -->
 
 <!-- チリつも 글쓰기 오버레이 -->
@@ -3459,7 +3473,7 @@ function ctSwitchTab(name) {
 
 function ctUpdateCoinDisplay() {
   var bal = _ctCoinBalance;
-  ['ct-coin-balance','ct-coin-balance2','ct-coin-balance3','sp-coin-balance','ct-store-coin'].forEach(function(id) {
+  ['ct-coin-balance','ct-coin-balance2','ct-coin-balance3','sp-coin-balance','ct-store-coin','ct-store-full-coin'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.textContent = bal;
   });
@@ -3903,74 +3917,127 @@ function ctStoreExchange(id, name, cost) {
 var _ctStoreCache = null; // 마지막 로드된 상품 캐시 (60초)
 var _ctStoreCacheAt = 0;
 
+var _CT_STORE_CAT_BG   = { gift:'#FFF3E0', food:'#FCE4EC', cafe:'#E8F5E9', other:'#F3E5F5' };
+var _CT_STORE_CAT_ICON = { gift:'🎁', food:'🍱', cafe:'☕', other:'📦' };
+var CT_STORE_PREVIEW = 6;      // 리워드 탭에서 미리보기 개수
+var CT_STORE_PAGE    = 6;      // 전체 페이지에서 더보기 1회당 추가 개수
+var CT_STORE_AD_EVERY = 6;     // N개 카드마다 광고 카드 1개 삽입
+var _ctStoreFullShown = 0;     // 전체 페이지 현재 표시 개수
+
+// 상품 1개 → 카드 HTML
+function _ctStoreCardHtml(it) {
+  var bg = _CT_STORE_CAT_BG[it.category] || _CT_STORE_CAT_BG.other;
+  var icon = _CT_STORE_CAT_ICON[it.category] || _CT_STORE_CAT_ICON.other;
+  var imgH = it.image_url
+    ? '<img src="'+it.image_url+'" style="width:100%;height:100%;object-fit:cover;" alt="">'
+    : '<span style="font-size:44px;">'+icon+'</span>';
+  var outOfStock = (it.stock === 0);
+  var btnDisabled = outOfStock ? 'disabled style="opacity:.5;cursor:not-allowed;"' : '';
+  var btnLabel = outOfStock ? t('rw.sold_out') : t('rw.exchange');
+  var stockBadge = (it.stock > 0 && it.stock <= 5)
+    ? '<div style="position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;">'+t('rw.stock_left',{n:it.stock})+'</div>'
+    : '';
+  var descH = it.description ? '<div class="cs-price">'+_esc(it.description)+'</div>' : '';
+  return '<div class="cs-card" style="position:relative;">'
+    + stockBadge
+    + '<div class="cs-img" style="background:'+bg+';overflow:hidden;">'+imgH+'</div>'
+    + '<div class="cs-info">'
+    +   '<div class="cs-name">'+_esc(it.name)+'</div>'
+    +   descH
+    +   '<div class="cs-coin-row"><span class="cs-coin">✨ '+it.cost_chiri.toLocaleString()+'</span></div>'
+    +   '<button onclick="ctStoreExchangeDB(\''+it.id+'\')" class="cs-btn" '+btnDisabled+'>'+btnLabel+'</button>'
+    + '</div>'
+    + '</div>';
+}
+
+// 리워드 카드 사이즈의 중간 광고 카드 (AdSense 승인 후 _injectAd 로 교체 가능)
+function _ctStoreAdCardHtml(idx) {
+  return '<div class="cs-card" id="ct-store-ad-'+idx+'" style="display:flex;align-items:center;justify-content:center;min-height:150px;background:var(--bg-2);border:1px dashed var(--border-mid);">'
+    + '<div id="ad-placeholder-store-'+idx+'" style="display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text-3);font-size:11px;font-weight:700;">'
+    +   '<span style="font-size:22px;">📢</span><span data-i18n="rw.ad">'+t('rw.ad')+'</span>'
+    + '</div></div>';
+}
+
+async function _ctStoreLoadItems() {
+  var now = Date.now();
+  if (_ctStoreCache && (now - _ctStoreCacheAt < 60000)) return _ctStoreCache;
+  var res = await _sb.from('store_items')
+    .select('id,name,description,image_url,cost_chiri,stock,category,is_active,sort_order')
+    .eq('is_active', true)
+    .order('sort_order', { ascending:true })
+    .order('created_at', { ascending:false });
+  if (res.error) throw res.error;
+  _ctStoreCache = res.data || [];
+  _ctStoreCacheAt = now;
+  return _ctStoreCache;
+}
+
 async function renderCtStore() {
   var wrap = document.getElementById('ct-store-items');
   if (!wrap) return;
-  if (!_sb) {
-    wrap.innerHTML = '<div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--text-3);">로그인 후 이용 가능</div>';
-    return;
-  }
-  // 60초 이내 캐시 사용
-  var now = Date.now();
+  if (!_sb) { wrap.innerHTML = '<div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--text-3);">'+t('rw.no_items')+'</div>'; return; }
   var items;
-  if (_ctStoreCache && (now - _ctStoreCacheAt < 60000)) {
-    items = _ctStoreCache;
-  } else {
-    var res = await _sb.from('store_items')
-      .select('id,name,description,image_url,cost_chiri,stock,category,is_active,sort_order')
-      .eq('is_active', true)
-      .order('sort_order', { ascending:true })
-      .order('created_at', { ascending:false });
-    if (res.error) {
-      wrap.innerHTML = '<div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--red);">로딩 실패: '+res.error.message+'</div>';
-      return;
+  try { items = await _ctStoreLoadItems(); }
+  catch(e) { wrap.innerHTML = '<div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--red);">'+(e.message||'error')+'</div>'; return; }
+  if (items.length === 0) { wrap.innerHTML = '<div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--text-3);">'+t('rw.no_items')+'</div>'; return; }
+  // 미리보기 6개만
+  var html = items.slice(0, CT_STORE_PREVIEW).map(_ctStoreCardHtml).join('');
+  wrap.innerHTML = html;
+  // 6개 초과 시 "더보기" 버튼 (그리드 전체 폭)
+  var moreBtn = document.getElementById('ct-store-more-btn');
+  if (items.length > CT_STORE_PREVIEW) {
+    if (!moreBtn) {
+      moreBtn = document.createElement('button');
+      moreBtn.id = 'ct-store-more-btn';
+      moreBtn.onclick = openCtStoreFull;
+      moreBtn.style.cssText = 'margin-top:12px;width:100%;padding:13px;border-radius:14px;border:1px solid var(--gold);background:var(--gold-light);color:var(--gold-dark);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);';
+      wrap.parentNode.appendChild(moreBtn);
     }
-    items = res.data || [];
-    _ctStoreCache = items;
-    _ctStoreCacheAt = now;
+    moreBtn.textContent = t('rw.see_more') + ' (' + items.length + ') ›';
+    moreBtn.style.display = '';
+  } else if (moreBtn) {
+    moreBtn.style.display = 'none';
   }
-  if (items.length === 0) {
-    wrap.innerHTML = '<div style="grid-column:1 / -1;text-align:center;padding:24px;font-size:12px;color:var(--text-3);">등록된 상품이 없어요</div>';
-    return;
+}
+
+/* ── 치리스토어 전체 페이지 (더보기 → 풀스크린, 6개씩 증가) ── */
+function openCtStoreFull() {
+  _ctStoreFullShown = CT_STORE_PREVIEW;
+  var ov = document.getElementById('ov-ct-store-full');
+  if (ov) ov.style.display = 'flex';
+  renderCtStoreFull();
+}
+function closeCtStoreFull() {
+  var ov = document.getElementById('ov-ct-store-full');
+  if (ov) ov.style.display = 'none';
+}
+function ctStoreFullMore() {
+  _ctStoreFullShown += CT_STORE_PAGE;
+  renderCtStoreFull();
+}
+function renderCtStoreFull() {
+  var grid = document.getElementById('ct-store-full-grid');
+  if (!grid) return;
+  var items = _ctStoreCache || [];
+  var shown = Math.min(_ctStoreFullShown, items.length);
+  var html = '';
+  for (var i = 0; i < shown; i++) {
+    html += _ctStoreCardHtml(items[i]);
+    // N개마다 광고 카드 1개 삽입 (마지막 카드 뒤에는 안 넣음)
+    if ((i + 1) % CT_STORE_AD_EVERY === 0 && (i + 1) < shown) {
+      html += _ctStoreAdCardHtml(i);
+    }
   }
-  var CAT_BG = {
-    gift:  '#FFF3E0',
-    food:  '#FCE4EC',
-    cafe:  '#E8F5E9',
-    other: '#F3E5F5'
-  };
-  var CAT_ICON = {
-    gift:  '🎁',
-    food:  '🍱',
-    cafe:  '☕',
-    other: '📦'
-  };
-  wrap.innerHTML = items.map(function(it) {
-    var bg = CAT_BG[it.category] || CAT_BG.other;
-    var icon = CAT_ICON[it.category] || CAT_ICON.other;
-    var imgH = it.image_url
-      ? '<img src="'+it.image_url+'" style="width:100%;height:100%;object-fit:cover;" alt="">'
-      : '<span style="font-size:44px;">'+icon+'</span>';
-    var outOfStock = (it.stock === 0);
-    var btnDisabled = outOfStock ? 'disabled style="opacity:.5;cursor:not-allowed;"' : '';
-    var btnLabel = outOfStock ? '품절' : '交換する';
-    var stockBadge = (it.stock > 0 && it.stock <= 5)
-      ? '<div style="position:absolute;top:6px;right:6px;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:8px;">残り'+it.stock+'</div>'
-      : '';
-    var descH = it.description
-      ? '<div class="cs-price">'+_esc(it.description)+'</div>'
-      : '';
-    return '<div class="cs-card" style="position:relative;">'
-      + stockBadge
-      + '<div class="cs-img" style="background:'+bg+';overflow:hidden;">'+imgH+'</div>'
-      + '<div class="cs-info">'
-      +   '<div class="cs-name">'+_esc(it.name)+'</div>'
-      +   descH
-      +   '<div class="cs-coin-row"><span class="cs-coin">✨ '+it.cost_chiri.toLocaleString()+'</span></div>'
-      +   '<button onclick="ctStoreExchangeDB(\''+it.id+'\')" class="cs-btn" '+btnDisabled+'>'+btnLabel+'</button>'
-      + '</div>'
-      + '</div>';
-  }).join('');
+  grid.innerHTML = html;
+  // 더보기 버튼 표시 여부
+  var moreBtn = document.getElementById('ct-store-full-more');
+  if (moreBtn) moreBtn.style.display = (shown < items.length) ? '' : 'none';
+  // 승인 시 광고 주입
+  if (typeof AD_CONFIG !== 'undefined' && AD_CONFIG.enabled) {
+    for (var j = CT_STORE_AD_EVERY - 1; j < shown; j += CT_STORE_AD_EVERY) {
+      _injectAd('ct-store-ad-' + j, 'store');
+    }
+  }
 }
 
 // DB 기반 교환 — 상품 정보를 매번 새로 확인 후 처리 (재고/가격 변경 대응)
@@ -3992,7 +4059,10 @@ async function ctStoreExchangeDB(itemId) {
   if (it.stock > 0) {
     await _sb.from('store_items').update({ stock: it.stock - 1 }).eq('id', it.id);
     _ctStoreCache = null; // 캐시 무효화 → 다음 로드 시 갱신
-    renderCtStore();
+    renderCtStore().then(function(){
+      var ov = document.getElementById('ov-ct-store-full');
+      if (ov && ov.style.display !== 'none') renderCtStoreFull();
+    });
   }
   showToast(t('toast.exchange_done', {name: it.name}));
 }
@@ -9663,6 +9733,7 @@ var I18N = {
     'rw.streak':'連続出席','rw.day':'日','rw.reward_3':'3日','rw.reward_7':'7日','rw.reward_15':'15日','rw.reward_30':'30日',
     'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 2,000チリ',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
+    'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
     'sd.menu_cards':'🍽️ メニューカード','sd.add_card':'メニュー<br>カード<br>追加',
     // 메뉴 상세 모달
@@ -9887,6 +9958,7 @@ var I18N = {
     'rw.streak':'연속 출석','rw.day':'일','rw.reward_3':'3일','rw.reward_7':'7일','rw.reward_15':'15일','rw.reward_30':'30일',
     'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 2,000치리',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
+    'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
     'sd.menu_cards':'🍽️ 메뉴 카드','sd.add_card':'메뉴<br>카드<br>추가',
     'md.title':'📋 메뉴 상세','md.rated_count':'{n}명 평가','md.comments_count':'💬 댓글 {n}개',
@@ -10106,6 +10178,7 @@ var I18N = {
     'rw.streak':'Streak','rw.day':'d','rw.reward_3':'3d','rw.reward_7':'7d','rw.reward_15':'15d','rw.reward_30':'30d',
     'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'2,000 chiri when a friend signs up',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
+    'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
     'sd.menu_cards':'🍽️ Menu Cards','sd.add_card':'Add<br>Menu<br>Card',
     'md.title':'📋 Menu Detail','md.rated_count':'{n} rated','md.comments_count':'💬 {n} comments',
@@ -10325,6 +10398,7 @@ var I18N = {
     'rw.streak':'连续签到','rw.day':'天','rw.reward_3':'3天','rw.reward_7':'7天','rw.reward_15':'15天','rw.reward_30':'30天',
     'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 2,000 积分',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
+    'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
     'sd.menu_cards':'🍽️ 菜单卡','sd.add_card':'添加<br>菜单<br>卡',
     'md.title':'📋 菜单详情','md.rated_count':'{n}人评价','md.comments_count':'💬 评论 {n}条',
@@ -12537,7 +12611,10 @@ function _setupRealtimeSubscriptions() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'store_items' }, function(payload) {
         console.log('[realtime] store_items', payload.eventType);
         _ctStoreCache = null;
-        if (typeof renderCtStore === 'function') renderCtStore();
+        if (typeof renderCtStore === 'function') renderCtStore().then(function(){
+          var ov = document.getElementById('ov-ct-store-full');
+          if (ov && ov.style.display !== 'none' && typeof renderCtStoreFull === 'function') renderCtStoreFull();
+        });
         var admOpen = document.getElementById('ov-admin-items');
         if (admOpen && admOpen.classList.contains('open') && typeof _loadAdminStoreItemList === 'function') {
           _loadAdminStoreItemList();
@@ -17062,7 +17139,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v183';
+window.__APP_VERSION__ = 'v184';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
