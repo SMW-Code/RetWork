@@ -12679,6 +12679,9 @@ function applyDarkMode(isDark, silent) {
       document.documentElement.style.setProperty('--green-light', t.color + '25');
       document.documentElement.style.setProperty('--green-mid',   t.color + '45');
       document.documentElement.style.setProperty('--gold-light',  t.color + '22');
+      // 다크모드: 칩/아이콘 텍스트로 쓰이는 gold-dark(=테마 dark) 는 너무 어두워 안 보임
+      //          → 밝은 파스텔 톤(mid)으로 올려 가독성 확보
+      document.documentElement.style.setProperty('--gold-dark',   t.mid);
     }
   } else {
     applyTheme(_currentTheme, true);
@@ -12699,13 +12702,14 @@ function applyTheme(key, silent) {
   var r = document.documentElement;
   r.style.setProperty('--green',       th.color);
   r.style.setProperty('--green-dark',  th.dark);
-  r.style.setProperty('--green-light', th.light);
-  r.style.setProperty('--green-mid',   th.mid);
+  r.style.setProperty('--green-light', _isDark ? (th.color + '25') : th.light);
+  r.style.setProperty('--green-mid',   _isDark ? (th.color + '45') : th.mid);
   r.style.setProperty('--shadow-green','0 6px 24px '+th.dark+'4D, 0 2px 8px '+th.dark+'26');
   // チリつも 테마도 동기화
   r.style.setProperty('--gold',        th.color);
-  r.style.setProperty('--gold-dark',   th.dark);
-  r.style.setProperty('--gold-light',  th.light);
+  // 다크모드에서는 gold-dark(=칩/아이콘 텍스트)를 밝은 mid 톤으로 (어두운 dark 톤은 안 보임)
+  r.style.setProperty('--gold-dark',   _isDark ? th.mid : th.dark);
+  r.style.setProperty('--gold-light',  _isDark ? (th.color + '22') : th.light);
   r.style.setProperty('--gold-shadow', '0 6px 24px '+th.dark+'4D, 0 2px 8px '+th.dark+'26');
   // 요약 카드 그라디언트
   document.querySelectorAll('.summary-card').forEach(function(el){ el.style.background = th.grad; });
@@ -17806,7 +17810,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v200';
+window.__APP_VERSION__ = 'v201';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
