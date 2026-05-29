@@ -3351,11 +3351,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="edit.pay_method">支払い方法</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;" id="edit-pay-select">
-        <div class="pay-chip-sel" data-pay="cash"   onclick="selectEditPay(this)" data-i18n="pay.cash2">💴 現金</div>
-        <div class="pay-chip-sel" data-pay="credit" onclick="selectEditPay(this)" data-i18n="pay.credit">💳 クレジット</div>
-        <div class="pay-chip-sel" data-pay="debit"  onclick="selectEditPay(this)" data-i18n="pay.debit">🏦 デビット</div>
-        <div class="pay-chip-sel" data-pay="ic"     onclick="selectEditPay(this)" data-i18n="pay.ic">🚃 IC카드</div>
-        <div class="pay-chip-sel" data-pay="qr"     onclick="selectEditPay(this)" data-i18n="pay.qr2">📱 QR決済</div>
+        <div class="pay-chip-sel" data-pay="cash"   onclick="selectEditPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="cash"></span><span data-i18n="pay.label.cash">現金</span></div>
+        <div class="pay-chip-sel" data-pay="credit" onclick="selectEditPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="credit"></span><span data-i18n="pay.label.credit">クレジットカード</span></div>
+        <div class="pay-chip-sel" data-pay="debit"  onclick="selectEditPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="debit"></span><span data-i18n="pay.label.debit">デビットカード</span></div>
+        <div class="pay-chip-sel" data-pay="ic"     onclick="selectEditPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="ic"></span><span data-i18n="pay.label.ic">交通系IC</span></div>
+        <div class="pay-chip-sel" data-pay="qr"     onclick="selectEditPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="qr"></span><span data-i18n="pay.label.qr">QR決済</span></div>
       </div>
     </div>
 
@@ -3407,11 +3407,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="edit.pay_method">支払い方法</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;" id="manual-pay-select">
-        <div class="pay-chip-sel" data-pay="cash"   onclick="selectManualPay(this)" data-i18n="pay.cash2">💴 現金</div>
-        <div class="pay-chip-sel" data-pay="credit" onclick="selectManualPay(this)" data-i18n="pay.credit">💳 クレジット</div>
-        <div class="pay-chip-sel" data-pay="debit"  onclick="selectManualPay(this)" data-i18n="pay.debit">🏦 デビット</div>
-        <div class="pay-chip-sel" data-pay="ic"     onclick="selectManualPay(this)" data-i18n="pay.ic">🚃 IC카드</div>
-        <div class="pay-chip-sel" data-pay="qr"     onclick="selectManualPay(this)" data-i18n="pay.qr2">📱 QR決済</div>
+        <div class="pay-chip-sel" data-pay="cash"   onclick="selectManualPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="cash"></span><span data-i18n="pay.label.cash">現金</span></div>
+        <div class="pay-chip-sel" data-pay="credit" onclick="selectManualPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="credit"></span><span data-i18n="pay.label.credit">クレジットカード</span></div>
+        <div class="pay-chip-sel" data-pay="debit"  onclick="selectManualPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="debit"></span><span data-i18n="pay.label.debit">デビットカード</span></div>
+        <div class="pay-chip-sel" data-pay="ic"     onclick="selectManualPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="ic"></span><span data-i18n="pay.label.ic">交通系IC</span></div>
+        <div class="pay-chip-sel" data-pay="qr"     onclick="selectManualPay(this)" style="display:inline-flex;align-items:center;gap:4px;"><span class="payi" data-payi="qr"></span><span data-i18n="pay.label.qr">QR決済</span></div>
       </div>
     </div>
 
@@ -6102,7 +6102,7 @@ function _selectCat(cat) {
   var icon   = isAll ? '' : CAT_ICON[cat] + ' ';
   var label  = isAll ? t('cat.all') : CAT_LABEL[cat];
   var btnEl  = document.getElementById('cat-wheel-btn');
-  document.getElementById('cat-wheel-label').textContent = icon + label;
+  document.getElementById('cat-wheel-label').innerHTML = icon + label;
   document.getElementById('cat-wheel-hint').textContent  = isAll ? t('catwheel.hint') : t('catwheel.filtering');
   if (btnEl) {
     btnEl.style.background = isAll ? 'var(--green-light)' : 'var(--green)';
@@ -6276,16 +6276,16 @@ function openEditReceipt(id) {
 
   // 카테고리 선택
   var cats = [
-    {k:'food',l:'🛒 식료품'},{k:'eat',l:'🍜 식사'},{k:'cafe',l:'☕ 카페'},
-    {k:'life',l:'🏠 생활'},{k:'med',l:'💊 의약품'},{k:'shop',l:'👜 쇼핑'},
-    {k:'ent',l:'🎮 오락'},{k:'tra',l:'🚗 교통'},{k:'travel',l:'✈️ 여행'},
-    {k:'fixed',l:'💳 고정비'},{k:'hobby',l:'🎨 취미'},{k:'beauty',l:'💇 미용'},
-    {k:'drink',l:'🍺 술·유흥'},{k:'edu',l:'📚 교육'},
-    {k:'fuel',l:'⛽ 주유'},{k:'park',l:'🅿️ 주차'},{k:'other',l:'📦 기타'}
+    {k:'food',l:'식료품'},{k:'eat',l:'식사'},{k:'cafe',l:'카페'},
+    {k:'life',l:'생활'},{k:'med',l:'의약품'},{k:'shop',l:'쇼핑'},
+    {k:'ent',l:'오락'},{k:'tra',l:'교통'},{k:'travel',l:'여행'},
+    {k:'fixed',l:'고정비'},{k:'hobby',l:'취미'},{k:'beauty',l:'미용'},
+    {k:'drink',l:'술·유흥'},{k:'edu',l:'교육'},
+    {k:'fuel',l:'주유'},{k:'park',l:'주차'},{k:'other',l:'기타'}
   ];
   var catHtml = '';
   cats.forEach(function(c){
-    catHtml += '<div class="cat-chip-sel'+(r.cat===c.k?' sel':'')+'" onclick="selectEditCat(this,\''+c.k+'\')">'+c.l+'</div>';
+    catHtml += '<div class="cat-chip-sel'+(r.cat===c.k?' sel':'')+'" onclick="selectEditCat(this,\''+c.k+'\')" style="display:inline-flex;align-items:center;gap:4px;">'+CAT_ICON[c.k]+'<span>'+c.l+'</span></div>';
   });
   document.getElementById('edit-cat-select').innerHTML = catHtml;
 
@@ -10902,6 +10902,13 @@ function t(key, params){
   }
   return s;
 }
+// 정적 결제수단 칩의 아이콘 스팬(.payi[data-payi])을 단색 라인 SVG로 채움
+function _paintPayChips(){
+  document.querySelectorAll('.payi[data-payi]').forEach(function(sp){
+    var p = sp.getAttribute('data-payi');
+    if (typeof _paySvgStr === 'function') sp.innerHTML = _paySvgStr(p);
+  });
+}
 function applyLang(lang){
   if (!I18N[lang]) lang = 'ja';
   _currentLang = lang;
@@ -10942,6 +10949,7 @@ function applyLang(lang){
   try { if (typeof renderBars === 'function') renderBars(typeof _reportPeriod !== 'undefined' ? _reportPeriod : 'week'); } catch(e){}
   try { if (typeof renderHome === 'function') renderHome(); } catch(e){}
   try { if (typeof _updateTodayLabel === 'function') _updateTodayLabel(); } catch(e){}
+  try { _paintPayChips(); } catch(e){}
 }
 /* ══════════════════════════════
    i18n CMS — Supabase 어드민 편집 가능한 번역 override 레이어
@@ -17878,7 +17886,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v205';
+window.__APP_VERSION__ = 'v206';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
