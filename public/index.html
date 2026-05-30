@@ -18033,7 +18033,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v212';
+window.__APP_VERSION__ = 'v213';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18042,6 +18042,81 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   쓸어내리기 새로고침 (Pull-To-Refresh)
+   - 스크롤 컨테이너가 맨 위(scrollTop=0)일 때 아래로 쓸어내리면 location.reload()
+   - 임계값 80px, 저항감 0.6, 편집모달/시트 안에서는 비활성
+   - 새로고침 시 SW 의 HTML network-first 전략으로 최신 버전 자동 적용
+══════════════════════════════════════════════════════════════ */
+(function(){
+  var startY=0, currentY=0, startX=0, pulling=false, armed=false;
+  var THRESHOLD = 80;
+  var RESIST = 0.55;
+  var indicator = null;
+
+  function _scrollableAt(el){
+    while (el && el.nodeType === 1 && el !== document.body){
+      var oy = getComputedStyle(el).overflowY;
+      if ((oy === 'auto' || oy === 'scroll') && el.scrollHeight > el.clientHeight) return el;
+      el = el.parentElement;
+    }
+    return null;
+  }
+  function _ind(){
+    if (indicator) return indicator;
+    indicator = document.createElement('div');
+    indicator.id = '_ptr_indicator';
+    indicator.style.cssText = 'position:fixed;top:0;left:50%;transform:translate(-50%,-130%);z-index:99999;background:var(--surface,#fff);border:1px solid var(--border,rgba(0,0,0,.08));border-top:none;border-radius:0 0 18px 18px;padding:10px 20px;font-size:12px;font-weight:800;color:var(--text-1,#1a1a1a);box-shadow:0 6px 20px rgba(0,0,0,.18);transition:transform .18s cubic-bezier(.32,.72,0,1);pointer-events:none;font-family:var(--font,sans-serif);white-space:nowrap;';
+    document.body.appendChild(indicator);
+    return indicator;
+  }
+  function _hide(){ if (indicator) indicator.style.transform = 'translate(-50%,-130%)'; }
+  function _reset(){ pulling=false; armed=false; _hide(); }
+
+  document.addEventListener('touchstart', function(e){
+    if (e.touches.length !== 1) { armed=false; return; }
+    // 편집/시트 모달 안에서는 실수로 발동되지 않게 비활성
+    if (e.target.closest && e.target.closest('.confirm-overlay,.bottom-sheet-overlay,#ov-edit,#ov-manual,#ov-scan')) { armed=false; return; }
+    var t = e.touches[0];
+    startY = currentY = t.clientY;
+    startX = t.clientX;
+    pulling = false;
+    var sc = _scrollableAt(e.target);
+    armed = !sc || sc.scrollTop <= 0;
+  }, { passive: true });
+
+  document.addEventListener('touchmove', function(e){
+    if (!armed) return;
+    var t = e.touches[0];
+    currentY = t.clientY;
+    var dy = currentY - startY;
+    var dx = Math.abs(t.clientX - startX);
+    if (dy <= 0 || dx > Math.abs(dy) * 0.6) return; // 위로 끌거나 옆으로면 무시
+    pulling = true;
+    var pull = Math.min(dy * RESIST, 130);
+    var ind = _ind();
+    var pct = Math.min(pull / THRESHOLD, 1);
+    ind.style.transform = 'translate(-50%, ' + (pct * 130 - 130) + '%)';
+    ind.textContent = pull >= THRESHOLD ? '↑ 놓으면 새로고침' : '↓ 더 내리세요';
+  }, { passive: true });
+
+  function _release(){
+    if (!pulling) { _reset(); return; }
+    var pull = (currentY - startY) * RESIST;
+    if (pull >= THRESHOLD){
+      var ind = _ind();
+      ind.textContent = '🔄 새로고침 중...';
+      ind.style.transform = 'translate(-50%, 0%)';
+      setTimeout(function(){ location.reload(); }, 180);
+    } else {
+      _hide();
+    }
+    pulling=false; armed=false;
+  }
+  document.addEventListener('touchend',    _release, { passive: true });
+  document.addEventListener('touchcancel', _reset,    { passive: true });
+})();
 </script>
 </body>
 </html>
