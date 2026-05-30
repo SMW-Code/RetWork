@@ -15,9 +15,14 @@ ALTER TABLE profiles
   ADD COLUMN IF NOT EXISTS referred_by   UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
 -- referral_code UNIQUE 제약 (이미 있어도 안전)
+-- duplicate_object(컬럼/타입 등) + duplicate_table(인덱스/제약 객체) 양쪽 다 캐치
 DO $$ BEGIN
   ALTER TABLE profiles ADD CONSTRAINT profiles_referral_code_key UNIQUE (referral_code);
-EXCEPTION WHEN duplicate_object THEN NULL; END $$;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+  WHEN duplicate_table  THEN NULL;
+  WHEN others           THEN RAISE NOTICE 'UNIQUE constraint skip: %', SQLERRM;
+END $$;
 
 -- 조회 인덱스
 CREATE INDEX IF NOT EXISTS idx_profiles_referral_code ON profiles(referral_code) WHERE referral_code IS NOT NULL;
