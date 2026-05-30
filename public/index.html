@@ -131,19 +131,17 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 /* ── 데스크탑: 폰 프레임 ── */
 .phone{width:390px;height:844px;background:var(--bg);border-radius:0;border:1px solid rgba(255,255,255,0.14);overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 30px 60px rgba(0,0,0,.55),0 8px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12);}
 
-/* ── 모바일: 전체 화면으로 전환 ──
-   position:fixed + inset:0 으로 visual viewport에 직접 고정 →
-   주소창 펼침/숨김에 따라 phone 자체가 정확히 visible area에 핏 → 탭바 안 가려짐 */
+/* ── 모바일: 전체 화면 ──
+   .phone 높이는 JS(_syncPhoneViewportHeight)가 window.visualViewport 기반으로 px 직접 세팅
+   → PWA standalone 에서도 시스템바 변화에 즉시 대응, 탭바 절대 안 가려짐
+   100svh 는 시스템바 펼쳤을 때 기준이라 폴백으로 적절 */
 @media screen and (max-width:500px){
   html,body{height:100%;height:100dvh;align-items:flex-start;}
   .phone{
-    position:fixed !important;
-    top:0 !important;
-    left:0 !important;
-    right:0 !important;
-    bottom:0 !important;
-    width:auto !important;
-    height:auto !important;
+    width:100% !important;
+    height:100vh !important;
+    height:100svh !important;  /* 시스템바 표시 기준 (보수적) */
+    height:100dvh !important;  /* 동적 — 최종 폴백 */
     border-radius:0 !important;
     border:none !important;
     box-shadow:none !important;
@@ -18132,7 +18130,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v221';
+window.__APP_VERSION__ = 'v222';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18141,6 +18139,33 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   모바일 viewport 높이 동기화 (PWA standalone 대응)
+   - window.visualViewport.height 를 .phone 에 px 로 직접 세팅
+   - resize/scroll/orientationchange 모두 hook → 시스템바 변화에 즉시 대응
+   - PWA 새로고침 직후 webview 가 잠시 잘못된 viewport 로 시작해도 보정
+══════════════════════════════════════════════════════════════ */
+(function(){
+  function _syncPhoneVH(){
+    if (window.matchMedia && !window.matchMedia('(max-width:500px)').matches) return;
+    var p = document.querySelector('.phone');
+    if (!p) return;
+    var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight || 0;
+    if (h > 0) p.style.height = h + 'px';
+  }
+  // 초기 + 짧은 딜레이로 두 번 (PWA 첫 페인트 직후 viewport 변동 캐치)
+  _syncPhoneVH();
+  setTimeout(_syncPhoneVH, 50);
+  setTimeout(_syncPhoneVH, 300);
+  window.addEventListener('load', _syncPhoneVH);
+  window.addEventListener('orientationchange', function(){ setTimeout(_syncPhoneVH, 100); });
+  window.addEventListener('resize', _syncPhoneVH);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', _syncPhoneVH);
+    window.visualViewport.addEventListener('scroll', _syncPhoneVH);
+  }
+})();
 
 /* ══════════════════════════════════════════════════════════════
    쓸어내리기 새로고침 (Pull-To-Refresh)
