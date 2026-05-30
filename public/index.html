@@ -7312,10 +7312,183 @@ function mrChangeMonth(dir){
   }
   renderMonthReport();
 }
+/* ──── 월별 리포트 공유 — 카드형 요약 이미지 + 링크 ────
+   1. 캔버스에 1080×1350 (인스타 스토리 비율) 카드 그리기
+   2. blob 으로 변환 → navigator.share({files:[...]}) 로 이미지+링크 같이 전송
+   3. files 미지원 환경: 이미지 다운로드 + 링크는 share/clipboard */
+function _mrRoundRect(x, X, Y, W, H, R){
+  x.beginPath();
+  x.moveTo(X+R, Y);
+  x.arcTo(X+W, Y, X+W, Y+H, R);
+  x.arcTo(X+W, Y+H, X, Y+H, R);
+  x.arcTo(X, Y+H, X, Y, R);
+  x.arcTo(X, Y, X+W, Y, R);
+  x.closePath();
+}
+function _mrBuildCardCanvas(){
+  try {
+    var y=_mrY, m=_mrM;
+    var key = y+'-'+String(m).padStart(2,'0');
+    var cur = (typeof DB!=='undefined'?DB:[]).filter(function(r){return r.date && r.date.indexOf(key)===0;});
+    if (!cur.length) { if(typeof showToast==='function') showToast('이번 달 데이터가 없어요'); return null; }
+
+    var total = cur.reduce(function(s,r){return s+(r.total||0);},0);
+    var count = cur.length;
+    var avg = Math.round(total/Math.max(count,1));
+
+    // 카테고리 합계 → top3
+    var catSums = {};
+    cur.forEach(function(r){ var k=r.cat||'other'; catSums[k]=(catSums[k]||0)+(r.total||0); });
+    var top3 = Object.keys(catSums).map(function(k){return {k:k,v:catSums[k]};})
+                     .sort(function(a,b){return b.v-a.v;}).slice(0,3);
+
+    var budget = parseInt(localStorage.getItem('receiptiq_budget')||'0',10);
+    var budgetPct = budget>0 ? Math.min(100, Math.round(total/budget*100)) : 0;
+
+    var root = getComputedStyle(document.documentElement);
+    var themeMain = (root.getPropertyValue('--green') || '#16A87A').trim();
+    var themeDark = (root.getPropertyValue('--green-dark') || '#0C6B52').trim();
+
+    var W=1080, H=1350;
+    var c = document.createElement('canvas');
+    c.width=W; c.height=H;
+    var x = c.getContext('2d');
+
+    // 배경 그라디언트
+    var g = x.createLinearGradient(0,0,W*.6,H);
+    g.addColorStop(0, themeMain);
+    g.addColorStop(1, themeDark);
+    x.fillStyle = g; x.fillRect(0,0,W,H);
+
+    // 장식 원 (살짝 비치는)
+    x.fillStyle = 'rgba(255,255,255,.06)';
+    x.beginPath(); x.arc(W-80, 80, 240, 0, Math.PI*2); x.fill();
+    x.beginPath(); x.arc(-60, H-180, 260, 0, Math.PI*2); x.fill();
+
+    var FONT='"DM Sans","Noto Sans JP","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+    var PX=80, cy=140;
+
+    // 브랜드
+    x.fillStyle = 'rgba(255,255,255,.75)';
+    x.font = '600 36px '+FONT;
+    x.fillText('RetWork', PX, cy);
+    cy += 60;
+
+    // 월 라벨
+    x.fillStyle = 'rgba(255,255,255,.85)';
+    x.font = '500 40px '+FONT;
+    x.fillText(y + '年 ' + m + '月 리포트', PX, cy);
+    cy += 100;
+
+    // 총 지출 (큰 숫자)
+    x.fillStyle = '#fff';
+    x.font = '900 130px '+FONT;
+    x.fillText('¥' + total.toLocaleString(), PX, cy);
+    cy += 60;
+
+    // 부가 정보
+    x.fillStyle = 'rgba(255,255,255,.78)';
+    x.font = '500 30px '+FONT;
+    x.fillText(count + '건 · 일 평균 ¥' + avg.toLocaleString(), PX, cy);
+    cy += 70;
+
+    // 구분선
+    x.strokeStyle = 'rgba(255,255,255,.22)'; x.lineWidth = 2;
+    x.beginPath(); x.moveTo(PX, cy); x.lineTo(W-PX, cy); x.stroke();
+    cy += 65;
+
+    // 카테고리 TOP 3
+    x.fillStyle = 'rgba(255,255,255,.7)';
+    x.font = '700 26px '+FONT;
+    x.fillText('TOP 카테고리', PX, cy);
+    cy += 55;
+
+    var CL = (typeof CAT_LABEL!=='undefined') ? CAT_LABEL : {};
+    top3.forEach(function(item, i){
+      x.fillStyle = '#fff';
+      x.font = '700 38px '+FONT;
+      x.fillText((i+1) + '.  ' + (CL[item.k] || item.k), PX, cy);
+      x.font = '800 38px '+FONT;
+      var amt = '¥' + item.v.toLocaleString();
+      var aw = x.measureText(amt).width;
+      x.fillText(amt, W-PX-aw, cy);
+      cy += 60;
+    });
+    cy += 30;
+
+    // 예산
+    if (budget > 0){
+      x.strokeStyle = 'rgba(255,255,255,.22)';
+      x.beginPath(); x.moveTo(PX, cy); x.lineTo(W-PX, cy); x.stroke();
+      cy += 55;
+      x.fillStyle = 'rgba(255,255,255,.7)';
+      x.font = '700 26px '+FONT;
+      x.fillText('이달 예산 ¥' + budget.toLocaleString(), PX, cy);
+      var pctTxt = budgetPct + '%';
+      x.fillStyle = '#fff'; x.font = '800 36px '+FONT;
+      var pw = x.measureText(pctTxt).width;
+      x.fillText(pctTxt, W-PX-pw, cy+3);
+      cy += 30;
+      // 프로그레스 바
+      var barW = W - PX*2, barH = 14;
+      x.fillStyle = 'rgba(255,255,255,.2)';
+      _mrRoundRect(x, PX, cy, barW, barH, 7); x.fill();
+      x.fillStyle = '#fff';
+      var fillW = barW * budgetPct/100;
+      if (fillW > 0) { _mrRoundRect(x, PX, cy, Math.max(fillW, barH), barH, 7); x.fill(); }
+      cy += 60;
+    }
+
+    // 푸터
+    x.fillStyle = 'rgba(255,255,255,.85)';
+    x.font = '700 32px '+FONT;
+    x.fillText('retwork.jp', PX, H-110);
+    x.fillStyle = 'rgba(255,255,255,.55)';
+    x.font = '500 24px '+FONT;
+    x.fillText('영수증으로 똑똑하게 가계부', PX, H-65);
+
+    return c;
+  } catch(e){ console.warn('[mrShare] card build failed:', e); return null; }
+}
+function _mrDownloadBlob(blob, filename){
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
+}
 function mrShare(){
-  var u='https://retwork.jp';
-  if(navigator.share) navigator.share({title:'RetWork', text:t('mr.title'), url:u}).catch(function(){});
-  else { try{ navigator.clipboard.writeText(u); }catch(e){} showToast('🔗 '+u); }
+  var url = 'https://retwork.jp';
+  var text = (typeof t==='function' ? t('mr.title') : '월별 리포트') + ' · ' + _mrY + '年 ' + _mrM + '月';
+  var canvas = _mrBuildCardCanvas();
+  // 카드 빌드 실패 → 기존처럼 링크만
+  if (!canvas){
+    if (navigator.share) navigator.share({title:'RetWork', text:text, url:url}).catch(function(){});
+    else { try{navigator.clipboard.writeText(url);}catch(e){} showToast('🔗 '+url); }
+    return;
+  }
+  canvas.toBlob(function(blob){
+    if (!blob){
+      if (navigator.share) navigator.share({title:'RetWork', text:text, url:url}).catch(function(){});
+      return;
+    }
+    var fname = 'retwork-report-'+_mrY+'-'+String(_mrM).padStart(2,'0')+'.jpg';
+    var file  = (typeof File==='function') ? new File([blob], fname, {type:'image/jpeg'}) : null;
+    var shareData = { title:'RetWork', text:text, url:url };
+    if (file) shareData.files = [file];
+    // Web Share Level 2 (파일 공유) 지원 시
+    if (file && navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
+      navigator.share(shareData).catch(function(err){
+        // 사용자 취소면 조용히, 진짜 에러면 다운로드 폴백
+        if (err && err.name !== 'AbortError') _mrDownloadBlob(blob, fname);
+      });
+    } else {
+      // 파일 공유 미지원 → 이미지는 갤러리에 저장, 링크/텍스트는 share 또는 클립보드
+      _mrDownloadBlob(blob, fname);
+      if (navigator.share) navigator.share({title:'RetWork', text:text, url:url}).catch(function(){});
+      else { try{navigator.clipboard.writeText(url);}catch(e){} showToast('🖼 이미지 저장됨 · 링크 복사'); }
+    }
+  }, 'image/jpeg', 0.92);
 }
 function mrToggleAcc(card){
   var body = card.querySelector('.mracc-body');
@@ -18130,7 +18303,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v225';
+window.__APP_VERSION__ = 'v226';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
