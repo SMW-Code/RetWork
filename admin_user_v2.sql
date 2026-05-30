@@ -57,8 +57,10 @@ BEGIN
   IF NOT COALESCE(v_is_admin, FALSE) THEN
     RAISE EXCEPTION 'admin only';
   END IF;
+  -- 실제 coin_transactions 컬럼: id, user_id, amount, type, description, created_at
+  -- RPC 출력은 kind/note 로 alias 해서 클라 코드는 그대로 동작
   RETURN QUERY
-    SELECT ct.id, ct.amount, ct.kind, ct.note, ct.created_at
+    SELECT ct.id, ct.amount, ct.type AS kind, ct.description AS note, ct.created_at
     FROM coin_transactions ct
     WHERE ct.user_id = p_user
       AND (p_from IS NULL OR ct.created_at >= p_from)

@@ -86,9 +86,9 @@ BEGIN
   -- 추천인에게 +200 치리 (profiles.coins 직접 증가)
   UPDATE profiles SET coins = COALESCE(coins, 0) + 200 WHERE id = v_referrer;
 
-  -- coin_transactions 이력 기록 (테이블이 존재할 경우만)
+  -- coin_transactions 이력 기록 (실제 컬럼: amount/type/description)
   BEGIN
-    INSERT INTO coin_transactions(user_id, amount, kind, note)
+    INSERT INTO coin_transactions(user_id, amount, type, description)
       VALUES (v_referrer, 200, 'referral', '추천 가입 보상');
   EXCEPTION WHEN undefined_table THEN NULL;
            WHEN undefined_column THEN NULL;
