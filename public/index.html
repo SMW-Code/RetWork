@@ -568,6 +568,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-photo-upload-btn{position:absolute;top:8px;right:8px;z-index:2;background:rgba(0,0,0,.7);color:#fff;border:none;border-radius:20px;padding:5px 11px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:5px;backdrop-filter:blur(6px);box-shadow:0 2px 8px rgba(0,0,0,.3);}
 .sd-photo-upload-btn:hover{background:rgba(0,0,0,.85);}
 .adm-period-btn{flex-shrink:0;padding:6px 12px;border:1px solid var(--border-mid);border-radius:16px;background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;}
+.adm-coinp-btn{padding:5px 10px;border:1px solid var(--border-mid);border-radius:14px;background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;}
+.adm-coinp-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
 
 /* ─ 어드민 / 가게 상세 모달의 카드 프레임 강화 ─
    --border 변수 자체를 더 진한 값으로 override → 모달 내 모든 카드에 적용 */
@@ -2553,6 +2555,43 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <button onclick="admSuspendUser(-1)" style="flex:1;min-width:80px;padding:9px;border:none;border-radius:8px;background:#7a0000;color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">🚫 영구</button>
           <button onclick="admUnsuspendUser()" style="flex:1;min-width:80px;padding:9px;border:none;border-radius:8px;background:var(--bg-2);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">▶️ 해제</button>
         </div>
+      </div>
+
+      <!-- 추천(레퍼럴) 정보 -->
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">🎁 추천 정보</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div>
+            <div style="font-size:10px;color:var(--text-3);">레퍼럴 코드</div>
+            <div id="adm-user-ref-code" style="font-size:14px;font-weight:900;color:var(--gold-dark);font-family:monospace;letter-spacing:.5px;">—</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:10px;color:var(--text-3);">초대된 가입자</div>
+            <div id="adm-user-ref-count" style="font-size:18px;font-weight:900;color:var(--green);">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 치리 내역 (기간 필터) -->
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);">✨ 치리 내역</div>
+          <span id="adm-user-coin-sum" style="font-size:10px;color:var(--text-3);font-weight:700;">—</span>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;">
+          <button onclick="admCoinHistPeriod('1d')"   data-period="1d"   class="adm-coinp-btn">1일</button>
+          <button onclick="admCoinHistPeriod('7d')"   data-period="7d"   class="adm-coinp-btn">7일</button>
+          <button onclick="admCoinHistPeriod('30d')"  data-period="30d"  class="adm-coinp-btn">30일</button>
+          <button onclick="admCoinHistPeriod('all')"  data-period="all"  class="adm-coinp-btn active">전체</button>
+          <button onclick="admCoinHistPeriod('custom')" data-period="custom" class="adm-coinp-btn">커스텀</button>
+        </div>
+        <div id="adm-user-coin-custom" style="display:none;gap:6px;margin-bottom:8px;align-items:center;">
+          <input id="adm-user-coin-from" type="date" style="flex:1;padding:6px;border:1px solid var(--border-mid);border-radius:6px;background:var(--bg);color:var(--text-1);font-size:11px;font-family:var(--font);box-sizing:border-box;">
+          <span style="font-size:11px;color:var(--text-3);">~</span>
+          <input id="adm-user-coin-to" type="date" style="flex:1;padding:6px;border:1px solid var(--border-mid);border-radius:6px;background:var(--bg);color:var(--text-1);font-size:11px;font-family:var(--font);box-sizing:border-box;">
+          <button onclick="admCoinHistApplyCustom()" style="padding:6px 10px;border:none;border-radius:6px;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">조회</button>
+        </div>
+        <div id="adm-user-coin-list" style="max-height:300px;overflow-y:auto;border:.5px solid var(--border);border-radius:8px;background:var(--bg);"></div>
       </div>
 
       <!-- 위험 작업 (탈퇴 처리) -->
@@ -16851,6 +16890,26 @@ async function openAdminUserDetail(userId) {
     admBtn.style.color = u.is_admin ? 'var(--gold-dark)' : 'var(--text-1)';
   }
 
+  // 추천(레퍼럴) 정보 표시
+  var refEl = document.getElementById('adm-user-ref-code');
+  if (refEl) refEl.textContent = u.referral_code || '—';
+  var refCntEl = document.getElementById('adm-user-ref-count');
+  if (refCntEl) {
+    refCntEl.textContent = '—';
+    _sb.rpc('admin_count_referred', { p_user: userId }).then(function(r){
+      if (!r.error) refCntEl.textContent = (r.data || 0) + '명';
+    });
+  }
+
+  // 치리 내역: 기본 '전체' 로 로드
+  _admCoinHistPeriod = 'all';
+  document.querySelectorAll('.adm-coinp-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-period') === 'all');
+  });
+  var customRow = document.getElementById('adm-user-coin-custom');
+  if (customRow) customRow.style.display = 'none';
+  if (typeof admLoadCoinHistory === 'function') admLoadCoinHistory();
+
   openOv('ov-admin-user-detail');
 }
 
@@ -16931,10 +16990,78 @@ async function admToggleUserAdmin() {
   if (!_isAdmin || !_admEditUserId || !_admEditUserData) return;
   var next = !_admEditUserData.is_admin;
   if (!confirm(next ? '이 사용자를 어드민으로 만들까요?' : '이 사용자의 어드민 권한을 제거할까요?')) return;
-  var res = await _sb.from('profiles').update({ is_admin: next }).eq('id', _admEditUserId);
+  // 직접 UPDATE 는 profiles RLS 가 막을 수 있으므로 SECURITY DEFINER RPC 사용
+  var res = await _sb.rpc('admin_set_user_admin', { p_target: _admEditUserId, p_value: next });
   if (res.error) { showToast('변경 실패: '+res.error.message); return; }
+  var d = res.data || {};
+  if (!d.ok) { showToast('변경 실패: '+(d.err || 'unknown')); return; }
   showToast(next ? '🛡️ 어드민 권한 부여' : '👤 어드민 권한 제거');
   await openAdminUserDetail(_admEditUserId);
+}
+
+// ── 치리 내역 기간 필터 ──
+var _admCoinHistPeriod = 'all';
+function admCoinHistPeriod(p){
+  _admCoinHistPeriod = p;
+  document.querySelectorAll('.adm-coinp-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-period') === p);
+  });
+  document.getElementById('adm-user-coin-custom').style.display = (p === 'custom') ? 'flex' : 'none';
+  if (p !== 'custom') admLoadCoinHistory();
+}
+function admCoinHistApplyCustom(){
+  admLoadCoinHistory();
+}
+async function admLoadCoinHistory(){
+  if (!_isAdmin || !_admEditUserId || !_sb) return;
+  var listEl = document.getElementById('adm-user-coin-list');
+  var sumEl  = document.getElementById('adm-user-coin-sum');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-3);font-size:11px;">로딩…</div>';
+  // 기간 → from/to
+  var from = null, to = null;
+  var now = new Date();
+  if (_admCoinHistPeriod === '1d')  { from = new Date(now.getTime() - 1*86400*1000); }
+  if (_admCoinHistPeriod === '7d')  { from = new Date(now.getTime() - 7*86400*1000); }
+  if (_admCoinHistPeriod === '30d') { from = new Date(now.getTime() - 30*86400*1000); }
+  if (_admCoinHistPeriod === 'custom'){
+    var fv = document.getElementById('adm-user-coin-from').value;
+    var tv = document.getElementById('adm-user-coin-to').value;
+    if (fv) from = new Date(fv + 'T00:00:00');
+    if (tv) to   = new Date(tv + 'T23:59:59');
+  }
+  var res = await _sb.rpc('admin_user_coin_history', {
+    p_user: _admEditUserId,
+    p_from: from ? from.toISOString() : null,
+    p_to:   to   ? to.toISOString()   : null
+  });
+  if (res.error){
+    listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--red);font-size:11px;">로드 실패: '+_esc(res.error.message||'')+'</div>';
+    if (sumEl) sumEl.textContent = '—';
+    return;
+  }
+  var rows = res.data || [];
+  if (!rows.length){
+    listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-3);font-size:11px;">기록 없음</div>';
+    if (sumEl) sumEl.textContent = '0건';
+    return;
+  }
+  var totalIn = 0, totalOut = 0;
+  rows.forEach(function(r){ if (r.amount > 0) totalIn += r.amount; else totalOut += r.amount; });
+  if (sumEl) sumEl.textContent = rows.length + '건 · +' + totalIn.toLocaleString() + ' / ' + totalOut.toLocaleString();
+  listEl.innerHTML = rows.map(function(r){
+    var pos = r.amount >= 0;
+    var amtStr = (pos?'+':'') + r.amount.toLocaleString();
+    var col    = pos ? 'var(--green)' : 'var(--red)';
+    var when   = (r.created_at || '').replace('T',' ').slice(0,16);
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:.5px solid var(--border);">'
+      +   '<div style="flex:1;min-width:0;">'
+      +     '<div style="font-size:11px;font-weight:700;color:var(--text-1);">'+_esc(r.note || r.kind || '-')+'</div>'
+      +     '<div style="font-size:9px;color:var(--text-3);margin-top:1px;">'+when+(r.kind?' · '+_esc(r.kind):'')+'</div>'
+      +   '</div>'
+      +   '<div style="font-size:13px;font-weight:900;color:'+col+';white-space:nowrap;">'+amtStr+'</div>'
+      + '</div>';
+  }).join('');
 }
 
 // ── 일시/영구 정지 ──
@@ -18347,7 +18474,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v234';
+window.__APP_VERSION__ = 'v235';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
