@@ -126,7 +126,7 @@
   --on-theme:#ffffff;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellipse at 30% 20%,#1f2230 0%,#0f1018 60%,#08080d 100%);display:flex;align-items:center;justify-content:center;font-family:var(--font);overflow:hidden;}
+html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellipse at 30% 20%,#1f2230 0%,#0f1018 60%,#08080d 100%);display:flex;align-items:center;justify-content:center;font-family:var(--font);overflow:hidden;overscroll-behavior:none;-webkit-overflow-scrolling:touch;}
 
 /* ── 데스크탑: 폰 프레임 ── */
 .phone{width:390px;height:844px;background:var(--bg);border-radius:0;border:1px solid rgba(255,255,255,0.14);overflow:hidden;display:flex;flex-direction:column;position:relative;box-shadow:0 30px 60px rgba(0,0,0,.55),0 8px 20px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12);}
@@ -982,8 +982,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <span style="font-size:16px;color:#C8B273;">›</span>
     </div>
 
-    <!-- 광고 (절약 배너 바로 아래로 이동됨) -->
-    <div id="ad-slot-home-list" style="margin:14px 0 0;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;">
+    <!-- 광고 (절약 배너 바로 아래로 이동됨) — 좌우 16px 마진으로 다른 카드와 폭 일치 -->
+    <div id="ad-slot-home-list" style="margin:12px 16px 0;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:64px;display:flex;align-items:center;justify-content:center;">
       <div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div>
     </div>
 
@@ -3089,6 +3089,22 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <option value="feed">치리톡 (가로형)</option>
           <option value="modal">저장 모달 (가로 배너)</option>
         </select>
+      </div>
+
+      <!-- ①-2 표시 크기 (영역 폭 대비 %·세로는 현재 가로폭 대비 %) -->
+      <div style="margin-bottom:10px;padding:8px 10px;background:var(--bg);border:1px solid var(--border-mid);border-radius:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">①-2 표시 크기</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+          <span style="font-size:10px;color:var(--text-2);width:32px;flex-shrink:0;">가로</span>
+          <input id="adm-ad-width" type="range" min="30" max="100" value="100" oninput="document.getElementById('adm-ad-width-v').textContent=this.value+'%'" style="flex:1;accent-color:var(--gold);">
+          <span id="adm-ad-width-v" style="font-size:11px;font-weight:700;color:var(--text-1);width:42px;text-align:right;">100%</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:var(--text-2);width:32px;flex-shrink:0;">세로</span>
+          <input id="adm-ad-aspect" type="range" min="10" max="100" value="40" oninput="document.getElementById('adm-ad-aspect-v').textContent=this.value+'%'" style="flex:1;accent-color:var(--gold);">
+          <span id="adm-ad-aspect-v" style="font-size:11px;font-weight:700;color:var(--text-1);width:42px;text-align:right;">40%</span>
+        </div>
+        <div style="font-size:9px;color:var(--text-3);margin-top:5px;line-height:1.5;">가로=영역 폭 대비 · 세로=현재 가로폭 대비 (100%=정사각형)</div>
       </div>
 
       <!-- ② 배너 이미지 — 영역 비율 프레임 안에서 위치/크기 조정 -->
@@ -12783,12 +12799,19 @@ function _localAdClick(id, url) {
 }
 
 function _renderLocalAd(c, ad) {
+  // 어드민에서 지정한 가로/세로 비율 (없으면 기본 100% × 40%)
+  var w = Math.max(20, Math.min(100, parseInt(ad.width_pct  || 100, 10) || 100));
+  var a = Math.max(10, Math.min(100, parseInt(ad.aspect_pct || 40,  10) || 40));
+  // placeholder용 컨테이너 chrome 무효화 — 실제 광고는 내부 div가 정확한 사이즈로 표시
+  c.style.background = 'transparent';
+  c.style.border = 'none';
+  c.style.minHeight = '0';
+  c.style.padding = '0';
   c.innerHTML = '<div onclick="_localAdClick(\''+ad.id+'\',\''+(ad.link_url||'').replace(/'/g,"\\'")+'\')" '
-    + 'style="position:relative;width:100%;cursor:pointer;line-height:0;">'
-    + '<img src="'+ad.image_url+'" alt="'+_esc(ad.title||'')+'" style="width:100%;display:block;object-fit:cover;">'
+    + 'style="position:relative;width:'+w+'%;aspect-ratio:100/'+a+';margin:0 auto;cursor:pointer;line-height:0;overflow:hidden;border-radius:14px;border:0.5px solid var(--border);">'
+    + '<img src="'+ad.image_url+'" alt="'+_esc(ad.title||'')+'" style="width:100%;height:100%;display:block;object-fit:cover;">'
     + '<span style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.45);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px;line-height:1.4;">'+t('rw.ad')+'</span>'
     + '</div>';
-  // 같은 이유로 .then() 으로 실제 발사
   if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: ad.id, p_kind: 'imp' }).then(function(){}, function(){}); } catch(e){} }
 }
 
@@ -16130,6 +16153,13 @@ async function adminOpenAdForm(id) {
   document.getElementById('adm-ad-sort').value = '0';
   document.getElementById('adm-ad-zone').value = 'home';
   document.getElementById('adm-ad-active').checked = true;
+  // 크기 슬라이더 기본값
+  var _setSize = function(w, a){
+    var wEl=document.getElementById('adm-ad-width'), aEl=document.getElementById('adm-ad-aspect');
+    if(wEl){ wEl.value = w; document.getElementById('adm-ad-width-v').textContent = w + '%'; }
+    if(aEl){ aEl.value = a; document.getElementById('adm-ad-aspect-v').textContent = a + '%'; }
+  };
+  _setSize(100, 40);
   var frame = document.getElementById('adm-ad-frame');
   if (frame) { frame.style.backgroundImage = 'none'; }
   var fe = document.getElementById('adm-ad-frame-empty'); if (fe) fe.style.display = 'flex';
@@ -16146,6 +16176,7 @@ async function adminOpenAdForm(id) {
       document.getElementById('adm-ad-active').checked = !!a.is_active;
       if (a.start_at) document.getElementById('adm-ad-start').value = a.start_at.slice(0,10);
       if (a.end_at)   document.getElementById('adm-ad-end').value   = a.end_at.slice(0,10);
+      _setSize(a.width_pct || 100, a.aspect_pct || 40);
       // 기존 이미지: 프레임에 cover 로 미리보기 (새로 올리지 않으면 그대로 유지)
       if (a.image_url && frame) {
         frame.style.backgroundImage = 'url('+a.image_url+')';
@@ -16187,7 +16218,9 @@ async function adminSaveLocalAd() {
     sort_order: parseInt(document.getElementById('adm-ad-sort').value||'0',10),
     is_active: document.getElementById('adm-ad-active').checked,
     start_at: startV ? new Date(startV).toISOString() : null,
-    end_at:   endV   ? new Date(endV).toISOString()   : null
+    end_at:   endV   ? new Date(endV).toISOString()   : null,
+    width_pct:  parseInt(document.getElementById('adm-ad-width').value  || '100', 10),
+    aspect_pct: parseInt(document.getElementById('adm-ad-aspect').value || '40', 10)
   };
   if (imageUrl) payload.image_url = imageUrl;
   var res;
@@ -18036,7 +18069,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v215';
+window.__APP_VERSION__ = 'v216';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {

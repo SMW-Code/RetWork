@@ -24,9 +24,15 @@ CREATE TABLE IF NOT EXISTS local_ads (
   sort_order  INT NOT NULL DEFAULT 0,
   impressions BIGINT NOT NULL DEFAULT 0,
   clicks      BIGINT NOT NULL DEFAULT 0,
+  width_pct   INT NOT NULL DEFAULT 100,   -- 노출 영역 폭 대비 % (30~100)
+  aspect_pct  INT NOT NULL DEFAULT 40,    -- 세로/가로 비율 % (10~100, 100=정사각)
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- 기존 테이블에 컬럼 추가 (이미 만든 사용자 대상)
+ALTER TABLE local_ads
+  ADD COLUMN IF NOT EXISTS width_pct  INT NOT NULL DEFAULT 100,
+  ADD COLUMN IF NOT EXISTS aspect_pct INT NOT NULL DEFAULT 40;
 CREATE INDEX IF NOT EXISTS idx_local_ads_zone   ON local_ads(zone);
 CREATE INDEX IF NOT EXISTS idx_local_ads_active ON local_ads(is_active);
 
