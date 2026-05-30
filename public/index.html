@@ -12774,7 +12774,8 @@ function _pickLocalAd(zone) {
 }
 
 function _localAdClick(id, url) {
-  if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: id, p_kind: 'click' }); } catch(e){} }
+  // supabase-js v2 의 rpc() 는 lazy thenable → .then() 안 붙이면 요청이 안 나감
+  if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: id, p_kind: 'click' }).then(function(){}, function(){}); } catch(e){} }
   if (url) window.open(url, '_blank', 'noopener');
 }
 
@@ -12784,7 +12785,8 @@ function _renderLocalAd(c, ad) {
     + '<img src="'+ad.image_url+'" alt="'+_esc(ad.title||'')+'" style="width:100%;display:block;object-fit:cover;">'
     + '<span style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.45);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px;line-height:1.4;">'+t('rw.ad')+'</span>'
     + '</div>';
-  if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: ad.id, p_kind: 'imp' }); } catch(e){} }
+  // 같은 이유로 .then() 으로 실제 발사
+  if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: ad.id, p_kind: 'imp' }).then(function(){}, function(){}); } catch(e){} }
 }
 
 /* 광고 컨테이너에 광고 주입 — 로컬 광고 우선, 없으면 AdSense */
@@ -18031,7 +18033,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v211';
+window.__APP_VERSION__ = 'v212';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
