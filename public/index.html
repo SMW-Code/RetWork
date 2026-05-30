@@ -14234,6 +14234,8 @@ function openPremium() {
 function showApp() {
   document.getElementById('screen-auth').style.display = 'none';
   document.getElementById('screen-main').style.display = 'flex';
+  // 마지막에 머물던 탭/모드 복원 (새로고침 후 같은 화면 유지)
+  if (typeof window._restoreNav === 'function') setTimeout(window._restoreNav, 60);
   // 어드민 권한 로드 (비동기, UI에 자동 반영됨)
   _loadAdminFlag();
   // 활성 공지 로드 → 상단 배너 표시
@@ -18303,7 +18305,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v227';
+window.__APP_VERSION__ = 'v228';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18312,6 +18314,59 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   새로고침/PWA 재진입 시 마지막 탭 복원
+   - switchTab/switchMode/ctSwitchTab 후크해서 localStorage 에 저장
+   - showApp() 직후 _restoreNav() 가 마지막 위치로 복귀
+   - 24시간 지난 상태는 무시 (오랜만에 들어왔을 땐 홈이 자연스러움)
+══════════════════════════════════════════════════════════════ */
+window._saveNav = function _saveNav(){
+  try {
+    var sw = document.getElementById('mode-toggle-sw');
+    var mode = (sw && sw.dataset && sw.dataset.mode) || 'receipt';
+    var tab;
+    if (mode === 'chiri'){
+      var cs = document.querySelector('.ct-screen.active');
+      tab = cs ? cs.id.replace('ct-screen-','') : 'map';
+    } else {
+      var rs = document.querySelector('.screen.active');
+      tab = rs ? rs.id.replace('screen-','') : 'home';
+    }
+    localStorage.setItem('riq_last_nav', JSON.stringify({mode:mode, tab:tab, t:Date.now()}));
+  } catch(e){}
+};
+window._restoreNav = function _restoreNav(){
+  try {
+    var raw = localStorage.getItem('riq_last_nav');
+    if (!raw) return;
+    var n = JSON.parse(raw);
+    if (!n || !n.tab) return;
+    if (n.t && (Date.now() - n.t) > 24*3600*1000) return;
+    if (n.mode === 'chiri'){
+      if (typeof switchMode === 'function') switchMode('chiri');
+      if (n.tab && n.tab !== 'map' && typeof ctSwitchTab === 'function'){
+        setTimeout(function(){ ctSwitchTab(n.tab); }, 80);
+      }
+    } else {
+      if (n.tab && n.tab !== 'home' && typeof switchTab === 'function'){
+        setTimeout(function(){ switchTab(n.tab); }, 80);
+      }
+    }
+  } catch(e){}
+};
+// 탭/모드 전환 함수 monkey-patch → 매번 자동 저장
+(function(){
+  ['switchTab','switchMode','ctSwitchTab'].forEach(function(fn){
+    if (typeof window[fn] !== 'function') return;
+    var orig = window[fn];
+    window[fn] = function(){
+      var r = orig.apply(this, arguments);
+      try { window._saveNav(); } catch(e){}
+      return r;
+    };
+  });
+})();
 
 /* ══════════════════════════════════════════════════════════════
    모바일 viewport 높이 동기화 (PWA standalone 대응)
