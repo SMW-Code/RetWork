@@ -236,7 +236,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .att-hdr{background:var(--surface);padding:14px 16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .att-back{width:36px;height:36px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text-1);}
 .att-title{font-size:16px;font-weight:800;color:var(--text-1);letter-spacing:-.3px;}
-.att-body{flex:1;overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:12px;}
+.att-body{flex:1;overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none;-ms-overflow-style:none;}
+.att-body::-webkit-scrollbar{display:none;width:0;height:0;}
 .att-card{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.04);}
 .att-card-title{font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.5px;margin-bottom:10px;text-transform:uppercase;}
 .att-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:.5px dashed var(--border);}
@@ -3219,6 +3220,48 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 추가 광고 보상 모달 (출석과 별개로 하루 1회) ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-att-bonus-ad" onclick="bonusAcCloseOutside(event)">
+  <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:90vh;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.25);overflow-y:auto;">
+    <div class="sheet-handle" style="margin:10px auto 14px;"></div>
+    <!-- 상단 카드 -->
+    <div style="margin:0 16px 12px;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:20px;line-height:1;">🎁</span>
+        <span style="font-size:13px;font-weight:800;color:var(--text-1);">추가 보상을 받으세요</span>
+      </div>
+      <span style="font-size:16px;font-weight:900;color:var(--gold-dark);white-space:nowrap;">+15 치리 ✨</span>
+    </div>
+    <!-- 중단 카드: 자동재생 광고 -->
+    <div style="margin:0 16px 14px;border:.5px solid var(--border);border-radius:14px;overflow:hidden;background:#0d0d22;box-shadow:0 4px 14px rgba(0,0,0,.08);">
+      <div style="position:relative;width:100%;height:240px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;">
+        <div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.16) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>
+        <div style="position:relative;z-index:2;text-align:center;color:#fff;">
+          <div style="font-size:42px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:.5px;margin-top:8px;">광고를 보고 +15 치리 받기</div>
+          <div style="font-size:10px;opacity:.75;margin-top:3px;font-weight:500;">📢 Sponsored Content</div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15);">
+          <div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
+        <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+      </div>
+    </div>
+    <!-- 하단 카드: 헤더 + 설명 + 버튼 -->
+    <div style="padding:0 16px 24px;">
+      <div style="font-size:14px;font-weight:800;color:var(--text-1);margin-bottom:4px;">추가 +15치리 받기</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;">광고를 보면 추가 치리가 지급됩니다.</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="bonusAcSkip()" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">건너뛰기</button>
+        <button onclick="bonusAcWatch()" style="flex:2;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 4px 12px rgba(232,160,32,.3);">📺 보기</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 업로드 확인 모달 (광고 동영상 + 취소/등록) ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-upload-confirm" onclick="ucCloseOutside(event)">
   <div id="upload-confirm-panel">
@@ -3930,6 +3973,21 @@ function _ctRenderAttendance(){
     + '</div>'
     + '</div>';
 
+  // ─── 카드2.5: 추가 광고 보상 (하루 1회) ───
+  var bonusClaimed = (localStorage.getItem('ct_bonus_ad_date') === _ctAttDayKey());
+  h += '<div class="att-card">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
+    +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);">📺 추가 광고 보상</div>'
+    +   '<div style="font-size:13px;font-weight:900;color:var(--gold-dark);">+15 치리</div>'
+    + '</div>'
+    + '<div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;">'
+    +   (bonusClaimed ? '오늘 추가 보상은 이미 받았어요. 내일 다시 받을 수 있어요.' : '받을 수 있는 추가 보상이 있습니다.')
+    + '</div>'
+    + '<button class="att-go-btn" onclick="ctOpenBonusAd()" '+(bonusClaimed?'disabled':'')+'>'
+    +   (bonusClaimed ? '오늘 받음 ✓' : '추가 광고 보상 받기')
+    + '</button>'
+    + '</div>';
+
   // ─── 카드3: 달력 ───
   var now = new Date();
   var year = now.getFullYear(), month = now.getMonth();
@@ -4025,6 +4083,28 @@ function acSkip(){
   // 건너뛰기 → 기본 보상 +5チリ 메시지 (ctDoCheckIn 에서 이미 지급됨)
   showToast(t('toast.checkin'));
 }
+/* 추가 광고 보상 모달 — 출석과 별개로 하루 1회 +15치리 지급 */
+function ctOpenBonusAd(){
+  if (localStorage.getItem('ct_bonus_ad_date') === _ctAttDayKey()){
+    showToast('오늘 추가 보상은 이미 받았어요');
+    return;
+  }
+  openOv('ov-att-bonus-ad');
+}
+function bonusAcCloseOutside(e){
+  if (e.target === document.getElementById('ov-att-bonus-ad')) bonusAcSkip();
+}
+function bonusAcSkip(){ closeOv('ov-att-bonus-ad'); }
+function bonusAcWatch(){
+  closeOv('ov-att-bonus-ad');
+  // 풀스크린 광고 후 콜백에서 보상 지급 + 오늘 받음 표시
+  ctOpenFullscreenAd('bonus', function(){
+    ctAddCoin(15, '📺 추가 광고 보상');
+    localStorage.setItem('ct_bonus_ad_date', _ctAttDayKey());
+    _ctRenderAttendance();
+  });
+}
+
 function acWatchAd(){
   closeOv('ov-att-complete');
   // 전체화면 동영상 광고 → 콜백에서 +15チリ 추가 지급 → 풀스크린 완료 화면이 "+20チリ" 표시
@@ -17924,7 +18004,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v209';
+window.__APP_VERSION__ = 'v210';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
