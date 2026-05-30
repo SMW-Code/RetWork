@@ -1633,10 +1633,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </div>
       </div>
     </div>
-    <div style="background:var(--gold-light);border:1px solid rgba(232,160,32,.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;">
+    <div onclick="ctInviteShare()" style="background:var(--gold-light);border:1px solid rgba(232,160,32,.25);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;cursor:pointer;">
       <div>
         <div style="font-size:13px;font-weight:800;color:var(--gold-dark);" data-i18n="rw.invite">👥 友達を招待して✨チリもらう</div>
-        <div style="font-size:11px;color:var(--gold-dark);opacity:.7;margin-top:3px;" data-i18n="rw.invite_sub">友達が登録完了で 2,000チリ</div>
+        <div style="font-size:11px;color:var(--gold-dark);opacity:.7;margin-top:3px;" data-i18n="rw.invite_sub">友達が登録完了で 200チリ</div>
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--gold);"><span data-i18n="common.share">共有</span> ›</div>
     </div>
@@ -10471,7 +10471,7 @@ var I18N = {
     // 리워드 / 출석
     'rw.draw':'チリつもドロー','rw.attendance':'出席チェック','rw.checkin_btn':'出席する',
     'rw.streak':'連続出席','rw.day':'日','rw.reward_3':'3日','rw.reward_7':'7日','rw.reward_15':'15日','rw.reward_30':'30日',
-    'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 2,000チリ',
+    'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 200チリ',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
@@ -10697,7 +10697,7 @@ var I18N = {
     'ctw.add_photo':'사진 추가','ctw.photo_hint':'선택 · 최대 5장',
     'rw.draw':'치리츠모 드로우','rw.attendance':'출석 체크','rw.checkin_btn':'출석하기',
     'rw.streak':'연속 출석','rw.day':'일','rw.reward_3':'3일','rw.reward_7':'7일','rw.reward_15':'15일','rw.reward_30':'30일',
-    'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 2,000치리',
+    'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 200치리',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
@@ -10918,7 +10918,7 @@ var I18N = {
     'ctw.add_photo':'Add Photo','ctw.photo_hint':'Optional · up to 5',
     'rw.draw':'Chiri Draw','rw.attendance':'Check-in','rw.checkin_btn':'Check in',
     'rw.streak':'Streak','rw.day':'d','rw.reward_3':'3d','rw.reward_7':'7d','rw.reward_15':'15d','rw.reward_30':'30d',
-    'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'2,000 chiri when a friend signs up',
+    'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'200 chiri when a friend signs up',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
@@ -11139,7 +11139,7 @@ var I18N = {
     'ctw.add_photo':'添加照片','ctw.photo_hint':'可选 · 最多5张',
     'rw.draw':'Chiri 抽奖','rw.attendance':'签到','rw.checkin_btn':'签到',
     'rw.streak':'连续签到','rw.day':'天','rw.reward_3':'3天','rw.reward_7':'7天','rw.reward_15':'15天','rw.reward_30':'30天',
-    'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 2,000 积分',
+    'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 200 积分',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
@@ -14240,6 +14240,8 @@ function showApp() {
   document.getElementById('screen-main').style.display = 'flex';
   // 3) 정식 render (요소 사이즈 측정 후) — 클래스는 이미 맞춰진 상태라 깜빡임 없음
   if (_savedNav && typeof window._restoreNav === 'function') setTimeout(window._restoreNav, 0);
+  // 보류 중인 추천 코드 redeem (가입/로그인 직후, 1회만 처리됨)
+  if (typeof window._redeemPendingRef === 'function') setTimeout(window._redeemPendingRef, 500);
   // 어드민 권한 로드 (비동기, UI에 자동 반영됨)
   _loadAdminFlag();
   // 활성 공지 로드 → 상단 배너 표시
@@ -18309,7 +18311,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v229';
+window.__APP_VERSION__ = 'v230';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18318,6 +18320,70 @@ if ('serviceWorker' in navigator) {
     });
   });
 }
+
+/* ══════════════════════════════════════════════════════════════
+   추천(레퍼럴) 시스템
+   - URL 의 ?ref=CODE 캐치 → localStorage 보관
+   - 로그인 후 redeem_referral RPC 호출 → 추천인에게 +200 치리
+   - ctInviteShare() : 내 코드로 초대 링크 공유
+══════════════════════════════════════════════════════════════ */
+// (1) 페이지 진입 즉시 URL 의 ref 캐치
+(function _capturePendingRef(){
+  try {
+    var u = new URL(window.location.href);
+    var r = u.searchParams.get('ref');
+    if (r && /^[A-Z0-9]{4,16}$/i.test(r)) {
+      localStorage.setItem('pending_ref', r.toUpperCase());
+      // URL 정리 (북마크/공유 깔끔하게)
+      u.searchParams.delete('ref');
+      try { history.replaceState({}, '', u.pathname + (u.search || '') + (u.hash || '')); } catch(e){}
+    }
+  } catch(e){}
+})();
+
+// (2) 로그인된 상태에서 보류 중인 ref redeem 시도 — showApp 직후 호출
+window._redeemPendingRef = async function _redeemPendingRef(){
+  var code = (function(){ try{return localStorage.getItem('pending_ref');}catch(e){return null;} })();
+  if (!code) return;
+  if (!_sb || !_currentUser) return;
+  try {
+    var res = await _sb.rpc('redeem_referral', { p_code: code });
+    if (res.error) { console.warn('[ref redeem]', res.error); return; }
+    var d = res.data || {};
+    if (d.ok){
+      try{localStorage.removeItem('pending_ref');}catch(e){}
+      if (typeof showToast === 'function') showToast('🎁 추천 보상이 지급됐어요!');
+    } else if (d.err === 'already_redeemed' || d.err === 'code_not_found' || d.err === 'self_referral') {
+      // 재시도 무의미 → 정리
+      try{localStorage.removeItem('pending_ref');}catch(e){}
+    }
+  } catch(e){ console.warn('[ref redeem]', e); }
+};
+
+// (3) 내 추천코드로 초대 링크 공유 (없으면 생성)
+window.ctInviteShare = async function ctInviteShare(){
+  if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast('로그인 후 사용 가능해요'); return; }
+  var code = null;
+  try {
+    var res = await _sb.from('profiles').select('referral_code').eq('id', _currentUser.id).maybeSingle();
+    if (res.data && res.data.referral_code) code = res.data.referral_code;
+  } catch(e){}
+  if (!code) {
+    // 없으면 즉석 생성 + DB 저장
+    code = Math.random().toString(36).slice(2,10).toUpperCase();
+    try { await _sb.from('profiles').update({ referral_code: code }).eq('id', _currentUser.id); }
+    catch(e) { console.warn('[invite] code save failed', e); }
+  }
+  if (!code) { if (typeof showToast==='function') showToast('초대 링크 생성 실패'); return; }
+  var url = 'https://retwork.jp?ref=' + code;
+  var text = '🎁 RetWork 에 가입하고 200치리 받기!\n나도 200치리 적립돼요\n' + url;
+  if (navigator.share) {
+    navigator.share({ title:'RetWork 초대', text:text, url:url }).catch(function(){});
+  } else {
+    try { navigator.clipboard.writeText(text); } catch(e){}
+    if (typeof showToast==='function') showToast('🔗 초대 링크 복사됨');
+  }
+};
 
 /* ══════════════════════════════════════════════════════════════
    새로고침/PWA 재진입 시 마지막 탭 복원
