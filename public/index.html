@@ -12771,7 +12771,7 @@ async function _loadLocalAds() {
   if (!_sb) return;
   try {
     var res = await _sb.from('local_ads')
-      .select('id,title,image_url,link_url,zone,is_active,start_at,end_at,sort_order')
+      .select('id,title,image_url,link_url,zone,is_active,start_at,end_at,sort_order,width_pct,aspect_pct')
       .eq('is_active', true)
       .order('sort_order', { ascending:true });
     if (res.error || !res.data) return;
@@ -18074,7 +18074,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v217';
+window.__APP_VERSION__ = 'v218';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18129,6 +18129,7 @@ if ('serviceWorker' in navigator) {
     armed = !sc || sc.scrollTop <= 0;
   }, { passive: true });
 
+  // passive:false 로 잡아 PTR 동작 중에는 preventDefault 로 브라우저 네이티브 PTR/주소창 표시 차단
   document.addEventListener('touchmove', function(e){
     if (!armed) return;
     var t = e.touches[0];
@@ -18136,13 +18137,15 @@ if ('serviceWorker' in navigator) {
     var dy = currentY - startY;
     var dx = Math.abs(t.clientX - startX);
     if (dy <= 0 || dx > Math.abs(dy) * 0.6) return; // 위로 끌거나 옆으로면 무시
+    // 우리가 PTR을 잡았으니 브라우저 네이티브 동작(주소창 펼침, 네이티브 PTR) 차단
+    if (e.cancelable) e.preventDefault();
     pulling = true;
     var pull = Math.min(dy * RESIST, 130);
     var ind = _ind();
     var pct = Math.min(pull / THRESHOLD, 1);
     ind.style.transform = 'translate(-50%, ' + (pct * 130 - 130) + '%)';
     ind.textContent = pull >= THRESHOLD ? '↑ 놓으면 새로고침' : '↓ 더 내리세요';
-  }, { passive: true });
+  }, { passive: false });
 
   function _release(){
     if (!pulling) { _reset(); return; }
