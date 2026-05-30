@@ -18130,7 +18130,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v222';
+window.__APP_VERSION__ = 'v223';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18152,7 +18152,9 @@ if ('serviceWorker' in navigator) {
     var p = document.querySelector('.phone');
     if (!p) return;
     var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight || 0;
-    if (h > 0) p.style.height = h + 'px';
+    // CSS 에 height:100dvh !important 가 있어 일반 inline style 은 무시됨
+    // → setProperty 의 3번째 인자로 'important' 를 줘야 JS 값이 이김
+    if (h > 0) p.style.setProperty('height', h + 'px', 'important');
   }
   // 초기 + 짧은 딜레이로 두 번 (PWA 첫 페인트 직후 viewport 변동 캐치)
   _syncPhoneVH();
