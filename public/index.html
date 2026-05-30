@@ -45,7 +45,8 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="RetWork（チリつも） — レシート家計簿で節約をスマートに">
 <meta property="og:description" content="レシートを撮るだけで家計簿が完成。地域の最安価格マップで賢く節約。">
-<meta property="og:url" content="https://retwork.jp/">
+<!-- og:url 제거 — 공유 시 카톡/라인 등이 링크 프리뷰 카드를 원본 URL(ref 포함)로 만들도록.
+     SEO canonical 은 위의 <link rel="canonical"> 로 별도 제공됨 -->
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="RetWork">
 <meta name="twitter:card" content="summary_large_image">
@@ -18346,7 +18347,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v232';
+window.__APP_VERSION__ = 'v233';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18412,10 +18413,13 @@ window.ctInviteShare = async function ctInviteShare(){
   if (!code) { if (typeof showToast==='function') showToast('초대 링크 생성 실패'); return; }
   var url = 'https://retwork.jp?ref=' + code;
   var text = '🎁 RetWork 에 가입하고 200치리 받기!\n나도 200치리 적립돼요\n' + url;
+  // 카톡/라인 등 chat 앱이 받을 때 URL 중복 노출 + 링크 프리뷰 카드의 canonical URL 사용 문제 회피:
+  //  - url 필드 제거 (text 안 한 곳에만 URL 포함)
+  //  - 백업으로 클립보드 복사 (사용자가 직접 붙여넣기 가능)
+  try { if (navigator.clipboard) navigator.clipboard.writeText(url); } catch(e){}
   if (navigator.share) {
-    navigator.share({ title:'RetWork 초대', text:text, url:url }).catch(function(){});
+    navigator.share({ text: text }).catch(function(){});
   } else {
-    try { navigator.clipboard.writeText(text); } catch(e){}
     if (typeof showToast==='function') showToast('🔗 초대 링크 복사됨');
   }
 };
