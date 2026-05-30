@@ -18130,7 +18130,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v224';
+window.__APP_VERSION__ = 'v225';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18188,8 +18188,10 @@ if ('serviceWorker' in navigator) {
     st.textContent =
       '@keyframes _ptr_spin{to{transform:rotate(360deg);}}' +
       '@keyframes _ptr_pulse{0%{transform:scale(1);}50%{transform:scale(1.12);}100%{transform:scale(1);}}' +
-      '#_ptr_indicator._ready{animation:_ptr_pulse .35s ease;}' +
-      '#_ptr_indicator._loading #_ptr_icon{animation:_ptr_spin .9s linear infinite;transform-origin:12px 12px;}' +
+      // pulse 는 inner 에만 — outer 의 translate(-50%) 안 깨지게
+      '#_ptr_indicator._ready #_ptr_inner{animation:_ptr_pulse .35s ease;}' +
+      // 회전은 SVG 자기 중심 기준
+      '#_ptr_indicator._loading #_ptr_icon{animation:_ptr_spin .9s linear infinite;transform-origin:50% 50%;transform-box:fill-box;}' +
       '#_ptr_indicator._loading #_ptr_arc{stroke-dashoffset:0!important;transition:stroke-dashoffset .15s ease;}';
     document.head.appendChild(st);
   }
@@ -18206,28 +18208,32 @@ if ('serviceWorker' in navigator) {
     if (indicator) return indicator;
     indicator = document.createElement('div');
     indicator.id = '_ptr_indicator';
+    // outer: 위치 + 슬라이드(translate) 만 담당
     indicator.style.cssText =
       'position:fixed;top:14px;left:50%;transform:translate(-50%,-160%);z-index:99999;' +
-      'width:44px;height:44px;background:var(--surface,#fff);' +
-      'border:0.5px solid var(--border,rgba(0,0,0,.08));border-radius:50%;' +
-      'display:flex;align-items:center;justify-content:center;' +
-      'box-shadow:0 8px 24px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);' +
-      'transition:transform .22s cubic-bezier(.32,.72,0,1);pointer-events:none;' +
-      'backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);';
+      'transition:transform .22s cubic-bezier(.32,.72,0,1);pointer-events:none;';
     indicator.innerHTML =
-      '<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">' +
-        '<svg width="36" height="36" viewBox="0 0 36 36" style="position:absolute;inset:0;">' +
-          '<circle cx="18" cy="18" r="15" fill="none" stroke="var(--border-mid,rgba(0,0,0,.08))" stroke-width="2.5"/>' +
-          '<circle id="_ptr_arc" cx="18" cy="18" r="15" fill="none" stroke="var(--green)" stroke-width="2.5" ' +
-            'stroke-linecap="round" stroke-dasharray="' + CIRC + '" stroke-dashoffset="' + CIRC + '" ' +
-            'transform="rotate(-90 18 18)" style="transition:stroke-dashoffset .12s linear,stroke .15s;"/>' +
-        '</svg>' +
-        '<svg id="_ptr_icon" width="16" height="16" viewBox="0 0 24 24" fill="none" ' +
-          'stroke="var(--text-2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ' +
-          'style="transition:transform .15s ease,stroke .15s;">' +
-          '<polyline points="23 4 23 10 17 10"/>' +
-          '<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>' +
-        '</svg>' +
+      // inner: 외형(배경/그림자) + 스케일 펄스
+      '<div id="_ptr_inner" style="width:44px;height:44px;background:var(--surface,#fff);' +
+        'border:0.5px solid var(--border,rgba(0,0,0,.08));border-radius:50%;' +
+        'display:flex;align-items:center;justify-content:center;' +
+        'box-shadow:0 8px 24px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);' +
+        'backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);">' +
+        '<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">' +
+          '<svg width="36" height="36" viewBox="0 0 36 36" style="position:absolute;inset:0;">' +
+            '<circle cx="18" cy="18" r="15" fill="none" stroke="var(--border-mid,rgba(0,0,0,.08))" stroke-width="2.5"/>' +
+            '<circle id="_ptr_arc" cx="18" cy="18" r="15" fill="none" stroke="var(--green)" stroke-width="2.5" ' +
+              'stroke-linecap="round" stroke-dasharray="' + CIRC + '" stroke-dashoffset="' + CIRC + '" ' +
+              'transform="rotate(-90 18 18)" style="transition:stroke-dashoffset .12s linear,stroke .15s;"/>' +
+          '</svg>' +
+          // SVG 요소의 회전 중심은 기본이 (0,0) 이라 transform-box:fill-box + 50% 50% 명시 필요
+          '<svg id="_ptr_icon" width="16" height="16" viewBox="0 0 24 24" fill="none" ' +
+            'stroke="var(--text-2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ' +
+            'style="transition:transform .15s ease,stroke .15s;transform-box:fill-box;transform-origin:50% 50%;">' +
+            '<polyline points="23 4 23 10 17 10"/>' +
+            '<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>' +
+          '</svg>' +
+        '</div>' +
       '</div>';
     document.body.appendChild(indicator);
     return indicator;
