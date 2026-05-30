@@ -18036,7 +18036,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v214';
+window.__APP_VERSION__ = 'v215';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18081,6 +18081,8 @@ if ('serviceWorker' in navigator) {
     if (e.touches.length !== 1) { armed=false; return; }
     // 편집/시트 모달 안에서는 실수로 발동되지 않게 비활성
     if (e.target.closest && e.target.closest('.confirm-overlay,.bottom-sheet-overlay,#ov-edit,#ov-manual,#ov-scan')) { armed=false; return; }
+    // 지도 영역(Google Maps) 내부에서는 비활성 — 지도 팬/줌과 충돌 방지
+    if (e.target.closest && e.target.closest('#ct-google-map,#google-map,.gm-style')) { armed=false; return; }
     var t = e.touches[0];
     startY = currentY = t.clientY;
     startX = t.clientX;
