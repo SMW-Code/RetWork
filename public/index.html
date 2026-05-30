@@ -5656,7 +5656,7 @@ async function ctSubmitPost() {
   ctRenderCatBar();
   ctRenderPosts();
   showToast(t('toast.post_done'));
-  ctAddCoin(5, '💬 チリトーク投稿');
+  ctAddCoin(1, '💬 チリトーク投稿');
 }
 
 var _cpStarRating = 0;
@@ -17552,7 +17552,7 @@ function openAdminPricing() {
     { action:'📅 출석체크',          chiri: 5 },
     { action:'📺 출석 광고 시청 보너스', chiri: 15 },
     { action:'📺 리워드 광고 시청',     chiri: 50 },
-    { action:'💬 치리톡 게시글',        chiri: 5 },
+    { action:'💬 치리톡 게시글',        chiri: 1 },
     { action:'🧾 치리 공개 (메뉴 1개)',  chiri: 10 },
     { action:'📍 수동 핀 등록',         chiri: 10 },
     { action:'📸 메뉴 사진 공유',       chiri: 10 }
@@ -18311,7 +18311,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v230';
+window.__APP_VERSION__ = 'v231';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
