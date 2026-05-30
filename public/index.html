@@ -4493,6 +4493,8 @@ function ctInitMap() {
     center: defaultPos,
     disableDefaultUI: true,
     zoomControl: false,
+    // 한손가락 팬, 두손가락 핀치 줌 (cooperative→greedy)
+    gestureHandling: 'greedy',
     styles: [
       { featureType:'poi', stylers:[{ visibility:'off' }] },
       { featureType:'transit', stylers:[{ visibility:'off' }] }
@@ -11254,6 +11256,8 @@ function initGoogleMap() {
     center: defaultPos,
     disableDefaultUI: true,
     zoomControl: true,
+    // 한손가락 팬, 두손가락 핀치 줌
+    gestureHandling: 'greedy',
     styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }]
   });
 
@@ -17088,7 +17092,8 @@ function _admInitStoreMap(lat, lng) {
   _admStoreMap = new google.maps.Map(mapEl, {
     center: { lat: initLat, lng: initLng },
     zoom: lat ? 17 : 13,
-    mapTypeControl: false, streetViewControl: false, fullscreenControl: false
+    mapTypeControl: false, streetViewControl: false, fullscreenControl: false,
+    gestureHandling: 'greedy'
   });
   _admStoreMarker = new google.maps.Marker({
     position: { lat: initLat, lng: initLng },
@@ -18069,7 +18074,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v216';
+window.__APP_VERSION__ = 'v217';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
