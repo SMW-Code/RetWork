@@ -2343,74 +2343,109 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <button onclick="_admSetPeriod('all')"     data-period="all"     class="adm-period-btn active">전체</button>
       </div>
 
-      <!-- 통계 카드 (3×2 그리드) — 클릭 시 세부 리스트 모달 -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;">
-        <div onclick="openAdminDetail('users')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px;transition:transform .15s;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;">👥 사용자 ›</div>
+      <!-- 통계 카드 (세로 1열, 가로형) — 클릭 시 세부 리스트 모달 -->
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+        <div onclick="openAdminDetail('users')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:22px;flex-shrink:0;">👥</span>
+          <div style="flex:1;min-width:0;font-size:12px;color:var(--text-3);font-weight:700;">사용자</div>
           <div id="adm-stat-users" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminDetail('receipts')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px;transition:transform .15s;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;">🧾 영수증 ›</div>
+        <div onclick="openAdminDetail('receipts')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:22px;flex-shrink:0;">🧾</span>
+          <div style="flex:1;min-width:0;font-size:12px;color:var(--text-3);font-weight:700;">영수증</div>
           <div id="adm-stat-receipts" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminDetail('stores')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px;transition:transform .15s;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;">🏪 가게 ›</div>
+        <div onclick="openAdminDetail('stores')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:22px;flex-shrink:0;">🏪</span>
+          <div style="flex:1;min-width:0;font-size:12px;color:var(--text-3);font-weight:700;">가게</div>
           <div id="adm-stat-stores" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminDetail('pins')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px;transition:transform .15s;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;">📍 가격 핀 ›</div>
+        <div onclick="openAdminDetail('pins')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:22px;flex-shrink:0;">📍</span>
+          <div style="flex:1;min-width:0;font-size:12px;color:var(--text-3);font-weight:700;">가격 핀</div>
           <div id="adm-stat-pins" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div style="background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;">📺 광고 시청</div>
-          <div id="adm-stat-ads" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
-          <div id="adm-stat-ads-revenue" style="font-size:10px;color:var(--green);font-weight:700;margin-top:2px;">—</div>
+        <div style="background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:22px;flex-shrink:0;">📺</span>
+          <div style="flex:1;min-width:0;font-size:12px;color:var(--text-3);font-weight:700;">광고 시청</div>
+          <div style="text-align:right;">
+            <div id="adm-stat-ads" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
+            <div id="adm-stat-ads-revenue" style="font-size:10px;color:var(--green);font-weight:700;">—</div>
+          </div>
         </div>
-        <div style="background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px;">
-          <div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:4px;">✨ 치리 발급</div>
-          <div id="adm-stat-coins" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
-          <div id="adm-stat-coins-expense" style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px;">—</div>
+        <div style="background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:22px;flex-shrink:0;">✨</span>
+          <div style="flex:1;min-width:0;font-size:12px;color:var(--text-3);font-weight:700;">치리 발급</div>
+          <div style="text-align:right;">
+            <div id="adm-stat-coins" style="font-size:18px;font-weight:900;color:var(--text-1);">—</div>
+            <div id="adm-stat-coins-expense" style="font-size:10px;color:var(--red);font-weight:700;">—</div>
+          </div>
         </div>
       </div>
 
-      <!-- 메뉴 그리드 (2×2) -->
+      <!-- 관리 메뉴 (세로 1열, 가로형) -->
       <div style="font-size:11px;color:var(--text-3);font-weight:800;margin:18px 0 8px;letter-spacing:.5px;">관리 메뉴</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-        <div onclick="openAdminStoreItems()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
-          <div style="font-size:28px;margin-bottom:4px;">🛍️</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">치리스토어 상품</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">상품 등록·수정</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div onclick="openAdminStoreItems()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:26px;flex-shrink:0;">🛍️</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">치리스토어 상품</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">상품 등록·수정</div>
+          </div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="showToast('교환 요청 처리 — 다음 단계에서 구축 예정')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
-          <div style="font-size:28px;margin-bottom:4px;">📋</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">교환 요청</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">대기·발송 처리</div>
+        <div onclick="showToast('교환 요청 처리 — 다음 단계에서 구축 예정')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:26px;flex-shrink:0;">📋</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">교환 요청</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">대기·발송 처리</div>
+          </div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminAnnouncements()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
-          <div style="font-size:28px;margin-bottom:4px;">📢</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">공지사항</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">발송·관리</div>
+        <div onclick="openAdminAnnouncements()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:26px;flex-shrink:0;">📢</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">공지사항</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">발송·관리</div>
+          </div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminReports()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;position:relative;">
-          <div style="font-size:28px;margin-bottom:4px;">💬</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">댓글 모더</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">신고 처리</div>
-          <div id="adm-reports-badge" style="display:none;position:absolute;top:6px;right:8px;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
+        <div onclick="openAdminReports()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;position:relative;">
+          <span style="font-size:26px;flex-shrink:0;">💬</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">댓글 모더</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">신고 처리</div>
+          </div>
+          <div id="adm-reports-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminPricing()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
-          <div style="font-size:28px;margin-bottom:4px;">💡</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">단가·요율</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">참고표·조정</div>
+        <div onclick="openAdminPricing()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:26px;flex-shrink:0;">💡</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">단가·요율</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">참고표·조정</div>
+          </div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminI18n()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
-          <div style="font-size:28px;margin-bottom:4px;">🌐</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">언어 시트</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">번역 편집·즉시 반영</div>
+        <div onclick="openAdminI18n()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:26px;flex-shrink:0;">🌐</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">언어 시트</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">번역 편집·즉시 반영</div>
+          </div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminAds()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px 12px;text-align:center;transition:transform .15s;">
-          <div style="font-size:28px;margin-bottom:4px;">📺</div>
-          <div style="font-size:12px;font-weight:800;color:var(--text-1);">광고 관리</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">영역별 수익·로컬 광고</div>
+        <div onclick="openAdminAds()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
+          <span style="font-size:26px;flex-shrink:0;">📺</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">광고 관리</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">영역별 수익·로컬 광고</div>
+          </div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
       </div>
 
@@ -18311,7 +18346,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v231';
+window.__APP_VERSION__ = 'v232';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
