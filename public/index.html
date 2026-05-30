@@ -18347,7 +18347,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v233';
+window.__APP_VERSION__ = 'v234';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18373,6 +18373,17 @@ if ('serviceWorker' in navigator) {
       // URL 정리 (북마크/공유 깔끔하게)
       u.searchParams.delete('ref');
       try { history.replaceState({}, '', u.pathname + (u.search || '') + (u.hash || '')); } catch(e){}
+      // 사용자에게 캐치 확인 토스트 — showToast 가 정의된 후 노출 (최대 5초 폴링)
+      var _tries = 0;
+      var _toastTimer = setInterval(function(){
+        _tries++;
+        if (typeof showToast === 'function'){
+          clearInterval(_toastTimer);
+          showToast('🎁 추천 코드가 적용되었어요. 가입하면 자동으로 보상이 지급됩니다.');
+        } else if (_tries >= 25) {
+          clearInterval(_toastTimer);
+        }
+      }, 200);
     }
   } catch(e){}
 })();
