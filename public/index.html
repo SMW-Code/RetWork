@@ -3866,27 +3866,46 @@ function _ctDetectCoinType(desc){
   if (d.indexOf('boost') >= 0 || d.indexOf('만보') >= 0) return 'boost';
   return 'bonus';
 }
-function ctAddCoin(amount, desc) {
+function ctAddCoin(amount, desc, type) {
+  // 낙관적 로컬 적립 (UX 빠르게)
   _ctCoinBalance += amount;
   if (_ctCoinBalance < 0) _ctCoinBalance = 0;
   var now = new Date();
   var dateStr = (now.getMonth()+1) + '/' + now.getDate()
     + ' ' + String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-  _ctCoinHistory.unshift({ desc: desc, amount: amount, date: dateStr });
+  var histEntry = { desc: desc, amount: amount, date: dateStr };
+  _ctCoinHistory.unshift(histEntry);
   if (_ctCoinHistory.length > 100) _ctCoinHistory.pop();
   ctUpdateCoinDisplay();
   if (_ctCoinHistoryOpen) ctRenderCoinHistory();
-  // DB 동기화: client_add_coins RPC (잔액 + coin_transactions 한 번에)
-  //  ⚠️ profiles 직접 UPDATE 는 보안 트리거가 막음 → RPC 필수
+  // DB 동기화 — type 명시 우선, 없으면 desc 로 추정
   if (_sb && _currentUser && amount !== 0) {
-    var type = _ctDetectCoinType(desc);
+    var finalType = type || _ctDetectCoinType(desc);
     _sb.rpc('client_add_coins', {
       p_amount: amount,
-      p_type: type,
+      p_type:   finalType,
       p_description: desc || null
     }).then(function(r){
-      if (r.error) { console.warn('[coin]', r.error.message); return; }
-      if (r.data && !r.data.ok) console.warn('[coin]', r.data);
+      if (r.error || (r.data && !r.data.ok)) {
+        // ── 실패 → 로컬 롤백 ──
+        _ctCoinBalance -= amount;
+        if (_ctCoinBalance < 0) _ctCoinBalance = 0;
+        var idx = _ctCoinHistory.indexOf(histEntry);
+        if (idx >= 0) _ctCoinHistory.splice(idx, 1);
+        ctUpdateCoinDisplay();
+        if (_ctCoinHistoryOpen) ctRenderCoinHistory();
+        // 사용자 안내
+        var err = (r.data && r.data.err) || (r.error && r.error.message) || 'unknown';
+        if (err === 'daily_limit') {
+          showToast('🚫 오늘 적립 한도를 초과했어요 (' + (r.data.limit||'?') + '회/일)');
+        } else if (err === 'cooldown') {
+          showToast('⏳ ' + (r.data.wait_sec || r.data.retry_sec || '') + '초 후 다시 시도해주세요');
+        } else if (err === 'invalid_type' || err === 'amount_oob') {
+          console.warn('[coin] invalid call:', err, finalType, amount);
+        } else {
+          console.warn('[coin]', err);
+        }
+      }
     });
   }
 }
@@ -4183,7 +4202,7 @@ function ctDoCheckIn(){
   data.days[dk] = today;
   _ctAttSave(data);
   // 기본 보상 +5
-  ctAddCoin(5, '📅 出席チェック');
+  ctAddCoin(5, '📅 出席チェック', 'attendance');
   // 스트릭 보너스 체크 (해당 일수 달성 시 1회만 지급)
   var streak = _ctAttStreak();
   var rewardKey;
@@ -4191,7 +4210,7 @@ function ctDoCheckIn(){
   ATT_STREAK_REWARDS.forEach(function(r){
     if (streak >= r.days && rewardKey.indexOf(r.days) < 0) {
       rewardKey.push(r.days);
-      ctAddCoin(r.coins, '🎁 連続'+r.days+'日ボーナス');
+      ctAddCoin(r.coins, '🎁 連続'+r.days+'日ボーナス', 'bonus');
       setTimeout(function(){ showToast(t('toast.streak', {days: r.days, coins: r.coins})); }, 800);
     }
   });
@@ -4251,7 +4270,7 @@ function bonusAcWatch(){
   closeOv('ov-att-bonus-ad');
   // 슬롯 카운트는 광고 시청 후 콜백에서 1 증가 (시청 안 했으면 차감 안 됨)
   ctOpenFullscreenAd('bonus', function(){
-    ctAddCoin(15, '📺 추가 광고 보상');
+    ctAddCoin(15, '📺 추가 광고 보상', 'ad');
     _ctBonusClaim();
     _ctRenderAttendance();
   });
@@ -4261,7 +4280,7 @@ function acWatchAd(){
   closeOv('ov-att-complete');
   // 전체화면 동영상 광고 → 콜백에서 +15チリ 추가 지급 → 풀스크린 완료 화면이 "+20チリ" 표시
   ctOpenFullscreenAd('attendance', function(){
-    ctAddCoin(15, '📺 出席広告視聴ボーナス');
+    ctAddCoin(15, '📺 出席広告視聴ボーナス', 'ad');
     _ctRenderAttendance();
     // 토스트는 풀스크린 완료 화면에서 자동 표시됨
   });
@@ -4289,7 +4308,7 @@ function ctUpdateAttendanceCard() {
 function ctWatchAd() {
   // 영수증 모드 등 다른 곳에서 호출 시 기존 모달 사용
   showAdModal(function() {
-    ctAddCoin(50, '📺 広告視聴');
+    ctAddCoin(50, '📺 広告視聴', 'ad');
     showToast(t('toast.ad_reward'));
   });
 }
@@ -4354,7 +4373,7 @@ function ctStoreExchange(id, name, cost) {
     return;
   }
   if (!confirm('「' + name + '」と交換しますか？\n' + cost + 'pt消費します。')) return;
-  ctAddCoin(-cost, '🎁 「' + name + '」交換');
+  ctAddCoin(-cost, '🎁 「' + name + '」交換', 'shop');
   showToast(t('toast.exchange_done', {name: name}));
 }
 
@@ -4510,7 +4529,7 @@ async function ctStoreExchangeDB(itemId) {
   }
   if (!confirm('「' + it.name + '」と交換しますか？\n' + it.cost_chiri + ' チリを消費します。')) return;
   // 코인 차감 (현재 Phase B에서는 단순 차감, Phase C에서 exchange_requests에 저장)
-  ctAddCoin(-it.cost_chiri, '🎁 「' + it.name + '」交換');
+  ctAddCoin(-it.cost_chiri, '🎁 「' + it.name + '」交換', 'shop');
   // 재고가 유한이면 차감
   if (it.stock > 0) {
     await _sb.from('store_items').update({ stock: it.stock - 1 }).eq('id', it.id);
@@ -5745,7 +5764,7 @@ async function ctSubmitPost() {
   ctRenderCatBar();
   ctRenderPosts();
   showToast(t('toast.post_done'));
-  ctAddCoin(1, '💬 チリトーク投稿');
+  ctAddCoin(1, '💬 チリトーク投稿', 'post');
 }
 
 var _cpStarRating = 0;
@@ -10257,7 +10276,7 @@ async function submitChiriPublish() {
   });
 
   // 포인트 지급 (+10 고정, 품목 수 무관)
-  ctAddCoin(10, '🧾 チリつも共有');
+  ctAddCoin(10, '🧾 チリつも共有', 'publish');
 
   // 별점 저장 (선택한 경우, 영수증 공유이므로 has_receipt: true)
   var _savedStarRating = _cpStarRating; // 리셋 전에 저장
@@ -12662,7 +12681,7 @@ async function submitManualPin() {
   newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
   if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
 
-  ctAddCoin(10, '📌 手動ピン登録');
+  ctAddCoin(10, '📌 手動ピン登録', 'pin');
 
   // 별점 저장 (선택한 경우, 수동 핀이므로 has_receipt: false)
   if (_mpStarRating > 0 && _currentUser) {
@@ -14275,7 +14294,7 @@ function ctOpenFullscreenAd(mode, callback) {
         var key   = 'ct_rad_' + today;
         var used  = parseInt(localStorage.getItem(key) || '0');
         localStorage.setItem(key, String(used + 1));
-        ctAddCoin(50, '📺 広告視聴');
+        ctAddCoin(50, '📺 広告視聴', 'ad');
       } else if (typeof callback === 'function') {
         callback(); // attendance / save 등 콜백 실행
       }
@@ -17980,7 +17999,7 @@ async function _sdDoCardPhotoUpload(file) {
       return;
     }
     // +10チリ 보상
-    ctAddCoin(10, '📸 메뉴 사진 공유');
+    ctAddCoin(10, '📸 메뉴 사진 공유', 'photo');
     showToast('🎉 사진 업로드 완료 +10チリ');
     // 카드 새로고침
     await _sdLoadMenuCards();
@@ -18515,7 +18534,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v237';
+window.__APP_VERSION__ = 'v238';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
