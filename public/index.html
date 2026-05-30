@@ -982,6 +982,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <span style="font-size:16px;color:#C8B273;">›</span>
     </div>
 
+    <!-- 광고 (절약 배너 바로 아래로 이동됨) -->
+    <div id="ad-slot-home-list" style="margin:14px 0 0;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;">
+      <div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div>
+    </div>
+
     <!-- 날짜별 그룹 영수증 -->
     <div class="sec-title" data-i18n="home.recent" style="margin-top:18px;padding-bottom:4px;">最近のレシート</div>
     <div id="home-receipts"></div>
@@ -6004,7 +6009,7 @@ function renderHome() {
   var recent=DB.slice().sort(function(a,b){return b.date.localeCompare(a.date);}).slice(0,12);
   var groups={}, order=[];
   recent.forEach(function(r){ if(!groups[r.date]){groups[r.date]=[];order.push(r.date);} groups[r.date].push(r); });
-  var _homeAdHtml = '<div id="ad-slot-home-list" style="margin:0 16px 8px;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:80px;display:flex;align-items:center;justify-content:center;"><div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div></div>';
+  // 광고 슬롯(ad-slot-home-list)은 이제 정적 HTML로 절약 배너 아래에 고정됨 — 여기서 동적 주입 안 함
   var html='';
   if(recent.length===0){
     html='<div style="text-align:center;padding:30px 20px;color:var(--text-3);font-size:13px;">'+t('home.no_receipts_yet')+'</div>';
@@ -6038,8 +6043,6 @@ function renderHome() {
           +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
           +'<div style="font-size:10px;color:var(--text-3);">'+t('home.item_count',{n:r.items.length})+'</div>'
           +'</div></div>';
-        // 첫 번째 카드 바로 아래 광고 삽입
-        if(homeCardCnt===1) html+=_homeAdHtml;
       });
     });
   }
@@ -18033,7 +18036,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v213';
+window.__APP_VERSION__ = 'v214';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
