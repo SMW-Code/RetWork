@@ -52,7 +52,8 @@ DECLARE
   v_caller UUID := auth.uid();
   v_is_admin BOOLEAN;
 BEGIN
-  SELECT is_admin INTO v_is_admin FROM profiles WHERE id = v_caller;
+  -- ⚠️ RETURNS TABLE 의 OUT 파라미터(id) 와 profiles.id 가 충돌하므로 반드시 명시
+  SELECT p.is_admin INTO v_is_admin FROM profiles p WHERE p.id = v_caller;
   IF NOT COALESCE(v_is_admin, FALSE) THEN
     RAISE EXCEPTION 'admin only';
   END IF;
