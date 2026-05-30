@@ -7459,9 +7459,11 @@ function _mrDownloadBlob(blob, filename){
 }
 function mrShare(){
   var url = 'https://retwork.jp';
-  var text = (typeof t==='function' ? t('mr.title') : '월별 리포트') + ' · ' + _mrY + '年 ' + _mrM + '月';
+  // ⚠️ URL을 text 안에 같이 넣음 — 받는 앱이 text만 채택해도 링크 따라감
+  //   (KakaoTalk/Line/SMS/메모 등 대부분의 share target 에서 안전)
+  var text = '📊 ' + _mrY + '年 ' + _mrM + '月 RetWork 리포트\n' + url;
   var canvas = _mrBuildCardCanvas();
-  // 카드 빌드 실패 → 기존처럼 링크만
+  // 카드 빌드 실패 → 링크만
   if (!canvas){
     if (navigator.share) navigator.share({title:'RetWork', text:text, url:url}).catch(function(){});
     else { try{navigator.clipboard.writeText(url);}catch(e){} showToast('🔗 '+url); }
@@ -7474,19 +7476,17 @@ function mrShare(){
     }
     var fname = 'retwork-report-'+_mrY+'-'+String(_mrM).padStart(2,'0')+'.jpg';
     var file  = (typeof File==='function') ? new File([blob], fname, {type:'image/jpeg'}) : null;
-    var shareData = { title:'RetWork', text:text, url:url };
+    var shareData = { title:'RetWork 리포트', text:text, url:url };
     if (file) shareData.files = [file];
-    // Web Share Level 2 (파일 공유) 지원 시
     if (file && navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
       navigator.share(shareData).catch(function(err){
-        // 사용자 취소면 조용히, 진짜 에러면 다운로드 폴백
         if (err && err.name !== 'AbortError') _mrDownloadBlob(blob, fname);
       });
     } else {
-      // 파일 공유 미지원 → 이미지는 갤러리에 저장, 링크/텍스트는 share 또는 클립보드
+      // 파일 공유 미지원 → 이미지는 저장, 텍스트(URL 포함)는 share/클립보드
       _mrDownloadBlob(blob, fname);
       if (navigator.share) navigator.share({title:'RetWork', text:text, url:url}).catch(function(){});
-      else { try{navigator.clipboard.writeText(url);}catch(e){} showToast('🖼 이미지 저장됨 · 링크 복사'); }
+      else { try{navigator.clipboard.writeText(text);}catch(e){} showToast('🖼 이미지 저장됨 · 링크 복사'); }
     }
   }, 'image/jpeg', 0.92);
 }
@@ -18303,7 +18303,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v226';
+window.__APP_VERSION__ = 'v227';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
