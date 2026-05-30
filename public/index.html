@@ -16908,7 +16908,7 @@ async function openAdminUserDetail(userId) {
   });
   var customRow = document.getElementById('adm-user-coin-custom');
   if (customRow) customRow.style.display = 'none';
-  if (typeof admLoadCoinHistory === 'function') admLoadCoinHistory();
+  if (typeof admLoadCoinHistory === 'function') admLoadCoinHistory(false);
 
   openOv('ov-admin-user-detail');
 }
@@ -16999,26 +16999,22 @@ async function admToggleUserAdmin() {
   await openAdminUserDetail(_admEditUserId);
 }
 
-// ── 치리 내역 기간 필터 ──
+// ── 치리 내역 기간 필터 + 페이지네이션 ──
 var _admCoinHistPeriod = 'all';
+var _admCoinHistRows   = [];   // 누적 로드된 행
+var _admCoinHistPageSize = 200;
 function admCoinHistPeriod(p){
   _admCoinHistPeriod = p;
   document.querySelectorAll('.adm-coinp-btn').forEach(function(b){
     b.classList.toggle('active', b.getAttribute('data-period') === p);
   });
   document.getElementById('adm-user-coin-custom').style.display = (p === 'custom') ? 'flex' : 'none';
-  if (p !== 'custom') admLoadCoinHistory();
+  if (p !== 'custom') admLoadCoinHistory(false);
 }
-function admCoinHistApplyCustom(){
-  admLoadCoinHistory();
-}
-async function admLoadCoinHistory(){
-  if (!_isAdmin || !_admEditUserId || !_sb) return;
-  var listEl = document.getElementById('adm-user-coin-list');
-  var sumEl  = document.getElementById('adm-user-coin-sum');
-  if (!listEl) return;
-  listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-3);font-size:11px;">로딩…</div>';
-  // 기간 → from/to
+function admCoinHistApplyCustom(){ admLoadCoinHistory(false); }
+function admCoinHistLoadMore(){ admLoadCoinHistory(true); }
+
+function _admCoinHistRangeFromPeriod(){
   var from = null, to = null;
   var now = new Date();
   if (_admCoinHistPeriod === '1d')  { from = new Date(now.getTime() - 1*86400*1000); }
@@ -17030,26 +17026,16 @@ async function admLoadCoinHistory(){
     if (fv) from = new Date(fv + 'T00:00:00');
     if (tv) to   = new Date(tv + 'T23:59:59');
   }
-  var res = await _sb.rpc('admin_user_coin_history', {
-    p_user: _admEditUserId,
-    p_from: from ? from.toISOString() : null,
-    p_to:   to   ? to.toISOString()   : null
-  });
-  if (res.error){
-    listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--red);font-size:11px;">로드 실패: '+_esc(res.error.message||'')+'</div>';
-    if (sumEl) sumEl.textContent = '—';
-    return;
-  }
-  var rows = res.data || [];
+  return { from: from, to: to };
+}
+function _admCoinHistRenderRows(rows, hasMore){
+  var listEl = document.getElementById('adm-user-coin-list');
+  if (!listEl) return;
   if (!rows.length){
     listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-3);font-size:11px;">기록 없음</div>';
-    if (sumEl) sumEl.textContent = '0건';
     return;
   }
-  var totalIn = 0, totalOut = 0;
-  rows.forEach(function(r){ if (r.amount > 0) totalIn += r.amount; else totalOut += r.amount; });
-  if (sumEl) sumEl.textContent = rows.length + '건 · +' + totalIn.toLocaleString() + ' / ' + totalOut.toLocaleString();
-  listEl.innerHTML = rows.map(function(r){
+  var html = rows.map(function(r){
     var pos = r.amount >= 0;
     var amtStr = (pos?'+':'') + r.amount.toLocaleString();
     var col    = pos ? 'var(--green)' : 'var(--red)';
@@ -17062,6 +17048,45 @@ async function admLoadCoinHistory(){
       +   '<div style="font-size:13px;font-weight:900;color:'+col+';white-space:nowrap;">'+amtStr+'</div>'
       + '</div>';
   }).join('');
+  if (hasMore){
+    html += '<button onclick="admCoinHistLoadMore()" style="width:100%;padding:10px;border:none;background:var(--surface);color:var(--green);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);border-top:.5px solid var(--border);">↓ 더보기 ('+rows.length+'건 로드됨)</button>';
+  } else if (rows.length >= _admCoinHistPageSize) {
+    html += '<div style="text-align:center;padding:10px;color:var(--text-3);font-size:10px;border-top:.5px solid var(--border);">모두 로드됨 ('+rows.length+'건)</div>';
+  }
+  listEl.innerHTML = html;
+}
+async function admLoadCoinHistory(append){
+  if (!_isAdmin || !_admEditUserId || !_sb) return;
+  var listEl = document.getElementById('adm-user-coin-list');
+  var sumEl  = document.getElementById('adm-user-coin-sum');
+  if (!listEl) return;
+  if (!append){
+    _admCoinHistRows = [];
+    listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text-3);font-size:11px;">로딩…</div>';
+  }
+  var range  = _admCoinHistRangeFromPeriod();
+  var offset = _admCoinHistRows.length;
+  var res = await _sb.rpc('admin_user_coin_history', {
+    p_user:   _admEditUserId,
+    p_from:   range.from ? range.from.toISOString() : null,
+    p_to:     range.to   ? range.to.toISOString()   : null,
+    p_offset: offset,
+    p_limit:  _admCoinHistPageSize
+  });
+  if (res.error){
+    listEl.innerHTML = '<div style="text-align:center;padding:16px;color:var(--red);font-size:11px;">로드 실패: '+_esc(res.error.message||'')+'</div>';
+    if (sumEl) sumEl.textContent = '—';
+    return;
+  }
+  var batch = res.data || [];
+  _admCoinHistRows = _admCoinHistRows.concat(batch);
+  // 페이지가 가득 찼으면 추가가 더 있을 가능성
+  var hasMore = batch.length >= _admCoinHistPageSize;
+  // 요약: 누적 기준
+  var totalIn = 0, totalOut = 0;
+  _admCoinHistRows.forEach(function(r){ if (r.amount > 0) totalIn += r.amount; else totalOut += r.amount; });
+  if (sumEl) sumEl.textContent = _admCoinHistRows.length + '건 · +' + totalIn.toLocaleString() + ' / ' + totalOut.toLocaleString();
+  _admCoinHistRenderRows(_admCoinHistRows, hasMore);
 }
 
 // ── 일시/영구 정지 ──
@@ -18474,7 +18499,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v235';
+window.__APP_VERSION__ = 'v236';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {

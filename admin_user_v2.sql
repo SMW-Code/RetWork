@@ -31,12 +31,17 @@ BEGIN
 END $$;
 GRANT EXECUTE ON FUNCTION admin_set_user_admin(UUID, BOOLEAN) TO authenticated;
 
--- ─── 2) 사용자 치리 내역 조회 (기간 필터) ─────────────────────────
+-- ─── 2) 사용자 치리 내역 조회 (기간 필터 + 페이지네이션) ──────────
 -- coin_transactions 테이블이 있어야 함 (없으면 빈 결과 반환)
+-- 시그니처 변경 시(파라미터 추가) DROP + CREATE 필요
+DROP FUNCTION IF EXISTS admin_user_coin_history(UUID, TIMESTAMPTZ, TIMESTAMPTZ);
+DROP FUNCTION IF EXISTS admin_user_coin_history(UUID, TIMESTAMPTZ, TIMESTAMPTZ, INT);
 CREATE OR REPLACE FUNCTION admin_user_coin_history(
-  p_user UUID,
-  p_from TIMESTAMPTZ DEFAULT NULL,
-  p_to   TIMESTAMPTZ DEFAULT NULL
+  p_user   UUID,
+  p_from   TIMESTAMPTZ DEFAULT NULL,
+  p_to     TIMESTAMPTZ DEFAULT NULL,
+  p_offset INT DEFAULT 0,
+  p_limit  INT DEFAULT 200
 )
 RETURNS TABLE(id UUID, amount INT, kind TEXT, note TEXT, created_at TIMESTAMPTZ)
 LANGUAGE plpgsql
@@ -58,12 +63,12 @@ BEGIN
       AND (p_from IS NULL OR ct.created_at >= p_from)
       AND (p_to   IS NULL OR ct.created_at <= p_to)
     ORDER BY ct.created_at DESC
-    LIMIT 200;
+    OFFSET GREATEST(p_offset, 0)
+    LIMIT  LEAST(GREATEST(p_limit, 1), 500);
 EXCEPTION WHEN undefined_table THEN
-  -- coin_transactions 테이블이 없으면 빈 결과
   RETURN;
 END $$;
-GRANT EXECUTE ON FUNCTION admin_user_coin_history(UUID, TIMESTAMPTZ, TIMESTAMPTZ) TO authenticated;
+GRANT EXECUTE ON FUNCTION admin_user_coin_history(UUID, TIMESTAMPTZ, TIMESTAMPTZ, INT, INT) TO authenticated;
 
 -- ─── 3) 추천 가입자 수 카운트 ────────────────────────────────────
 CREATE OR REPLACE FUNCTION admin_count_referred(p_user UUID)
