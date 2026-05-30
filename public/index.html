@@ -3973,19 +3973,25 @@ function _ctRenderAttendance(){
     + '</div>'
     + '</div>';
 
-  // ─── 카드2.5: 추가 광고 보상 (하루 1회) ───
-  var bonusClaimed = (localStorage.getItem('ct_bonus_ad_date') === _ctAttDayKey());
+  // ─── 카드2.5: 추가 광고 보상 (출석 슬롯당 2회까지) ───
+  var bonusUsed = _ctBonusCurSlotCount();
+  var bonusLeft = BONUS_PER_SLOT - bonusUsed;
+  var bonusCanClaim = bonusLeft > 0;
+  var bonusSubText, bonusBtnLabel;
+  if (bonusCanClaim) {
+    bonusSubText = '이번 슬롯에서 ' + bonusLeft + '회 받을 수 있어요. (' + bonusUsed + ' / ' + BONUS_PER_SLOT + ')';
+    bonusBtnLabel = '추가 광고 보상 받기';
+  } else {
+    bonusSubText = '이번 슬롯은 모두 받았어요. 다음 슬롯까지 ' + _ctAttFmtMs(_ctAttNextSlotMs());
+    bonusBtnLabel = '다음 슬롯 대기 중';
+  }
   h += '<div class="att-card">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
     +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);">📺 추가 광고 보상</div>'
     +   '<div style="font-size:13px;font-weight:900;color:var(--gold-dark);">+15 치리</div>'
     + '</div>'
-    + '<div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;">'
-    +   (bonusClaimed ? '오늘 추가 보상은 이미 받았어요. 내일 다시 받을 수 있어요.' : '받을 수 있는 추가 보상이 있습니다.')
-    + '</div>'
-    + '<button class="att-go-btn" onclick="ctOpenBonusAd()" '+(bonusClaimed?'disabled':'')+'>'
-    +   (bonusClaimed ? '오늘 받음 ✓' : '추가 광고 보상 받기')
-    + '</button>'
+    + '<div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;">' + bonusSubText + '</div>'
+    + '<button class="att-go-btn" onclick="ctOpenBonusAd()" '+(bonusCanClaim?'':'disabled')+'>' + bonusBtnLabel + '</button>'
     + '</div>';
 
   // ─── 카드3: 달력 ───
@@ -4083,10 +4089,31 @@ function acSkip(){
   // 건너뛰기 → 기본 보상 +5チリ 메시지 (ctDoCheckIn 에서 이미 지급됨)
   showToast(t('toast.checkin'));
 }
-/* 추가 광고 보상 모달 — 출석과 별개로 하루 1회 +15치리 지급 */
+/* 추가 광고 보상 — 출석 슬롯(3개/일)당 BONUS_PER_SLOT 회 +15치리 지급 */
+var BONUS_PER_SLOT = 2;
+function _ctBonusData(){
+  try {
+    var raw = localStorage.getItem('ct_bonus_ad_v2');
+    var d = raw ? JSON.parse(raw) : null;
+    var today = _ctAttDayKey();
+    if (!d || d.date !== today) return { date: today, slots: {} };
+    return d;
+  } catch(e){ return { date: _ctAttDayKey(), slots: {} }; }
+}
+function _ctBonusSave(d){ localStorage.setItem('ct_bonus_ad_v2', JSON.stringify(d)); }
+function _ctBonusCurSlotCount(){
+  var d = _ctBonusData();
+  return d.slots[_ctAttSlot()] || 0;
+}
+function _ctBonusClaim(){
+  var d = _ctBonusData();
+  var s = _ctAttSlot();
+  d.slots[s] = (d.slots[s] || 0) + 1;
+  _ctBonusSave(d);
+}
 function ctOpenBonusAd(){
-  if (localStorage.getItem('ct_bonus_ad_date') === _ctAttDayKey()){
-    showToast('오늘 추가 보상은 이미 받았어요');
+  if (_ctBonusCurSlotCount() >= BONUS_PER_SLOT){
+    showToast('이번 슬롯은 모두 받았어요. 다음 슬롯에 받을 수 있어요.');
     return;
   }
   openOv('ov-att-bonus-ad');
@@ -4097,10 +4124,10 @@ function bonusAcCloseOutside(e){
 function bonusAcSkip(){ closeOv('ov-att-bonus-ad'); }
 function bonusAcWatch(){
   closeOv('ov-att-bonus-ad');
-  // 풀스크린 광고 후 콜백에서 보상 지급 + 오늘 받음 표시
+  // 슬롯 카운트는 광고 시청 후 콜백에서 1 증가 (시청 안 했으면 차감 안 됨)
   ctOpenFullscreenAd('bonus', function(){
     ctAddCoin(15, '📺 추가 광고 보상');
-    localStorage.setItem('ct_bonus_ad_date', _ctAttDayKey());
+    _ctBonusClaim();
     _ctRenderAttendance();
   });
 }
@@ -18004,7 +18031,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v210';
+window.__APP_VERSION__ = 'v211';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
