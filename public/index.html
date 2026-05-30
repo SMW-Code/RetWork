@@ -6286,15 +6286,16 @@ function openEditReceipt(id) {
   var r = DB.find(function(x){ return String(x.id) === String(id); });
   if (!r) return;
   _editId = id;
-  // 영수증 원본의 세금 offset 계산 (예: ¥23,701 - ¥21,911 = ¥1,790)
-  var origItemsSum = (r.items || []).reduce(function(s, it){ return s + (it.price || 0); }, 0);
-  _editTaxOffset = (r.total || 0) - origItemsSum;
-  if (_editTaxOffset < 0) _editTaxOffset = 0; // 음수는 무시 (이상 케이스)
-  _editItems = r.items.map(function(it){
+  _editItems = (r.items || []).map(function(it){
     var q = it.qty || 1;
     // price는 행 합계(단가×수량)로 저장되므로, 편집 시 단가로 변환
-    return { name: it.name, qty: q, price: Math.round(it.price / q) };
+    return { name: it.name, qty: q, price: Math.round((it.price || 0) / q) };
   });
+  // offset 은 단가 변환 *후* 의 합산 기준으로 계산 → 반올림 손실(¥1~2)까지
+  //  offset 에 흡수돼 원본 합계가 그대로 유지됨 (세금 + 반올림 손실 동시 보존)
+  var convertedSum = _editItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
+  _editTaxOffset = (r.total || 0) - convertedSum;
+  if (_editTaxOffset < 0) _editTaxOffset = 0; // 음수는 무시 (이상 케이스)
 
   document.getElementById('edit-store').value = r.store || '';
   document.getElementById('edit-date').value = r.date || '';
@@ -17923,7 +17924,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v208';
+window.__APP_VERSION__ = 'v209';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
