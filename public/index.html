@@ -3853,6 +3853,19 @@ var _ctCoinHistory = [];          // { desc, amount, date }
 var _ctCoinHistoryOpen = false;
 
 /* ── 포인트 추가/차감 헬퍼 ── */
+// desc 문자열에서 적절한 transaction type 추정
+function _ctDetectCoinType(desc){
+  if (!desc) return 'bonus';
+  var d = String(desc).toLowerCase();
+  if (d.indexOf('출석') >= 0 || d.indexOf('出席') >= 0 || d.indexOf('attendance') >= 0) return 'attendance';
+  if (d.indexOf('광고') >= 0 || d.indexOf('広告') >= 0 || d.indexOf('ad') >= 0 || d.indexOf('視聴') >= 0) return 'ad';
+  if (d.indexOf('교환') >= 0 || d.indexOf('交換') >= 0 || d.indexOf('exchange') >= 0 || d.indexOf('shop') >= 0) return 'shop';
+  if (d.indexOf('스캔') >= 0 || d.indexOf('スキャン') >= 0 || d.indexOf('scan') >= 0 || d.indexOf('영수증') >= 0) return 'scan';
+  if (d.indexOf('추천') >= 0 || d.indexOf('referral') >= 0 || d.indexOf('초대') >= 0) return 'referral';
+  if (d.indexOf('드로') >= 0 || d.indexOf('draw') >= 0 || d.indexOf('応募') >= 0) return 'draw';
+  if (d.indexOf('boost') >= 0 || d.indexOf('만보') >= 0) return 'boost';
+  return 'bonus';
+}
 function ctAddCoin(amount, desc) {
   _ctCoinBalance += amount;
   if (_ctCoinBalance < 0) _ctCoinBalance = 0;
@@ -3863,17 +3876,18 @@ function ctAddCoin(amount, desc) {
   if (_ctCoinHistory.length > 100) _ctCoinHistory.pop();
   ctUpdateCoinDisplay();
   if (_ctCoinHistoryOpen) ctRenderCoinHistory();
-  // DB 동기화: profiles 잔액 + coin_transactions 내역
-  if (_sb && _currentUser) {
-    _sb.from('profiles').update({ coin_balance: _ctCoinBalance }).eq('id', _currentUser.id).then(function(r){
-      if (r.error) console.warn('[coin sync]', r.error.message);
+  // DB 동기화: client_add_coins RPC (잔액 + coin_transactions 한 번에)
+  //  ⚠️ profiles 직접 UPDATE 는 보안 트리거가 막음 → RPC 필수
+  if (_sb && _currentUser && amount !== 0) {
+    var type = _ctDetectCoinType(desc);
+    _sb.rpc('client_add_coins', {
+      p_amount: amount,
+      p_type: type,
+      p_description: desc || null
+    }).then(function(r){
+      if (r.error) { console.warn('[coin]', r.error.message); return; }
+      if (r.data && !r.data.ok) console.warn('[coin]', r.data);
     });
-    _sb.from('coin_transactions').insert({
-      user_id: _currentUser.id,
-      amount: amount,
-      reason: desc || null,
-      balance_after: _ctCoinBalance
-    }).then(function(r){ if (r.error) console.warn('[coin tx]', r.error.message); });
   }
 }
 
@@ -16938,8 +16952,10 @@ async function admSaveUserCoin() {
   if (!_isAdmin || !_admEditUserId) return;
   var val = parseInt(document.getElementById('adm-user-coin').value);
   if (isNaN(val) || val < 0) { showToast('유효한 숫자를 입력해주세요'); return; }
-  var res = await _sb.from('profiles').update({ coin_balance: val }).eq('id', _admEditUserId);
+  // 보안 트리거 우회 위해 admin RPC 사용
+  var res = await _sb.rpc('admin_set_user_coin', { p_target: _admEditUserId, p_balance: val });
   if (res.error) { showToast('저장 실패: '+res.error.message); return; }
+  if (res.data && !res.data.ok) { showToast('저장 실패: '+(res.data.err||'unknown')); return; }
   // 본인이라면 로컬도 동기화
   if (_admEditUserId === _currentUser.id) {
     _ctCoinBalance = val;
@@ -18499,7 +18515,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v236';
+window.__APP_VERSION__ = 'v237';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
