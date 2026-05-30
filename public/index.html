@@ -18130,7 +18130,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v223';
+window.__APP_VERSION__ = 'v224';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18170,16 +18170,29 @@ if ('serviceWorker' in navigator) {
 })();
 
 /* ══════════════════════════════════════════════════════════════
-   쓸어내리기 새로고침 (Pull-To-Refresh)
-   - 스크롤 컨테이너가 맨 위(scrollTop=0)일 때 아래로 쓸어내리면 location.reload()
-   - 임계값 80px, 저항감 0.6, 편집모달/시트 안에서는 비활성
-   - 새로고침 시 SW 의 HTML network-first 전략으로 최신 버전 자동 적용
+   쓸어내리기 새로고침 (Pull-To-Refresh) — 원형 프로그레스 + 로딩 스피너
+   - 끌수록 링이 차오름 (테마색 progress arc)
+   - 임계점 도달: 링 완성 + 살짝 스케일 펄스
+   - 놓으면: 새로고침 아이콘이 회전하며 reload
 ══════════════════════════════════════════════════════════════ */
 (function(){
   var startY=0, currentY=0, startX=0, pulling=false, armed=false;
   var THRESHOLD = 80;
   var RESIST = 0.55;
+  var CIRC = 94.25; // 2 * π * 15 (반지름 15 원의 둘레)
   var indicator = null;
+  // 스피너 회전/펄스 keyframes 1회만 주입
+  if (!document.getElementById('_ptr_style')){
+    var st = document.createElement('style');
+    st.id = '_ptr_style';
+    st.textContent =
+      '@keyframes _ptr_spin{to{transform:rotate(360deg);}}' +
+      '@keyframes _ptr_pulse{0%{transform:scale(1);}50%{transform:scale(1.12);}100%{transform:scale(1);}}' +
+      '#_ptr_indicator._ready{animation:_ptr_pulse .35s ease;}' +
+      '#_ptr_indicator._loading #_ptr_icon{animation:_ptr_spin .9s linear infinite;transform-origin:12px 12px;}' +
+      '#_ptr_indicator._loading #_ptr_arc{stroke-dashoffset:0!important;transition:stroke-dashoffset .15s ease;}';
+    document.head.appendChild(st);
+  }
 
   function _scrollableAt(el){
     while (el && el.nodeType === 1 && el !== document.body){
@@ -18193,18 +18206,48 @@ if ('serviceWorker' in navigator) {
     if (indicator) return indicator;
     indicator = document.createElement('div');
     indicator.id = '_ptr_indicator';
-    indicator.style.cssText = 'position:fixed;top:0;left:50%;transform:translate(-50%,-130%);z-index:99999;background:var(--surface,#fff);border:1px solid var(--border,rgba(0,0,0,.08));border-top:none;border-radius:0 0 18px 18px;padding:10px 20px;font-size:12px;font-weight:800;color:var(--text-1,#1a1a1a);box-shadow:0 6px 20px rgba(0,0,0,.18);transition:transform .18s cubic-bezier(.32,.72,0,1);pointer-events:none;font-family:var(--font,sans-serif);white-space:nowrap;';
+    indicator.style.cssText =
+      'position:fixed;top:14px;left:50%;transform:translate(-50%,-160%);z-index:99999;' +
+      'width:44px;height:44px;background:var(--surface,#fff);' +
+      'border:0.5px solid var(--border,rgba(0,0,0,.08));border-radius:50%;' +
+      'display:flex;align-items:center;justify-content:center;' +
+      'box-shadow:0 8px 24px rgba(0,0,0,.18),0 2px 6px rgba(0,0,0,.08);' +
+      'transition:transform .22s cubic-bezier(.32,.72,0,1);pointer-events:none;' +
+      'backdrop-filter:saturate(180%) blur(8px);-webkit-backdrop-filter:saturate(180%) blur(8px);';
+    indicator.innerHTML =
+      '<div style="position:relative;width:36px;height:36px;display:flex;align-items:center;justify-content:center;">' +
+        '<svg width="36" height="36" viewBox="0 0 36 36" style="position:absolute;inset:0;">' +
+          '<circle cx="18" cy="18" r="15" fill="none" stroke="var(--border-mid,rgba(0,0,0,.08))" stroke-width="2.5"/>' +
+          '<circle id="_ptr_arc" cx="18" cy="18" r="15" fill="none" stroke="var(--green)" stroke-width="2.5" ' +
+            'stroke-linecap="round" stroke-dasharray="' + CIRC + '" stroke-dashoffset="' + CIRC + '" ' +
+            'transform="rotate(-90 18 18)" style="transition:stroke-dashoffset .12s linear,stroke .15s;"/>' +
+        '</svg>' +
+        '<svg id="_ptr_icon" width="16" height="16" viewBox="0 0 24 24" fill="none" ' +
+          'stroke="var(--text-2)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" ' +
+          'style="transition:transform .15s ease,stroke .15s;">' +
+          '<polyline points="23 4 23 10 17 10"/>' +
+          '<path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>' +
+        '</svg>' +
+      '</div>';
     document.body.appendChild(indicator);
     return indicator;
   }
-  function _hide(){ if (indicator) indicator.style.transform = 'translate(-50%,-130%)'; }
+  function _hide(){
+    if (!indicator) return;
+    indicator.style.transform = 'translate(-50%,-160%)';
+    indicator.classList.remove('_loading','_ready');
+    // 진행 arc 초기화
+    var arc = indicator.querySelector('#_ptr_arc');
+    if (arc) arc.style.strokeDashoffset = CIRC;
+    var icon = indicator.querySelector('#_ptr_icon');
+    if (icon){ icon.style.transform = ''; icon.style.stroke = 'var(--text-2)'; }
+    if (arc) arc.style.stroke = 'var(--green)';
+  }
   function _reset(){ pulling=false; armed=false; _hide(); }
 
   document.addEventListener('touchstart', function(e){
     if (e.touches.length !== 1) { armed=false; return; }
-    // 편집/시트 모달 안에서는 실수로 발동되지 않게 비활성
     if (e.target.closest && e.target.closest('.confirm-overlay,.bottom-sheet-overlay,#ov-edit,#ov-manual,#ov-scan')) { armed=false; return; }
-    // 지도 영역(Google Maps) 내부에서는 비활성 — 지도 팬/줌과 충돌 방지
     if (e.target.closest && e.target.closest('#ct-google-map,#google-map,.gm-style')) { armed=false; return; }
     var t = e.touches[0];
     startY = currentY = t.clientY;
@@ -18214,22 +18257,39 @@ if ('serviceWorker' in navigator) {
     armed = !sc || sc.scrollTop <= 0;
   }, { passive: true });
 
-  // passive:false 로 잡아 PTR 동작 중에는 preventDefault 로 브라우저 네이티브 PTR/주소창 표시 차단
+  var _wasReady = false; // pulse 1회만 재생용
   document.addEventListener('touchmove', function(e){
     if (!armed) return;
     var t = e.touches[0];
     currentY = t.clientY;
     var dy = currentY - startY;
     var dx = Math.abs(t.clientX - startX);
-    if (dy <= 0 || dx > Math.abs(dy) * 0.6) return; // 위로 끌거나 옆으로면 무시
-    // 우리가 PTR을 잡았으니 브라우저 네이티브 동작(주소창 펼침, 네이티브 PTR) 차단
+    if (dy <= 0 || dx > Math.abs(dy) * 0.6) return;
     if (e.cancelable) e.preventDefault();
     pulling = true;
     var pull = Math.min(dy * RESIST, 130);
     var ind = _ind();
     var pct = Math.min(pull / THRESHOLD, 1);
-    ind.style.transform = 'translate(-50%, ' + (pct * 130 - 130) + '%)';
-    ind.textContent = pull >= THRESHOLD ? '↑ 놓으면 새로고침' : '↓ 더 내리세요';
+    // 인디케이터 슬라이드 다운
+    ind.style.transform = 'translate(-50%, ' + (pct * 160 - 160) + '%)';
+    // 프로그레스 arc 채우기
+    var arc = ind.querySelector('#_ptr_arc');
+    if (arc) arc.style.strokeDashoffset = CIRC * (1 - pct);
+    // 중앙 아이콘은 끌수록 살짝 회전 (시각적 피드백)
+    var icon = ind.querySelector('#_ptr_icon');
+    if (icon) icon.style.transform = 'rotate(' + (pct * 270) + 'deg)';
+    // 임계점 도달: 색상 강조 + 펄스 1회
+    if (pct >= 1){
+      if (icon) icon.style.stroke = 'var(--green)';
+      if (!_wasReady){
+        _wasReady = true;
+        ind.classList.add('_ready');
+        setTimeout(function(){ if(indicator) indicator.classList.remove('_ready'); }, 360);
+      }
+    } else {
+      _wasReady = false;
+      if (icon) icon.style.stroke = 'var(--text-2)';
+    }
   }, { passive: false });
 
   function _release(){
@@ -18237,9 +18297,13 @@ if ('serviceWorker' in navigator) {
     var pull = (currentY - startY) * RESIST;
     if (pull >= THRESHOLD){
       var ind = _ind();
-      ind.textContent = '🔄 새로고침 중...';
-      ind.style.transform = 'translate(-50%, 0%)';
-      setTimeout(function(){ location.reload(); }, 180);
+      // 로딩 상태로 전환 — 아이콘 회전 시작
+      ind.classList.remove('_ready');
+      ind.classList.add('_loading');
+      ind.style.transform = 'translate(-50%, 14px)';
+      var icon = ind.querySelector('#_ptr_icon');
+      if (icon){ icon.style.transform = ''; icon.style.stroke = 'var(--green)'; }
+      setTimeout(function(){ location.reload(); }, 280);
     } else {
       _hide();
     }
