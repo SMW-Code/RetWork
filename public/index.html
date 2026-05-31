@@ -814,7 +814,101 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDPt8HONIu2SKsQBSIcFD5f6tir3g2GWXI&libraries=places&language=ja&loading=async&v=weekly"></script>
 </head>
 <body>
-<div class="phone" id="app">
+
+<!-- ════════════════════════════════════════════════════════════════
+     SEO 랜딩 — 봇/크롤러용 풀텍스트 콘텐츠 (실사용자는 .phone 이 위에 덮어서 안 보임)
+     AdSense 의 "콘텐츠 가치" 평가에서 필수 — 정적 인덱싱 가능 콘텐츠 제공
+     레이아웃: position:fixed inset:0 z-index:0 → .phone (z-index:100) 이 위에 덮음
+     ════════════════════════════════════════════════════════════════ -->
+<section id="seo-landing" lang="ja" aria-hidden="false"
+  style="position:fixed;inset:0;z-index:0;background:transparent;overflow-y:auto;-webkit-overflow-scrolling:touch;
+         padding:32px 20px 80px;color:rgba(255,255,255,.78);font-family:'Noto Sans JP','Hiragino Sans','Yu Gothic',sans-serif;
+         font-size:14px;line-height:1.75;">
+<div style="max-width:760px;margin:0 auto;">
+  <header style="border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:20px;margin-bottom:28px;">
+    <h1 style="font-size:28px;font-weight:900;color:#fff;margin:0 0 8px;letter-spacing:-.5px;">
+      RetWork（チリつも）— レシート家計簿で節約をスマートに
+    </h1>
+    <p style="font-size:14px;color:rgba(255,255,255,.7);margin:0;font-weight:500;">
+      日本最大級のレシート共有型節約アプリ。撮るだけで自動家計簿、近所の最安価格マップで賢く節約。
+    </p>
+  </header>
+
+  <section>
+    <h2 style="font-size:18px;font-weight:800;color:#fff;border-left:4px solid #16a87a;padding-left:10px;margin:24px 0 12px;">RetWork とは</h2>
+    <p>RetWork（リトワーク／日本語通称「チリつも」）は、毎日の買い物レシートを撮影するだけで自動的に家計簿が出来上がり、同じエリアの利用者と価格情報を共有することで「いつ・どこで・何を買えば最もお得か」が一目で分かるサービスです。</p>
+    <p>「チリも積もれば山となる」という諺のとおり、毎日の小さな節約の積み重ねが、年間で数万円の節約につながります。RetWork は、その「チリ」を見える化し、続けやすい仕組みを提供します。</p>
+    <p>家計簿アプリは数多くありますが、RetWork は「個人の記録」だけでなく「地域全体の価格情報」を共有することで、より実用的な節約をサポートする点が特徴です。スマートフォンのカメラ一つで、AI が店舗名・商品名・価格を自動認識するため、手入力の煩わしさがありません。</p>
+  </section>
+
+  <section>
+    <h2 style="font-size:18px;font-weight:800;color:#fff;border-left:4px solid #16a87a;padding-left:10px;margin:24px 0 12px;">主な機能</h2>
+    <ul style="margin:0 0 16px 22px;">
+      <li><strong>OCR レシート読取</strong>：レシートを撮影するだけで店舗名・商品名・金額を自動認識して家計簿に反映。手入力ゼロ。</li>
+      <li><strong>カテゴリ別自動分類</strong>：食料品・外食・カフェ・生活雑貨・医療・交通・娯楽など16カテゴリで自動分類。</li>
+      <li><strong>月別レポート</strong>：支出傾向・カテゴリ別比率・予算消化率を可視化。月末に節約レポートを自動生成。</li>
+      <li><strong>チリつもマップ</strong>：近所のスーパーや飲食店の価格情報を共有・閲覧。最安店舗を地図で発見。</li>
+      <li><strong>チリリワード</strong>：出席チェックや情報共有で「チリ（ポイント）」を貯めて、商品券などに交換可能。</li>
+      <li><strong>チリトーク</strong>：節約コミュニティで体験談・お得情報を共有。仲間とモチベーションを維持。</li>
+      <li><strong>4言語対応</strong>：日本語・韓国語・英語・中国語。在日外国人にも対応。</li>
+      <li><strong>PWA 対応</strong>：ホーム画面に追加するだけでアプリのように使える。インストール不要。</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 style="font-size:18px;font-weight:800;color:#fff;border-left:4px solid #16a87a;padding-left:10px;margin:24px 0 12px;">こんな方におすすめ</h2>
+    <ul style="margin:0 0 16px 22px;">
+      <li>毎月の支出を「なんとなく」で済ませている方</li>
+      <li>家計簿を始めたいけれど続かなかった方</li>
+      <li>近所のスーパーの価格を比較して買い物したい主婦・主夫</li>
+      <li>一人暮らしで食費・光熱費をしっかり管理したい学生・会社員</li>
+      <li>子育て中で家計を効率化したいファミリー</li>
+      <li>節約仲間と情報交換しながらモチベーションを保ちたい方</li>
+      <li>日々のチリツモ節約を楽しみたい方</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2 style="font-size:18px;font-weight:800;color:#fff;border-left:4px solid #16a87a;padding-left:10px;margin:24px 0 12px;">使い方の流れ</h2>
+    <ol style="margin:0 0 16px 22px;">
+      <li><strong>無料でアカウント登録</strong>：メールアドレスだけで30秒で完了。</li>
+      <li><strong>レシートを撮影</strong>：買い物のたびにレシートをパシャッと撮るだけ。AI が自動入力。</li>
+      <li><strong>支出を確認</strong>：月別レポートで支出傾向を一目把握。予算オーバーを未然に防ぐ。</li>
+      <li><strong>マップで節約</strong>：近所の最安店舗を地図で発見。賢く買い物。</li>
+      <li><strong>チリで還元</strong>：貯まったチリを商品券などに交換して、節約の楽しさを実感。</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2 style="font-size:18px;font-weight:800;color:#fff;border-left:4px solid #16a87a;padding-left:10px;margin:24px 0 12px;">節約のヒント</h2>
+    <p>節約の第一歩は「自分が何にいくら使っているかを知ること」です。RetWork のレシート家計簿を1ヶ月続けるだけで、外食費・コンビニ費・嗜好品など、無意識に使っているお金が見えてきます。</p>
+    <p>さらに、地域の価格マップを活用すれば、同じ商品でも店舗を変えるだけで月数千円の節約が可能です。例えば、毎日のミネラルウォーター1本でも、最安店舗を選び続ければ年間で約5,000円の差が生まれます。</p>
+    <p>「節約=我慢」ではなく「節約=賢い選択」。RetWork はそのお手伝いをします。</p>
+  </section>
+
+  <section>
+    <h2 style="font-size:18px;font-weight:800;color:#fff;border-left:4px solid #16a87a;padding-left:10px;margin:24px 0 12px;">よくあるご質問</h2>
+    <p><strong>Q. 利用料金はかかりますか？</strong><br>A. 基本機能はすべて無料です。一部のプレミアム機能には有料プランがありますが、家計簿・OCR・マップ・コミュニティはすべて無料でご利用いただけます。</p>
+    <p><strong>Q. レシートのデータは安全ですか？</strong><br>A. すべての通信は HTTPS で暗号化され、データは厳格なアクセス制御の下に保管されています。詳細は<a href="/privacy.html" style="color:#7ad9b3;pointer-events:auto;">プライバシーポリシー</a>をご確認ください。</p>
+    <p><strong>Q. アプリのインストールは必要ですか？</strong><br>A. ブラウザでそのまま利用できます。ホーム画面に追加すれば、アプリのような体験で利用可能です。</p>
+    <p><strong>Q. 海外からでも使えますか？</strong><br>A. 多言語対応していますが、価格マップは日本国内のご利用を想定して最適化されています。</p>
+  </section>
+
+  <footer style="margin-top:40px;padding-top:24px;border-top:1px solid rgba(255,255,255,.12);text-align:center;color:rgba(255,255,255,.5);font-size:12px;">
+    <nav style="margin-bottom:14px;">
+      <a href="/about.html" style="color:#7ad9b3;text-decoration:none;font-weight:600;margin:0 8px;pointer-events:auto;">サービスについて</a> ·
+      <a href="/privacy.html" style="color:#7ad9b3;text-decoration:none;font-weight:600;margin:0 8px;pointer-events:auto;">プライバシーポリシー</a> ·
+      <a href="/terms.html" style="color:#7ad9b3;text-decoration:none;font-weight:600;margin:0 8px;pointer-events:auto;">利用規約</a> ·
+      <a href="/contact.html" style="color:#7ad9b3;text-decoration:none;font-weight:600;margin:0 8px;pointer-events:auto;">お問い合わせ</a> ·
+      <a href="/blog/" style="color:#7ad9b3;text-decoration:none;font-weight:600;margin:0 8px;pointer-events:auto;">ブログ</a>
+    </nav>
+    <p style="margin:0;">© 2026 RetWork（チリつも）. All rights reserved.<br>
+    運営者：SEO MINWOO ・ 所在地：東京都中央区晴海 ・ お問い合わせ：<a href="mailto:minwoo.seo1019@gmail.com" style="color:rgba(255,255,255,.6);pointer-events:auto;">minwoo.seo1019@gmail.com</a></p>
+  </footer>
+</div>
+</section>
+
+<div class="phone" id="app" style="z-index:100;">
 
 <!-- ══ 온보딩 슬라이드 ══ -->
 <div class="onb-screen" id="screen-onboarding">
@@ -18534,7 +18628,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v238';
+window.__APP_VERSION__ = 'v239';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
