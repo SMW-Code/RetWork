@@ -3872,6 +3872,17 @@ function switchMode(mode) {
   });
   document.querySelector('.tabbar').style.display = isReceipt ? '' : 'none';
 
+  // 가드: receipt 모드 전환 시 어떤 .screen 도 .active 가 아니면 home 기본 활성화
+  // (앱 시작 시 _applyNavClasses 가 chiri 모드 복원하면서 .screen.active 를 다 제거한 상태에서
+  //  receipt 로 토글하면 빈 화면 + 탭바만 상단에 떠 보이는 버그 수정)
+  if (isReceipt && !document.querySelector('.screen.active')) {
+    if (typeof switchTab === 'function') switchTab('home');
+  }
+  // 가드: chiri 모드 전환 시 어떤 .ct-screen 도 .active 가 아니면 map 기본 활성화
+  if (!isReceipt && !document.querySelector('.ct-screen.active')) {
+    if (typeof ctSwitchTab === 'function') ctSwitchTab('map');
+  }
+
   // チリつも 화면/탭바 표시 여부
   document.querySelectorAll('.ct-screen').forEach(function(s) {
     s.style.display = (!isReceipt && s.classList.contains('active')) ? 'flex' : 'none';
@@ -18627,7 +18638,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v240';
+window.__APP_VERSION__ = 'v241';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
