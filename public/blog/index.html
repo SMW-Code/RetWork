@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>節約ブログ - RetWork（チリつも）｜家計簿・節約術・お得情報</title>
-<meta name="description" content="RetWork節約ブログでは、レシート家計簿の活用方法、一人暮らし・主婦・学生のための食費節約術、ポイ活、価格比較のコツなど、毎日の節約に役立つ情報をお届けします。">
-<meta name="keywords" content="節約ブログ,家計簿ブログ,節約術,節約のコツ,一人暮らし節約,食費節約,主婦節約,ポイ活,価格比較">
+<meta name="description" content="RetWork節約ブログでは、レシート家計簿の活用方法、一人暮らし・主婦・学生・夫婦のための食費節約術、ポイ活、価格比較、決済手段のコツなど、毎日の節約に役立つ情報を10記事以上掲載しています。">
+<meta name="keywords" content="節約ブログ,家計簿ブログ,節約術,節約のコツ,一人暮らし節約,食費節約,主婦節約,ポイ活,価格比較,夫婦 家計,キャッシュレス">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <link rel="canonical" href="https://retwork.jp/blog/">
 <meta property="og:type" content="website">
@@ -28,14 +28,23 @@
   .back{display:inline-block;margin-bottom:24px;font-size:13px;color:#666;text-decoration:none;}
   .back:hover{color:#0d7a5f;}
   .intro{background:#f5f7f9;border-radius:14px;padding:18px 22px;margin-bottom:32px;font-size:14px;color:#555;}
+  .filter-bar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px;}
+  .filter-btn{padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid #e5e5e5;background:#fff;color:#555;cursor:pointer;text-decoration:none;display:inline-block;}
+  .filter-btn.active{background:#16a87a;color:#fff;border-color:#16a87a;}
+  .filter-btn:hover{border-color:#16a87a;color:#0d7a5f;}
+  .filter-btn.active:hover{color:#fff;}
   .post-list{display:flex;flex-direction:column;gap:20px;}
-  .post{display:block;padding:24px;border:1px solid #e5e5e5;border-radius:16px;background:#fff;text-decoration:none;color:inherit;transition:all .15s;}
+  .post{display:block;padding:24px;border:1px solid #e5e5e5;border-radius:16px;background:#fff;text-decoration:none;color:inherit;transition:all .15s;position:relative;}
   .post:hover{border-color:#16a87a;box-shadow:0 6px 20px rgba(22,168,122,.12);transform:translateY(-2px);}
-  .post-cat{display:inline-block;font-size:11px;font-weight:800;color:#0d7a5f;background:#e8f6f1;padding:4px 10px;border-radius:10px;margin-bottom:10px;}
+  .post-badges{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+  .post-cat{display:inline-block;font-size:11px;font-weight:800;color:#0d7a5f;background:#e8f6f1;padding:4px 10px;border-radius:10px;}
+  .post-new{display:inline-block;font-size:10px;font-weight:800;color:#fff;background:#e53935;padding:3px 9px;border-radius:10px;letter-spacing:.3px;}
   .post-title{font-size:19px;font-weight:800;color:#1a1a1a;margin-bottom:8px;line-height:1.4;letter-spacing:-.3px;}
   .post-excerpt{font-size:13px;color:#555;line-height:1.7;margin-bottom:12px;}
   .post-meta{font-size:11px;color:#999;font-weight:500;}
   h2{font-size:18px;font-weight:800;margin:40px 0 16px;color:#1a1a1a;padding-bottom:6px;border-bottom:2px solid #16a87a;display:inline-block;}
+  .category-list{display:flex;flex-wrap:wrap;gap:8px;}
+  .category-item{font-size:13px;color:#555;background:#f5f7f9;padding:6px 12px;border-radius:10px;}
   .footer{margin-top:60px;padding-top:24px;border-top:1px solid #e5e5e5;font-size:12px;color:#888;text-align:center;}
   .footer a{color:#0d7a5f;text-decoration:none;}
   .footer a:hover{text-decoration:underline;}
@@ -54,29 +63,105 @@
   </div>
 
   <div class="intro">
-    RetWork（チリつも）公式ブログでは、レシート家計簿の活用方法、一人暮らし・主婦・学生のための食費節約術、ポイ活、価格比較のコツなど、毎日の節約に役立つ情報をお届けします。
+    RetWork（チリつも）公式ブログでは、レシート家計簿の活用方法、一人暮らし・主婦・学生・共働き夫婦のための食費節約術、ポイ活、価格比較、決済手段の選び方など、毎日の節約に役立つ情報を10記事以上掲載しています。
   </div>
 
-  <h2>最新の記事</h2>
+  <h2>最新の記事（新着順）</h2>
 
   <div class="post-list">
 
+    <a href="/blog/kakeibo-tsuduku-kotsu.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">習慣化</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">1日5分のレシート家計簿習慣｜続けられる人の3つのコツ【2026年版】</div>
+      <div class="post-excerpt">家計簿が続かないあなたへ。1日5分で完結する家計簿習慣の作り方を、行動心理学に基づいて解説。続けられる人と続かない人の違い、三日坊主からの復活方法、ライフスタイル別の継続パターンまで。</div>
+      <div class="post-meta">2026年6月1日 ・ 約11分で読めます</div>
+    </a>
+
+    <a href="/blog/fufu-kakeibo.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">家計管理</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">共働き夫婦の家計簿シェア術｜揉めない管理方法5選【2026年版】</div>
+      <div class="post-excerpt">共働き夫婦が揉めずに家計を管理する方法を徹底解説。3つの分担パターン、月次MTGの進め方、目的別貯金の分け方、家計簿アプリの活用法まで、実践しやすい5つのコツをご紹介します。</div>
+      <div class="post-meta">2026年5月31日 ・ 約12分で読めます</div>
+    </a>
+
+    <a href="/blog/poikatsu-5000.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">ポイ活</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">ポイ活で月¥5,000稼ぐ！レシートアプリ活用法【2026年版】</div>
+      <div class="post-excerpt">2026年最新のポイ活完全ガイド。レシートアプリ・アンケート・モニター・歩いてポイ活など、無料で月¥5,000以上を稼ぐ具体的な方法を公開。初心者でも今日から始められます。</div>
+      <div class="post-meta">2026年5月31日 ・ 約11分で読めます</div>
+    </a>
+
+    <a href="/blog/payment-method-compare.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">家計管理</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">クレジットカードvs現金vsQRコード決済｜節約に最適な支払い方法は？【2026年版】</div>
+      <div class="post-excerpt">クレジットカード・QRコード決済（PayPay・楽天Pay）・交通系IC・現金、それぞれの還元率と節約効果を徹底比較。ライフスタイル別おすすめパターンで年間¥30,000以上の節約が可能です。</div>
+      <div class="post-meta">2026年5月31日 ・ 約11分で読めます</div>
+    </a>
+
+    <a href="/blog/gakusei-food-20000.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">節約レポート</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">一人暮らし大学生の食費月¥20,000生活レポート【1ヶ月密着】</div>
+      <div class="post-excerpt">関東圏の大学生が1ヶ月間、食費¥20,000以内で生活した実体験レポート。週ごとの買い物リスト・自炊メニュー・失敗談・コツを公開。一人暮らしの食費節約のリアルがわかります。</div>
+      <div class="post-meta">2026年5月31日 ・ 約12分で読めます</div>
+    </a>
+
+    <a href="/blog/gyomu-vs-aeon.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">価格比較</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">業務スーパーvsイオン徹底比較｜本当に安いのはどっち？50品目価格対決</div>
+      <div class="post-excerpt">業務スーパーとイオン、本当に安いのはどちらか？50品目の実価格を徹底比較。冷凍食品・調味料・PB商品・生鮮食品それぞれのカテゴリごとに勝者を検証し、賢い使い分け方をご紹介します。</div>
+      <div class="post-meta">2026年5月31日 ・ 約11分で読めます</div>
+    </a>
+
+    <a href="/blog/konbini-super-drug-price.html" class="post">
+      <div class="post-badges">
+        <span class="post-cat">価格比較</span>
+        <span class="post-new">🆕 NEW</span>
+      </div>
+      <div class="post-title">コンビニvsスーパーvsドラッグストア｜同じ商品の価格差で年間¥50,000節約する買い方</div>
+      <div class="post-excerpt">同じペットボトル飲料・お菓子・日用品でも、コンビニ・スーパー・ドラッグストアで価格が大きく違います。30品目の実価格を徹底比較。賢い使い分けで年間¥50,000の節約が可能です。</div>
+      <div class="post-meta">2026年5月31日 ・ 約10分で読めます</div>
+    </a>
+
     <a href="/blog/setsuyaku-7tips.html" class="post">
-      <span class="post-cat">節約術</span>
+      <div class="post-badges">
+        <span class="post-cat">節約術</span>
+      </div>
       <div class="post-title">一人暮らしで月¥30,000節約する家計簿のコツ7選</div>
       <div class="post-excerpt">一人暮らしの食費・光熱費・通信費を見直すだけで月¥30,000の節約も可能。レシート家計簿を活用した具体的な節約方法を7つ厳選してご紹介します。</div>
       <div class="post-meta">2026年5月25日 ・ 約8分で読めます</div>
     </a>
 
     <a href="/blog/receipt-app-guide.html" class="post">
-      <span class="post-cat">家計簿アプリ</span>
+      <div class="post-badges">
+        <span class="post-cat">家計簿アプリ</span>
+      </div>
       <div class="post-title">レシート家計簿アプリのメリットと選び方完全ガイド</div>
       <div class="post-excerpt">なぜレシート家計簿アプリを使うべきなのか、手書き家計簿との違い、選ぶときのポイント、無料・有料アプリの比較まで、これから家計簿を始める方に向けて完全解説。</div>
       <div class="post-meta">2026年5月25日 ・ 約7分で読めます</div>
     </a>
 
     <a href="/blog/shufu-food-save.html" class="post">
-      <span class="post-cat">食費節約</span>
+      <div class="post-badges">
+        <span class="post-cat">食費節約</span>
+      </div>
       <div class="post-title">主婦が実践する食費を月¥10,000減らす節約術</div>
       <div class="post-excerpt">家計の中で大きな割合を占める食費。スーパーの選び方、まとめ買いのコツ、価格比較の方法など、主婦が実際に使っている食費節約術を具体的にご紹介します。</div>
       <div class="post-meta">2026年5月25日 ・ 約6分で読めます</div>
@@ -85,7 +170,20 @@
   </div>
 
   <h2>カテゴリ</h2>
-  <p style="font-size:14px;color:#555;">📊 家計簿アプリ ・ 💰 節約術 ・ 🛒 食費節約 ・ 🎯 ポイ活 ・ 📍 価格比較</p>
+  <div class="category-list">
+    <span class="category-item">📊 家計簿アプリ</span>
+    <span class="category-item">💰 節約術</span>
+    <span class="category-item">🛒 食費節約</span>
+    <span class="category-item">📍 価格比較</span>
+    <span class="category-item">🎯 ポイ活</span>
+    <span class="category-item">💳 家計管理</span>
+    <span class="category-item">📝 習慣化</span>
+    <span class="category-item">📈 節約レポート</span>
+  </div>
+
+  <h2>RetWorkの公式ブログについて</h2>
+  <p style="font-size:14px;color:#555;line-height:1.8;">RetWork（チリつも）公式ブログでは、レシートを撮るだけで家計簿が完成する日本市場向けアプリ「RetWork」を活用した実践的な節約術を、初心者から上級者まで段階的にお届けしています。</p>
+  <p style="font-size:14px;color:#555;line-height:1.8;margin-top:10px;">一人暮らし・大学生・主婦/主夫・共働き夫婦・シニア世代まで、すべてのライフスタイルに対応した記事を10編以上掲載中。レシート家計簿で「自分のお金の流れを見える化」することから、地域の最安値情報を共有する「チリつも価格マップ」の活用法まで、家計改善の実例を豊富にご紹介します。</p>
 
   <div class="footer">
     © 2026 RetWork. All rights reserved. ｜
