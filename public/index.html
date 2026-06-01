@@ -18966,12 +18966,29 @@ if (_isOAuthReturnTab) {
   (async function() {
     try { await _sb.auth.getSession(); } catch(e) {}
     try { localStorage.removeItem('riq_oauth_from_pwa'); } catch(e) {}
+    try { history.replaceState(null, '', window.location.pathname); } catch(e) {} // hash 정리
+    // 커스텀 탭이면 닫히며 PWA 자동 복귀 (전체 크롬 탭이면 무시됨)
     try { window.close(); } catch(e) {}
-    // 3) 닫기 실패 기기 대비: 0.7초 후 명확한 안내로 전환
+    // 3) 닫기 실패(전체 크롬 탭) 대비: 0.5초 후 "앱으로 돌아가기" 버튼 + 안내
     setTimeout(function() {
-      var m = document.getElementById('oauth-return-msg');
-      if (m) m.innerHTML = 'ログインが完了しました 🎉<br><b>アプリに戻ってください</b><br><span style="font-size:12px;opacity:.6;">(このタブは閉じても大丈夫です)</span>';
-    }, 700);
+      var msg = document.getElementById('oauth-return-msg');
+      var sp  = document.getElementById('oauth-return-splash');
+      if (!msg || !sp) return;
+      msg.innerHTML = 'ログインが完了しました 🎉';
+      // 설치된 PWA(WebAPK)를 Android intent로 직접 여는 버튼
+      var btn = document.createElement('button');
+      btn.textContent = '📱 アプリに戻る';
+      btn.style.cssText = 'margin-top:20px;padding:15px 30px;font-size:16px;font-weight:700;color:#0f0f14;background:#06C755;border:none;border-radius:14px;cursor:pointer;box-shadow:0 6px 20px rgba(6,199,85,.35);';
+      btn.onclick = function() {
+        var intentUrl = 'intent://' + window.location.host + '/#Intent;scheme=https;action=android.intent.action.VIEW;end';
+        window.location.href = intentUrl;
+      };
+      var hint = document.createElement('div');
+      hint.style.cssText = 'margin-top:18px;font-size:12px;line-height:1.7;opacity:.6;';
+      hint.innerHTML = 'ボタンで戻れない場合は<br>ホーム画面の <b>RetWork</b> アプリを開いてください<br>(すでにログイン済みです)';
+      sp.appendChild(btn);
+      sp.appendChild(hint);
+    }, 500);
   })();
 } else {
   // ── 정상 앱 시작: 세션 먼저 확인 후 화면 분기 (로그인 화면 플래시 방지) ──
@@ -19062,7 +19079,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 256;
+window.__APP_BUILD__ = 257;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
