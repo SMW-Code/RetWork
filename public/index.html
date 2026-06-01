@@ -1032,8 +1032,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       Apple로 계속하기
     </button>
 
-    <!-- LINE 로그인 -->
-    <button onclick="authLine()"
+    <!-- LINE 로그인 (Supabase Custom OIDC Provider 활용) -->
+    <button onclick="authLine()" id="auth-line-btn"
       style="width:100%;background:#06C755;color:#fff;border:1px solid #06C755;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M19.365 9.89c.50 0 .906.41.906.917 0 .506-.406.916-.906.916h-2.527v1.62h2.527c.5 0 .906.41.906.916 0 .507-.406.916-.906.916h-3.434c-.5 0-.906-.41-.906-.916V7.844c0-.507.406-.917.906-.917h3.434c.5 0 .906.41.906.917 0 .506-.406.916-.906.916h-2.527v1.62h2.527v-.49zm-5.61 4.286c0 .39-.25.736-.62.86-.092.03-.187.044-.282.044-.296 0-.566-.148-.736-.39l-3.516-4.78v4.275c0 .506-.406.916-.906.916-.501 0-.906-.41-.906-.916V7.844c0-.39.25-.737.62-.86.092-.029.187-.044.282-.044.296 0 .566.148.737.39l3.515 4.78V7.843c0-.506.406-.916.906-.916.5 0 .906.41.906.916v6.333zm-7.84 0c0 .506-.405.916-.906.916-.5 0-.906-.41-.906-.916V7.844c0-.507.406-.917.906-.917.5 0 .906.41.906.917v6.333zM12 0C5.376 0 0 4.413 0 9.85 0 14.737 4.265 18.83 10.024 19.6c.39.084.92.258 1.053.59.122.302.08.776.04 1.083l-.17 1.027c-.054.302-.243 1.184 1.04.645 1.282-.54 6.91-4.072 9.43-6.97C23.18 14.05 24 12.057 24 9.85 24 4.413 18.624 0 12 0z"/></svg>
       LINEで続ける
@@ -15004,22 +15004,15 @@ async function authGoogle() {
 }
 
 async function authApple() {
-  var redirectTo = window.location.origin + window.location.pathname;
-  var res = await _sb.auth.signInWithOAuth({
-    provider: 'apple',
-    options: { redirectTo: redirectTo }
-  });
-  if (res.error) {
-    console.error('[apple] error:', res.error);
-    showAuthError('Apple 로그인 실패: ' + (res.error.message || '잠시 후 다시 시도해주세요'));
-  }
+  // Apple Developer Program 가입 후 활성화 예정
+  showToast('🍎 Apple 로그인은 준비 중이에요. 곧 만나요!');
 }
 
 async function authLine() {
   var redirectTo = window.location.origin + window.location.pathname;
-  // Supabase는 LINE을 'line_notify' 또는 'line' provider로 지원. 최신은 'line'
+  // Supabase Custom Provider (OIDC) 로 LINE 등록됨 → provider identifier: 'custom:line'
   var res = await _sb.auth.signInWithOAuth({
-    provider: 'line',
+    provider: 'custom:line',
     options: { redirectTo: redirectTo }
   });
   if (res.error) {
@@ -18969,7 +18962,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 251;
+window.__APP_BUILD__ = 253;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
