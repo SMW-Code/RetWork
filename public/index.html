@@ -13184,9 +13184,10 @@ var AD_CONFIG = {
 };
 
 /* ══════════════════════════════
-   광고 / 보상 제한 우회 (정식 출시 v1.0.0 직전에 false 로 변경)
-   true  → 광고 모달 우회 + 일일 한도 무시 + 쿨다운 무시
-   false → 정상 동작 (광고 시청 / 일일 한도 / 쿨다운 적용)
+   어뷰저 대책 한도 우회 (정식 출시 v1.0.0 직전에 false 로 변경)
+   광고 모달 자체는 정상 노출 — 적립 한도/쿨다운만 우회한다.
+   true  → 일일 한도 무시 + 쿨다운 무시 + 슬롯 한도 무시 (광고는 본다)
+   false → 정상 동작 (일일 한도 / 쿨다운 / 슬롯 한도 적용)
 ══════════════════════════════ */
 var _BYPASS_ADS = true;
 
@@ -14307,11 +14308,6 @@ var _rvAdMode    = 'save'; // 'save' | 'reward'
    context: 'save'  = 영수증 결과 화면에서 가계부 저장 흐름 (기본)
             'chiri' = 이미 치리 모달을 거친 흐름 (저장+공개 한 번에) */
 function showAdModal(callback, context) {
-  // _BYPASS_ADS true 면 광고 모달 우회 — 콜백 즉시 실행
-  if (typeof _BYPASS_ADS !== 'undefined' && _BYPASS_ADS) {
-    if (callback) callback();
-    return;
-  }
   _adCallback = callback;
   _adContext = context || 'save';
   var el = document.getElementById('ov-saveconfirm');
@@ -18687,7 +18683,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 247;
+window.__APP_BUILD__ = 248;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
