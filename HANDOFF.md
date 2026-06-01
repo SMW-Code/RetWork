@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-01 / build 256 / v0.9.0
+> **최종 갱신**: 2026-06-01 / build 258 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -20,15 +20,24 @@
 
 ## 🚦 현재 상태 한눈에
 
-### ✅ 배포 완료 (build 256)
-- **PWA OAuth 크롬 탭 자동 닫기** (build 256): PWA에서 LINE/구글 로그인 시 외부 크롬 탭으로
-  넘어가 인증이 끝나면, 그 탭이 세션만 저장하고 **자동으로 닫혀 PWA로 복귀**.
-  - 동작 원리: `authLine`/`authGoogle`에서 standalone이면 `localStorage['riq_oauth_from_pwa']='1'` 표식 →
-    리다이렉트로 돌아온 크롬 탭이 시작 시 `!standalone && access_token && 표식` 감지 →
-    가림막(스플래시) 즉시 표시 → `getSession()`으로 세션 영속화 → `window.close()` →
-    커스텀 탭이 닫히며 PWA 자동 복귀 (PWA는 `visibilitychange`로 세션 인식).
-  - 닫기 실패 기기: 0.7초 후 "アプリに戻ってください" 안내로 전환.
-  - ⏳ **실기기 검증 필요**: 일부 기기는 `window.close()`가 막혀 안내 화면만 뜰 수 있음.
+### ✅ 배포 완료 (build 256~258) — PWA OAuth 복귀 동선 개선
+PWA에서 LINE/구글 로그인 시 외부 크롬 탭으로 넘어가 인증이 끝나면, 그 탭이 세션만 저장하고
+PWA로 복귀시키는 처리. 코드 위치: `authLine`/`authGoogle` + 앱 시작부의 `_isOAuthReturnTab` 분기.
+
+- **build 256**: standalone이면 `localStorage['riq_oauth_from_pwa']='1'` 표식 → 돌아온 크롬 탭이
+  `!standalone && access_token && 표식` 감지 → 가림막 스플래시 → `getSession()` 세션 영속화 →
+  `window.close()` (커스텀 탭이면 닫히며 PWA 자동 복귀, PWA는 `visibilitychange`로 세션 인식).
+- **build 257**: `window.close()`가 막히는 **전체 크롬 탭** 기기 대비 — 0.5초 후 `📱 アプリに戻る`
+  버튼(Android `intent://`로 WebAPK 직접 열기) + 안내 표시.
+- **build 258**: 복귀 표식을 **URL(`?pwaret=1`)에도** 실어보냄. WebAPK↔크롬이 localStorage를
+  공유 안 하는 기기에서 Google 웹 로그인 후 복귀 처리가 안 되던 문제 수정.
+  - redirectTo = `origin + '/' + (isStandalone ? '?pwaret=1' : '')`, 감지는 `_hasReturnMark`.
+
+- 📌 **관찰된 동작 차이**: LINE 재로그인은 네이티브 LINE 앱이 딥링크로 앱 직접 복귀(우리 코드 안 거침),
+  Google은 순수 크롬 웹 경로라 위 복귀 처리에 의존.
+- ⏳ **만약 Google 로그인이 실패 토스트** 뜨면: Supabase → Auth → URL Configuration →
+  Redirect URLs에 `https://retwork.jp/**` (와일드카드) 추가 필요.
+- 🎯 **정식 출시 시 근본 해결**: TWA(Bubblewrap+Play스토어) 전환하면 커스텀 탭 처리로 자동 복귀 완벽.
 
 - 광고 모달 결과 메시지 분기 (bonus/chiri/menu_photo 등)
 - 추가 광고 보상 버튼 disabled 우회 (베타용 `_BYPASS_ADS=true`)
@@ -311,4 +320,4 @@ receiptiq/
 
 ---
 
-**현재 build 256 배포 — PWA OAuth 크롬 탭 자동 닫기 적용. 실기기에서 LINE/구글 로그인 후 앱 자동 복귀되는지 검증 필요!**
+**현재 build 258 배포 — PWA OAuth 복귀 동선 개선(256~258). 실기기 테스트상 대체로 작동, 추가 이상 발견 시 위 "관찰된 동작 차이" 참고하여 이어서 디버깅.**
