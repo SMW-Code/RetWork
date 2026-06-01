@@ -13303,7 +13303,7 @@ var THEMES = {
   purple:  { name: '퍼플',    color: '#380193', dark: '#240160', light: '#E7E0F2', mid: '#9B80C9', grad: 'linear-gradient(140deg,#6439AB 0%,#380193 55%,#240160 100%)' },
   coral:   { name: '코랄',    color: '#F78156', dark: '#A15438', light: '#FFF0EB', mid: '#FBC0AB', grad: 'linear-gradient(140deg,#F89571 0%,#F78156 55%,#A15438 100%)' },
   rose:    { name: '로즈핑크', color: '#F198D5', dark: '#9D638A', light: '#FDF3FA', mid: '#F8CCEA', grad: 'linear-gradient(140deg,#F4AEDE 0%,#F198D5 55%,#9D638A 100%)' },
-  gold:    { name: '골드',    color: '#FFD700', dark: '#A68C00', light: '#FFFAE0', mid: '#FFEB80', grad: 'linear-gradient(140deg,#FFE033 0%,#FFD700 55%,#A68C00 100%)' },
+  gold:    { name: '골드',    color: '#FFDE02', dark: '#A68C00', light: '#FFFAE0', mid: '#FFEB80', grad: 'linear-gradient(140deg,#FFE033 0%,#FFDE02 55%,#A68C00 100%)' },
   indigo:  { name: '인디고',  color: '#172C58', dark: '#0F1D39', light: '#E3E6EB', mid: '#8B95AB', grad: 'linear-gradient(140deg,#495E80 0%,#172C58 55%,#0F1D39 100%)' },
   cyan:    { name: '사이언',  color: '#266586', dark: '#194257', light: '#E5ECF0', mid: '#92B2C2', grad: 'linear-gradient(140deg,#53889F 0%,#266586 55%,#194257 100%)' },
   lime:    { name: '라임',    color: '#38CF39', dark: '#248725', light: '#E7F9E7', mid: '#9BE79C', grad: 'linear-gradient(140deg,#60E361 0%,#38CF39 55%,#248725 100%)' },
@@ -18638,7 +18638,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v241';
+window.__APP_VERSION__ = 'v242';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
@@ -18748,8 +18748,18 @@ window._saveNav = function _saveNav(){
   } catch(e){}
 };
 // 저장된 nav 읽기만 (display 전 호출용)
+// 정책: 앱을 종료했다가 다시 시작 = 홈 / 같은 세션(새로고침·백그라운드 복귀) = 24시간 내 복원
 window._loadSavedNav = function _loadSavedNav(){
   try {
+    // sessionStorage 마커는 탭/PWA 종료 시 자동 삭제됨
+    // 없으면 = 앱 새로 시작 (또는 새 탭에서 열림) → 홈으로 시작
+    var sessionMarker = sessionStorage.getItem('riq_session_active');
+    if (!sessionMarker) {
+      // 이 세션의 마커를 지금부터 기록 (이후 새로고침 대비)
+      sessionStorage.setItem('riq_session_active', String(Date.now()));
+      return null;
+    }
+    // 같은 세션 (새로고침·백그라운드 복귀) — 저장된 nav 복원 (24시간 룰)
     var raw = localStorage.getItem('riq_last_nav');
     if (!raw) return null;
     var n = JSON.parse(raw);
