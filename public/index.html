@@ -3467,6 +3467,51 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 댓글 한도 광고 모달 (1일 5회 초과시 → 자동재생 +1, 풀스크린 +4) ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-comment-quota-ad" onclick="cqCloseOutside(event)">
+  <div style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:90vh;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.25);overflow-y:auto;">
+    <div class="sheet-handle" style="margin:10px auto 14px;"></div>
+    <!-- 상단 카드: 한도 도달 + 즉시 +1 부여 안내 -->
+    <div style="margin:0 16px 12px;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:20px;line-height:1;">📝</span>
+        <div>
+          <div style="font-size:13px;font-weight:800;color:var(--text-1);">댓글 한도 도달</div>
+          <div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:1px;" id="cq-status-line">5/5 사용 중</div>
+        </div>
+      </div>
+      <span style="font-size:14px;font-weight:900;color:var(--gold-dark);white-space:nowrap;" id="cq-grant-badge">+1회 부여됨!</span>
+    </div>
+    <!-- 중단 카드: 자동재생 광고 -->
+    <div style="margin:0 16px 14px;border:.5px solid var(--border);border-radius:14px;overflow:hidden;background:#0d0d22;box-shadow:0 4px 14px rgba(0,0,0,.08);">
+      <div style="position:relative;width:100%;height:240px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;">
+        <div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.16) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>
+        <div style="position:relative;z-index:2;text-align:center;color:#fff;">
+          <div style="font-size:42px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:.5px;margin-top:8px;">자동재생 광고</div>
+          <div style="font-size:10px;opacity:.75;margin-top:3px;font-weight:500;">📢 Sponsored Content</div>
+        </div>
+        <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15);">
+          <div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
+        <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+      </div>
+    </div>
+    <!-- 하단 카드: 헤더 + 설명 + 버튼 -->
+    <div style="padding:0 16px 24px;">
+      <div style="font-size:14px;font-weight:800;color:var(--text-1);margin-bottom:4px;">더 많이 작성하고 싶나요?</div>
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;">광고를 보면 추가 4회를 더 받을 수 있어요.</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="cqClose()" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">닫기</button>
+        <button onclick="cqWatchExtra()" style="flex:2;padding:13px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold-dark));color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 4px 12px rgba(232,160,32,.3);">📺 +4회 기입 가능</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 업로드 확인 모달 (광고 동영상 + 취소/등록) ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-upload-confirm" onclick="ucCloseOutside(event)">
   <div id="upload-confirm-panel">
@@ -5408,6 +5453,93 @@ async function ctLikePost(id) {
 
 var _ctPostComments = {};
 
+/* ─────────────────────────────────────────────────
+   댓글 1일 한도 시스템 (어뷰져 대책)
+   - 기본 5회/일
+   - 한도 초과시 광고 모달 (자동재생 +1, 풀스크린 +4)
+   - _BYPASS_ADS = true 면 무제한
+   ───────────────────────────────────────────────── */
+var _cqPendingRetry = null; // 광고 후 재시도할 작업
+
+async function _checkCommentQuota() {
+  if (typeof _BYPASS_ADS !== 'undefined' && _BYPASS_ADS) return { allowed: true, bypassed: true };
+  if (!_sb || !_currentUser) return { allowed: true };
+  try {
+    var res = await _sb.rpc('get_comment_quota_today');
+    if (!res.data || !res.data.ok) return { allowed: true }; // 에러시 일단 허용
+    var d = res.data;
+    return {
+      allowed: d.remaining > 0,
+      used: d.used,
+      total: d.total_limit,
+      remaining: d.remaining,
+      extra_granted: d.extra_granted
+    };
+  } catch(e) {
+    console.warn('[quota] check err:', e);
+    return { allowed: true };
+  }
+}
+
+async function _grantCommentQuota(extra) {
+  if (!_sb || !_currentUser) return false;
+  try {
+    var res = await _sb.rpc('grant_comment_quota', { p_extra: extra });
+    return res.data && res.data.ok;
+  } catch(e) {
+    console.warn('[quota] grant err:', e);
+    return false;
+  }
+}
+
+/* 한도 초과 → 광고 모달 열기 (자동재생 광고 노출 → +1 즉시 부여) */
+async function openCommentQuotaAdModal(retryFn) {
+  _cqPendingRetry = retryFn || null;
+  // 모달 열기 직전 status line 갱신
+  var statusEl = document.getElementById('cq-status-line');
+  if (statusEl) {
+    var q = await _checkCommentQuota();
+    if (q && typeof q.used === 'number') {
+      statusEl.textContent = q.used + '/' + q.total + ' 사용 중 (추가 ' + (q.extra_granted || 0) + '회)';
+    }
+  }
+  openOv('ov-comment-quota-ad');
+  // 자동재생 광고 노출 → 즉시 +1 부여 (자동재생은 노출만으로 광고 매출 발생)
+  var ok = await _grantCommentQuota(1);
+  if (ok) {
+    showToast('🎁 광고 노출 보너스! +1회 댓글 작성 가능');
+  }
+}
+
+function cqCloseOutside(e) {
+  if (e.target === document.getElementById('ov-comment-quota-ad')) cqClose();
+}
+
+function cqClose() {
+  closeOv('ov-comment-quota-ad');
+  // 모달 닫은 후 보류된 작업 재시도 (+1 권한 부여됐으니 통과해야 함)
+  if (typeof _cqPendingRetry === 'function') {
+    var fn = _cqPendingRetry; _cqPendingRetry = null;
+    setTimeout(fn, 100);
+  }
+}
+
+function cqWatchExtra() {
+  closeOv('ov-comment-quota-ad');
+  // 전체화면 동영상 광고 → 콜백에서 +4회 부여
+  ctOpenFullscreenAd('comment_quota', async function(){
+    var ok = await _grantCommentQuota(4);
+    if (ok) {
+      // ctOpenFullscreenAd 완료 분기에서 자체 토스트 표시됨
+      // 보류된 작업 재시도
+      if (typeof _cqPendingRetry === 'function') {
+        var fn = _cqPendingRetry; _cqPendingRetry = null;
+        setTimeout(fn, 100);
+      }
+    }
+  });
+}
+
 function ctFocusComment(id) {
   var input = document.getElementById('ct-comment-input-' + id);
   if (input) input.focus();
@@ -5418,6 +5550,14 @@ async function ctAddComment(id) {
   var input = document.getElementById('ct-comment-input-' + id);
   var text = input ? input.value.trim() : '';
   if (!text) return;
+
+  // 1일 댓글 한도 체크 (어뷰져 대책)
+  var quota = await _checkCommentQuota();
+  if (!quota.allowed) {
+    // 광고 모달 열기 → 모달이 +1회 부여 후 닫히면 이 함수 재호출
+    openCommentQuotaAdModal(function(){ ctAddComment(id); });
+    return;
+  }
 
   // 벤워드 사전 검사
   var banned = await _checkContentForBannedWord(text);
@@ -14463,6 +14603,8 @@ function ctOpenFullscreenAd(mode, callback) {
         iconTxt = '🎉'; titleTxt = '+20チリ 獲得！'; toastTxt = '🎉 出席+5 ・ 広告+15 = +20チリ 獲得！';
       } else if (mode === 'bonus') {
         iconTxt = '🎁'; titleTxt = '+15チリ 獲得！'; toastTxt = '🎁 追加広告ボーナス +15チリ 獲得！';
+      } else if (mode === 'comment_quota') {
+        iconTxt = '📝'; titleTxt = '+4회 댓글 가능！'; toastTxt = '🎁 광고 시청 완료! +4회 댓글 작성 가능';
       } else if (_adContext === 'private') {
         iconTxt = '🔒'; titleTxt = '프라이빗 모드로 전환됐어요'; toastTxt = '🔒 프라이빗 모드 활성화';
       } else if (_adContext === 'chiri') {
@@ -18699,7 +18841,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 249;
+window.__APP_BUILD__ = 250;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
