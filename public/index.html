@@ -4225,10 +4225,15 @@ function _ctRenderAttendance(){
   // ─── 카드2.5: 추가 광고 보상 (출석 슬롯당 2회까지) ───
   var bonusUsed = _ctBonusCurSlotCount();
   var bonusLeft = BONUS_PER_SLOT - bonusUsed;
-  var bonusCanClaim = bonusLeft > 0;
+  var _bypass = (typeof _BYPASS_ADS !== 'undefined' && _BYPASS_ADS);
+  var bonusCanClaim = _bypass ? true : (bonusLeft > 0);
   var bonusSubText, bonusBtnLabel;
   if (bonusCanClaim) {
-    bonusSubText = '이번 슬롯에서 ' + bonusLeft + '회 받을 수 있어요. (' + bonusUsed + ' / ' + BONUS_PER_SLOT + ')';
+    if (_bypass && bonusLeft <= 0) {
+      bonusSubText = '🔓 베타: 한도 우회 중 (정식 출시 시 슬롯당 ' + BONUS_PER_SLOT + '회 제한)';
+    } else {
+      bonusSubText = '이번 슬롯에서 ' + bonusLeft + '회 받을 수 있어요. (' + bonusUsed + ' / ' + BONUS_PER_SLOT + ')';
+    }
     bonusBtnLabel = '추가 광고 보상 받기';
   } else {
     bonusSubText = '이번 슬롯은 모두 받았어요. 다음 슬롯까지 ' + _ctAttFmtMs(_ctAttNextSlotMs());
@@ -14326,6 +14331,9 @@ function showAdModal(callback, context) {
   } else if (_adContext === 'private') {
     if (mainLabel) mainLabel.textContent = t('ad.to_private');
     if (pubBtn)    pubBtn.style.display = 'none';
+  } else if (_adContext === 'menu_photo') {
+    if (mainLabel) mainLabel.textContent = '광고 보고 메뉴 사진 등록';
+    if (pubBtn)    pubBtn.style.display = 'none';
   } else {
     if (mainLabel) mainLabel.textContent = t('ad.save_free');
     if (pubBtn) {
@@ -14452,9 +14460,15 @@ function ctOpenFullscreenAd(mode, callback) {
       if (mode === 'reward') {
         iconTxt = '✨'; titleTxt = '+50チリ 獲得！'; toastTxt = '🎉 +50チリ 獲得！ありがとうございます！';
       } else if (mode === 'attendance') {
-        iconTxt = '🎉'; titleTxt = '+20チリ 獲得！'; toastTxt = '🎉 +20チリ 獲得！';
+        iconTxt = '🎉'; titleTxt = '+20チリ 獲得！'; toastTxt = '🎉 出席+5 ・ 広告+15 = +20チリ 獲得！';
+      } else if (mode === 'bonus') {
+        iconTxt = '🎁'; titleTxt = '+15チリ 獲得！'; toastTxt = '🎁 追加広告ボーナス +15チリ 獲得！';
       } else if (_adContext === 'private') {
         iconTxt = '🔒'; titleTxt = '프라이빗 모드로 전환됐어요'; toastTxt = '🔒 프라이빗 모드 활성화';
+      } else if (_adContext === 'chiri') {
+        iconTxt = '✨'; titleTxt = 'チリに公開しました！'; toastTxt = '✨ チリ에 공개했어요！';
+      } else if (_adContext === 'menu_photo') {
+        iconTxt = '📸'; titleTxt = '메뉴 사진을 등록했어요！'; toastTxt = '📸 메뉴 사진 등록 완료！';
       } else {
         iconTxt = '✅'; titleTxt = '가계부에 저장했습니다！'; toastTxt = '✅ 가계부에 저장했습니다！';
       }
@@ -14660,6 +14674,8 @@ async function authSignup() {
   });
   btn.textContent = '회원가입'; btn.disabled = false;
   if (res.error) {
+    console.error('[signup] error:', res.error);
+    console.error('[signup] code:', res.error.code, '| status:', res.error.status, '| msg:', res.error.message);
     var rawMsg = res.error.message || '';
     var msg = rawMsg;
     if (/database.*saving|saving.*new.*user/i.test(rawMsg))
@@ -18109,7 +18125,7 @@ function sdHandleCardPhoto(input) {
   }
   // 광고 시청 후 업로드 (프리미엄은 광고 스킵)
   if (!_isPremium) {
-    showAdModal(function(){ _sdDoCardPhotoUpload(f); }, 'save');
+    showAdModal(function(){ _sdDoCardPhotoUpload(f); }, 'menu_photo');
   } else {
     _sdDoCardPhotoUpload(f);
   }
@@ -18683,7 +18699,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 248;
+window.__APP_BUILD__ = 249;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
