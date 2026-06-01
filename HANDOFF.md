@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-01 / build 255 / v0.9.0
+> **최종 갱신**: 2026-06-01 / build 256 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -20,7 +20,16 @@
 
 ## 🚦 현재 상태 한눈에
 
-### ✅ 배포 완료 (build 255)
+### ✅ 배포 완료 (build 256)
+- **PWA OAuth 크롬 탭 자동 닫기** (build 256): PWA에서 LINE/구글 로그인 시 외부 크롬 탭으로
+  넘어가 인증이 끝나면, 그 탭이 세션만 저장하고 **자동으로 닫혀 PWA로 복귀**.
+  - 동작 원리: `authLine`/`authGoogle`에서 standalone이면 `localStorage['riq_oauth_from_pwa']='1'` 표식 →
+    리다이렉트로 돌아온 크롬 탭이 시작 시 `!standalone && access_token && 표식` 감지 →
+    가림막(스플래시) 즉시 표시 → `getSession()`으로 세션 영속화 → `window.close()` →
+    커스텀 탭이 닫히며 PWA 자동 복귀 (PWA는 `visibilitychange`로 세션 인식).
+  - 닫기 실패 기기: 0.7초 후 "アプリに戻ってください" 안내로 전환.
+  - ⏳ **실기기 검증 필요**: 일부 기기는 `window.close()`가 막혀 안내 화면만 뜰 수 있음.
+
 - 광고 모달 결과 메시지 분기 (bonus/chiri/menu_photo 등)
 - 추가 광고 보상 버튼 disabled 우회 (베타용 `_BYPASS_ADS=true`)
 - 댓글 1일 5회 한도 + 광고 모달 시스템 (A안)
@@ -302,4 +311,4 @@ receiptiq/
 
 ---
 
-**현재 줄 (build 255)에서 멈춤 — 다음 컴에서 `git pull` 받고 P0의 LINE OAuth 점검부터 시작!**
+**현재 build 256 배포 — PWA OAuth 크롬 탭 자동 닫기 적용. 실기기에서 LINE/구글 로그인 후 앱 자동 복귀되는지 검증 필요!**
