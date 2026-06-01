@@ -2077,7 +2077,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             </div>
             <button id="sp-ref-copy-btn" onclick="copyReferralCode()" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.3);white-space:nowrap;">📋 복사</button>
           </div>
-          <div style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 둘 다 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요</div>
+          <div style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요</div>
           <button onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">🔗 초대 링크 공유</button>
         </div>
       </div>
@@ -19086,7 +19086,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 259;
+window.__APP_BUILD__ = 260;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
@@ -19166,7 +19166,7 @@ window.ctInviteShare = async function ctInviteShare(){
   }
   if (!code) { if (typeof showToast==='function') showToast('초대 링크 생성 실패'); return; }
   var url = 'https://retwork.jp?ref=' + code;
-  var text = '🎁 RetWork 에 가입하고 200치리 받기!\n나도 200치리 적립돼요\n' + url;
+  var text = '🎁 RetWork でレシート家計簿、はじめよう!\nAIが自動入力、節約も楽しく 📸\n' + url;
   // 카톡/라인 등 chat 앱이 받을 때 URL 중복 노출 + 링크 프리뷰 카드의 canonical URL 사용 문제 회피:
   //  - url 필드 제거 (text 안 한 곳에만 URL 포함)
   //  - 백업으로 클립보드 복사 (사용자가 직접 붙여넣기 가능)
