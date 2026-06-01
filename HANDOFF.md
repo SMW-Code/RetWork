@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-01 / build 261 / v0.9.0
+> **최종 갱신**: 2026-06-01 / build 262 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -19,6 +19,16 @@
 ---
 
 ## 🚦 현재 상태 한눈에
+
+### ⚠️ build 262 — 가게 수정요청 기능 (★ SQL 실행 필요)
+**먼저 `store_edit_requests.sql` 을 Supabase SQL Editor 에서 실행해야 작동.**
+- 유저: 치리맵 가게상세모달 ⋮ → "✏️ 修正リクエスト" → 입력 모달(`ov-store-edit-req`,
+  textarea 500자) → `store_edit_requests` INSERT. 함수: `sdReqEdit()` / `submitStoreEditReq()`.
+- 어드민: 대시보드 "🛠 가게 수정요청" 카드(`openAdminEditReqs`) → 모달 `ov-admin-edit-reqs`
+  (미처리/처리완료/전체 탭) → 카드별 ✓처리완료 토글(`markEditReqDone`). 미처리 건수 배지
+  `adm-editreq-badge`(`_loadEditReqBadge`, openAdminDashboard에서 호출).
+- 테이블 RLS: 유저 본인 INSERT + 본인/어드민 SELECT + 어드민 UPDATE (is_admin EXISTS 패턴).
+- 기존 `sdReqEdit()`는 alert만 띄우던 placeholder였음 → 실제 저장으로 교체.
 
 ### ⚠️ build 261 — 추천 보상 "대기 + 광고 청구" 모델 (★ SQL 실행 필요)
 **먼저 `referral_v2.sql` 을 Supabase SQL Editor 에서 실행해야 작동함.** 안 하면 클라는
@@ -344,4 +354,4 @@ receiptiq/
 
 ---
 
-**현재 build 261 — 추천 보상 대기+광고청구 모델. ★ `referral_v2.sql` Supabase 실행 필수. 실행 후 폰에서 추천→가입→설정카드/홈 배너→광고 보고 200치리 청구 흐름 검증 필요.**
+**현재 build 262 — 가게 수정요청 기능. ★ `store_edit_requests.sql` Supabase 실행 필수. (직전 build 261의 `referral_v2.sql` 도 아직 실행 안 했으면 같이 실행)**

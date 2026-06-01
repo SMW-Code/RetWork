@@ -1978,6 +1978,26 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 가게 수정요청 입력 모달 ══ -->
+<div class="overlay" id="ov-store-edit-req" style="z-index:980;" onclick="if(event.target===this)closeOv('ov-store-edit-req')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:460px;width:100%;max-height:90vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <div style="font-size:16px;font-weight:900;color:var(--text-1);">✏️ 修正リクエスト</div>
+        <div onclick="closeOv('ov-store-edit-req')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+      <div id="ser-store-name" style="font-size:12px;color:var(--text-3);margin-bottom:12px;"></div>
+      <textarea id="ser-content" maxlength="500" oninput="var c=document.getElementById('ser-charcount');if(c)c.textContent=this.value.length;"
+        placeholder="修正してほしい内容を具体的に入力してください&#10;（例: 店名が違う / 閉店した / 場所がずれている / カテゴリが違う など）"
+        style="width:100%;height:130px;border:1px solid var(--border-mid);border-radius:12px;padding:12px;font-size:14px;font-family:var(--font);resize:none;box-sizing:border-box;outline:none;background:var(--bg);color:var(--text-1);"></textarea>
+      <div style="font-size:10px;color:var(--text-3);text-align:right;margin-top:4px;"><span id="ser-charcount">0</span>/500</div>
+      <button onclick="submitStoreEditReq()" id="ser-submit-btn"
+        style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;">送信する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 설정 ══ -->
 <div class="overlay settings-overlay" id="ov-settings" onclick="closeOvOutside(event,'ov-settings')">
   <div class="settings-panel">
@@ -2578,6 +2598,15 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div id="adm-reports-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
           <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
+        <div onclick="openAdminEditReqs()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;position:relative;">
+          <span style="font-size:26px;flex-shrink:0;">🛠</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">가게 수정요청</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">유저 제보 확인·처리</div>
+          </div>
+          <div id="adm-editreq-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
+        </div>
         <div onclick="openAdminPricing()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
           <span style="font-size:26px;flex-shrink:0;">💡</span>
           <div style="flex:1;min-width:0;">
@@ -2645,6 +2674,29 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 공지 리스트 -->
       <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📋 등록된 공지</div>
       <div id="adm-ann-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 가게 수정요청 모달 ══ -->
+<div class="overlay" id="ov-admin-edit-reqs" style="z-index:965;" onclick="if(event.target===this)closeOv('ov-admin-edit-reqs')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:520px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🛠 가게 수정요청</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">유저가 제보한 가게 정보 수정 요청</div>
+        </div>
+        <div onclick="closeOv('ov-admin-edit-reqs')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+      <!-- 상태 필터 -->
+      <div style="display:flex;gap:6px;margin-bottom:12px;">
+        <button id="adm-ser-tab-open" onclick="loadAdminEditReqs('open')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:var(--green);color:#fff;">미처리</button>
+        <button id="adm-ser-tab-done" onclick="loadAdminEditReqs('done')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text-3);border:.5px solid var(--border);">처리완료</button>
+        <button id="adm-ser-tab-all" onclick="loadAdminEditReqs('all')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text-3);border:.5px solid var(--border);">전체</button>
+      </div>
+      <div id="adm-editreq-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
   </div>
 </div>
@@ -15443,7 +15495,36 @@ function sdToggleDotMenu() {
     document.addEventListener('click',function hdl(e){if(!m.contains(e.target)){m.remove();document.removeEventListener('click',hdl);}});
   },10);
 }
-function sdReqEdit(){var d=document.getElementById('sd-dot-popup');if(d)d.remove();alert(t('sd.req_edit_done'));}
+function sdReqEdit(){
+  var d=document.getElementById('sd-dot-popup');if(d)d.remove();
+  if(!_currentUser){ showToast(t('toast.login_required')||'로그인 후 사용 가능해요'); return; }
+  var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(_sdName||'');
+  var ta=document.getElementById('ser-content'); if(ta) ta.value='';
+  var cc=document.getElementById('ser-charcount'); if(cc) cc.textContent='0';
+  openOv('ov-store-edit-req');
+}
+async function submitStoreEditReq(){
+  var ta=document.getElementById('ser-content');
+  var content=ta?ta.value.trim():'';
+  if(content.length<3){ showToast('내용을 조금 더 자세히 적어주세요'); return; }
+  if(!_sb||!_currentUser){ showToast('로그인 후 사용 가능해요'); return; }
+  var btn=document.getElementById('ser-submit-btn');
+  if(btn){ btn.disabled=true; btn.textContent='送信中...'; }
+  try {
+    var sd=_sdSData||{};
+    var res=await _sb.from('store_edit_requests').insert({
+      store_name: _sdName || sd.name || '',
+      store_id:   (sd.id!=null) ? String(sd.id) : null,
+      lat:        (typeof sd.lat==='number') ? sd.lat : null,
+      lng:        (typeof sd.lng==='number') ? sd.lng : null,
+      user_id:    _currentUser.id,
+      content:    content
+    });
+    if(res.error){ console.warn('[edit req]', res.error); showToast('전송 실패. 잠시 후 다시 시도해주세요'); }
+    else { closeOv('ov-store-edit-req'); showToast(t('sd.req_edit_done')); }
+  } catch(e){ console.warn('[edit req]', e); showToast('전송 실패'); }
+  if(btn){ btn.disabled=false; btn.textContent='送信する'; }
+}
 function sdShareStore(){
   var d=document.getElementById('sd-dot-popup');if(d)d.remove();
   var u='https://retwork.jp';
@@ -16752,6 +16833,86 @@ function openAdminDashboard() {
   closeOv('ov-settings');
   openOv('ov-admin');
   _loadAdminStats();
+  _loadEditReqBadge();
+}
+
+/* ══════════════════════════════
+   어드민: 가게 수정요청
+══════════════════════════════ */
+function _serEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+
+async function _loadEditReqBadge(){
+  var badge=document.getElementById('adm-editreq-badge'); if(!badge||!_sb) return;
+  try {
+    var res=await _sb.from('store_edit_requests').select('id',{count:'exact',head:true}).eq('status','open');
+    var n=res.count||0;
+    if(n>0){ badge.style.display='inline-block'; badge.textContent=n>99?'99+':n; }
+    else badge.style.display='none';
+  } catch(e){ /* silent */ }
+}
+
+function openAdminEditReqs(){
+  if(!_isAdmin){ showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  openOv('ov-admin-edit-reqs');
+  loadAdminEditReqs('open');
+}
+
+async function loadAdminEditReqs(filter){
+  filter=filter||'open';
+  window._admSerFilter=filter;
+  // 탭 활성화 표시
+  ['open','done','all'].forEach(function(f){
+    var b=document.getElementById('adm-ser-tab-'+f); if(!b)return;
+    if(f===filter){ b.style.background='var(--green)'; b.style.color='#fff'; b.style.border='none'; }
+    else { b.style.background='transparent'; b.style.color='var(--text-3)'; b.style.border='.5px solid var(--border)'; }
+  });
+  var list=document.getElementById('adm-editreq-list'); if(!list||!_sb) return;
+  list.innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:12px;">불러오는 중...</div>';
+  try {
+    var q=_sb.from('store_edit_requests').select('*').order('created_at',{ascending:false}).limit(200);
+    if(filter!=='all') q=q.eq('status',filter);
+    var res=await q;
+    if(res.error){ list.innerHTML='<div style="text-align:center;color:var(--red);padding:24px;font-size:12px;">로드 실패: '+_serEsc(res.error.message)+'</div>'; return; }
+    var rows=res.data||[];
+    if(!rows.length){ list.innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:12px;">'+(filter==='done'?'처리완료된 요청이 없어요':'수정요청이 없어요')+'</div>'; return; }
+    list.innerHTML=rows.map(renderEditReqCard).join('');
+  } catch(e){ console.warn('[adm editreq]',e); list.innerHTML='<div style="text-align:center;color:var(--red);padding:24px;font-size:12px;">로드 실패</div>'; }
+}
+
+function renderEditReqCard(r){
+  var dt=r.created_at?new Date(r.created_at):null;
+  var dateStr=dt?((dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0')):'';
+  var done=r.status==='done';
+  var mapLink=(typeof r.lat==='number'&&typeof r.lng==='number')
+    ? '<a href="https://www.google.com/maps?q='+r.lat+','+r.lng+'" target="_blank" style="font-size:11px;color:var(--green);text-decoration:none;">📍 지도</a>' : '';
+  return '<div style="background:var(--surface);border:.5px solid '+(done?'var(--border)':'#06C755')+';border-radius:14px;padding:13px;'+(done?'opacity:.6;':'')+'">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">'
+      +'<div style="font-size:13px;font-weight:800;color:var(--text-1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🏪 '+_serEsc(r.store_name)+'</div>'
+      +'<span style="flex-shrink:0;font-size:10px;font-weight:800;padding:2px 8px;border-radius:8px;'+(done?'background:var(--bg-2);color:var(--text-3);':'background:#06C75522;color:#06C755;')+'">'+(done?'처리완료':'미처리')+'</span>'
+    +'</div>'
+    +'<div style="font-size:13px;color:var(--text-1);line-height:1.6;white-space:pre-wrap;word-break:break-word;background:var(--bg);border-radius:10px;padding:10px;margin-bottom:8px;">'+_serEsc(r.content)+'</div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
+      +'<div style="font-size:10px;color:var(--text-3);display:flex;gap:8px;align-items:center;">'+dateStr+(mapLink?(' · '+mapLink):'')+'</div>'
+      +(done
+        ? '<button onclick="markEditReqDone('+r.id+',false)" style="background:transparent;border:.5px solid var(--border);color:var(--text-3);border-radius:9px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);">↩ 미처리로</button>'
+        : '<button onclick="markEditReqDone('+r.id+',true)" style="background:var(--green);border:none;color:#fff;border-radius:9px;padding:6px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);">✓ 처리완료</button>')
+    +'</div>'
+  +'</div>';
+}
+
+async function markEditReqDone(id, done){
+  if(!_isAdmin||!_sb) return;
+  try {
+    var res=await _sb.from('store_edit_requests').update({
+      status: done?'done':'open',
+      resolved_at: done?new Date().toISOString():null
+    }).eq('id', id);
+    if(res.error){ showToast('처리 실패: '+res.error.message); return; }
+    showToast(done?'✅ 처리완료로 표시했어요':'↩ 미처리로 되돌렸어요');
+    // 현재 활성 탭 유지하며 새로고침
+    loadAdminEditReqs(window._admSerFilter||'open');
+    _loadEditReqBadge();
+  } catch(e){ console.warn('[adm editreq done]',e); showToast('처리 실패'); }
 }
 
 /* ══════════════════════════════
@@ -19115,7 +19276,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 261;
+window.__APP_BUILD__ = 262;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
