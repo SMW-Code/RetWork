@@ -1021,8 +1021,22 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- Google 로그인 -->
     <button onclick="authGoogle()"
-      style="width:100%;background:var(--surface);color:var(--text-1);border:1px solid var(--border-mid);border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+      style="width:100%;background:var(--surface);color:var(--text-1);border:1px solid var(--border-mid);border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:10px;">
       <img src="https://www.google.com/favicon.ico" width="17" height="17"> Google로 계속하기
+    </button>
+
+    <!-- Apple 로그인 -->
+    <button onclick="authApple()"
+      style="width:100%;background:#000;color:#fff;border:1px solid #000;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:10px;">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+      Apple로 계속하기
+    </button>
+
+    <!-- LINE 로그인 -->
+    <button onclick="authLine()"
+      style="width:100%;background:#06C755;color:#fff;border:1px solid #06C755;border-radius:12px;padding:13px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M19.365 9.89c.50 0 .906.41.906.917 0 .506-.406.916-.906.916h-2.527v1.62h2.527c.5 0 .906.41.906.916 0 .507-.406.916-.906.916h-3.434c-.5 0-.906-.41-.906-.916V7.844c0-.507.406-.917.906-.917h3.434c.5 0 .906.41.906.917 0 .506-.406.916-.906.916h-2.527v1.62h2.527v-.49zm-5.61 4.286c0 .39-.25.736-.62.86-.092.03-.187.044-.282.044-.296 0-.566-.148-.736-.39l-3.516-4.78v4.275c0 .506-.406.916-.906.916-.501 0-.906-.41-.906-.916V7.844c0-.39.25-.737.62-.86.092-.029.187-.044.282-.044.296 0 .566.148.737.39l3.515 4.78V7.843c0-.506.406-.916.906-.916.5 0 .906.41.906.916v6.333zm-7.84 0c0 .506-.405.916-.906.916-.5 0-.906-.41-.906-.916V7.844c0-.507.406-.917.906-.917.5 0 .906.41.906.917v6.333zM12 0C5.376 0 0 4.413 0 9.85 0 14.737 4.265 18.83 10.024 19.6c.39.084.92.258 1.053.59.122.302.08.776.04 1.083l-.17 1.027c-.054.302-.243 1.184 1.04.645 1.282-.54 6.91-4.072 9.43-6.97C23.18 14.05 24 12.057 24 9.85 24 4.413 18.624 0 12 0z"/></svg>
+      LINEで続ける
     </button>
 
   </div>
@@ -2042,6 +2056,27 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">🛡️ 운영자 메뉴</div>
         <div class="si" onclick="openAdminDashboard()" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl">어드민 대시보드</span><span class="si-val">›</span></div>
       </div>
+      <!-- 친구 초대 / 레퍼럴 코드 -->
+      <div class="sg">
+        <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">👥 친구 초대</div>
+        <div class="si" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px 16px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:15px;width:22px;text-align:center;">🎟️</span>
+            <span class="si-lbl" style="flex:1;">내 추천 코드</span>
+          </div>
+          <!-- 코드 카드 + 복사 버튼 -->
+          <div id="sp-ref-card" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1px solid var(--gold);border-radius:12px;padding:10px 14px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:10px;color:var(--text-3);font-weight:700;letter-spacing:.5px;">RECEIPT CODE</div>
+              <div id="sp-ref-code-display" style="font-size:18px;font-weight:900;color:var(--text-1);letter-spacing:1.5px;font-family:monospace;margin-top:2px;user-select:all;-webkit-user-select:all;cursor:pointer;" onclick="copyReferralCode()">— — — —</div>
+            </div>
+            <button id="sp-ref-copy-btn" onclick="copyReferralCode()" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.3);white-space:nowrap;">📋 복사</button>
+          </div>
+          <div style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 둘 다 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요</div>
+          <button onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">🔗 초대 링크 공유</button>
+        </div>
+      </div>
+
       <div class="sg">
         <div class="si" onclick="window.open('./about.html','_blank')" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">ℹ️</span><span class="si-lbl" data-i18n="settings.about">サイトについて</span><span class="si-val">›</span></div>
         <div class="si" onclick="window.open('./blog/','_blank')" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">📝</span><span class="si-lbl" data-i18n="settings.blog">節約ブログ</span><span class="si-val">›</span></div>
@@ -13241,6 +13276,7 @@ function openOv(id){
   if (id === 'ov-settings') {
     renderThemeSwatches();
     loadProfileToSettings();
+    loadReferralCodeToSettings(); // 레퍼럴 코드 로드
     // 저장된 GPT 키 상태 표시
     var inp = document.getElementById('gpt-key-input');
     var st  = document.getElementById('gpt-status');
@@ -13248,6 +13284,73 @@ function openOv(id){
       inp.placeholder = 'sk-...●●●' + gptKey.slice(-4);
       if (st) { st.textContent = '✅ OpenAI 키 저장됨 — GPT 파싱 활성화'; st.style.color = 'var(--green)'; }
     }
+  }
+}
+
+/* ── 레퍼럴 코드: 설정창 진입시 로드 + 복사 ── */
+async function loadReferralCodeToSettings() {
+  var disp = document.getElementById('sp-ref-code-display');
+  if (!disp) return;
+  if (!_sb || !_currentUser) {
+    disp.textContent = '로그인 필요';
+    return;
+  }
+  disp.textContent = '...';
+  try {
+    var res = await _sb.from('profiles').select('referral_code').eq('id', _currentUser.id).maybeSingle();
+    var code = (res.data && res.data.referral_code) || null;
+    if (!code) {
+      // 코드 없으면 자동 생성
+      code = Math.random().toString(36).slice(2,10).toUpperCase();
+      try { await _sb.from('profiles').update({ referral_code: code }).eq('id', _currentUser.id); }
+      catch(e) { console.warn('[ref] code save failed', e); }
+    }
+    disp.textContent = code || '— — — —';
+    disp.dataset.code = code || '';
+  } catch(e) {
+    console.warn('[ref] load failed', e);
+    disp.textContent = '— — — —';
+  }
+}
+
+function copyReferralCode() {
+  var disp = document.getElementById('sp-ref-code-display');
+  var code = disp ? (disp.dataset.code || disp.textContent || '').trim() : '';
+  if (!code || code === '— — — —' || code === '...' || code === '로그인 필요') {
+    if (typeof showToast === 'function') showToast('코드 로드 중이에요. 잠시만요!');
+    return;
+  }
+  // 클립보드 복사 시도
+  var copied = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(function(){});
+      copied = true;
+    }
+  } catch(e) {}
+  // Fallback: textarea + execCommand
+  if (!copied) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = code;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      copied = true;
+    } catch(e) {}
+  }
+  // 시각 피드백: 버튼 텍스트 일시 변경 + 토스트
+  var btn = document.getElementById('sp-ref-copy-btn');
+  if (btn) {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '✅ 복사됨';
+    btn.style.background = 'var(--green)';
+    setTimeout(function(){ btn.innerHTML = orig; btn.style.background = 'var(--gold)'; }, 1500);
+  }
+  if (typeof showToast === 'function') {
+    showToast(copied ? '📋 추천 코드 복사됨: ' + code : '복사 실패 — 코드를 직접 선택해 복사해주세요');
   }
 }
 function closeOv(id){
@@ -14898,6 +15001,31 @@ async function authGoogle() {
     provider: 'google',
     options: { redirectTo: redirectTo }
   });
+}
+
+async function authApple() {
+  var redirectTo = window.location.origin + window.location.pathname;
+  var res = await _sb.auth.signInWithOAuth({
+    provider: 'apple',
+    options: { redirectTo: redirectTo }
+  });
+  if (res.error) {
+    console.error('[apple] error:', res.error);
+    showAuthError('Apple 로그인 실패: ' + (res.error.message || '잠시 후 다시 시도해주세요'));
+  }
+}
+
+async function authLine() {
+  var redirectTo = window.location.origin + window.location.pathname;
+  // Supabase는 LINE을 'line_notify' 또는 'line' provider로 지원. 최신은 'line'
+  var res = await _sb.auth.signInWithOAuth({
+    provider: 'line',
+    options: { redirectTo: redirectTo }
+  });
+  if (res.error) {
+    console.error('[line] error:', res.error);
+    showAuthError('LINE 로그인 실패: ' + (res.error.message || '잠시 후 다시 시도해주세요'));
+  }
 }
 
 async function authLogout() {
@@ -18841,7 +18969,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 250;
+window.__APP_BUILD__ = 251;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
