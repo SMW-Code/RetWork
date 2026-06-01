@@ -2545,8 +2545,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </div>
       </div>
 
-      <div style="margin-top:14px;padding:10px;background:var(--bg-2);border-radius:10px;font-size:11px;color:var(--text-3);text-align:center;">
-        ⚠️ 운영자 권한 · 모든 데이터에 접근 가능
+      <div style="margin-top:14px;padding:10px;background:var(--bg-2);border-radius:10px;font-size:11px;color:var(--text-3);text-align:center;line-height:1.7;">
+        ⚠️ 운영자 권한 · 모든 데이터에 접근 가능<br>
+        <span style="font-size:10px;opacity:.7;font-family:monospace;">RetWork <span class="app-version-text"></span> · build <span class="app-build-text"></span></span>
       </div>
     </div>
   </div>
@@ -18638,10 +18639,15 @@ _sb.auth.onAuthStateChange(function(event, session) {
 </script>
 <script>
 // PWA 서비스 워커 등록
-window.__APP_VERSION__ = 'v243';
-console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__);
+// 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
+window.__APP_VERSION__ = 'v0.9.0';
+// 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
+window.__APP_BUILD__ = 244;
+console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
+// 어드민 모달의 빌드 번호 표시 자동 갱신
+document.querySelectorAll('.app-build-text').forEach(function(el){ el.textContent = window.__APP_BUILD__; });
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('/sw.js').catch(function(err) {
