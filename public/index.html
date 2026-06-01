@@ -15000,11 +15000,11 @@ async function authGoogle() {
                      window.navigator.standalone === true;
   if (isStandalone) {
     showToast('🔄 Googleログイン: 外部ブラウザで認証後、自動的に戻ります');
-    // PWA에서 시작한 OAuth임을 표식 (외부 크롬 탭이 이 플래그를 읽고 자동 닫기)
+    // PWA에서 시작한 OAuth임을 표식 (저장소 + URL 두 경로 모두 — WebAPK/크롬 저장소 미공유 대비)
     try { localStorage.setItem('riq_oauth_from_pwa', '1'); } catch(e) {}
   }
-  // 루트로 복귀 (PWA 안정성)
-  var redirectTo = window.location.origin + '/';
+  // 루트로 복귀. standalone이면 URL에 ?pwaret=1 표식 (크롬 탭이 저장소 없이도 인식)
+  var redirectTo = window.location.origin + '/' + (isStandalone ? '?pwaret=1' : '');
   await _sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: redirectTo }
@@ -15023,11 +15023,11 @@ async function authLine() {
   if (isStandalone) {
     // 외부 브라우저로 이동한다는 안내 (몰랐다가 당황하지 않게)
     showToast('🔄 LINEログイン: 外部ブラウザで認証後、自動的に戻ります');
-    // PWA에서 시작한 OAuth임을 표식 (외부 크롬 탭이 이 플래그를 읽고 자동 닫기)
+    // PWA에서 시작한 OAuth임을 표식 (저장소 + URL 두 경로 모두 — WebAPK/크롬 저장소 미공유 대비)
     try { localStorage.setItem('riq_oauth_from_pwa', '1'); } catch(e) {}
   }
-  // 명시적으로 retwork.jp 루트로 복귀하도록 설정 (외부 브라우저 → PWA 복귀 안정성)
-  var redirectTo = window.location.origin + '/';
+  // retwork.jp 루트로 복귀. standalone이면 URL에 ?pwaret=1 표식 (크롬 탭이 저장소 없이도 인식)
+  var redirectTo = window.location.origin + '/' + (isStandalone ? '?pwaret=1' : '');
   // Supabase Custom Provider (OIDC) 로 LINE 등록됨 → provider identifier: 'custom:line-v2'
   // (기존 'custom:line'은 Supabase Dashboard 버그로 수정/삭제 불가하여 'line-v2'로 재생성)
   var res = await _sb.auth.signInWithOAuth({
@@ -18949,8 +18949,10 @@ async function _sdDoSubmitNewCard(p){
 var _isStandalone  = window.matchMedia('(display-mode: standalone)').matches ||
                      window.navigator.standalone === true;
 var _hasOAuthToken = !!(window.location.hash && window.location.hash.indexOf('access_token') !== -1);
-var _isOAuthReturnTab = (!_isStandalone && _hasOAuthToken &&
-                         localStorage.getItem('riq_oauth_from_pwa') === '1');
+// PWA에서 시작한 OAuth 표식: URL(?pwaret=1) 우선, 저장소 플래그는 보조 (저장소 미공유 기기 대비)
+var _hasReturnMark = (window.location.search.indexOf('pwaret=1') !== -1) ||
+                     (localStorage.getItem('riq_oauth_from_pwa') === '1');
+var _isOAuthReturnTab = (!_isStandalone && _hasOAuthToken && _hasReturnMark);
 
 if (_isOAuthReturnTab) {
   // 1) 즉시 전체 가림막 (앱 UI 노출 방지 — 동기적으로 바로 그림)
@@ -19079,7 +19081,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 257;
+window.__APP_BUILD__ = 258;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
