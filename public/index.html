@@ -1064,6 +1064,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 인사말 + 오늘 지출 -->
     <div id="home-greet"></div>
 
+    <!-- 추천 대기 보상 배너 (청구 가능할 때만 표시) → 탭하면 광고 보고 200치리 받기 -->
+    <div id="home-ref-reward-banner" onclick="claimReferralRewardViaAd()" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#06C755,#04a045);border-radius:14px;padding:12px 16px;align-items:center;gap:10px;cursor:pointer;box-shadow:var(--shadow-sm);">
+      <span style="font-size:20px;">🎁</span>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;">추천 보상 <span id="home-ref-reward-count">0</span>건 대기 중!</div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;">광고 보고 200チリ씩 받기</div></div>
+      <span style="font-size:16px;color:rgba(255,255,255,.9);">›</span>
+    </div>
+
     <!-- 메인 지출 카드 -->
     <div class="summary-card">
       <div class="s-label" id="home-label">5月 합계 지출 · 0건</div>
@@ -1950,7 +1957,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 상단 바: 광고 라벨 + 카운트다운 -->
   <div style="position:absolute;top:0;left:0;right:0;z-index:2;padding:env(safe-area-inset-top,12px) 16px 12px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(to bottom,rgba(0,0,0,.7),transparent);">
     <div style="font-size:11px;color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.5px;">広告</div>
-    <div id="rv-countdown-badge" style="background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:800;">15</div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <!-- 나가기 버튼: referral 모드 등에서만 노출 (광고 미로딩 시 탈출용, 보상은 대기 유지) -->
+      <button id="rv-close-btn" onclick="ctCloseFullscreenAd()" style="display:none;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;border:none;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">✕ 閉じる</button>
+      <div id="rv-countdown-badge" style="background:rgba(0,0,0,.55);backdrop-filter:blur(4px);color:#fff;border-radius:20px;padding:5px 14px;font-size:13px;font-weight:800;">15</div>
+    </div>
   </div>
   <!-- 광고 슬롯 (전체 화면 차지) -->
   <div id="rv-ad-slot" style="flex:1;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
@@ -2079,6 +2090,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           </div>
           <div style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요</div>
           <button onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">🔗 초대 링크 공유</button>
+          <!-- 대기 추천 보상 (있을 때만 표시) → 광고 보고 200치리씩 받기 -->
+          <div id="sp-ref-reward-banner" style="display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(6,199,85,.14),var(--surface));border:1px solid #06C755;border-radius:12px;padding:10px 14px;">
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12px;font-weight:800;color:var(--text-1);">🎁 받을 수 있는 추천 보상 <span id="sp-ref-reward-count">0</span>건</div>
+              <div id="sp-ref-reward-sub" style="font-size:10px;color:var(--text-3);margin-top:2px;">광고 보고 200チリ씩 받기</div>
+            </div>
+            <button id="sp-ref-reward-btn" onclick="claimReferralRewardViaAd()" style="background:#06C755;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);white-space:nowrap;">📺 받기</button>
+          </div>
         </div>
       </div>
 
@@ -13316,6 +13335,8 @@ async function loadReferralCodeToSettings() {
     console.warn('[ref] load failed', e);
     disp.textContent = '— — — —';
   }
+  // 대기 추천 보상 배너 갱신
+  if (typeof window.loadReferralStatus === 'function') window.loadReferralStatus();
 }
 
 function copyReferralCode() {
@@ -14659,6 +14680,10 @@ function ctOpenFullscreenAd(mode, callback) {
   var ov = document.getElementById('ov-reward-ad');
   if (ov) ov.style.display = 'flex';
 
+  // 나가기 버튼: referral 모드(추천 보상 청구)에서만 노출 — 광고 미로딩 시 탈출 가능 (보상 대기 유지)
+  var _closeBtn = document.getElementById('rv-close-btn');
+  if (_closeBtn) _closeBtn.style.display = (mode === 'referral') ? 'inline-block' : 'none';
+
   // 광고 슬롯 초기화 후 주입
   var slot = document.getElementById('rv-ad-slot');
   if (slot) slot.innerHTML = '<div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);"><div style="font-size:52px;margin-bottom:14px;">▶️</div><div style="font-size:13px;">広告を読み込み中...</div></div>';
@@ -14713,6 +14738,8 @@ function ctOpenFullscreenAd(mode, callback) {
         iconTxt = '🎁'; titleTxt = '+15チリ 獲得！'; toastTxt = '🎁 追加広告ボーナス +15チリ 獲得！';
       } else if (mode === 'comment_quota') {
         iconTxt = '📝'; titleTxt = '+4회 댓글 가능！'; toastTxt = '🎁 광고 시청 완료! +4회 댓글 작성 가능';
+      } else if (mode === 'referral') {
+        iconTxt = '🎁'; titleTxt = '+200チリ 獲得！'; toastTxt = '🎁 추천 보상 +200チリ 받았어요!';
       } else if (_adContext === 'private') {
         iconTxt = '🔒'; titleTxt = '프라이빗 모드로 전환됐어요'; toastTxt = '🔒 프라이빗 모드 활성화';
       } else if (_adContext === 'chiri') {
@@ -14760,6 +14787,8 @@ function showApp() {
   if (_savedNav && typeof window._restoreNav === 'function') setTimeout(window._restoreNav, 0);
   // 보류 중인 추천 코드 redeem (가입/로그인 직후, 1회만 처리됨)
   if (typeof window._redeemPendingRef === 'function') setTimeout(window._redeemPendingRef, 500);
+  // 추천 대기 보상 상태 로드 → 홈 배너 갱신
+  if (typeof window.loadReferralStatus === 'function') setTimeout(window.loadReferralStatus, 700);
   // 어드민 권한 로드 (비동기, UI에 자동 반영됨)
   _loadAdminFlag();
   // 활성 공지 로드 → 상단 배너 표시
@@ -19086,7 +19115,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 260;
+window.__APP_BUILD__ = 261;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
@@ -19142,12 +19171,84 @@ window._redeemPendingRef = async function _redeemPendingRef(){
     var d = res.data || {};
     if (d.ok){
       try{localStorage.removeItem('pending_ref');}catch(e){}
-      if (typeof showToast === 'function') showToast('🎁 추천 보상이 지급됐어요!');
+      if (typeof showToast === 'function') showToast('🎁 추천이 완료됐어요! 추천해주신 분께 보상이 적립됩니다.');
     } else if (d.err === 'already_redeemed' || d.err === 'code_not_found' || d.err === 'self_referral') {
       // 재시도 무의미 → 정리
       try{localStorage.removeItem('pending_ref');}catch(e){}
     }
   } catch(e){ console.warn('[ref redeem]', e); }
+};
+
+// ── 추천 대기 보상: 상태 조회 → UI 렌더 → 광고 보고 청구 ──
+window._refStatus = { pending: 0, claimable_today: 0, cap: 10, claimed_today: 0 };
+
+window.loadReferralStatus = async function loadReferralStatus(){
+  if (!_sb || !_currentUser) return;
+  try {
+    var res = await _sb.rpc('get_referral_status');
+    if (res.data && res.data.ok) window._refStatus = res.data;
+  } catch(e){ console.warn('[ref status]', e); }
+  renderReferralRewardUI();
+};
+
+window.renderReferralRewardUI = function renderReferralRewardUI(){
+  var s = window._refStatus || {};
+  var pending   = s.pending || 0;
+  var claimable = s.claimable_today || 0;
+  // 설정창 배너 (대기 건이 있으면 표시)
+  var spB = document.getElementById('sp-ref-reward-banner');
+  if (spB) {
+    if (pending > 0) {
+      spB.style.display = 'flex';
+      var spC = document.getElementById('sp-ref-reward-count');
+      var spS = document.getElementById('sp-ref-reward-sub');
+      if (spC) spC.textContent = pending;
+      if (spS) spS.textContent = (claimable > 0)
+        ? ('광고 보고 200チリ씩 받기 (오늘 ' + claimable + '건 가능)')
+        : ('오늘 한도(' + (s.cap||10) + '건) 도달 · 내일 다시 받기');
+    } else spB.style.display = 'none';
+  }
+  // 홈 배너 (오늘 청구 가능할 때만 표시)
+  var hB = document.getElementById('home-ref-reward-banner');
+  if (hB) {
+    if (claimable > 0) {
+      hB.style.display = 'flex';
+      var hC = document.getElementById('home-ref-reward-count');
+      if (hC) hC.textContent = claimable;
+    } else hB.style.display = 'none';
+  }
+};
+
+window.claimReferralRewardViaAd = async function claimReferralRewardViaAd(){
+  if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast('로그인 후 사용 가능해요'); return; }
+  await loadReferralStatus();
+  var s = window._refStatus || {};
+  if ((s.pending||0) <= 0) { if (typeof showToast==='function') showToast('받을 추천 보상이 없어요'); return; }
+  if ((s.claimable_today||0) <= 0) {
+    if (typeof showToast==='function') showToast('오늘 추천 보상 한도(' + (s.cap||10) + '건)에 도달했어요. 내일 다시 받을 수 있어요');
+    return;
+  }
+  // 전체화면 광고 → 완료 콜백에서 1건 청구 (광고 1회 = 보상 1건)
+  ctOpenFullscreenAd('referral', async function(){
+    try {
+      var res = await _sb.rpc('claim_referral_reward');
+      var d = res.data || {};
+      if (d.ok) {
+        // 잔액 화면 즉시 갱신
+        if (typeof d.balance === 'number' && typeof _ctCoinBalance !== 'undefined') {
+          _ctCoinBalance = d.balance;
+          if (typeof ctUpdateCoinDisplay === 'function') ctUpdateCoinDisplay();
+        }
+        await loadReferralStatus();
+      } else if (d.err === 'daily_cap') {
+        if (typeof showToast==='function') showToast('오늘 추천 보상 한도에 도달했어요');
+      } else if (d.err === 'no_pending') {
+        if (typeof showToast==='function') showToast('받을 추천 보상이 없어요');
+      } else {
+        console.warn('[ref claim]', d.err || res.error);
+      }
+    } catch(e){ console.warn('[ref claim]', e); }
+  });
 };
 
 // (3) 내 추천코드로 초대 링크 공유 (없으면 생성)

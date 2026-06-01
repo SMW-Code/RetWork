@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-01 / build 260 / v0.9.0
+> **최종 갱신**: 2026-06-01 / build 261 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -19,6 +19,20 @@
 ---
 
 ## 🚦 현재 상태 한눈에
+
+### ⚠️ build 261 — 추천 보상 "대기 + 광고 청구" 모델 (★ SQL 실행 필요)
+**먼저 `referral_v2.sql` 을 Supabase SQL Editor 에서 실행해야 작동함.** 안 하면 클라는
+graceful 하게 배너 안 뜸(무해). 모델:
+- 친구가 레퍼럴 링크로 가입 → 추천인에게 즉시 X, `referral_rewards`에 **pending 1건** 적립.
+- 추천인이 **광고 1회 시청 = pending 1건 청구 → +200 coin_balance** (광고 ¥17 > 보상 ¥16, 항상 흑자).
+- **1일 청구 상한 10건** (JST 자정 리셋, `get/claim` RPC 안의 `v_cap`에서 숫자 조정).
+- 광고 모달에 referral 모드 전용 **✕ 閉じる 버튼**(미로딩 시 탈출, 보상 대기 유지).
+- UI: 설정창 추천카드 배너(`sp-ref-reward-banner`) + 홈 상단 배너(`home-ref-reward-banner`).
+- 신규 RPC: `get_referral_status`, `claim_referral_reward`. `redeem_referral`은 pending 적립으로 변경.
+- ⚠️ 잔액 컬럼은 **`coin_balance`** (기존 referral.sql의 `coins`는 버그였음). 코인 UPDATE 전
+  `set_config('app.admin_action','true')` 트리거 우회 필수(client_add_coins와 동일).
+- 한계(허용): claim RPC는 광고 실제 시청을 서버 검증 못 함 → 광고 스킵 어뷰징은 1일 10건으로 상한.
+  추천 자체가 실제 OAuth 가입을 요구하므로 최악 노출 = 10건×¥16 = ¥160/일/추천인.
 
 ### ✅ 배포 완료 (build 259~260) — 로그인 화면 / 추천 시스템 정리
 - **build 259**: 로그인 화면에서 이메일 직접 로그인/회원가입 영역 숨김(`display:none`, 코드 보존).
@@ -330,4 +344,4 @@ receiptiq/
 
 ---
 
-**현재 build 258 배포 — PWA OAuth 복귀 동선 개선(256~258). 실기기 테스트상 대체로 작동, 추가 이상 발견 시 위 "관찰된 동작 차이" 참고하여 이어서 디버깅.**
+**현재 build 261 — 추천 보상 대기+광고청구 모델. ★ `referral_v2.sql` Supabase 실행 필수. 실행 후 폰에서 추천→가입→설정카드/홈 배너→광고 보고 200치리 청구 흐름 검증 필요.**
