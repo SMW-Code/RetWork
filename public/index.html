@@ -10188,7 +10188,7 @@ function openChiriPublish() {
   var cpArrowEl = document.getElementById('cp-cat-arrow');
   var cpAccEl   = document.getElementById('cp-cat-accordion');
   var cpCatSec  = document.getElementById('cp-cat-section');
-  if (cpLabelEl) cpLabelEl.textContent = initCat.icon + ' ' + initCat.label;
+  if (cpLabelEl) cpLabelEl.innerHTML = initCat.icon + ' ' + _esc(initCat.label);
   if (cpArrowEl) cpArrowEl.textContent = '▼';
   if (cpCatSec)  cpCatSec.style.display = 'none';
   if (cpAccEl) {
@@ -10308,7 +10308,7 @@ function selectCpCat(key) {
   _cpCategory = key;
   var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
   var label = document.getElementById('cp-cat-label');
-  if (label) label.textContent = cat.icon + ' ' + cat.label;
+  if (label) label.innerHTML = cat.icon + ' ' + _esc(cat.label);
   var acc = document.getElementById('cp-cat-accordion');
   if (acc) {
     acc.querySelectorAll('button').forEach(function(btn) {
@@ -12759,7 +12759,7 @@ function selectMpCat(key) {
   _mpCategory = key;
   var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
   var label = document.getElementById('mp-cat-label');
-  if (label) label.textContent = cat.icon + ' ' + cat.label;
+  if (label) label.innerHTML = cat.icon + ' ' + _esc(cat.label);
   var acc = document.getElementById('mp-cat-accordion');
   if (acc) {
     acc.querySelectorAll('button').forEach(function(btn) {
@@ -18669,7 +18669,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 245;
+window.__APP_BUILD__ = 246;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
