@@ -2555,9 +2555,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="_admPcCloseLocalAdMgr()" style="cursor:pointer;font-size:18px;color:#6B7280;padding:6px;">✕</div>
     </div>
     <div style="padding:18px 22px;">
-      <!-- 등록 폼 -->
-      <div id="apc-local-ad-form" style="background:#F4F5F8;border-radius:10px;padding:14px;margin-bottom:14px;">
-        <div style="font-size:12px;font-weight:800;color:#172C58;margin-bottom:10px;">✏️ 새 광고 등록 / 수정</div>
+      <!-- 새 광고 추가 버튼 — 기존 ov-admin-ad-form (이미지 업로드/크롭/줌) 호출 -->
+      <button onclick="_admPcOpenAdFormForContext(window._admPcCurrentLocalAdContext)" style="width:100%;background:#172C58;color:#fff;border:none;border-radius:10px;padding:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <span style="font-size:16px;">＋</span>
+        <span>새 광고 추가 (이미지 업로드)</span>
+      </button>
+      <!-- 등록 폼 영역 (구버전, 사용 안 함 — 기존 폼 호출로 대체) -->
+      <div id="apc-local-ad-form" style="display:none;">
         <input type="hidden" id="apc-la-id">
         <input type="hidden" id="apc-la-context">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
@@ -3520,7 +3524,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 </div>
 
 <!-- ══ 어드민: 로컬 광고 추가/수정 폼 ══ -->
-<div class="overlay" id="ov-admin-ad-form" style="z-index:970;" onclick="if(event.target===this)closeOv('ov-admin-ad-form')">
+<div class="overlay" id="ov-admin-ad-form" style="z-index:10000;" onclick="if(event.target===this)closeOv('ov-admin-ad-form')">
   <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
     <div class="sheet-handle"></div>
     <div style="padding:8px 20px 28px;">
@@ -3533,12 +3537,26 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="margin-bottom:10px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">① 노출 영역 (먼저 선택)</div>
         <select id="adm-ad-zone" onchange="adOnZoneChange()" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);">
-          <option value="home">홈 (가로 배너)</option>
-          <option value="map">치리맵 (가로 배너)</option>
-          <option value="store">가게상세 (가로 배너)</option>
-          <option value="reward">리워드/치리스토어 (정사각 카드)</option>
-          <option value="feed">치리톡 (가로형)</option>
-          <option value="modal">저장 모달 (가로 배너)</option>
+          <optgroup label="기본 영역 (페이지)">
+            <option value="home">홈 (가로 배너)</option>
+            <option value="map">치리맵 (가로 배너)</option>
+            <option value="store">가게상세 (가로 배너)</option>
+            <option value="reward">리워드/치리스토어 (정사각 카드)</option>
+            <option value="feed">치리톡 (가로형)</option>
+            <option value="modal">저장 모달 (가로 배너)</option>
+          </optgroup>
+          <optgroup label="세분화 위치 (AD_POSITIONS)">
+            <option value="save">영수증 저장 풀스크린</option>
+            <option value="chiri">치리 공개 풀스크린</option>
+            <option value="menu_photo">메뉴 사진 업로드 풀스크린</option>
+            <option value="private">프라이빗 전환 풀스크린</option>
+            <option value="comment_quota">댓글 한도 풀스크린</option>
+            <option value="bonus">추가 광고 보상 풀스크린</option>
+            <option value="attendance">출석 완료 풀스크린</option>
+            <option value="attendance_auto">출석 화면 자동재생</option>
+            <option value="attendance_modal_auto">출석 모달 자동재생</option>
+            <option value="referral">추천 보상 풀스크린</option>
+          </optgroup>
         </select>
       </div>
 
@@ -17297,11 +17315,40 @@ async function _admPcOpenLocalAdMgr(context, posName) {
   if (!_isAdmin) return;
   window._admPcCurrentLocalAdContext = context;
   document.getElementById('apc-local-ad-pos-name').textContent = '위치: ' + (posName || context);
-  document.getElementById('apc-la-context').value = context;
-  _admPcResetLocalAdForm();
   document.getElementById('ov-apc-local-ad').style.display = 'flex';
   await _admPcLoadLocalAdList(context);
 }
+
+/* 카드의 "+ 새 광고 추가" 버튼 → 기존 ov-admin-ad-form 호출 + zone 미리 채움
+   (이미지 업로드 + 드래그 크롭 + 줌 + 슬라이더/픽셀 동기화 모두 기존 폼이 처리) */
+function _admPcOpenAdFormForContext(context) {
+  if (!_isAdmin) return;
+  if (typeof adminOpenAdForm !== 'function') { showToast('광고 폼을 찾을 수 없어요'); return; }
+  // 신규 등록 모드로 진입 후 zone 자동 채움
+  adminOpenAdForm(null);
+  setTimeout(function(){
+    var sel = document.getElementById('adm-ad-zone');
+    if (sel) {
+      sel.value = context;
+      if (typeof adOnZoneChange === 'function') adOnZoneChange();
+    }
+  }, 50);
+}
+
+/* 기존 광고 수정 — adminOpenAdForm(id) 그대로 사용 */
+function _admPcEditExistingLocalAd(id) {
+  if (typeof adminOpenAdForm === 'function') adminOpenAdForm(id);
+}
+
+/* 광고 폼이 닫힐 때 (adminSaveLocalAd 또는 사용자 취소) 카드 광고 목록 재로드
+   adminSaveLocalAd 끝부분에 닿지 못 하니까 — 폴링 또는 closeOv 후크 */
+window._admPcRefreshLocalAdsIfOpen = function(){
+  var mgr = document.getElementById('ov-apc-local-ad');
+  if (mgr && mgr.style.display === 'flex' && window._admPcCurrentLocalAdContext) {
+    _admPcLoadLocalAdList(window._admPcCurrentLocalAdContext);
+    if (typeof _admPcLoadAdPagesStats === 'function') _admPcLoadAdPagesStats();
+  }
+};
 
 function _admPcCloseLocalAdMgr() {
   document.getElementById('ov-apc-local-ad').style.display = 'none';
@@ -17434,7 +17481,7 @@ async function _admPcLoadLocalAdList(context) {
             +   '</div>'
             + '</div>'
             + '<div style="display:flex;flex-direction:column;gap:4px;">'
-            +   '<button onclick="_admPcEditLocalAd(\''+r.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">수정</button>'
+            +   '<button onclick="_admPcEditExistingLocalAd(\''+r.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">수정</button>'
             +   '<button onclick="_admPcDeleteLocalAd(\''+r.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">삭제</button>'
             + '</div>'
             + '</div>';
@@ -18141,6 +18188,8 @@ async function adminSaveLocalAd() {
   _admAdImgFile = null; _admEditAdId = null;
   loadLocalAdList(); loadAdminAdStats();
   if (typeof _loadLocalAds === 'function') _loadLocalAds();
+  // PC 어드민의 광고 페이지/위치 카드 + 모달 목록도 갱신
+  if (typeof window._admPcRefreshLocalAdsIfOpen === 'function') window._admPcRefreshLocalAdsIfOpen();
 }
 
 async function adminToggleLocalAd(id, next) {
@@ -20194,7 +20243,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 278;
+window.__APP_BUILD__ = 279;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
