@@ -16987,16 +16987,17 @@ function _admPcRenderSidebar(tab) {
   var sb = document.getElementById('apc-sidebar');
   if (!sb) return;
   var menus = _admPcMenus[tab] || [];
+  // 섹션 헤더: 이모지 제거 (사이드바 클린)
   var labels = {
-    overview: '📊 RetWork 전체',
-    i18n:     '🌐 언어시트',
-    chiri:    '✨ 치리관리',
-    ads:      '📺 광고관리'
+    overview: 'RetWork 전체',
+    i18n:     '언어시트',
+    chiri:    '치리관리',
+    ads:      '광고관리'
   };
   var html = '<div class="apc-menu-section">' + (labels[tab] || tab) + '</div>';
   menus.forEach(function(m, idx){
+    // 메뉴 항목: 이모지 제거 (텍스트만)
     html += '<div class="apc-menu-item" data-key="' + m.key + '" onclick="_admPcSelectMenu(\'' + m.key + '\')">'
-         +    '<span style="font-size:15px;width:20px;text-align:center;">' + m.icon + '</span>'
          +    '<span>' + m.label + '</span>'
          +    (m.badgeId ? '<span class="apc-badge" id="' + m.badgeId + '" style="display:none;"></span>' : '')
          +  '</div>';
@@ -19496,7 +19497,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 269;
+window.__APP_BUILD__ = 270;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
