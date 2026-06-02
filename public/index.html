@@ -2118,9 +2118,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="prem-banner"><div><div style="font-size:13px;font-weight:800;" data-i18n="premium.title">프리미엄 업그레이드</div><div style="font-size:11px;opacity:.8;margin-top:3px;" data-i18n="premium.sub">무제한 스캔 · 광고 제거</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:900;">¥320</div><div style="font-size:10px;opacity:.75;" data-i18n="premium.unit">/월</div></div></div>
       <div class="sg">
         <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🌙</span><span class="si-lbl" data-i18n="settings.dark">다크모드</span><div class="toggle off" id="dark-toggle" onclick="toggleDarkMode()"></div></div>
-        <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🔔</span><span class="si-lbl" data-i18n="settings.notif.save">절약 알림</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
-        <div class="si"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl" data-i18n="settings.notif.weekly">주간 리포트</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div>
-        <div class="si"><span style="font-size:15px;width:22px;text-align:center;">💡</span><span class="si-lbl" data-i18n="settings.notif.compare">가격 비교 알림</span><div class="toggle off" onclick="this.classList.toggle('off')"></div></div>
+        <!-- 알림 토글 — 실제 푸시 알림 인프라 구축 후 노출 예정 (정식 출시 시) -->
+        <!-- <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🔔</span><span class="si-lbl" data-i18n="settings.notif.save">절약 알림</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div> -->
+        <!-- <div class="si"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl" data-i18n="settings.notif.weekly">주간 리포트</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div> -->
+        <!-- <div class="si"><span style="font-size:15px;width:22px;text-align:center;">💡</span><span class="si-lbl" data-i18n="settings.notif.compare">가격 비교 알림</span><div class="toggle off" onclick="this.classList.toggle('off')"></div></div> -->
       </div>
       <div class="sg">
         <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🌐</span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
@@ -21940,7 +21941,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 299;
+window.__APP_BUILD__ = 300;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
