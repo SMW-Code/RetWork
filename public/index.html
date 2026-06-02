@@ -17376,6 +17376,39 @@ async function _admPcLoadAdPagesStats() {
   list.innerHTML = html;
 }
 
+/* PC 어드민 활성 여부 — 드릴다운 모드 분기용 */
+function _isAdminPcActive() {
+  var el = document.getElementById('ov-admin-pc');
+  return el && el.style.display === 'flex';
+}
+
+/* ──── 드릴다운: 사용자 목록 → 사용자 상세 (콘텐츠 영역 내부 이동, breadcrumb 추가) ──── */
+function _admPcDrilldownToUserDetail() {
+  _admPcMountSheet('ov-admin-user-detail', null);  // 시트 마운트만 (데이터는 이미 openAdminUserDetail 에서 로드됨)
+  // breadcrumb "← 사용자 목록" 시트 위에 prepend
+  setTimeout(function(){
+    var ct = document.getElementById('apc-content');
+    if (!ct) return;
+    if (document.getElementById('apc-breadcrumb')) return; // 이미 있으면 skip
+    var bc = document.createElement('div');
+    bc.id = 'apc-breadcrumb';
+    bc.style.cssText = 'padding:14px 24px;background:#F4F5F8;border-bottom:1px solid #E3E6EB;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;';
+    bc.innerHTML = '<button onclick="_admPcBackToUserList()" style="background:#fff;border:1px solid #E3E6EB;color:#172C58;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;font-family:var(--font);">← 사용자 목록</button>'
+                 + '<span style="color:#9CA3AF;">/</span>'
+                 + '<span style="color:#172C58;font-weight:800;">사용자 상세</span>';
+    var firstChild = ct.firstElementChild;
+    if (firstChild) ct.insertBefore(bc, firstChild);
+    else ct.appendChild(bc);
+  }, 50);
+}
+
+function _admPcBackToUserList() {
+  // breadcrumb 제거 + 다시 사용자 목록 마운트
+  var bc = document.getElementById('apc-breadcrumb');
+  if (bc) bc.remove();
+  _admPcSelectMenu('users');
+}
+
 /* ════════════════════════════════════════════════════════════
    Phase 3.B — 치리 발급 통계 화면
    - coin_transactions 테이블 기반
@@ -19040,7 +19073,12 @@ async function openAdminUserDetail(userId) {
   if (customRow) customRow.style.display = 'none';
   if (typeof admLoadCoinHistory === 'function') admLoadCoinHistory(false);
 
-  openOv('ov-admin-user-detail');
+  // PC 어드민 활성 시 모달 대신 콘텐츠 영역에 마운트 (드릴다운 패턴 + breadcrumb)
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownToUserDetail();
+  } else {
+    openOv('ov-admin-user-detail');
+  }
 }
 
 // 시간 경과 표시 ("2시간 전", "3일 전")
@@ -20740,7 +20778,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 285;
+window.__APP_BUILD__ = 286;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
