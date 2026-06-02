@@ -16975,12 +16975,186 @@ var _admPcMenus = {
   ],
   ads: [
     { key:'ad-pages', icon:'📐', label:'광고 페이지/위치',
-      fn:function(){ showToast('광고 페이지/위치 관리 — Phase 3 신규 화면 예정'); } },
+      customRender:function(){ if (typeof _admPcRenderAdPages === 'function') _admPcRenderAdPages(); } },
     { key:'ad-views', icon:'📺', label:'광고 시청',
       mount:'ov-admin-ads',
       load:function(){ if (typeof openAdminAds === 'function') openAdminAds(); } },
   ]
 };
+
+/* ════════════════════════════════════════════════════════════
+   Phase 3.A — 광고 페이지/위치 관리 (신규 화면)
+   - 앱 내 모든 광고 표시 위치를 페이지별로 그룹화
+   - ad_views 테이블에서 context 별 통계 집계 (오늘 + 누적)
+   - 자동재생: ¥0.15/노출, 풀스크린: ¥17/시청 가정
+   ════════════════════════════════════════════════════════════ */
+var AD_POSITIONS = [
+  // 영수증
+  { page:'receipt',    name:'영수증 저장 풀스크린',          context:'save',                    type:'fullscreen', cpv:17,    desc:'영수증 저장 시 15초 동영상' },
+  // 치리맵
+  { page:'chirimap',   name:'가게 상세 인라인',              context:'store',                   type:'inline',     cpm:0.15,  desc:'가게 상세 모달 인라인' },
+  { page:'chirimap',   name:'치리 공개 풀스크린',            context:'chiri',                   type:'fullscreen', cpv:17,    desc:'치리 공개 시 15초 동영상' },
+  { page:'chirimap',   name:'메뉴 사진 업로드 풀스크린',     context:'menu_photo',              type:'fullscreen', cpv:17,    desc:'메뉴 사진 등록 시' },
+  { page:'chirimap',   name:'프라이빗 전환 풀스크린',        context:'private',                 type:'fullscreen', cpv:17,    desc:'프라이빗 모드 전환 시' },
+  // 치리톡
+  { page:'chiritalk',  name:'댓글 한도 풀스크린',            context:'comment_quota',           type:'fullscreen', cpv:17,    desc:'댓글 한도 초과 시 +4회 권한' },
+  // 리워드
+  { page:'reward',     name:'자발 광고 풀스크린',            context:'reward',                  type:'fullscreen', cpv:17,    desc:'+50치리 보상 (1일 3회)' },
+  { page:'reward',     name:'추가 광고 보상 풀스크린',       context:'bonus',                   type:'fullscreen', cpv:17,    desc:'+15치리 (출석 슬롯당 2회)' },
+  // 출석
+  { page:'attendance', name:'출석 완료 풀스크린',            context:'attendance',              type:'fullscreen', cpv:17,    desc:'+15치리 (출석 슬롯 1회당)' },
+  { page:'attendance', name:'출석 화면 자동재생',            context:'attendance_auto',         type:'autoplay',   cpm:0.15,  desc:'출석 카드 상단 자동재생' },
+  { page:'attendance', name:'출석 완료 모달 자동재생',       context:'attendance_modal_auto',   type:'autoplay',   cpm:0.15,  desc:'출석 완료 모달 내 자동재생' },
+  // 추천
+  { page:'referral',   name:'추천 보상 청구 풀스크린',       context:'referral',                type:'fullscreen', cpv:17,    desc:'+200치리 청구 (1일 10회 상한)' },
+  // 홈 (현재 인라인 광고 거의 없음 — 향후 확장 시 추가)
+];
+
+var AD_PAGE_LABELS = {
+  all:'전체', home:'홈', receipt:'영수증', chirimap:'치리맵',
+  chiritalk:'치리톡', reward:'리워드', attendance:'출석', referral:'추천'
+};
+window._admPcAdPagesFilter = 'all';
+
+function _admPcAdPagesSetFilter(key) {
+  window._admPcAdPagesFilter = key;
+  _admPcRenderAdPages();
+}
+
+function _admPcReloadAdPages() {
+  _admPcLoadAdPagesStats();
+}
+
+function _admPcRenderAdPages() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  var pages = ['all','receipt','chirimap','chiritalk','reward','attendance','referral'];
+  var filter = window._admPcAdPagesFilter || 'all';
+
+  var tabHtml = pages.map(function(p){
+    var active = (p === filter);
+    return '<button onclick="_admPcAdPagesSetFilter(\''+p+'\')" '
+      + 'style="padding:7px 16px;border:1px solid '+(active?'#172C58':'#E3E6EB')+';border-radius:18px;'
+      + 'background:'+(active?'#172C58':'#fff')+';color:'+(active?'#fff':'#374151')+';'
+      + 'font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">' + AD_PAGE_LABELS[p] + '</button>';
+  }).join('');
+
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">광고 페이지 / 위치 관리</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">앱 내 모든 광고 표시 위치 · 통계 · 단가</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcReloadAdPages()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    + '</div>'
+    + '<div style="background:#F4F5F8;border-radius:12px;padding:14px 18px;margin-bottom:16px;display:flex;gap:24px;font-size:12px;flex-wrap:wrap;">'
+    +   '<div><span style="color:#6B7280;">오늘 매출</span> <span id="apc-adpages-revenue-today" style="font-weight:900;color:#172C58;margin-left:6px;font-size:14px;">—</span></div>'
+    +   '<div><span style="color:#6B7280;">오늘 시청</span> <span id="apc-adpages-views-today" style="font-weight:900;color:#172C58;margin-left:6px;font-size:14px;">—</span></div>'
+    +   '<div><span style="color:#6B7280;">누적 매출</span> <span id="apc-adpages-revenue-all" style="font-weight:900;color:#172C58;margin-left:6px;font-size:14px;">—</span></div>'
+    +   '<div><span style="color:#6B7280;">누적 시청</span> <span id="apc-adpages-views-all" style="font-weight:900;color:#172C58;margin-left:6px;font-size:14px;">—</span></div>'
+    + '</div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;">' + tabHtml + '</div>'
+    + '<div id="apc-adpages-list"></div>'
+    + '</div>';
+  _admPcLoadAdPagesStats();
+}
+
+async function _admPcLoadAdPagesStats() {
+  var list = document.getElementById('apc-adpages-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7280;font-size:12px;">로딩 중...</div>';
+
+  var todayMap = {}, allMap = {};
+  if (_sb) {
+    try {
+      var todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      var todayIso = todayStart.toISOString();
+      // 오늘 데이터
+      var t = await _sb.from('ad_views').select('ad_context, reward_chiri').gte('viewed_at', todayIso);
+      // 전체 누적
+      var a = await _sb.from('ad_views').select('ad_context, reward_chiri');
+      function agg(rows){
+        var m = {};
+        (rows||[]).forEach(function(r){
+          var c = r.ad_context || 'unknown';
+          if (!m[c]) m[c] = { views:0, revenue:0 };
+          m[c].views += 1;
+          // reward_chiri > 0 면 풀스크린 시청(¥17) 으로 가정, 아니면 자동재생(¥0.15)
+          m[c].revenue += (r.reward_chiri && r.reward_chiri > 0) ? 17 : 0.15;
+        });
+        return m;
+      }
+      todayMap = agg(t.data || []);
+      allMap   = agg(a.data || []);
+    } catch(e) { console.warn('[adpages] stats load failed', e); }
+  }
+
+  // 요약
+  function sumStats(map){ var s={views:0,revenue:0}; Object.keys(map).forEach(function(k){ s.views+=map[k].views; s.revenue+=map[k].revenue; }); return s; }
+  var tot = sumStats(todayMap), totAll = sumStats(allMap);
+  var setTxt = function(id, v){ var el=document.getElementById(id); if(el) el.textContent = v; };
+  setTxt('apc-adpages-revenue-today', '¥' + Math.round(tot.revenue).toLocaleString());
+  setTxt('apc-adpages-views-today',   tot.views.toLocaleString() + '회');
+  setTxt('apc-adpages-revenue-all',   '¥' + Math.round(totAll.revenue).toLocaleString());
+  setTxt('apc-adpages-views-all',     totAll.views.toLocaleString() + '회');
+
+  // 위치 카드 렌더링
+  var filter = window._admPcAdPagesFilter || 'all';
+  var positions = (filter === 'all') ? AD_POSITIONS : AD_POSITIONS.filter(function(p){ return p.page === filter; });
+  if (positions.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7280;font-size:12px;">이 페이지에 등록된 광고 위치가 없어요.</div>';
+    return;
+  }
+  // 페이지별 그룹화
+  var grouped = {};
+  positions.forEach(function(p){ if(!grouped[p.page]) grouped[p.page]=[]; grouped[p.page].push(p); });
+
+  var html = '';
+  Object.keys(grouped).forEach(function(pageKey){
+    html += '<div style="margin-bottom:28px;">'
+         + '<div style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:12px;letter-spacing:.2px;text-transform:uppercase;">' + (AD_PAGE_LABELS[pageKey] || pageKey) + '</div>'
+         + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:12px;">';
+    grouped[pageKey].forEach(function(pos){
+      var t = todayMap[pos.context] || {views:0,revenue:0};
+      var a = allMap[pos.context]   || {views:0,revenue:0};
+      var typeBg, typeColor, typeLbl;
+      if (pos.type === 'fullscreen') { typeBg='#FEE2E2'; typeColor='#991B1B'; typeLbl='풀스크린'; }
+      else if (pos.type === 'autoplay') { typeBg='#FEF3C7'; typeColor='#92400E'; typeLbl='자동재생'; }
+      else { typeBg='#DBEAFE'; typeColor='#1E40AF'; typeLbl='인라인'; }
+      var unitPrice = pos.cpv ? ('¥' + pos.cpv + ' / 시청') : ('¥' + pos.cpm + ' / 노출');
+      html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
+            + '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">'
+            +   '<div style="font-size:13px;font-weight:800;color:#172C58;flex:1;line-height:1.3;">' + pos.name + '</div>'
+            +   '<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:'+typeBg+';color:'+typeColor+';font-weight:700;white-space:nowrap;flex-shrink:0;">' + typeLbl + '</span>'
+            + '</div>'
+            + '<div style="font-size:10px;color:#6B7280;margin-bottom:10px;line-height:1.5;">' + pos.desc + '</div>'
+            + '<div style="display:flex;align-items:center;justify-content:space-between;background:#F4F5F8;border-radius:8px;padding:7px 10px;margin-bottom:8px;">'
+            +   '<span style="font-size:10px;color:#6B7280;">단가</span>'
+            +   '<span style="font-size:11px;font-weight:800;color:#172C58;">' + unitPrice + '</span>'
+            + '</div>'
+            + '<div style="display:flex;gap:6px;font-size:11px;">'
+            +   '<div style="flex:1;background:#F4F5F8;border-radius:8px;padding:7px 9px;">'
+            +     '<div style="font-size:9px;color:#6B7280;font-weight:700;margin-bottom:2px;">오늘</div>'
+            +     '<div style="font-size:14px;font-weight:900;color:#172C58;line-height:1;">' + t.views + '회</div>'
+            +     '<div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">¥' + Math.round(t.revenue).toLocaleString() + '</div>'
+            +   '</div>'
+            +   '<div style="flex:1;background:#F4F5F8;border-radius:8px;padding:7px 9px;">'
+            +     '<div style="font-size:9px;color:#6B7280;font-weight:700;margin-bottom:2px;">누적</div>'
+            +     '<div style="font-size:14px;font-weight:900;color:#172C58;line-height:1;">' + a.views + '회</div>'
+            +     '<div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">¥' + Math.round(a.revenue).toLocaleString() + '</div>'
+            +   '</div>'
+            + '</div>'
+            + '<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #E3E6EB;font-family:monospace;">'
+            +   '<span style="font-size:10px;color:#6B7280;">' + pos.context + '</span>'
+            +   '<span style="font-size:10px;color:#10B981;font-weight:700;">● 활성</span>'
+            + '</div>'
+          + '</div>';
+    });
+    html += '</div></div>';
+  });
+  list.innerHTML = html;
+}
 
 function openAdminPc() {
   var el = document.getElementById('ov-admin-pc');
@@ -17050,6 +17224,13 @@ function _admPcSelectMenu(key) {
   var menus = _admPcMenus[_admPcCurrentTab] || [];
   var menu = menus.find(function(m){ return m.key === key; });
   if (!menu) { _admPcRenderContent(null); return; }
+  // ★ Phase 3: menu.customRender 가 있으면 PC 전용 신규 화면 렌더
+  if (typeof menu.customRender === 'function') {
+    _admPcUnmountAll();
+    _admPcCloseAllAdminModals();
+    try { menu.customRender(); } catch(e) { console.warn('[admPc] customRender failed', e); }
+    return;
+  }
   // ★ Phase 2: menu.mount 가 있으면 시트를 콘텐츠 영역에 마운트
   if (menu.mount) {
     _admPcMountSheet(menu.mount, menu.load);
@@ -19643,7 +19824,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 274;
+window.__APP_BUILD__ = 275;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
