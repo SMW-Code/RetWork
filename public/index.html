@@ -6620,7 +6620,9 @@ function renderHome() {
   var eatAmt   = monthReceipts.filter(function(r){return r.cat==='eat'; }).reduce(function(a,r){return a+r.total;},0);
 
   // ── 1. 절약 명언 + 오늘 지출 (언어별 세트) ──
-  var QUOTES = _QUOTES_BY_LANG[_currentLang] || _QUOTES_BY_LANG.ja;
+  // DB(quotes) 의 활성 명언 우선, 없으면 정적 폴백
+  var dbQ = (window._dbQuotes && window._dbQuotes[_currentLang]) || [];
+  var QUOTES = (dbQ.length > 0) ? dbQ : (_QUOTES_BY_LANG[_currentLang] || _QUOTES_BY_LANG.ja);
   var _UNUSED_QUOTES = [
     { q:'작은 절약이 큰 부를 만든다', a:'벤자민 프랭클린' },
     { q:'돈을 쓰기 전에 한 번 더 생각하라', a:'워런 버핏' },
@@ -13763,6 +13765,25 @@ var _BYPASS_ADS = true;
 var _localAdsByZone = {};   // { zone: [ad, ...] }  활성 + 기간 내
 var _localAdRR = {};        // zone별 라운드로빈 인덱스
 
+/* DB 명언 로드 — 어드민이 추가한 활성 명언 (정적 _QUOTES_BY_LANG 보다 우선) */
+window._dbQuotes = window._dbQuotes || { ja:[], ko:[], en:[], zh:[] };
+async function _loadQuotes() {
+  if (!_sb) return;
+  try {
+    var res = await _sb.from('quotes')
+      .select('id,lang,text,author,is_active,sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending:false });
+    if (res.error || !res.data) return;
+    var byLang = { ja:[], ko:[], en:[], zh:[] };
+    res.data.forEach(function(q){
+      if (!q.text || !byLang[q.lang]) return;
+      byLang[q.lang].push({ q: q.text, a: q.author || '' });
+    });
+    window._dbQuotes = byLang;
+  } catch(e) { /* silent */ }
+}
+
 async function _loadLocalAds() {
   if (!_sb) return;
   try {
@@ -15147,6 +15168,7 @@ function showApp() {
   // 로컬 광고 먼저 로드 후 슬롯 주입 (로컬 광고 우선 노출)
   if (typeof _loadLocalAds === 'function') {
     _loadLocalAds().then(function(){ _initAds(); });
+    if (typeof _loadQuotes === 'function') _loadQuotes();
   } else {
     _initAds();
   }
@@ -17142,6 +17164,8 @@ var _admPcMenus = {
         var typeSel=document.getElementById('ann-type'); if(typeSel) typeSel.value='info';
         if (typeof _loadAdminAnnouncementList === 'function') _loadAdminAnnouncementList();
       } },
+    { key:'quotes', icon:'💬', label:'홈 명언 카드',
+      customRender:function(){ if (typeof _admPcRenderQuotes === 'function') _admPcRenderQuotes(); } },
   ],
   comments: [
     /* ★ Phase 4 — 게시글 관리 톱바 */
@@ -17857,6 +17881,200 @@ async function _admPcLoadExrBadge() {
       else badge.style.display = 'none';
     }
   } catch(e) {}
+}
+
+/* ════════════════════════════════════════════════════════════
+   홈 명언 카드 관리 — quotes 테이블 CRUD
+   ════════════════════════════════════════════════════════════ */
+window._admPcQuoteLang = 'ja';
+
+function _admPcQuoteSetLang(lang) {
+  window._admPcQuoteLang = lang;
+  _admPcRenderQuotes();
+}
+
+async function _admPcRenderQuotes() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+  var langs = [
+    { key:'ja', label:'🇯🇵 日本語' },
+    { key:'ko', label:'🇰🇷 한국어' },
+    { key:'en', label:'🇺🇸 English' },
+    { key:'zh', label:'🇨🇳 中文' }
+  ];
+  var cur = window._admPcQuoteLang || 'ja';
+  var tabHtml = langs.map(function(l){
+    var active = (l.key === cur);
+    return '<button onclick="_admPcQuoteSetLang(\''+l.key+'\')" style="padding:7px 16px;border:1px solid '+(active?'#172C58':'#E3E6EB')+';border-radius:18px;background:'+(active?'#172C58':'#fff')+';color:'+(active?'#fff':'#374151')+';font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">'+l.label+'</button>';
+  }).join('');
+
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">💬 홈 명언 카드 관리</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">홈 화면 상단 명언 (날짜 기준 순환) · 언어별 등록 · 활성/비활성 토글</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcQuoteOpenForm(null)" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">+ 새 명언 추가</button>'
+    + '</div>'
+    + '<div style="background:#F4F5F8;border-radius:10px;padding:12px;margin-bottom:16px;font-size:11px;color:#374151;line-height:1.6;">'
+    +   '💡 등록한 명언이 1개 이상 있으면 정적 폴백 대신 DB 명언만 사용돼요.<br>'
+    +   '💡 활성 명언이 없는 언어는 기존 코드 내 명언이 표시됩니다.<br>'
+    +   '💡 사용자 화면 반영: 새로고침 시 적용 (등록 즉시 적용은 본인 브라우저만).'
+    + '</div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabHtml + '</div>'
+    + '<div id="apc-quote-list"></div>'
+    // 신규/수정 폼 (숨김, 토글로 표시)
+    + '<div id="apc-quote-form" style="display:none;margin-top:18px;background:#fff;border:1px solid #172C58;border-radius:12px;padding:16px;">'
+    +   '<div id="apc-quote-form-title" style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:10px;">+ 새 명언 추가</div>'
+    +   '<input type="hidden" id="apc-quote-id">'
+    +   '<div style="display:grid;grid-template-columns:120px 1fr;gap:8px;margin-bottom:8px;">'
+    +     '<select id="apc-quote-lang" style="padding:9px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);">'
+    +       '<option value="ja">日本語</option>'
+    +       '<option value="ko">한국어</option>'
+    +       '<option value="en">English</option>'
+    +       '<option value="zh">中文</option>'
+    +     '</select>'
+    +     '<input id="apc-quote-text" type="text" maxlength="200" placeholder="명언 (최대 200자)" style="padding:9px 12px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);">'
+    +   '</div>'
+    +   '<div style="display:grid;grid-template-columns:1fr 120px 1fr;gap:8px;margin-bottom:10px;">'
+    +     '<input id="apc-quote-author" type="text" maxlength="60" placeholder="저자 (선택, 예: 벤자민 프랭클린)" style="padding:9px 12px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);">'
+    +     '<input id="apc-quote-sort" type="number" value="0" placeholder="우선순위" style="padding:9px 12px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);">'
+    +     '<label style="display:flex;align-items:center;gap:6px;padding:9px 12px;background:#F4F5F8;border:1px solid #E3E6EB;border-radius:8px;font-size:11px;font-weight:700;color:#374151;cursor:pointer;"><input id="apc-quote-active" type="checkbox" checked> 활성 (노출)</label>'
+    +   '</div>'
+    +   '<div style="display:flex;gap:6px;">'
+    +     '<button onclick="_admPcQuoteSave()" style="flex:1;background:#172C58;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>'
+    +     '<button onclick="_admPcQuoteCloseForm()" style="background:#fff;color:#6B7280;border:1px solid #E3E6EB;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">취소</button>'
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+  _admPcLoadQuotes();
+}
+
+async function _admPcLoadQuotes() {
+  var list = document.getElementById('apc-quote-list');
+  if (!list || !_sb) return;
+  list.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div>';
+  var lang = window._admPcQuoteLang || 'ja';
+  try {
+    var res = await _sb.from('quotes')
+      .select('*')
+      .eq('lang', lang)
+      .order('sort_order', { ascending:false })
+      .order('created_at', { ascending:false });
+    var rows = res.data || [];
+    if (rows.length === 0) {
+      list.innerHTML = '<div style="background:#F4F5F8;border-radius:12px;padding:32px;text-align:center;color:#6B7280;font-size:12px;">이 언어에 등록된 명언이 없어요.<br>상단 "+ 새 명언 추가" 로 등록하세요.<br>(현재 정적 폴백 명언이 표시됨)</div>';
+      return;
+    }
+    var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+    rows.forEach(function(q){
+      var safeText = _esc(q.text || '').replace(/"/g, '&quot;');
+      html += '<div style="background:#fff;border:1px solid '+(q.is_active?'#E3E6EB':'#FECACA')+';border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;'+(q.is_active?'':'opacity:.6;')+'">'
+            + '<div style="flex:1;min-width:0;">'
+            +   '<div style="font-size:14px;font-weight:700;color:#172C58;line-height:1.5;">' + _esc(q.text || '') + '</div>'
+            +   (q.author ? '<div style="font-size:11px;color:#6B7280;margin-top:4px;">— '+_esc(q.author)+'</div>' : '')
+            +   '<div style="font-size:9px;color:#9CA3AF;margin-top:4px;display:flex;gap:10px;flex-wrap:wrap;">'
+            +     '<span>우선 ' + (q.sort_order||0) + '</span>'
+            +     '<span style="font-family:monospace;">' + q.id.substring(0,8) + '…</span>'
+            +     '<span style="color:'+(q.is_active?'#059669':'#991B1B')+';font-weight:700;">'+(q.is_active?'✅ 활성':'⏸ 비활성')+'</span>'
+            +   '</div>'
+            + '</div>'
+            + '<div style="display:flex;flex-direction:column;gap:4px;">'
+            +   '<button onclick="_admPcQuoteToggle(\''+q.id+'\','+(q.is_active?'false':'true')+')" style="background:'+(q.is_active?'#fff':'#D1FAE5')+';color:'+(q.is_active?'#6B7280':'#065F46')+';border:1px solid '+(q.is_active?'#E3E6EB':'#A7F3D0')+';border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">'+(q.is_active?'⏸ 비활성':'▶ 활성')+'</button>'
+            +   '<button onclick="_admPcQuoteOpenForm(\''+q.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">✏️ 수정</button>'
+            +   '<button onclick="_admPcQuoteDelete(\''+q.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">🗑️ 삭제</button>'
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+  } catch(e) {
+    console.warn('[quotes] load failed', e);
+    list.innerHTML = '<div style="padding:24px;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message||'') + '</div>';
+  }
+}
+
+async function _admPcQuoteOpenForm(id) {
+  var form = document.getElementById('apc-quote-form');
+  if (!form) return;
+  form.style.display = 'block';
+  var title = document.getElementById('apc-quote-form-title');
+  document.getElementById('apc-quote-id').value = id || '';
+  if (id && _sb) {
+    title.textContent = '✏️ 명언 수정';
+    var res = await _sb.from('quotes').select('*').eq('id', id).maybeSingle();
+    if (res.data) {
+      var q = res.data;
+      document.getElementById('apc-quote-lang').value = q.lang || 'ja';
+      document.getElementById('apc-quote-text').value = q.text || '';
+      document.getElementById('apc-quote-author').value = q.author || '';
+      document.getElementById('apc-quote-sort').value = q.sort_order || 0;
+      document.getElementById('apc-quote-active').checked = !!q.is_active;
+    }
+  } else {
+    title.textContent = '+ 새 명언 추가';
+    document.getElementById('apc-quote-lang').value = window._admPcQuoteLang || 'ja';
+    document.getElementById('apc-quote-text').value = '';
+    document.getElementById('apc-quote-author').value = '';
+    document.getElementById('apc-quote-sort').value = '0';
+    document.getElementById('apc-quote-active').checked = true;
+  }
+  form.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+
+function _admPcQuoteCloseForm() {
+  var form = document.getElementById('apc-quote-form');
+  if (form) form.style.display = 'none';
+}
+
+async function _admPcQuoteSave() {
+  if (!_sb) return;
+  var id = document.getElementById('apc-quote-id').value || null;
+  var text = (document.getElementById('apc-quote-text').value || '').trim();
+  if (!text) { showToast('명언 텍스트를 입력해주세요'); return; }
+  var payload = {
+    lang: document.getElementById('apc-quote-lang').value || 'ja',
+    text: text,
+    author: (document.getElementById('apc-quote-author').value || '').trim() || null,
+    sort_order: parseInt(document.getElementById('apc-quote-sort').value || '0', 10) || 0,
+    is_active: document.getElementById('apc-quote-active').checked
+  };
+  var res;
+  if (id) {
+    res = await _sb.from('quotes').update(payload).eq('id', id);
+  } else {
+    payload.created_by = _currentUser ? _currentUser.id : null;
+    res = await _sb.from('quotes').insert(payload);
+  }
+  if (res.error) { showToast('저장 실패: ' + res.error.message); return; }
+  showToast('💾 저장됨');
+  _admPcQuoteCloseForm();
+  // 새 언어 탭으로 자동 전환 (등록 후 바로 보이게)
+  window._admPcQuoteLang = payload.lang;
+  _admPcRenderQuotes();
+  // 클라이언트 캐시 갱신
+  if (typeof _loadQuotes === 'function') _loadQuotes();
+}
+
+async function _admPcQuoteToggle(id, nextActive) {
+  if (!_sb) return;
+  var res = await _sb.from('quotes').update({ is_active: nextActive }).eq('id', id);
+  if (res.error) { showToast('변경 실패'); return; }
+  _admPcLoadQuotes();
+  if (typeof _loadQuotes === 'function') _loadQuotes();
+}
+
+async function _admPcQuoteDelete(id) {
+  if (!_sb) return;
+  if (!confirm('이 명언을 삭제할까요?')) return;
+  var res = await _sb.from('quotes').delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('🗑️ 삭제됨');
+  _admPcLoadQuotes();
+  if (typeof _loadQuotes === 'function') _loadQuotes();
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -21722,7 +21940,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 297;
+window.__APP_BUILD__ = 298;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
