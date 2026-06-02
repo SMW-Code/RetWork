@@ -532,6 +532,26 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .toggle.off::after{right:20px;}
 
 .bottom-sheet-overlay{align-items:flex-end;justify-content:center;}
+
+/* ════════════════════════════════════════════════════════════
+   PC 어드민 (인디고 #172C58) — Topbar + Sidebar + Content
+   ════════════════════════════════════════════════════════════ */
+.apc-tab{background:transparent;border:none;color:rgba(255,255,255,.6);font-size:13px;font-weight:700;padding:0 20px;cursor:pointer;font-family:var(--font);height:100%;border-bottom:3px solid transparent;transition:all .15s;letter-spacing:.2px;}
+.apc-tab:hover{color:#fff;background:rgba(255,255,255,.06);}
+.apc-tab-active{color:#fff !important;border-bottom-color:#fff !important;background:rgba(255,255,255,.08);}
+.apc-menu-section{font-size:10px;font-weight:800;color:#8B95AB;letter-spacing:.6px;padding:14px 20px 6px;text-transform:uppercase;}
+.apc-menu-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;transition:background .15s,color .15s;border-left:3px solid transparent;}
+.apc-menu-item:hover{background:#E3E6EB;color:#172C58;}
+.apc-menu-item.active{background:#fff;color:#172C58;border-left-color:#172C58;font-weight:800;}
+.apc-menu-item .apc-badge{margin-left:auto;background:#172C58;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:18px;text-align:center;}
+[data-dark="1"] #ov-admin-pc{background:#0E1218 !important;}
+[data-dark="1"] #apc-sidebar{background:#1A1F2E !important;border-right-color:#2A3142 !important;}
+[data-dark="1"] #apc-content{background:#0E1218 !important;color:#E3E6EB;}
+[data-dark="1"] .apc-menu-item{color:#9CA3AF;}
+[data-dark="1"] .apc-menu-item:hover{background:#2A3142;color:#fff;}
+[data-dark="1"] .apc-menu-item.active{background:#172C58;color:#fff;border-left-color:#fff;}
+[data-dark="1"] .apc-menu-section{color:#6B7280;}
+
 /* ──── PC(데스크탑) 에서 수정요청 모달: 중앙 팝업으로 분기 ──── */
 @media (min-width: 640px) {
   #ov-store-edit-req { align-items:center !important; justify-content:center !important; padding:16px; }
@@ -2524,6 +2544,31 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <input type="file" id="sd-card-photo-gal" accept="image/*"                       style="display:none" onchange="sdHandleCardPhoto(this)">
 
 <!-- ══ 어드민 대시보드 모달 ══ -->
+<!-- ════ PC 어드민 풀스크린 (가로 1024px 이상 데스크탑 전용) ════ -->
+<div id="ov-admin-pc" style="display:none;position:fixed;inset:0;z-index:9500;background:#0E1218;flex-direction:column;font-family:var(--font);">
+  <!-- 톱바 (인디고 #172C58) -->
+  <div style="height:56px;background:#172C58;flex:none;display:flex;align-items:center;padding:0 20px;box-shadow:0 2px 12px rgba(0,0,0,.25);">
+    <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px;margin-right:32px;display:flex;align-items:center;gap:8px;">
+      <span style="font-size:18px;">🛡️</span>RetWork Admin
+    </div>
+    <div style="display:flex;height:100%;flex:1;">
+      <button onclick="_admPcSwitchTab('overview')" id="apc-tab-overview" class="apc-tab apc-tab-active">RetWork (전체)</button>
+      <button onclick="_admPcSwitchTab('i18n')" id="apc-tab-i18n" class="apc-tab">언어시트</button>
+      <button onclick="_admPcSwitchTab('chiri')" id="apc-tab-chiri" class="apc-tab">치리관리</button>
+      <button onclick="_admPcSwitchTab('ads')" id="apc-tab-ads" class="apc-tab">광고관리</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span id="apc-user-email" style="font-size:11px;color:rgba(255,255,255,.5);font-weight:600;"></span>
+      <div onclick="closeAdminPc()" style="cursor:pointer;color:rgba(255,255,255,.7);font-size:16px;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'" title="닫기">✕</div>
+    </div>
+  </div>
+  <!-- 본문: 사이드바 + 콘텐츠 -->
+  <div style="flex:1;display:flex;overflow:hidden;">
+    <div id="apc-sidebar" style="width:240px;background:#F4F5F8;border-right:1px solid #E3E6EB;flex:none;overflow-y:auto;padding:8px 0;"></div>
+    <div id="apc-content" style="flex:1;overflow-y:auto;background:#fff;padding:24px;"></div>
+  </div>
+</div>
+
 <div class="overlay" id="ov-admin" style="z-index:950;" onclick="if(event.target===this)closeOv('ov-admin')">
   <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
     <div class="sheet-handle"></div>
@@ -16861,10 +16906,155 @@ function openAdminDashboard() {
     return;
   }
   closeOv('ov-settings');
-  openOv('ov-admin');
-  _loadAdminStats();
-  _loadEditReqBadge();
+  // PC 가로 1024px 이상 → 새 PC 어드민 페이지, 그 외 → 기존 모바일 시트
+  if (window.innerWidth >= 1024) {
+    openAdminPc();
+  } else {
+    openOv('ov-admin');
+    _loadAdminStats();
+    _loadEditReqBadge();
+  }
 }
+
+/* ════════════════════════════════════════════════════════════
+   PC 어드민 (Phase 1) — Topbar + Sidebar + Content 뼈대
+   - 톱바 카테고리 4개: overview / i18n / chiri / ads
+   - 사이드바: 카테고리별 동적 메뉴
+   - 콘텐츠 영역: Phase 1 에선 기존 모달 호출 (Phase 2에서 마운트로 전환)
+   ════════════════════════════════════════════════════════════ */
+var _admPcCurrentTab = 'overview';
+var _admPcCurrentMenu = null;
+
+var _admPcMenus = {
+  overview: [
+    { key:'users',         icon:'👥', label:'사용자',         fn:function(){ openAdminDetail('users'); } },
+    { key:'receipts',      icon:'🧾', label:'영수증',         fn:function(){ openAdminDetail('receipts'); } },
+    { key:'stores',        icon:'🏪', label:'가게',           fn:function(){ openAdminDetail('stores'); } },
+    { key:'pins',          icon:'📍', label:'가게핀',         fn:function(){ openAdminDetail('pins'); } },
+    { key:'editreqs',      icon:'🛠️', label:'가게수정요청',   fn:function(){ openAdminEditReqs(); }, badgeId:'apc-badge-editreqs' },
+    { key:'reports',       icon:'💬', label:'댓글모더',       fn:function(){ openAdminReports(); }, badgeId:'apc-badge-reports' },
+    { key:'announcements', icon:'📢', label:'공지사항',       fn:function(){ openAdminAnnouncements(); } },
+  ],
+  i18n: [
+    { key:'i18n-all',      icon:'🌐', label:'전체 언어시트',  fn:function(){ if (typeof openAdminI18n === 'function') openAdminI18n(); else showToast('i18n CMS 미연결'); } },
+    // Phase 2 에서 페이지별 분리 (홈/인증/영수증/치리맵/설정 등)
+  ],
+  chiri: [
+    { key:'pricing',       icon:'💴', label:'단가/요율',      fn:function(){ if (typeof openAdminPricing === 'function') openAdminPricing(); else showToast('가격 설정 미연결'); } },
+    { key:'coins',         icon:'✨', label:'치리 발급',      fn:function(){ openAdminDetail('coins'); } },
+    { key:'items',         icon:'🛍️', label:'치리스토어 상품', fn:function(){ openAdminStoreItems(); } },
+    { key:'exchange',      icon:'📋', label:'교환요청',       fn:function(){ showToast('교환 요청 처리 — Phase 2에서 구축'); } },
+  ],
+  ads: [
+    { key:'ad-pages',      icon:'📐', label:'광고 페이지/위치', fn:function(){ showToast('광고 페이지/위치 관리 — Phase 2에서 구축'); } },
+    { key:'ad-views',      icon:'📺', label:'광고 시청',      fn:function(){ if (typeof openAdminAds === 'function') openAdminAds(); else showToast('광고 시청 통계 미연결'); } },
+  ]
+};
+
+function openAdminPc() {
+  var el = document.getElementById('ov-admin-pc');
+  if (!el) { console.warn('[admPc] modal not found'); return; }
+  el.style.display = 'flex';
+  _admPcSwitchTab('overview');
+  // 사용자 이메일 표시
+  var emEl = document.getElementById('apc-user-email');
+  if (emEl && _currentUser && _currentUser.email) emEl.textContent = _currentUser.email;
+  // 기존 통계/뱃지 로드 호출
+  if (typeof _loadAdminStats === 'function') _loadAdminStats();
+  if (typeof _loadEditReqBadge === 'function') _loadEditReqBadge();
+}
+
+function closeAdminPc() {
+  var el = document.getElementById('ov-admin-pc');
+  if (el) el.style.display = 'none';
+  _admPcCurrentMenu = null;
+}
+
+function _admPcSwitchTab(tab) {
+  _admPcCurrentTab = tab;
+  ['overview','i18n','chiri','ads'].forEach(function(k){
+    var btn = document.getElementById('apc-tab-' + k);
+    if (!btn) return;
+    if (k === tab) btn.classList.add('apc-tab-active');
+    else btn.classList.remove('apc-tab-active');
+  });
+  _admPcRenderSidebar(tab);
+  _admPcRenderContent(null);
+  _admPcCurrentMenu = null;
+}
+
+function _admPcRenderSidebar(tab) {
+  var sb = document.getElementById('apc-sidebar');
+  if (!sb) return;
+  var menus = _admPcMenus[tab] || [];
+  var labels = {
+    overview: '📊 RetWork 전체',
+    i18n:     '🌐 언어시트',
+    chiri:    '✨ 치리관리',
+    ads:      '📺 광고관리'
+  };
+  var html = '<div class="apc-menu-section">' + (labels[tab] || tab) + '</div>';
+  menus.forEach(function(m, idx){
+    html += '<div class="apc-menu-item" data-key="' + m.key + '" onclick="_admPcSelectMenu(\'' + m.key + '\')">'
+         +    '<span style="font-size:15px;width:20px;text-align:center;">' + m.icon + '</span>'
+         +    '<span>' + m.label + '</span>'
+         +    (m.badgeId ? '<span class="apc-badge" id="' + m.badgeId + '" style="display:none;"></span>' : '')
+         +  '</div>';
+  });
+  sb.innerHTML = html;
+}
+
+function _admPcSelectMenu(key) {
+  _admPcCurrentMenu = key;
+  var items = document.querySelectorAll('#apc-sidebar .apc-menu-item');
+  items.forEach(function(it){
+    if (it.getAttribute('data-key') === key) it.classList.add('active');
+    else it.classList.remove('active');
+  });
+  _admPcRenderContent(key);
+  // 메뉴 정의에서 fn 찾아 실행 (기존 모달 열기 — Phase 1)
+  var menus = _admPcMenus[_admPcCurrentTab] || [];
+  var menu = menus.find(function(m){ return m.key === key; });
+  if (menu && typeof menu.fn === 'function') {
+    try { menu.fn(); } catch(e) { console.warn('[admPc] menu fn failed', e); }
+  }
+}
+
+function _admPcRenderContent(key) {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  if (!key) {
+    ct.innerHTML = '<div style="max-width:600px;margin:80px auto;text-align:center;color:#6B7280;">'
+                 + '<div style="font-size:64px;margin-bottom:20px;opacity:.5;">←</div>'
+                 + '<div style="font-size:18px;font-weight:700;color:#172C58;margin-bottom:8px;">RetWork Admin (PC) — Phase 1</div>'
+                 + '<div style="font-size:13px;line-height:1.7;">왼쪽 메뉴에서 항목을 선택하세요.<br>'
+                 + '현재는 기존 모달이 위에 표시됩니다 (Phase 2 에서 우측 영역 통합).</div>'
+                 + '<div style="margin-top:32px;padding:16px;background:#F4F5F8;border-radius:12px;text-align:left;font-size:11px;color:#374151;line-height:1.8;">'
+                 + '<strong>현재 사용 가능:</strong><br>'
+                 + '・ 톱바: RetWork(전체) · 언어시트 · 치리관리 · 광고관리<br>'
+                 + '・ 사이드바 메뉴 클릭 → 기존 어드민 모달 표시<br>'
+                 + '・ PC ≥ 1024px 에서만 표시 (모바일은 기존 시트)<br>'
+                 + '<br><strong>Phase 2 예정:</strong><br>'
+                 + '・ 우측 영역에 콘텐츠 직접 마운트 (모달 X)<br>'
+                 + '・ 언어시트 페이지별 분류<br>'
+                 + '・ 광고 페이지/위치 신규 화면'
+                 + '</div></div>';
+    return;
+  }
+  ct.innerHTML = '<div style="max-width:600px;margin:80px auto;text-align:center;color:#6B7280;">'
+               + '<div style="font-size:48px;margin-bottom:16px;">📂</div>'
+               + '<div style="font-size:16px;font-weight:700;color:#172C58;margin-bottom:8px;">선택한 항목의 모달이 표시되었습니다</div>'
+               + '<div style="font-size:12px;line-height:1.6;">Phase 2 에서 우측 영역에 직접 마운트될 예정입니다.</div>'
+               + '</div>';
+}
+
+// ESC 키로 PC 어드민 닫기
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Escape') {
+    var el = document.getElementById('ov-admin-pc');
+    if (el && el.style.display === 'flex') closeAdminPc();
+  }
+});
 
 /* ══════════════════════════════
    어드민: 가게 수정요청
@@ -19306,7 +19496,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 267;
+window.__APP_BUILD__ = 268;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
