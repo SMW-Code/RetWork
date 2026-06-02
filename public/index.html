@@ -2678,6 +2678,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <button onclick="_admPcSwitchTab('i18n')" id="apc-tab-i18n" class="apc-tab">언어시트</button>
       <button onclick="_admPcSwitchTab('chiri')" id="apc-tab-chiri" class="apc-tab">치리관리</button>
       <button onclick="_admPcSwitchTab('ads')" id="apc-tab-ads" class="apc-tab">광고관리</button>
+      <button onclick="_admPcSwitchTab('theme')" id="apc-tab-theme" class="apc-tab">테마관리</button>
     </div>
     <div style="display:flex;align-items:center;gap:14px;">
       <span id="apc-user-email" style="font-size:11px;color:rgba(255,255,255,.5);font-weight:600;"></span>
@@ -17212,6 +17213,11 @@ var _admPcMenus = {
     { key:'ad-views', icon:'📺', label:'광고 시청',
       mount:'ov-admin-ads',
       load:function(){ if (typeof openAdminAds === 'function') openAdminAds(); } },
+  ],
+  theme: [
+    /* ★ Phase 5 — 테마/색상 변수 관리 (디자인 검토 도구) */
+    { key:'theme-vars', icon:'🎨', label:'색상 변수 관리',
+      customRender:function(){ if (typeof _admPcRenderThemeManager === 'function') _admPcRenderThemeManager(); } },
   ]
 };
 
@@ -17854,6 +17860,192 @@ async function _admPcLoadExrBadge() {
 }
 
 /* ════════════════════════════════════════════════════════════
+   Phase 5 — 테마/색상 변수 관리 (디자인 검토 도구)
+   - 라이트/다크 모드 토글
+   - 테마 색상 10개 전환
+   - 모든 CSS variable 카드 + 색상 피커 + 실시간 반영
+   - 변경된 값 텍스트로 복사 (코드에 붙여넣기)
+   ════════════════════════════════════════════════════════════ */
+
+/* 표시할 CSS variable 그룹 — 라벨 + 사용처 설명 */
+var THEME_VAR_GROUPS = [
+  { title:'배경/표면', vars:[
+    { name:'--bg',          label:'앱 배경',           desc:'화면 전체 배경' },
+    { name:'--surface',     label:'카드/시트 배경',    desc:'카드, 모달, 입력창 배경' },
+    { name:'--bg-2',        label:'보조 배경',         desc:'서브 영역 (입력칸 등)' },
+    { name:'--border',      label:'테두리 (얇음)',     desc:'카드 1px 보더' },
+    { name:'--border-mid',  label:'테두리 (중간)',     desc:'입력 보더, 구분선' },
+  ]},
+  { title:'텍스트', vars:[
+    { name:'--text-1',      label:'본문 텍스트',       desc:'주요 글자 색' },
+    { name:'--text-2',      label:'서브 텍스트',       desc:'설명, 보조 정보' },
+    { name:'--text-3',      label:'힌트/플레이스홀더', desc:'비활성 색' },
+    { name:'--on-theme',    label:'테마색 위 글자',    desc:'테마 컬러 배경 위 글자색' },
+  ]},
+  { title:'테마 색상 (현재 적용)', vars:[
+    { name:'--green',       label:'테마 메인',         desc:'주 색 (버튼, 강조)' },
+    { name:'--green-dark',  label:'테마 진하기',       desc:'호버, 액티브' },
+    { name:'--green-mid',   label:'테마 중간',         desc:'그라디언트 중간' },
+    { name:'--green-light', label:'테마 밝기',         desc:'배경 hint, 칩' },
+  ]},
+  { title:'시스템 색', vars:[
+    { name:'--yellow',      label:'노랑',              desc:'경고 토스트' },
+    { name:'--yellow-bg',   label:'노랑 배경',         desc:'경고 배경' },
+    { name:'--blue',        label:'파랑',              desc:'정보' },
+    { name:'--blue-bg',     label:'파랑 배경',         desc:'정보 배경' },
+    { name:'--purple',      label:'보라',              desc:'특수 강조' },
+    { name:'--purple-bg',   label:'보라 배경',         desc:'특수 배경' },
+    { name:'--orange',      label:'주황',              desc:'알림/엣지' },
+    { name:'--orange-bg',   label:'주황 배경',         desc:'알림 배경' },
+    { name:'--red',         label:'빨강',              desc:'오류, 삭제' },
+    { name:'--red-bg',      label:'빨강 배경',         desc:'오류 배경' },
+  ]},
+  { title:'브랜드/특수', vars:[
+    { name:'--gold',        label:'골드 (チリ)',       desc:'チリつも 브랜드' },
+    { name:'--gold-dark',   label:'골드 진하기',       desc:'호버' },
+    { name:'--gold-light',  label:'골드 밝기',         desc:'배경 hint' },
+    { name:'--star',        label:'별 평점',           desc:'★ 색' },
+    { name:'--star-empty',  label:'빈 별',             desc:'☆ 색' },
+    { name:'--navy',        label:'네이비',            desc:'네이비 토큰' },
+  ]},
+];
+
+function _admPcRenderThemeManager() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+
+  // 테마 칩 (THEMES 10개)
+  var themes = (typeof THEMES !== 'undefined') ? Object.keys(THEMES) : ['green'];
+  var curTheme = (typeof _currentTheme !== 'undefined') ? _currentTheme : 'green';
+  var isDark = !!(typeof _isDark !== 'undefined' && _isDark);
+
+  var themeChips = themes.map(function(k){
+    var th = THEMES[k] || {};
+    var active = (k === curTheme);
+    return '<button onclick="_admPcThemeApply(\''+k+'\')" '
+      + 'style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:'+(active?'2px solid #172C58':'1px solid #E3E6EB')+';border-radius:18px;background:#fff;cursor:pointer;font-family:var(--font);font-size:11px;font-weight:'+(active?'800':'600')+';color:'+(active?'#172C58':'#374151')+';">'
+      + '<span style="width:14px;height:14px;border-radius:50%;background:'+(th.color||'#000')+';border:1px solid rgba(0,0,0,.1);"></span>'
+      + (th.name || k)
+      + '</button>';
+  }).join('');
+
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">🎨 테마/색상 변수 관리</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">모든 CSS variable · 색상 피커로 실시간 변경 · 코드 붙여넣기용 텍스트 추출</div>'
+    +   '</div>'
+    +   '<div style="display:flex;gap:8px;">'
+    +     '<button onclick="_admPcThemeReset()" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">⟲ 초기화</button>'
+    +     '<button onclick="_admPcThemeExport()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">📋 변경값 복사</button>'
+    +   '</div>'
+    + '</div>'
+    // 모드 토글 + 테마 칩
+    + '<div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;padding:14px 18px;background:#F4F5F8;border-radius:12px;">'
+    +   '<div style="display:flex;background:#fff;border-radius:10px;padding:3px;border:1px solid #E3E6EB;">'
+    +     '<button onclick="_admPcThemeSetDark(false)" id="apc-th-mode-light" style="background:'+(isDark?'transparent':'#172C58')+';color:'+(isDark?'#6B7280':'#fff')+';border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">☀️ 라이트</button>'
+    +     '<button onclick="_admPcThemeSetDark(true)"  id="apc-th-mode-dark"  style="background:'+(isDark?'#172C58':'transparent')+';color:'+(isDark?'#fff':'#6B7280')+';border:none;border-radius:7px;padding:6px 14px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🌙 다크</button>'
+    +   '</div>'
+    +   '<div style="font-size:11px;color:#6B7280;font-weight:700;">테마 색상:</div>'
+    +   '<div style="display:flex;gap:6px;flex-wrap:wrap;">' + themeChips + '</div>'
+    + '</div>'
+    // 변수 그룹들
+    + '<div id="apc-theme-vars">' + _admPcRenderThemeVarsHtml() + '</div>'
+    + '</div>';
+}
+
+function _admPcRenderThemeVarsHtml() {
+  var html = '';
+  var styles = getComputedStyle(document.documentElement);
+  THEME_VAR_GROUPS.forEach(function(group){
+    html += '<div style="margin-bottom:20px;">'
+         + '<div style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px;">' + group.title + '</div>'
+         + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px;">';
+    group.vars.forEach(function(v){
+      var raw = styles.getPropertyValue(v.name).trim();
+      var hex = raw;
+      // rgba()/hex 모두 input[type=color] 에 그대로 못 넣음 — hex 만 지원
+      if (!/^#([0-9a-fA-F]{3,8})$/.test(raw)) {
+        // alpha 또는 rgba 변형 → input 에 못 넣지만 표시는 그대로
+      }
+      var hexForPicker = /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : (/^#[0-9a-fA-F]{3}$/.test(raw) ? ('#'+raw.slice(1).split('').map(function(c){return c+c;}).join('')) : '#888888');
+      html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:10px;padding:12px;display:flex;gap:10px;align-items:center;">'
+            + '<input type="color" data-var="'+v.name+'" value="'+hexForPicker+'" oninput="_admPcThemeChangeVar(\''+v.name+'\', this.value)" '
+            +    'style="width:48px;height:48px;border:1px solid #E3E6EB;border-radius:8px;padding:0;cursor:pointer;background:none;flex-shrink:0;">'
+            + '<div style="flex:1;min-width:0;">'
+            +   '<div style="font-size:12px;font-weight:800;color:#172C58;">' + v.label + '</div>'
+            +   '<div style="font-size:9px;color:#6B7280;margin-top:2px;font-family:monospace;">' + v.name + ' · <span data-val="'+v.name+'">' + (raw || '(없음)') + '</span></div>'
+            +   '<div style="font-size:10px;color:#9CA3AF;margin-top:3px;line-height:1.4;">' + v.desc + '</div>'
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div></div>';
+  });
+  // 변경값 미리보기
+  html += '<div style="background:#F4F5F8;border:1px solid #E3E6EB;border-radius:10px;padding:12px;margin-top:14px;">'
+       + '<div style="font-size:11px;font-weight:800;color:#172C58;margin-bottom:6px;">📝 변경 사항 (복사해서 :root 또는 [data-dark="1"] 에 붙여넣기)</div>'
+       + '<pre id="apc-theme-diff" style="font-size:11px;color:#374151;font-family:monospace;white-space:pre-wrap;background:#fff;border:1px solid #E3E6EB;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">아직 변경 사항 없음</pre>'
+       + '</div>';
+  return html;
+}
+
+window._admPcThemeChanges = window._admPcThemeChanges || {};
+
+function _admPcThemeChangeVar(name, value) {
+  document.documentElement.style.setProperty(name, value);
+  window._admPcThemeChanges[name] = value;
+  // 텍스트 표시 + diff 갱신
+  var valEl = document.querySelector('[data-val="'+name+'"]');
+  if (valEl) valEl.textContent = value;
+  _admPcThemeRefreshDiff();
+}
+
+function _admPcThemeRefreshDiff() {
+  var diff = document.getElementById('apc-theme-diff');
+  if (!diff) return;
+  var keys = Object.keys(window._admPcThemeChanges);
+  if (keys.length === 0) { diff.textContent = '아직 변경 사항 없음'; return; }
+  diff.textContent = keys.map(function(k){ return '  ' + k + ': ' + window._admPcThemeChanges[k] + ';'; }).join('\n');
+}
+
+function _admPcThemeApply(themeKey) {
+  if (typeof _currentTheme === 'undefined') return;
+  window._currentTheme = themeKey;
+  if (typeof applyTheme === 'function') applyTheme(themeKey);
+  // 화면 다시 렌더 (변수 값 갱신)
+  setTimeout(_admPcRenderThemeManager, 50);
+}
+
+function _admPcThemeSetDark(dark) {
+  if (typeof applyDarkMode === 'function') applyDarkMode(dark, true);
+  setTimeout(_admPcRenderThemeManager, 50);
+}
+
+function _admPcThemeReset() {
+  if (!confirm('변경된 모든 색상 값을 초기화하시겠어요?')) return;
+  Object.keys(window._admPcThemeChanges).forEach(function(k){
+    document.documentElement.style.removeProperty(k);
+  });
+  window._admPcThemeChanges = {};
+  _admPcRenderThemeManager();
+  showToast('🔄 색상 변수 초기화');
+}
+
+function _admPcThemeExport() {
+  var keys = Object.keys(window._admPcThemeChanges);
+  if (keys.length === 0) { showToast('변경된 값이 없어요'); return; }
+  var lines = keys.map(function(k){ return '  ' + k + ': ' + window._admPcThemeChanges[k] + ';'; });
+  var text = '/* 변경된 색상 변수 */\n' + lines.join('\n');
+  try {
+    if (navigator.clipboard) navigator.clipboard.writeText(text);
+  } catch(e) {}
+  showToast('📋 클립보드 복사됨 (' + keys.length + '개 변수)');
+}
+
+/* ════════════════════════════════════════════════════════════
    Phase 4 — 게시글 리스트 (ct_posts 기반)
    - 글 + 이미지(images 배열) + 작성자 + 카테고리 + 댓글 수
    - 게시글 클릭 → 상세 (이미지 풀뷰 + 삭제 + 작성자 패널티)
@@ -18493,7 +18685,7 @@ function _admPcSwitchTab(tab) {
   _admPcUnmountAll();              // 탭 전환 시에도 복귀
   _admPcCloseAllAdminModals();     // 폴백 메뉴로 띄운 모달도 닫기
   _admPcCurrentTab = tab;
-  ['overview','comments','i18n','chiri','ads'].forEach(function(k){
+  ['overview','comments','i18n','chiri','ads','theme'].forEach(function(k){
     var btn = document.getElementById('apc-tab-' + k);
     if (!btn) return;
     if (k === tab) btn.classList.add('apc-tab-active');
@@ -18514,7 +18706,8 @@ function _admPcRenderSidebar(tab) {
     comments: '게시글 관리',
     i18n:     '언어시트',
     chiri:    '치리관리',
-    ads:      '광고관리'
+    ads:      '광고관리',
+    theme:    '테마관리'
   };
   var html = '<div class="apc-menu-section">' + (labels[tab] || tab) + '</div>';
   menus.forEach(function(m, idx){
@@ -21346,7 +21539,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 293;
+window.__APP_BUILD__ = 294;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
