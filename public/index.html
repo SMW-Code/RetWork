@@ -16923,18 +16923,30 @@ function openAdminDashboard() {
 var _admPcCurrentTab = 'overview';
 var _admPcCurrentMenu = null;
 
+/* ★ Phase 2.1 — 거의 모든 메뉴를 mount 방식으로 통일.
+     mount: 마운트할 모달 ID, load: 데이터 로더 (openOv 호출돼도 자동 정리됨) */
 var _admPcMenus = {
   overview: [
-    { key:'users',         icon:'👥', label:'사용자',         fn:function(){ openAdminDetail('users'); } },
-    { key:'receipts',      icon:'🧾', label:'영수증',         fn:function(){ openAdminDetail('receipts'); } },
-    { key:'stores',        icon:'🏪', label:'가게',           fn:function(){ openAdminDetail('stores'); } },
-    { key:'pins',          icon:'📍', label:'가게핀',         fn:function(){ openAdminDetail('pins'); } },
-    /* ★ Phase 2 마운트: mount = 콘텐츠 영역에 시트 이동, load = 데이터 로드 */
+    { key:'users',         icon:'👥', label:'사용자',
+      mount:'ov-admin-detail', load:function(){ openAdminDetail('users'); } },
+    { key:'receipts',      icon:'🧾', label:'영수증',
+      mount:'ov-admin-detail', load:function(){ openAdminDetail('receipts'); } },
+    { key:'stores',        icon:'🏪', label:'가게',
+      mount:'ov-admin-detail', load:function(){ openAdminDetail('stores'); } },
+    { key:'pins',          icon:'📍', label:'가게핀',
+      mount:'ov-admin-detail', load:function(){ openAdminDetail('pins'); } },
     { key:'editreqs',      icon:'🛠️', label:'가게수정요청',
       mount:'ov-admin-edit-reqs',
       load:function(){ if (typeof loadAdminEditReqs === 'function') loadAdminEditReqs('open'); },
       badgeId:'apc-badge-editreqs' },
-    { key:'reports',       icon:'💬', label:'댓글모더',       fn:function(){ openAdminReports(); }, badgeId:'apc-badge-reports' },
+    { key:'reports',       icon:'💬', label:'댓글모더',
+      mount:'ov-admin-reports',
+      load:function(){
+        if (typeof _admReportTab !== 'undefined') window._admReportTab = 'pending';
+        if (typeof _updateReportTabUI === 'function') _updateReportTabUI();
+        if (typeof _loadAdminReportList === 'function') _loadAdminReportList();
+      },
+      badgeId:'apc-badge-reports' },
     { key:'announcements', icon:'📢', label:'공지사항',
       mount:'ov-admin-ann',
       load:function(){
@@ -16944,18 +16956,29 @@ var _admPcMenus = {
       } },
   ],
   i18n: [
-    { key:'i18n-all',      icon:'🌐', label:'전체 언어시트',  fn:function(){ if (typeof openAdminI18n === 'function') openAdminI18n(); else showToast('i18n CMS 미연결'); } },
-    // Phase 2 에서 페이지별 분리 (홈/인증/영수증/치리맵/설정 등)
+    { key:'i18n-all', icon:'🌐', label:'전체 언어시트',
+      mount:'ov-admin-i18n',
+      load:function(){ if (typeof openAdminI18n === 'function') openAdminI18n(); } },
+    // Phase 3 에서 페이지별 분리 예정 (홈/인증/영수증/치리맵/설정 등)
   ],
   chiri: [
-    { key:'pricing',       icon:'💴', label:'단가/요율',      fn:function(){ if (typeof openAdminPricing === 'function') openAdminPricing(); else showToast('가격 설정 미연결'); } },
-    { key:'coins',         icon:'✨', label:'치리 발급',      fn:function(){ openAdminDetail('coins'); } },
-    { key:'items',         icon:'🛍️', label:'치리스토어 상품', fn:function(){ openAdminStoreItems(); } },
-    { key:'exchange',      icon:'📋', label:'교환요청',       fn:function(){ showToast('교환 요청 처리 — Phase 2에서 구축'); } },
+    { key:'pricing', icon:'💴', label:'단가/요율',
+      mount:'ov-admin-pricing',
+      load:function(){ if (typeof openAdminPricing === 'function') openAdminPricing(); } },
+    { key:'coins', icon:'✨', label:'치리 발급',
+      fn:function(){ showToast('치리 발급 통계는 메인 대시보드에서 확인 (별도 페이지 Phase 3 예정)'); } },
+    { key:'items', icon:'🛍️', label:'치리스토어 상품',
+      mount:'ov-admin-items',
+      load:function(){ if (typeof openAdminStoreItems === 'function') openAdminStoreItems(); } },
+    { key:'exchange', icon:'📋', label:'교환요청',
+      fn:function(){ showToast('교환 요청 처리 — Phase 3에서 구축'); } },
   ],
   ads: [
-    { key:'ad-pages',      icon:'📐', label:'광고 페이지/위치', fn:function(){ showToast('광고 페이지/위치 관리 — Phase 2에서 구축'); } },
-    { key:'ad-views',      icon:'📺', label:'광고 시청',      fn:function(){ if (typeof openAdminAds === 'function') openAdminAds(); else showToast('광고 시청 통계 미연결'); } },
+    { key:'ad-pages', icon:'📐', label:'광고 페이지/위치',
+      fn:function(){ showToast('광고 페이지/위치 관리 — Phase 3 신규 화면 예정'); } },
+    { key:'ad-views', icon:'📺', label:'광고 시청',
+      mount:'ov-admin-ads',
+      load:function(){ if (typeof openAdminAds === 'function') openAdminAds(); } },
   ]
 };
 
@@ -17086,10 +17109,15 @@ function _admPcMountSheet(modalId, dataLoader) {
   ct.innerHTML = '';
   ct.appendChild(sheet);
 
-  // 데이터 로드
+  // 데이터 로드 (대부분 openOv('ov-admin-*') 를 내부에서 호출 → 모달 wrapper 가 .open 됨)
   if (typeof dataLoader === 'function') {
     try { dataLoader(); } catch(e) { console.warn('[admPc] dataLoader failed', e); }
   }
+  // ★ loader 가 켠 모달 wrapper 들 자동 정리 (시트는 이미 PC 영역에 있어서 영향 X)
+  //   async loader 에서 await 이후 openOv 호출 케이스 대비 — 0/50/200ms 세 번 청소
+  _admPcCloseAllAdminModals();
+  setTimeout(_admPcCloseAllAdminModals, 50);
+  setTimeout(_admPcCloseAllAdminModals, 200);
 }
 
 /* PC 어드민 동작 중 누적된 어드민 모달들 일괄 닫기
@@ -19611,7 +19639,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 272;
+window.__APP_BUILD__ = 273;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
