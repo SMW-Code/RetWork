@@ -18105,7 +18105,12 @@ function _admPcRenderThemeVarsHtml() {
   return html;
 }
 
-window._admPcThemeChanges = window._admPcThemeChanges || {};
+/* 변경값을 라이트/다크 모드별로 분리 저장 (다른 모드에 영향 X) */
+window._admPcThemeChanges = window._admPcThemeChanges || { light:{}, dark:{} };
+if (!window._admPcThemeChanges.light) window._admPcThemeChanges.light = {};
+if (!window._admPcThemeChanges.dark)  window._admPcThemeChanges.dark  = {};
+
+function _admPcCurMode(){ return (typeof _isDark !== 'undefined' && _isDark) ? 'dark' : 'light'; }
 
 /* 미리보기 영역 클릭 → 해당 변수 카드로 스크롤 + 인디고 외곽선 1.5초 펄스 */
 function _admPcThemeJumpToVar(varName) {
@@ -18120,7 +18125,8 @@ function _admPcThemeJumpToVar(varName) {
 
 function _admPcThemeChangeVar(name, value) {
   document.documentElement.style.setProperty(name, value);
-  window._admPcThemeChanges[name] = value;
+  var mode = _admPcCurMode();
+  window._admPcThemeChanges[mode][name] = value;
   // 텍스트 표시 + diff 갱신
   var valEl = document.querySelector('[data-val="'+name+'"]');
   if (valEl) valEl.textContent = value;
@@ -18130,43 +18136,96 @@ function _admPcThemeChangeVar(name, value) {
 function _admPcThemeRefreshDiff() {
   var diff = document.getElementById('apc-theme-diff');
   if (!diff) return;
-  var keys = Object.keys(window._admPcThemeChanges);
-  if (keys.length === 0) { diff.textContent = '아직 변경 사항 없음'; return; }
-  diff.textContent = keys.map(function(k){ return '  ' + k + ': ' + window._admPcThemeChanges[k] + ';'; }).join('\n');
+  var light = window._admPcThemeChanges.light || {};
+  var dark  = window._admPcThemeChanges.dark  || {};
+  var lightKeys = Object.keys(light);
+  var darkKeys  = Object.keys(dark);
+  if (lightKeys.length + darkKeys.length === 0) { diff.textContent = '아직 변경 사항 없음'; return; }
+  var lines = [];
+  if (lightKeys.length > 0) {
+    lines.push('/* 라이트 모드 — :root 에 추가 */');
+    lines.push(':root {');
+    lightKeys.forEach(function(k){ lines.push('  ' + k + ': ' + light[k] + ';'); });
+    lines.push('}');
+  }
+  if (darkKeys.length > 0) {
+    if (lines.length > 0) lines.push('');
+    lines.push('/* 다크 모드 — [data-dark="1"] 에 추가 */');
+    lines.push('[data-dark="1"] {');
+    darkKeys.forEach(function(k){ lines.push('  ' + k + ': ' + dark[k] + ';'); });
+    lines.push('}');
+  }
+  diff.textContent = lines.join('\n');
 }
 
 function _admPcThemeApply(themeKey) {
   if (typeof _currentTheme === 'undefined') return;
   window._currentTheme = themeKey;
   if (typeof applyTheme === 'function') applyTheme(themeKey);
-  // 화면 다시 렌더 (변수 값 갱신)
+  // 현재 모드의 변경값 다시 적용 (applyTheme 가 일부 변수 덮어쓸 수 있으니)
+  _admPcThemeReapplyCurrentMode();
   setTimeout(_admPcRenderThemeManager, 50);
 }
 
 function _admPcThemeSetDark(dark) {
+  // 1. 이전 모드의 인라인 변경값 제거
+  var prev = _admPcCurMode();
+  Object.keys(window._admPcThemeChanges[prev] || {}).forEach(function(k){
+    document.documentElement.style.removeProperty(k);
+  });
+  // 2. 다크모드 전환
   if (typeof applyDarkMode === 'function') applyDarkMode(dark, true);
-  setTimeout(_admPcRenderThemeManager, 50);
+  // 3. 새 모드의 변경값 다시 인라인 적용
+  setTimeout(function(){
+    _admPcThemeReapplyCurrentMode();
+    _admPcRenderThemeManager();
+  }, 50);
+}
+
+/* 현재 모드의 변경값을 인라인으로 다시 적용 */
+function _admPcThemeReapplyCurrentMode() {
+  var mode = _admPcCurMode();
+  var changes = window._admPcThemeChanges[mode] || {};
+  Object.keys(changes).forEach(function(k){
+    document.documentElement.style.setProperty(k, changes[k]);
+  });
 }
 
 function _admPcThemeReset() {
-  if (!confirm('변경된 모든 색상 값을 초기화하시겠어요?')) return;
-  Object.keys(window._admPcThemeChanges).forEach(function(k){
-    document.documentElement.style.removeProperty(k);
+  if (!confirm('변경된 모든 색상 값을 초기화하시겠어요? (라이트 + 다크 모두)')) return;
+  ['light','dark'].forEach(function(m){
+    Object.keys(window._admPcThemeChanges[m] || {}).forEach(function(k){
+      document.documentElement.style.removeProperty(k);
+    });
   });
-  window._admPcThemeChanges = {};
+  window._admPcThemeChanges = { light:{}, dark:{} };
   _admPcRenderThemeManager();
   showToast('🔄 색상 변수 초기화');
 }
 
 function _admPcThemeExport() {
-  var keys = Object.keys(window._admPcThemeChanges);
-  if (keys.length === 0) { showToast('변경된 값이 없어요'); return; }
-  var lines = keys.map(function(k){ return '  ' + k + ': ' + window._admPcThemeChanges[k] + ';'; });
-  var text = '/* 변경된 색상 변수 */\n' + lines.join('\n');
-  try {
-    if (navigator.clipboard) navigator.clipboard.writeText(text);
-  } catch(e) {}
-  showToast('📋 클립보드 복사됨 (' + keys.length + '개 변수)');
+  var light = window._admPcThemeChanges.light || {};
+  var dark  = window._admPcThemeChanges.dark  || {};
+  var lightKeys = Object.keys(light);
+  var darkKeys  = Object.keys(dark);
+  if (lightKeys.length + darkKeys.length === 0) { showToast('변경된 값이 없어요'); return; }
+  var lines = [];
+  if (lightKeys.length > 0) {
+    lines.push('/* 라이트 모드 — :root 에 추가 */');
+    lines.push(':root {');
+    lightKeys.forEach(function(k){ lines.push('  ' + k + ': ' + light[k] + ';'); });
+    lines.push('}');
+  }
+  if (darkKeys.length > 0) {
+    if (lines.length > 0) lines.push('');
+    lines.push('/* 다크 모드 — [data-dark="1"] 에 추가 */');
+    lines.push('[data-dark="1"] {');
+    darkKeys.forEach(function(k){ lines.push('  ' + k + ': ' + dark[k] + ';'); });
+    lines.push('}');
+  }
+  var text = lines.join('\n');
+  try { if (navigator.clipboard) navigator.clipboard.writeText(text); } catch(e) {}
+  showToast('📋 복사됨 (라이트 ' + lightKeys.length + ' + 다크 ' + darkKeys.length + ')');
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -21663,7 +21722,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 296;
+window.__APP_BUILD__ = 297;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
