@@ -2146,11 +2146,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <!-- 친구 초대 / 레퍼럴 코드 -->
       <div class="sg">
-        <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">👥 친구 초대</div>
+        <div class="sp-sg-title" data-i18n="inv.title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">👥 친구 초대</div>
         <div class="si" style="flex-direction:column;align-items:stretch;gap:10px;padding:12px 16px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:15px;width:22px;text-align:center;">🎟️</span>
-            <span class="si-lbl" style="flex:1;">내 추천 코드</span>
+            <span class="si-lbl" data-i18n="inv.my_code" style="flex:1;">내 추천 코드</span>
           </div>
           <!-- 코드 카드 + 복사 버튼 -->
           <div id="sp-ref-card" style="display:flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1px solid var(--gold);border-radius:12px;padding:10px 14px;">
@@ -2158,38 +2158,38 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
               <div style="font-size:10px;color:var(--text-3);font-weight:700;letter-spacing:.5px;">RECEIPT CODE</div>
               <div id="sp-ref-code-display" style="font-size:18px;font-weight:900;color:var(--text-1);letter-spacing:1.5px;font-family:monospace;margin-top:2px;user-select:all;-webkit-user-select:all;cursor:pointer;" onclick="copyReferralCode()">— — — —</div>
             </div>
-            <button id="sp-ref-copy-btn" onclick="copyReferralCode()" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.3);white-space:nowrap;">📋 복사</button>
+            <button id="sp-ref-copy-btn" data-i18n="inv.copy" onclick="copyReferralCode()" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.3);white-space:nowrap;">📋 복사</button>
           </div>
 
           <!-- ★ 추천 통계 카드 (3개 항목: 추천 친구 / 받은 치리 / 대기) -->
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
             <div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;">
               <div id="sp-ref-stat-friends" style="font-size:17px;font-weight:900;color:var(--green);line-height:1;">0</div>
-              <div style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">👥 추천 친구</div>
+              <div data-i18n="inv.stat_friends" style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">👥 추천 친구</div>
             </div>
             <div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;">
               <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
                 <span style="font-size:11px;font-weight:800;color:var(--gold-dark);">+</span>
                 <span id="sp-ref-stat-earned" style="font-size:17px;font-weight:900;color:var(--gold-dark);">0</span>
               </div>
-              <div style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">✨ 받은 치리</div>
+              <div data-i18n="inv.stat_earned" style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">✨ 받은 치리</div>
             </div>
             <div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;">
               <div id="sp-ref-stat-pending" style="font-size:17px;font-weight:900;color:#06C755;line-height:1;">0</div>
-              <div style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">⏳ 대기 보상</div>
+              <div data-i18n="inv.stat_pending" style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">⏳ 대기 보상</div>
             </div>
           </div>
 
-          <div style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요 (광고 시청 후 청구)</div>
-          <button onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">🔗 초대 링크 공유</button>
+          <div data-i18n="inv.desc" style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요 (광고 시청 후 청구)</div>
+          <button data-i18n="inv.share" onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">🔗 초대 링크 공유</button>
 
-          <!-- 대기 추천 보상 (있을 때만 표시) → 광고 보고 200치리씩 받기 -->
+          <!-- 대기 추천 보상 (있을 때만 표시) → renderReferralRewardUI 가 본문/sub 텍스트 매번 i18n 으로 갱신 -->
           <div id="sp-ref-reward-banner" style="display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(6,199,85,.14),var(--surface));border:1px solid #06C755;border-radius:12px;padding:10px 14px;">
             <div style="flex:1;min-width:0;">
-              <div style="font-size:12px;font-weight:800;color:var(--text-1);">🎁 받을 수 있는 추천 보상 <span id="sp-ref-reward-count">0</span>건</div>
+              <div id="sp-ref-reward-title" style="font-size:12px;font-weight:800;color:var(--text-1);">🎁 받을 수 있는 추천 보상 <span id="sp-ref-reward-count">0</span>건</div>
               <div id="sp-ref-reward-sub" style="font-size:10px;color:var(--text-3);margin-top:2px;">광고 보고 200チリ씩 받기</div>
             </div>
-            <button id="sp-ref-reward-btn" onclick="claimReferralRewardViaAd()" style="background:#06C755;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);white-space:nowrap;">📺 받기</button>
+            <button id="sp-ref-reward-btn" data-i18n="inv.reward_btn" onclick="claimReferralRewardViaAd()" style="background:#06C755;color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);white-space:nowrap;">📺 받기</button>
           </div>
         </div>
       </div>
@@ -11204,6 +11204,14 @@ var I18N = {
     'rw.draw':'チリつもドロー','rw.attendance':'出席チェック','rw.checkin_btn':'出席する',
     'rw.streak':'連続出席','rw.day':'日','rw.reward_3':'3日','rw.reward_7':'7日','rw.reward_15':'15日','rw.reward_30':'30日',
     'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 200チリ',
+    // 設定 → 友達招待カード (build 302)
+    'inv.title':'👥 友達招待','inv.my_code':'マイ紹介コード','inv.copy':'📋 コピー',
+    'inv.stat_friends':'👥 紹介した友達','inv.stat_earned':'✨ 獲得チリ','inv.stat_pending':'⏳ 待機報酬',
+    'inv.desc':'友達がこのコードで登録すると <strong style="color:var(--gold-dark);">+200チリ</strong> もらえます（広告視聴後請求）',
+    'inv.share':'🔗 招待リンクを共有','inv.reward_count':'🎁 受け取り可能な紹介報酬 {n}件',
+    'inv.reward_sub_can':'広告を見て200チリずつ受け取る（本日 {n}件可能）',
+    'inv.reward_sub_capped':'本日の上限（{n}件）到達 · 明日また受け取る',
+    'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
@@ -11430,6 +11438,14 @@ var I18N = {
     'rw.draw':'치리츠모 드로우','rw.attendance':'출석 체크','rw.checkin_btn':'출석하기',
     'rw.streak':'연속 출석','rw.day':'일','rw.reward_3':'3일','rw.reward_7':'7일','rw.reward_15':'15일','rw.reward_30':'30일',
     'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 200치리',
+    // 설정 → 친구 초대 카드 (build 302)
+    'inv.title':'👥 친구 초대','inv.my_code':'내 추천 코드','inv.copy':'📋 복사',
+    'inv.stat_friends':'👥 추천 친구','inv.stat_earned':'✨ 받은 치리','inv.stat_pending':'⏳ 대기 보상',
+    'inv.desc':'친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200치리</strong> 받아요 (광고 시청 후 청구)',
+    'inv.share':'🔗 초대 링크 공유','inv.reward_count':'🎁 받을 수 있는 추천 보상 {n}건',
+    'inv.reward_sub_can':'광고 보고 200치리씩 받기 (오늘 {n}건 가능)',
+    'inv.reward_sub_capped':'오늘 한도({n}건) 도달 · 내일 다시 받기',
+    'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
@@ -11651,6 +11667,14 @@ var I18N = {
     'rw.draw':'Chiri Draw','rw.attendance':'Check-in','rw.checkin_btn':'Check in',
     'rw.streak':'Streak','rw.day':'d','rw.reward_3':'3d','rw.reward_7':'7d','rw.reward_15':'15d','rw.reward_30':'30d',
     'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'200 chiri when a friend signs up',
+    // Settings → Invite friends card (build 302)
+    'inv.title':'👥 Invite Friends','inv.my_code':'My Referral Code','inv.copy':'📋 Copy',
+    'inv.stat_friends':'👥 Referred','inv.stat_earned':'✨ Earned','inv.stat_pending':'⏳ Pending',
+    'inv.desc':'Get <strong style="color:var(--gold-dark);">+200 chiri</strong> when a friend signs up with this code (claim after watching an ad)',
+    'inv.share':'🔗 Share Invite Link','inv.reward_count':'🎁 {n} referral reward(s) available',
+    'inv.reward_sub_can':'Watch an ad to claim 200 chiri each ({n} claimable today)',
+    'inv.reward_sub_capped':'Daily cap ({n}) reached · try again tomorrow',
+    'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
@@ -11872,6 +11896,14 @@ var I18N = {
     'rw.draw':'Chiri 抽奖','rw.attendance':'签到','rw.checkin_btn':'签到',
     'rw.streak':'连续签到','rw.day':'天','rw.reward_3':'3天','rw.reward_7':'7天','rw.reward_15':'15天','rw.reward_30':'30天',
     'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 200 积分',
+    // 设置 → 邀请好友卡片 (build 302)
+    'inv.title':'👥 邀请好友','inv.my_code':'我的推荐码','inv.copy':'📋 复制',
+    'inv.stat_friends':'👥 推荐好友','inv.stat_earned':'✨ 已获塵积','inv.stat_pending':'⏳ 待领奖励',
+    'inv.desc':'好友用此码注册即可获得 <strong style="color:var(--gold-dark);">+200塵积</strong>（观看广告后领取）',
+    'inv.share':'🔗 分享邀请链接','inv.reward_count':'🎁 可领取的推荐奖励 {n}件',
+    'inv.reward_sub_can':'观看广告每次领200塵积（今日还可 {n} 次）',
+    'inv.reward_sub_capped':'今日上限（{n}件）已达 · 明日再领',
+    'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
@@ -17214,6 +17246,8 @@ var _admPcMenus = {
       mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('ct'); } },
     { key:'i18n-rw',       icon:'🎁', label:'리워드/출석',
       mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('rw'); } },
+    { key:'i18n-inv',      icon:'🎟️', label:'친구 초대',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('inv'); } },
     { key:'i18n-settings', icon:'⚙️', label:'설정',
       mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('settings'); } },
     { key:'i18n-prof',     icon:'👤', label:'프로필',
@@ -21953,7 +21987,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 301;
+window.__APP_BUILD__ = 302;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
@@ -22047,17 +22081,18 @@ window.renderReferralRewardUI = function renderReferralRewardUI(){
   if (sE) sE.textContent = totalEarned.toLocaleString();
   if (sP) sP.textContent = pending;
 
-  // 설정창 청구 배너 (대기 건이 있으면 표시)
+  // 설정창 청구 배너 (대기 건이 있으면 표시) — build 302: 다국어 지원
   var spB = document.getElementById('sp-ref-reward-banner');
   if (spB) {
     if (pending > 0) {
       spB.style.display = 'flex';
-      var spC = document.getElementById('sp-ref-reward-count');
+      var spT = document.getElementById('sp-ref-reward-title');
       var spS = document.getElementById('sp-ref-reward-sub');
-      if (spC) spC.textContent = pending;
+      // 타이틀 전체 텍스트를 i18n 으로 매번 갱신 (sp-ref-reward-count span 은 더 이상 필요 없음)
+      if (spT) spT.textContent = t('inv.reward_count', { n: pending });
       if (spS) spS.textContent = (claimable > 0)
-        ? ('광고 보고 200チリ씩 받기 (오늘 ' + claimable + '건 가능)')
-        : ('오늘 한도(' + (s.cap||10) + '건) 도달 · 내일 다시 받기');
+        ? t('inv.reward_sub_can',    { n: claimable })
+        : t('inv.reward_sub_capped', { n: (s.cap || 10) });
     } else spB.style.display = 'none';
   }
   // 홈 배너 (오늘 청구 가능할 때만 표시)
