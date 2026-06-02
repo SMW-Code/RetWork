@@ -17089,10 +17089,37 @@ var _admPcMenus = {
       } },
   ],
   i18n: [
-    { key:'i18n-all', icon:'🌐', label:'전체 언어시트',
-      mount:'ov-admin-i18n',
-      load:function(){ if (typeof openAdminI18n === 'function') openAdminI18n(); } },
-    // Phase 3 에서 페이지별 분리 예정 (홈/인증/영수증/치리맵/설정 등)
+    /* ★ Phase 3.D — 페이지별 prefix 필터링 (단일 모달 ov-admin-i18n 재사용) */
+    { key:'i18n-all',      icon:'🌐', label:'전체 언어시트',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix(''); } },
+    { key:'i18n-home',     icon:'🏠', label:'홈',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('home'); } },
+    { key:'i18n-auth',     icon:'🔐', label:'인증/온보딩',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('auth'); } },
+    { key:'i18n-receipt',  icon:'🧾', label:'영수증/OCR',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('ocr'); } },
+    { key:'i18n-sd',       icon:'🏪', label:'가게 상세',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('sd'); } },
+    { key:'i18n-ct',       icon:'💬', label:'치리톡',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('ct'); } },
+    { key:'i18n-rw',       icon:'🎁', label:'리워드/출석',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('rw'); } },
+    { key:'i18n-settings', icon:'⚙️', label:'설정',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('settings'); } },
+    { key:'i18n-prof',     icon:'👤', label:'프로필',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('prof'); } },
+    { key:'i18n-ad',       icon:'📢', label:'광고 모달',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('ad'); } },
+    { key:'i18n-toast',    icon:'🍞', label:'토스트/에러',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('toast'); } },
+    { key:'i18n-cat',      icon:'🏷️', label:'카테고리',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('cat'); } },
+    { key:'i18n-theme',    icon:'🎨', label:'테마/모드',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('theme'); } },
+    { key:'i18n-mode',     icon:'🔄', label:'모드 전환',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('mode'); } },
+    { key:'i18n-premium',  icon:'⭐', label:'프리미엄',
+      mount:'ov-admin-i18n', load:function(){ _admI18nLoadWithPrefix('premium'); } },
   ],
   chiri: [
     { key:'pricing', icon:'💴', label:'단가/요율',
@@ -17309,6 +17336,33 @@ async function _admPcLoadAdPagesStats() {
     html += '</div></div>';
   });
   list.innerHTML = html;
+}
+
+/* ──── i18n 페이지별 로딩 — prefix select 자동 채움 + 데이터 로드 ──── */
+function _admI18nLoadWithPrefix(prefix) {
+  if (typeof openAdminI18n !== 'function') return;
+  // openAdminI18n 호출 → 내부에서 prefix select option 채워짐 + 데이터 로드
+  openAdminI18n();
+  // option 채워진 후 prefix 적용 (옵션 동적 생성이라 약간의 딜레이 필요)
+  var apply = function(attempt){
+    var sel = document.getElementById('adm-i18n-prefix');
+    if (!sel) { if (attempt < 10) setTimeout(function(){ apply(attempt+1); }, 100); return; }
+    if (prefix) {
+      // 옵션에 해당 prefix 가 있으면 선택, 없으면 무시 (전체 표시)
+      var hasOpt = Array.from(sel.options).some(function(o){ return o.value === prefix; });
+      if (hasOpt) {
+        sel.value = prefix;
+        if (typeof _loadAdminI18n === 'function') _loadAdminI18n();
+      } else if (attempt < 8) {
+        // option 이 아직 안 채워졌을 수 있음 → 재시도
+        setTimeout(function(){ apply(attempt+1); }, 150);
+      }
+    } else {
+      sel.value = '';
+      if (typeof _loadAdminI18n === 'function') _loadAdminI18n();
+    }
+  };
+  setTimeout(function(){ apply(0); }, 200);
 }
 
 /* ──── 위치별 로컬 광고 관리 (zone = AD_POSITIONS.context) ──── */
@@ -20247,7 +20301,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 280;
+window.__APP_BUILD__ = 281;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
