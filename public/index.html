@@ -16767,7 +16767,11 @@ function adminOpenItemForm(item) {
       prev.innerHTML = '🖼️';
     }
   }
-  openOv('ov-admin-item-form');
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownTo('ov-admin-item-form', { backMenuKey:'items', backLabel:'스토어 상품', title:'상품 편집' });
+  } else {
+    openOv('ov-admin-item-form');
+  }
 }
 
 async function adminEditItem(id) {
@@ -17382,32 +17386,38 @@ function _isAdminPcActive() {
   return el && el.style.display === 'flex';
 }
 
-/* ──── 드릴다운: 사용자 목록 → 사용자 상세 (콘텐츠 영역 내부 이동, breadcrumb 추가) ──── */
-function _admPcDrilldownToUserDetail() {
-  _admPcMountSheet('ov-admin-user-detail', null);  // 시트 마운트만 (데이터는 이미 openAdminUserDetail 에서 로드됨)
-  // breadcrumb "← 사용자 목록" 시트 위에 prepend
+/* ──── 일반화된 드릴다운: 카드 클릭 → 콘텐츠 영역 전환 + breadcrumb ──── */
+function _admPcDrilldownTo(modalId, opts) {
+  opts = opts || {};
+  _admPcMountSheet(modalId, null); // 시트만 마운트 (데이터는 호출자가 이미 로드)
   setTimeout(function(){
     var ct = document.getElementById('apc-content');
     if (!ct) return;
-    if (document.getElementById('apc-breadcrumb')) return; // 이미 있으면 skip
+    var old = document.getElementById('apc-breadcrumb');
+    if (old) old.remove();
     var bc = document.createElement('div');
     bc.id = 'apc-breadcrumb';
     bc.style.cssText = 'padding:14px 24px;background:#F4F5F8;border-bottom:1px solid #E3E6EB;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;';
-    bc.innerHTML = '<button onclick="_admPcBackToUserList()" style="background:#fff;border:1px solid #E3E6EB;color:#172C58;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;font-family:var(--font);">← 사용자 목록</button>'
+    bc.innerHTML = '<button onclick="_admPcBackToMenu(\''+(opts.backMenuKey||'')+'\')" style="background:#fff;border:1px solid #E3E6EB;color:#172C58;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;font-family:var(--font);">← ' + (opts.backLabel || '뒤로') + '</button>'
                  + '<span style="color:#9CA3AF;">/</span>'
-                 + '<span style="color:#172C58;font-weight:800;">사용자 상세</span>';
+                 + '<span style="color:#172C58;font-weight:800;">' + (opts.title || '상세') + '</span>';
     var firstChild = ct.firstElementChild;
     if (firstChild) ct.insertBefore(bc, firstChild);
     else ct.appendChild(bc);
   }, 50);
 }
 
-function _admPcBackToUserList() {
-  // breadcrumb 제거 + 다시 사용자 목록 마운트
+function _admPcBackToMenu(menuKey) {
   var bc = document.getElementById('apc-breadcrumb');
   if (bc) bc.remove();
-  _admPcSelectMenu('users');
+  if (menuKey) _admPcSelectMenu(menuKey);
 }
+
+/* 호환 — 기존 사용자 드릴다운 함수 유지 */
+function _admPcDrilldownToUserDetail() {
+  _admPcDrilldownTo('ov-admin-user-detail', { backMenuKey:'users',    backLabel:'사용자 목록', title:'사용자 상세' });
+}
+function _admPcBackToUserList() { _admPcBackToMenu('users'); }
 
 /* ════════════════════════════════════════════════════════════
    Phase 3.B — 치리 발급 통계 화면
@@ -19342,7 +19352,11 @@ async function openAdminReceiptDetail(receiptId) {
     return { id: it.id, name: it.name || '', qty: q, price: Math.round((it.price||0) / q) };
   });
   _admRenderItems();
-  openOv('ov-admin-edit-receipt');
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownTo('ov-admin-edit-receipt', { backMenuKey:'receipts', backLabel:'영수증 목록', title:'영수증 편집' });
+  } else {
+    openOv('ov-admin-edit-receipt');
+  }
 }
 
 function _admRenderItems() {
@@ -19676,7 +19690,11 @@ async function openAdminStoreDetail(storeId) {
   document.getElementById('adm-store-gmap').value = s.google_maps_url || '';
   document.getElementById('adm-store-meta').textContent = '평균가: ¥'+(s.avg_price||0).toLocaleString()+' · 영수증: '+(s.receipt_count||0)+'장';
   _admLoadStoreMenus(s.name);
-  openOv('ov-admin-edit-store');
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownTo('ov-admin-edit-store', { backMenuKey:'stores', backLabel:'가게 목록', title:'가게 편집' });
+  } else {
+    openOv('ov-admin-edit-store');
+  }
   // 지도 초기화 (한 번만 생성, 이후 위치 변경)
   setTimeout(function(){ _admInitStoreMap(s.lat, s.lng); }, 50);
 }
@@ -19860,7 +19878,11 @@ async function openAdminPinDetail(pinId) {
   document.getElementById('adm-pin-comment').value = p.comment || '';
   document.getElementById('adm-pin-meta').textContent = 'UID: '+(p.user_id||'').substring(0,8)+'... · '+(p.created_at||'').slice(0,10);
   document.getElementById('adm-pin-store-name').textContent = (p.stores && p.stores.name) || '(가게 정보 없음)';
-  openOv('ov-admin-edit-pin');
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownTo('ov-admin-edit-pin', { backMenuKey:'pins', backLabel:'가게핀 목록', title:'핀 편집' });
+  } else {
+    openOv('ov-admin-edit-pin');
+  }
 }
 
 function admPinOpenStoreEdit() {
@@ -20778,7 +20800,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 286;
+window.__APP_BUILD__ = 287;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
