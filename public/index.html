@@ -5128,11 +5128,14 @@ function ctInitMap() {
   /* 즉시 기본 위치로 핀 로드 (위치 권한 대기 없이 바로 표시) */
   ctLoadPricePins(defaultPos.lat, defaultPos.lng);
 
-  /* 내 위치 */
+  /* 내 위치 — build 303: race condition fix (가성비맵과 동일) */
+  window._ctMapUserInteracted = false;
+  _ctMap.addListener('dragstart',    function(){ window._ctMapUserInteracted = true; });
+  _ctMap.addListener('zoom_changed', function(){ window._ctMapUserInteracted = true; });
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(function(pos) {
       _ctUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      _ctMap.setCenter(_ctUserPos);
       new google.maps.Marker({
         position: _ctUserPos, map: _ctMap,
         icon: {
@@ -5142,6 +5145,8 @@ function ctInitMap() {
         },
         title:'현재 위치'
       });
+      // 사용자가 아직 아무 액션 안 했을 때만 center 이동
+      if (!window._ctMapUserInteracted) _ctMap.setCenter(_ctUserPos);
       document.getElementById('ct-map-sub').textContent = '現在地周辺のおトク情報';
       document.getElementById('ct-area-btn').style.display = '';
       ctLoadPricePins(_ctUserPos.lat, _ctUserPos.lng);
@@ -12191,15 +12196,23 @@ function initGoogleMap() {
   _mapInitialized = true;
   var defaultPos = { lat: 34.9700, lng: 136.6220 }; // 四日市 기본값
 
+  // ⚡ build 303 — geolocation 늦게 도착해서 사용자 액션 덮어쓰는 race 방지
+  //    사용자가 가게 탭/드래그/줌 했으면 이후 geolocation pan 무시
+  window._mapUserInteracted = false;
+
   navigator.geolocation.getCurrentPosition(function(pos) {
     _mapUserPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-    _map.setCenter(_mapUserPos);
+    // 마커는 항상 추가 (현 위치 시각 표시)
     new google.maps.Marker({
       position: _mapUserPos,
       map: _map,
       icon: { path: google.maps.SymbolPath.CIRCLE, scale: 8, fillColor: '#378ADD', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
       title: '내 위치'
     });
+    // center 이동은 사용자가 아직 아무 액션 안 했을 때만
+    if (!window._mapUserInteracted) {
+      _map.setCenter(_mapUserPos);
+    }
     document.getElementById('map-sub').textContent = t('rmap.sub');
   }, function() {});
 
@@ -12212,6 +12225,10 @@ function initGoogleMap() {
     gestureHandling: 'greedy',
     styles: [{ featureType: 'poi', stylers: [{ visibility: 'off' }] }]
   });
+
+  // 사용자가 직접 맵을 만지면 이후 geolocation 결과로 center 옮기지 않음
+  _map.addListener('dragstart',     function(){ window._mapUserInteracted = true; });
+  _map.addListener('zoom_changed',  function(){ window._mapUserInteracted = true; });
 
   renderMapPins();
 }
@@ -13081,6 +13098,7 @@ function flyToStoreFromHistory(address, name, lat, lng, isCommunity) {
         flyToStore(parseFloat(lat), parseFloat(lng), name);
       } else {
         // 커뮤니티 가게 — 작은 임시 핀 표시
+        window._mapUserInteracted = true; // build 303: 늦게 도착한 geolocation pan 차단
         _map.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
         _map.setZoom(16);
         placeCommunityPin(parseFloat(lat), parseFloat(lng), name);
@@ -13093,6 +13111,7 @@ function flyToStoreFromHistory(address, name, lat, lng, isCommunity) {
       geocoder.geocode({ address: address }, function(results, status) {
         if (status === 'OK' && results[0]) {
           var loc = results[0].geometry.location;
+          window._mapUserInteracted = true; // build 303
           _map.panTo(loc);
           _map.setZoom(16);
           placeCommunityPin(loc.lat(), loc.lng(), name);
@@ -13164,6 +13183,7 @@ function placeCommunityPin(lat, lng, name) {
 
 function flyToStore(lat, lng, name) {
   if (!_map) return;
+  window._mapUserInteracted = true; // build 303: 늦게 도착한 geolocation pan 차단
   _map.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
   _map.setZoom(16);
   var marker = _mapMarkers.find(function(m) { return m.getTitle() === name; });
@@ -21987,7 +22007,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 302;
+window.__APP_BUILD__ = 303;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
