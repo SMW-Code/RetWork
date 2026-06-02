@@ -17120,14 +17120,18 @@ function _admPcMountSheet(modalId, dataLoader) {
   setTimeout(_admPcCloseAllAdminModals, 200);
 }
 
-/* PC 어드민 동작 중 누적된 어드민 모달들 일괄 닫기
+/* PC 어드민 동작 중 누적된 모달들 일괄 닫기
    - 사이드바 메뉴 전환 시 / 톱바 전환 시 / closeAdminPc 시 호출
-   - ov-admin-pc 자체는 제외 */
+   - ov-admin-pc 자체와 ov-settings 는 제외
+   - 어드민에서 파생되는 모든 overlay 일괄 정리 (ov-admin-*, ov-store-detail, ov-shop 등) */
 function _admPcCloseAllAdminModals() {
-  var modals = document.querySelectorAll('.overlay[id^="ov-admin"]');
+  var modals = document.querySelectorAll('.overlay.open');
   modals.forEach(function(modal){
     if (modal.id === 'ov-admin-pc') return; // PC 자체는 스킵
-    if (modal.classList.contains('open')) modal.classList.remove('open');
+    if (modal.id === 'ov-settings') return; // 설정 (별도 흐름)
+    modal.classList.remove('open');
+    // 인라인 style 로 강제 표시된 경우도 정리 (showAdModal 같은 케이스 대비)
+    if (modal.style.display === 'flex') modal.style.cssText = '';
   });
 }
 
@@ -19639,7 +19643,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 273;
+window.__APP_BUILD__ = 274;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
