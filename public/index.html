@@ -13690,9 +13690,9 @@ async function _loadLocalAds() {
   if (!_sb) return;
   try {
     var res = await _sb.from('local_ads')
-      .select('id,title,image_url,link_url,zone,is_active,start_at,end_at,sort_order,width_pct,aspect_pct')
+      .select('id,title,image_url,link_url,zone,is_active,start_at,end_at,sort_order,width_pct,aspect_pct,width_px,height_px')
       .eq('is_active', true)
-      .order('sort_order', { ascending:true });
+      .order('sort_order', { ascending:false });   // 높은 우선순위 먼저
     if (res.error || !res.data) return;
     var now = Date.now();
     var byZone = {};
@@ -13706,8 +13706,16 @@ async function _loadLocalAds() {
   } catch(e) { /* noop */ }
 }
 
-// zone 에 노출할 로컬 광고 1개 선택 (여러 개면 순회)
-function _pickLocalAd(zone) {
+// 광고 1개 선택 — contextOverride(세분화 context, 예: 'save') 우선, 폴백으로 zone(slotKey)
+function _pickLocalAd(zone, contextOverride) {
+  // 1) 세분화 context 우선 (어드민에서 카드별 등록한 광고)
+  if (contextOverride && _localAdsByZone[contextOverride] && _localAdsByZone[contextOverride].length) {
+    var l1 = _localAdsByZone[contextOverride];
+    var i1 = (_localAdRR[contextOverride] || 0) % l1.length;
+    _localAdRR[contextOverride] = i1 + 1;
+    return l1[i1];
+  }
+  // 2) 폴백: 기존 zone(slotKey) 기반 ('home', 'store', 'map', 'modal', 'reward' 등)
   var list = _localAdsByZone[zone];
   if (!list || !list.length) return null;
   var i = (_localAdRR[zone] || 0) % list.length;
@@ -13722,28 +13730,39 @@ function _localAdClick(id, url) {
 }
 
 function _renderLocalAd(c, ad) {
-  // 어드민에서 지정한 가로/세로 비율 (없으면 기본 100% × 40%)
-  var w = Math.max(20, Math.min(100, parseInt(ad.width_pct  || 100, 10) || 100));
-  var a = Math.max(10, Math.min(100, parseInt(ad.aspect_pct || 40,  10) || 40));
+  // px 우선, 없으면 % 사용
+  var sizeStyle = '';
+  if (ad.width_px || ad.height_px) {
+    var wpx = ad.width_px ? Math.max(50, parseInt(ad.width_px, 10)) : null;
+    var hpx = ad.height_px ? Math.max(20, parseInt(ad.height_px, 10)) : null;
+    if (wpx && hpx) sizeStyle = 'width:'+wpx+'px;height:'+hpx+'px;';
+    else if (wpx) sizeStyle = 'width:'+wpx+'px;height:auto;';
+    else if (hpx) sizeStyle = 'width:auto;height:'+hpx+'px;';
+  } else {
+    var w = Math.max(20, Math.min(100, parseInt(ad.width_pct  || 100, 10) || 100));
+    var a = Math.max(10, Math.min(200, parseInt(ad.aspect_pct || 40,  10) || 40));
+    sizeStyle = 'width:'+w+'%;aspect-ratio:100/'+a+';';
+  }
   // placeholder용 컨테이너 chrome 무효화 — 실제 광고는 내부 div가 정확한 사이즈로 표시
   c.style.background = 'transparent';
   c.style.border = 'none';
   c.style.minHeight = '0';
   c.style.padding = '0';
   c.innerHTML = '<div onclick="_localAdClick(\''+ad.id+'\',\''+(ad.link_url||'').replace(/'/g,"\\'")+'\')" '
-    + 'style="position:relative;width:'+w+'%;aspect-ratio:100/'+a+';margin:0 auto;cursor:pointer;line-height:0;overflow:hidden;border-radius:14px;border:0.5px solid var(--border);">'
+    + 'style="position:relative;'+sizeStyle+'margin:0 auto;cursor:pointer;line-height:0;overflow:hidden;border-radius:14px;border:0.5px solid var(--border);max-width:100%;">'
     + '<img src="'+ad.image_url+'" alt="'+_esc(ad.title||'')+'" style="width:100%;height:100%;display:block;object-fit:cover;">'
     + '<span style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,.45);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:6px;line-height:1.4;">'+t('rw.ad')+'</span>'
     + '</div>';
   if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: ad.id, p_kind: 'imp' }).then(function(){}, function(){}); } catch(e){} }
 }
 
-/* 광고 컨테이너에 광고 주입 — 로컬 광고 우선, 없으면 AdSense */
-function _injectAd(containerId, slotKey) {
+/* 광고 컨테이너에 광고 주입 — 로컬 광고 우선(세분화 context > zone), 없으면 AdSense
+   contextOverride: AD_POSITIONS.context 값 (예: 'save','chiri','attendance' 등) */
+function _injectAd(containerId, slotKey, contextOverride) {
   var c = document.getElementById(containerId);
   if (!c) return;
-  // 1) 로컬(자체) 광고 우선
-  var local = _pickLocalAd(slotKey);
+  // 1) 로컬(자체) 광고 우선 — 세분화 context 가 매칭되면 그것 사용
+  var local = _pickLocalAd(slotKey, contextOverride);
   if (local) { _renderLocalAd(c, local); return; }
   // 2) AdSense (승인 후)
   if (!AD_CONFIG.enabled) return;
@@ -14847,7 +14866,7 @@ function showAdModal(callback, context) {
 
   // AdSense 승인 후 실제 광고 주입 (플레이스홀더 대체)
   setTimeout(function() {
-    if (_injectAd('ad-slot-modal', 'modal')) {
+    if (_injectAd('ad-slot-modal', 'modal', _adContext)) {
       var ph = document.getElementById('ad-placeholder-modal');
       if (ph) ph.style.display = 'none';
     }
@@ -14904,7 +14923,8 @@ function ctOpenFullscreenAd(mode, callback) {
   // 광고 슬롯 초기화 후 주입
   var slot = document.getElementById('rv-ad-slot');
   if (slot) slot.innerHTML = '<div id="rv-ad-placeholder" style="text-align:center;color:rgba(255,255,255,.45);"><div style="font-size:52px;margin-bottom:14px;">▶️</div><div style="font-size:13px;">広告を読み込み中...</div></div>';
-  _injectAd('rv-ad-slot', mode === 'reward' ? 'reward' : 'modal');
+  // mode 자체를 contextOverride 로 전달 (save, chiri, menu_photo, reward, bonus, attendance, comment_quota, referral, private)
+  _injectAd('rv-ad-slot', mode === 'reward' ? 'reward' : 'modal', mode);
 
   // 완료 오버레이 숨기기
   var comp = document.getElementById('rv-complete-overlay');
@@ -17492,6 +17512,8 @@ async function _admPcSaveLocalAd() {
   showToast('✅ 저장 완료');
   _admPcResetLocalAdForm();
   await _admPcLoadLocalAdList(context);
+  // 클라이언트 광고 캐시 즉시 갱신 → 실제 광고 영역에 반영
+  if (typeof _loadLocalAds === 'function') _loadLocalAds();
 }
 
 async function _admPcDeleteLocalAd(id) {
@@ -17501,6 +17523,7 @@ async function _admPcDeleteLocalAd(id) {
   if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
   showToast('삭제됨');
   await _admPcLoadLocalAdList(window._admPcCurrentLocalAdContext);
+  if (typeof _loadLocalAds === 'function') _loadLocalAds();
 }
 
 function openAdminPc() {
@@ -20171,7 +20194,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 277;
+window.__APP_BUILD__ = 278;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
