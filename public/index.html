@@ -2674,6 +2674,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px;margin-right:32px;">RetWork Admin</div>
     <div style="display:flex;height:100%;flex:1;">
       <button onclick="_admPcSwitchTab('overview')" id="apc-tab-overview" class="apc-tab apc-tab-active">RetWork (전체)</button>
+      <button onclick="_admPcSwitchTab('comments')" id="apc-tab-comments" class="apc-tab">댓글관리</button>
       <button onclick="_admPcSwitchTab('i18n')" id="apc-tab-i18n" class="apc-tab">언어시트</button>
       <button onclick="_admPcSwitchTab('chiri')" id="apc-tab-chiri" class="apc-tab">치리관리</button>
       <button onclick="_admPcSwitchTab('ads')" id="apc-tab-ads" class="apc-tab">광고관리</button>
@@ -5881,6 +5882,20 @@ async function ctAddComment(id) {
   var input = document.getElementById('ct-comment-input-' + id);
   var text = input ? input.value.trim() : '';
   if (!text) return;
+
+  // 댓글 패널티 체크 (어드민이 부여한 N시간 댓글 작성 금지)
+  if (_sb) {
+    try {
+      var penRes = await _sb.rpc('get_active_comment_penalty');
+      if (penRes.data && penRes.data.blocked) {
+        var endsTxt = penRes.data.ends_at
+          ? ' (' + new Date(penRes.data.ends_at).toLocaleString() + ' 까지)'
+          : ' (영구)';
+        showToast('🚫 댓글 작성 제한 중' + endsTxt + (penRes.data.reason ? ' · ' + penRes.data.reason : ''));
+        return;
+      }
+    } catch(e) { console.warn('[penalty] check err', e); }
+  }
 
   // 1일 댓글 한도 체크 (어뷰져 대책)
   var quota = await _checkCommentQuota();
@@ -17113,14 +17128,6 @@ var _admPcMenus = {
       mount:'ov-admin-edit-reqs',
       load:function(){ if (typeof loadAdminEditReqs === 'function') loadAdminEditReqs('open'); },
       badgeId:'apc-badge-editreqs' },
-    { key:'reports',       icon:'💬', label:'댓글모더',
-      mount:'ov-admin-reports',
-      load:function(){
-        if (typeof _admReportTab !== 'undefined') window._admReportTab = 'pending';
-        if (typeof _updateReportTabUI === 'function') _updateReportTabUI();
-        if (typeof _loadAdminReportList === 'function') _loadAdminReportList();
-      },
-      badgeId:'apc-badge-reports' },
     { key:'announcements', icon:'📢', label:'공지사항',
       mount:'ov-admin-ann',
       load:function(){
@@ -17128,6 +17135,22 @@ var _admPcMenus = {
         var typeSel=document.getElementById('ann-type'); if(typeSel) typeSel.value='info';
         if (typeof _loadAdminAnnouncementList === 'function') _loadAdminAnnouncementList();
       } },
+  ],
+  comments: [
+    /* ★ Phase 4 — 댓글관리 톱바 */
+    { key:'comment-list', icon:'💬', label:'댓글 리스트',
+      customRender:function(){ if (typeof _admPcRenderCommentList === 'function') _admPcRenderCommentList(); } },
+    { key:'comment-reports', icon:'🚨', label:'신고된 댓글',
+      mount:'ov-admin-reports',
+      load:function(){
+        if (typeof _admReportTab !== 'undefined') window._admReportTab = 'pending';
+        if (typeof _updateReportTabUI === 'function') _updateReportTabUI();
+        if (typeof _loadAdminReportList === 'function') _loadAdminReportList();
+      },
+      badgeId:'apc-badge-reports' },
+    { key:'comment-bwords', icon:'🚫', label:'밴 워드 설정',
+      mount:'ov-admin-bwords',
+      load:function(){ if (typeof openAdminBannedWords === 'function') openAdminBannedWords(); else if (typeof openAdminBwords === 'function') openAdminBwords(); } },
   ],
   i18n: [
     /* ★ Phase 3.D — 페이지별 prefix 필터링 (단일 모달 ov-admin-i18n 재사용) */
@@ -17813,6 +17836,176 @@ async function _admPcLoadExrBadge() {
   } catch(e) {}
 }
 
+/* ════════════════════════════════════════════════════════════
+   Phase 4 — 댓글 리스트 + 패널티 부여 화면
+   - ct_comments (치리톡 게시글 댓글) + store_comments (가게 리뷰) 통합
+   - 카드: 내용/사용자 닉네임+추천코드/패널티 누적 + 액션 (삭제/패널티)
+   - 패널티 옵션: 1h / 6h / 12h / 24h / 72h / 168h / 영구(-1)
+   ════════════════════════════════════════════════════════════ */
+window._admPcCommentTab = 'all'; // all / ct / store
+
+function _admPcCommentSetTab(tab) {
+  window._admPcCommentTab = tab;
+  _admPcRenderCommentList();
+}
+
+async function _admPcRenderCommentList() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  // 안전: 콘텐츠 영역에 마운트된 시트 복귀 (다른 메뉴에서 시트가 남아있을 수 있음)
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+  var tab = window._admPcCommentTab || 'all';
+  var tabs = [
+    { key:'all',   label:'전체' },
+    { key:'ct',    label:'치리톡 게시글 댓글' },
+    { key:'store', label:'가게 리뷰' }
+  ];
+  var tabHtml = tabs.map(function(p){
+    var active = (p.key === tab);
+    return '<button onclick="_admPcCommentSetTab(\''+p.key+'\')" style="padding:7px 16px;border:1px solid '+(active?'#172C58':'#E3E6EB')+';border-radius:18px;background:'+(active?'#172C58':'#fff')+';color:'+(active?'#fff':'#374151')+';font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">'+p.label+'</button>';
+  }).join('');
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">댓글 리스트</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">치리톡 댓글 + 가게 리뷰 · 즉시 삭제 / 작성자 패널티 부여</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcRenderCommentList()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabHtml + '</div>'
+    + '<div id="apc-comment-list"></div>'
+    + '</div>';
+  _admPcLoadCommentList();
+}
+
+async function _admPcLoadCommentList() {
+  var list = document.getElementById('apc-comment-list');
+  if (!list || !_sb) return;
+  list.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div>';
+  var tab = window._admPcCommentTab || 'all';
+  var rows = [];
+  try {
+    if (tab === 'all' || tab === 'ct') {
+      var ctRes = await _sb.from('ct_comments').select('id,content,user_id,user_name,post_id,created_at').order('created_at', { ascending:false }).limit(100);
+      (ctRes.data || []).forEach(function(r){ r._source = 'ct'; rows.push(r); });
+    }
+    if (tab === 'all' || tab === 'store') {
+      var sRes = await _sb.from('store_comments').select('id,content,user_id,user_name,store_name,rating,created_at').order('created_at', { ascending:false }).limit(100);
+      (sRes.data || []).forEach(function(r){ r._source = 'store'; rows.push(r); });
+    }
+    rows.sort(function(a,b){ return (b.created_at||'').localeCompare(a.created_at||''); });
+    if (rows.length === 0) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;background:#F4F5F8;border-radius:12px;">댓글이 없어요.</div>';
+      return;
+    }
+    // 사용자 정보 한 번에 fetch (referral_code)
+    var uids = Array.from(new Set(rows.map(function(r){ return r.user_id; }).filter(Boolean)));
+    var profMap = {};
+    if (uids.length > 0) {
+      var pRes = await _sb.from('profiles').select('id,nickname,referral_code').in('id', uids);
+      (pRes.data || []).forEach(function(p){ profMap[p.id] = p; });
+    }
+    var html = '<div style="display:flex;flex-direction:column;gap:8px;">';
+    rows.forEach(function(r){
+      var p = profMap[r.user_id] || {};
+      var name = p.nickname || r.user_name || '匿名';
+      var refCode = p.referral_code ? ('<span style="font-family:monospace;background:#F4F5F8;color:#374151;font-size:10px;padding:2px 6px;border-radius:6px;">🎟️ '+_esc(p.referral_code)+'</span>') : '';
+      var sourceTag = r._source === 'ct'
+        ? '<span style="font-size:9px;padding:2px 7px;border-radius:6px;background:#DBEAFE;color:#1E40AF;font-weight:700;">치리톡</span>'
+        : '<span style="font-size:9px;padding:2px 7px;border-radius:6px;background:#FEF3C7;color:#92400E;font-weight:700;">가게 리뷰</span>';
+      var ctx = r._source === 'ct'
+        ? ('게시글 ID: ' + (r.post_id || '').toString().substring(0,8) + '…')
+        : ('가게: ' + _esc(r.store_name || '') + (r.rating ? ' · ⭐'+r.rating : ''));
+      var contentSnap = _esc(r.content || '').replace(/'/g,"\\'");
+      html += '<div id="apc-cmt-card-'+r._source+'-'+r.id+'" style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
+            + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px;">'
+            +   '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+            +     '<span style="font-size:13px;font-weight:800;color:#172C58;">' + _esc(name) + '</span>'
+            +     refCode + sourceTag
+            +     '<span id="apc-pen-badge-'+r.user_id+'" style="font-size:9px;padding:2px 7px;border-radius:6px;background:#F4F5F8;color:#6B7280;font-weight:700;">패널티 조회중...</span>'
+            +   '</div>'
+            +   '<span style="font-size:10px;color:#6B7280;white-space:nowrap;">' + (r.created_at||'').slice(0,16).replace('T',' ') + '</span>'
+            + '</div>'
+            + '<div style="font-size:13px;color:#374151;line-height:1.5;padding:8px 12px;background:#F4F5F8;border-radius:8px;margin-bottom:8px;">' + _esc(r.content || '(내용 없음)') + '</div>'
+            + '<div style="font-size:10px;color:#6B7280;margin-bottom:8px;">' + ctx + '</div>'
+            + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">'
+            +   '<span style="font-size:10px;color:#6B7280;font-weight:700;">패널티 부여:</span>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',1,\''+contentSnap.substring(0,80)+'\')" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">1시간</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',6,\''+contentSnap.substring(0,80)+'\')" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">6시간</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',12,\''+contentSnap.substring(0,80)+'\')" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">12시간</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',24,\''+contentSnap.substring(0,80)+'\')" style="background:#FED7AA;color:#9A3412;border:1px solid #FDBA74;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">1일</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',72,\''+contentSnap.substring(0,80)+'\')" style="background:#FED7AA;color:#9A3412;border:1px solid #FDBA74;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">3일</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',168,\''+contentSnap.substring(0,80)+'\')" style="background:#FECACA;color:#991B1B;border:1px solid #FCA5A5;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">7일</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+r.user_id+'\',-1,\''+contentSnap.substring(0,80)+'\')" style="background:#7F1D1D;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">⛔ 영구</button>'
+            +   '<span style="flex:1;"></span>'
+            +   '<button onclick="_admPcDeleteComment(\''+r._source+'\',\''+r.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">🗑️ 댓글 삭제</button>'
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+    // 패널티 누적 카운트 비동기 로드
+    uids.forEach(function(uid){ _admPcLoadPenaltyBadge(uid); });
+  } catch(e) {
+    console.warn('[cmt-list] load failed', e);
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message||'') + '</div>';
+  }
+}
+
+async function _admPcLoadPenaltyBadge(uid) {
+  if (!_sb || !uid) return;
+  try {
+    var res = await _sb.rpc('get_user_penalty_count', { p_user_id: uid });
+    if (!res.data || !res.data.ok) return;
+    var badges = document.querySelectorAll('#apc-pen-badge-' + uid);
+    badges.forEach(function(b){
+      var tot = res.data.total || 0;
+      var act = res.data.active || 0;
+      if (tot > 0) {
+        b.textContent = '패널티 ' + tot + '회' + (act > 0 ? ' (현재 활성)' : '');
+        if (act > 0) { b.style.background = '#FECACA'; b.style.color = '#991B1B'; }
+        else { b.style.background = '#FEF3C7'; b.style.color = '#92400E'; }
+      } else {
+        b.textContent = '패널티 0회';
+      }
+    });
+  } catch(e) {}
+}
+
+async function _admPcGrantPenalty(uid, hours, related) {
+  if (!_sb || !uid) return;
+  var label = hours === -1 ? '영구' : (hours + '시간');
+  var reason = prompt('패널티 사유 (선택):', '부적절 댓글');
+  if (reason === null) return; // 취소
+  var confirmTxt = '이 사용자에게 [' + label + '] 댓글 작성 금지 부여?';
+  if (!confirm(confirmTxt)) return;
+  try {
+    var res = await _sb.rpc('admin_grant_comment_penalty', {
+      p_user_id: uid, p_hours: hours, p_reason: reason || null, p_related: related || null
+    });
+    if (res.data && res.data.ok) {
+      showToast('✅ 패널티 부여됨 (' + label + ')');
+      _admPcLoadPenaltyBadge(uid);
+    } else {
+      showToast('실패: ' + (res.data && res.data.err || res.error && res.error.message || 'unknown'));
+    }
+  } catch(e) { showToast('실패: ' + e.message); }
+}
+
+async function _admPcDeleteComment(source, id) {
+  if (!_sb || !id) return;
+  if (!confirm('이 댓글을 삭제할까요? (복구 불가)')) return;
+  var table = (source === 'store') ? 'store_comments' : 'ct_comments';
+  var res = await _sb.from(table).delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('🗑️ 삭제됨');
+  // 카드만 제거 (전체 reload 보다 빠름)
+  var card = document.getElementById('apc-cmt-card-' + source + '-' + id);
+  if (card) card.remove();
+}
+
 /* ──── i18n 페이지별 로딩 — prefix select 자동 채움 + 데이터 로드 ──── */
 function _admI18nLoadWithPrefix(prefix) {
   if (typeof openAdminI18n !== 'function') return;
@@ -18132,7 +18325,7 @@ function _admPcSwitchTab(tab) {
   _admPcUnmountAll();              // 탭 전환 시에도 복귀
   _admPcCloseAllAdminModals();     // 폴백 메뉴로 띄운 모달도 닫기
   _admPcCurrentTab = tab;
-  ['overview','i18n','chiri','ads'].forEach(function(k){
+  ['overview','comments','i18n','chiri','ads'].forEach(function(k){
     var btn = document.getElementById('apc-tab-' + k);
     if (!btn) return;
     if (k === tab) btn.classList.add('apc-tab-active');
@@ -18150,6 +18343,7 @@ function _admPcRenderSidebar(tab) {
   // 섹션 헤더: 이모지 제거 (사이드바 클린)
   var labels = {
     overview: 'RetWork 전체',
+    comments: '댓글관리',
     i18n:     '언어시트',
     chiri:    '치리관리',
     ads:      '광고관리'
@@ -20901,7 +21095,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 289;
+window.__APP_BUILD__ = 290;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
