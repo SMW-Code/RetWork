@@ -1979,9 +1979,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 </div>
 
 <!-- ══ 가게 수정요청 입력 모달 ══ -->
-<div class="overlay" id="ov-store-edit-req" style="position:fixed;inset:0;z-index:99999;align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)closeOv('ov-store-edit-req')">
-  <div class="sheet" onclick="event.stopPropagation()" style="max-width:460px;width:100%;max-height:90vh;overflow-y:auto;">
-    <div class="sheet-handle"></div>
+<div class="overlay bottom-sheet-overlay" id="ov-store-edit-req" style="position:fixed;inset:0;z-index:99999;" onclick="if(event.target===this)closeOv('ov-store-edit-req')">
+  <div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:520px;max-height:90vh;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.25);overflow-y:auto;">
+    <div class="sheet-handle" style="margin:10px auto 6px;"></div>
     <div style="padding:8px 20px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
         <div style="font-size:16px;font-weight:900;color:var(--text-1);">✏️ 修正リクエスト</div>
@@ -19300,7 +19300,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 265;
+window.__APP_BUILD__ = 266;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
