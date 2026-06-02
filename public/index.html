@@ -2570,29 +2570,63 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <input id="apc-la-sort" type="number" value="0" min="0" max="999" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
           </div>
         </div>
+        <!-- 이미지 — 파일 업로드 OR URL -->
         <div style="margin-bottom:8px;">
-          <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">이미지 URL</div>
-          <input id="apc-la-img" type="url" placeholder="https://...image.jpg" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">이미지</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+            <label style="flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;background:#fff;border:1px dashed #172C58;border-radius:8px;padding:9px;font-size:11px;font-weight:700;color:#172C58;cursor:pointer;font-family:var(--font);">
+              <input id="apc-la-file" type="file" accept="image/*" onchange="_admPcUploadLocalAdImage(this)" style="display:none;">
+              📁 파일에서 선택
+            </label>
+            <button onclick="_admPcRemoveLocalAdImage()" id="apc-la-remove-btn" style="display:none;background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:8px;padding:9px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">🗑️ 제거</button>
+          </div>
+          <input id="apc-la-img" type="url" placeholder="또는 이미지 URL 직접 입력 (https://...)" oninput="_admPcRefreshLocalAdPreview()" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          <!-- 미리보기 -->
+          <div id="apc-la-preview-wrap" style="display:none;margin-top:6px;background:#fff;border:1px solid #E3E6EB;border-radius:8px;padding:8px;text-align:center;">
+            <img id="apc-la-preview" style="max-width:100%;max-height:140px;border-radius:6px;" onerror="this.style.display='none'">
+            <div id="apc-la-upload-status" style="font-size:10px;color:#6B7280;margin-top:4px;display:none;"></div>
+          </div>
         </div>
-        <div style="margin-bottom:8px;">
+        <div style="margin-bottom:10px;">
           <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">클릭 시 이동 URL</div>
           <input id="apc-la-link" type="url" placeholder="https://... (선택)" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
-          <div>
-            <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">폭 %</div>
-            <input id="apc-la-width" type="number" value="100" min="30" max="100" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+        <!-- 크기 — % / px 토글 -->
+        <div style="margin-bottom:10px;background:#fff;border:1px solid #E3E6EB;border-radius:8px;padding:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="font-size:11px;font-weight:800;color:#172C58;">광고 크기</div>
+            <div style="display:flex;background:#F4F5F8;border-radius:6px;padding:2px;">
+              <button id="apc-la-unit-pct" onclick="_admPcSetSizeUnit('pct')" style="background:#172C58;color:#fff;border:none;border-radius:4px;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">%</button>
+              <button id="apc-la-unit-px"  onclick="_admPcSetSizeUnit('px')"  style="background:transparent;color:#6B7280;border:none;border-radius:4px;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">px</button>
+            </div>
           </div>
-          <div>
-            <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">세로/가로 %</div>
-            <input id="apc-la-aspect" type="number" value="40" min="10" max="100" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          <!-- % 모드 -->
+          <div id="apc-la-size-pct" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">가로 (폭) — 화면 폭 대비</div>
+              <div style="display:flex;align-items:center;gap:6px;"><input id="apc-la-width-pct" type="number" value="100" min="10" max="100" style="flex:1;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);"><span style="font-size:11px;color:#6B7280;font-weight:700;">%</span></div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">세로 (높이) — 가로 대비</div>
+              <div style="display:flex;align-items:center;gap:6px;"><input id="apc-la-aspect-pct" type="number" value="40" min="5" max="200" style="flex:1;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);"><span style="font-size:11px;color:#6B7280;font-weight:700;">%</span></div>
+            </div>
           </div>
-          <div style="display:flex;flex-direction:column;justify-content:flex-end;">
-            <label style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff;border:1px solid #E3E6EB;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#374151;">
-              <input id="apc-la-active" type="checkbox" checked> 활성
-            </label>
+          <!-- px 모드 -->
+          <div id="apc-la-size-px" style="display:none;grid-template-columns:1fr 1fr;gap:8px;">
+            <div>
+              <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">가로 (폭)</div>
+              <div style="display:flex;align-items:center;gap:6px;"><input id="apc-la-width-px" type="number" placeholder="320" min="50" max="2000" style="flex:1;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);"><span style="font-size:11px;color:#6B7280;font-weight:700;">px</span></div>
+            </div>
+            <div>
+              <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">세로 (높이)</div>
+              <div style="display:flex;align-items:center;gap:6px;"><input id="apc-la-height-px" type="number" placeholder="180" min="20" max="2000" style="flex:1;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);"><span style="font-size:11px;color:#6B7280;font-weight:700;">px</span></div>
+            </div>
           </div>
         </div>
+        <!-- 활성 -->
+        <label style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:#fff;border:1px solid #E3E6EB;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#374151;margin-bottom:10px;">
+          <input id="apc-la-active" type="checkbox" checked> 활성 (체크 해제 시 노출 안 됨)
+        </label>
         <div style="display:flex;gap:6px;">
           <button onclick="_admPcSaveLocalAd()" id="apc-la-save-btn" style="flex:1;background:#172C58;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
           <button onclick="_admPcResetLocalAdForm()" style="background:#fff;color:#374151;border:1px solid #E3E6EB;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">초기화</button>
@@ -17257,14 +17291,92 @@ function _admPcCloseLocalAdMgr() {
 
 function _admPcResetLocalAdForm() {
   window._admPcEditingLocalAdId = null;
-  ['apc-la-id','apc-la-title','apc-la-img','apc-la-link'].forEach(function(id){
+  window._admPcLocalAdSizeUnit = 'pct'; // 기본 %
+  ['apc-la-id','apc-la-title','apc-la-img','apc-la-link','apc-la-file','apc-la-width-px','apc-la-height-px'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
   document.getElementById('apc-la-sort').value = '0';
-  document.getElementById('apc-la-width').value = '100';
-  document.getElementById('apc-la-aspect').value = '40';
+  document.getElementById('apc-la-width-pct').value  = '100';
+  document.getElementById('apc-la-aspect-pct').value = '40';
   document.getElementById('apc-la-active').checked = true;
   document.getElementById('apc-la-save-btn').textContent = '💾 저장';
+  // 미리보기 숨김
+  var pw = document.getElementById('apc-la-preview-wrap'); if (pw) pw.style.display = 'none';
+  var pi = document.getElementById('apc-la-preview'); if (pi) { pi.src = ''; pi.style.display = ''; }
+  var rb = document.getElementById('apc-la-remove-btn'); if (rb) rb.style.display = 'none';
+  // 단위 토글 초기화
+  _admPcSetSizeUnit('pct');
+}
+
+/* ──── 크기 단위 토글 (% / px) ──── */
+function _admPcSetSizeUnit(unit) {
+  window._admPcLocalAdSizeUnit = unit;
+  var pct = document.getElementById('apc-la-size-pct');
+  var px  = document.getElementById('apc-la-size-px');
+  var btnPct = document.getElementById('apc-la-unit-pct');
+  var btnPx  = document.getElementById('apc-la-unit-px');
+  if (unit === 'px') {
+    if (pct) pct.style.display = 'none';
+    if (px)  px.style.display  = 'grid';
+    if (btnPct) { btnPct.style.background = 'transparent'; btnPct.style.color = '#6B7280'; }
+    if (btnPx)  { btnPx.style.background  = '#172C58';     btnPx.style.color  = '#fff'; }
+  } else {
+    if (pct) pct.style.display = 'grid';
+    if (px)  px.style.display  = 'none';
+    if (btnPct) { btnPct.style.background = '#172C58';     btnPct.style.color = '#fff'; }
+    if (btnPx)  { btnPx.style.background  = 'transparent'; btnPx.style.color  = '#6B7280'; }
+  }
+}
+
+/* ──── 이미지 파일 업로드 (Supabase Storage 'store-photos' / 'local-ads/' 접두사) ──── */
+async function _admPcUploadLocalAdImage(input) {
+  if (!input.files || input.files.length === 0) return;
+  if (!_sb) { showToast('Supabase 연결 안 됨'); return; }
+  var file = input.files[0];
+  if (file.size > 5 * 1024 * 1024) { showToast('이미지 크기는 5MB 이하로 올려주세요'); return; }
+  var statusEl = document.getElementById('apc-la-upload-status');
+  var wrap = document.getElementById('apc-la-preview-wrap');
+  if (wrap) wrap.style.display = 'block';
+  if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = '⏳ 업로드 중...'; statusEl.style.color = '#6B7280'; }
+  // 파일명 안전화 + 경로 (local-ads/<timestamp>_<random>_<ext>)
+  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+  var path = 'local-ads/' + Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  try {
+    var up = await _sb.storage.from('store-photos').upload(path, file, { upsert: false, contentType: file.type || 'image/jpeg' });
+    if (up.error) throw up.error;
+    var pub = _sb.storage.from('store-photos').getPublicUrl(path);
+    var url = pub && pub.data && pub.data.publicUrl;
+    if (!url) throw new Error('public URL 받을 수 없음');
+    document.getElementById('apc-la-img').value = url;
+    _admPcRefreshLocalAdPreview();
+    if (statusEl) { statusEl.textContent = '✅ 업로드 완료'; statusEl.style.color = '#059669'; }
+    setTimeout(function(){ if (statusEl) statusEl.style.display = 'none'; }, 1500);
+  } catch(e) {
+    console.warn('[localad] upload failed', e);
+    showToast('업로드 실패: ' + (e.message || e));
+    if (statusEl) { statusEl.textContent = '❌ 실패: ' + (e.message || ''); statusEl.style.color = '#991B1B'; }
+  }
+  input.value = ''; // 같은 파일 다시 선택 가능하게
+}
+
+function _admPcRefreshLocalAdPreview() {
+  var url = (document.getElementById('apc-la-img').value || '').trim();
+  var wrap = document.getElementById('apc-la-preview-wrap');
+  var img  = document.getElementById('apc-la-preview');
+  var rb   = document.getElementById('apc-la-remove-btn');
+  if (!url) {
+    if (wrap) wrap.style.display = 'none';
+    if (rb)   rb.style.display = 'none';
+    return;
+  }
+  if (wrap) wrap.style.display = 'block';
+  if (img)  { img.src = url; img.style.display = ''; }
+  if (rb)   rb.style.display = 'inline-flex';
+}
+
+function _admPcRemoveLocalAdImage() {
+  document.getElementById('apc-la-img').value = '';
+  _admPcRefreshLocalAdPreview();
 }
 
 async function _admPcLoadLocalAdList(context) {
@@ -17291,7 +17403,11 @@ async function _admPcLoadLocalAdList(context) {
             +     '<div style="font-size:12px;font-weight:800;color:#172C58;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.title || '(제목 없음)') + '</div>'
             +     '<span style="font-size:9px;padding:2px 7px;border-radius:8px;background:'+(r.is_active?'#D1FAE5':'#FEE2E2')+';color:'+(r.is_active?'#065F46':'#991B1B')+';font-weight:700;">'+(r.is_active?'활성':'비활성')+'</span>'
             +   '</div>'
-            +   '<div style="font-size:10px;color:#6B7280;margin-bottom:4px;">우선 ' + (r.sort_order||0) + ' · 폭 ' + (r.width_pct||100) + '% · 비율 ' + (r.aspect_pct||40) + '%</div>'
+            +   '<div style="font-size:10px;color:#6B7280;margin-bottom:4px;">우선 ' + (r.sort_order||0) + ' · '
+            +     (r.width_px || r.height_px
+                    ? ('크기 ' + (r.width_px || '?') + '×' + (r.height_px || '?') + ' px')
+                    : ('가로 ' + (r.width_pct||100) + '% · 세로 ' + (r.aspect_pct||40) + '%'))
+            +   '</div>'
             +   '<div style="font-size:10px;color:#6B7280;display:flex;gap:10px;">'
             +     '<span>📊 노출 <strong>' + (r.impressions||0) + '</strong></span>'
             +     '<span>👆 클릭 <strong>' + (r.clicks||0) + '</strong></span>'
@@ -17318,9 +17434,16 @@ async function _admPcEditLocalAd(id) {
   document.getElementById('apc-la-img').value = r.image_url || '';
   document.getElementById('apc-la-link').value = r.link_url || '';
   document.getElementById('apc-la-sort').value = r.sort_order || 0;
-  document.getElementById('apc-la-width').value = r.width_pct || 100;
-  document.getElementById('apc-la-aspect').value = r.aspect_pct || 40;
   document.getElementById('apc-la-active').checked = !!r.is_active;
+  // 크기: px 우선, 없으면 % 모드
+  document.getElementById('apc-la-width-pct').value  = (r.width_pct != null) ? r.width_pct : 100;
+  document.getElementById('apc-la-aspect-pct').value = (r.aspect_pct != null) ? r.aspect_pct : 40;
+  document.getElementById('apc-la-width-px').value   = (r.width_px != null) ? r.width_px : '';
+  document.getElementById('apc-la-height-px').value  = (r.height_px != null) ? r.height_px : '';
+  // px 값이 있으면 px 모드, 없으면 % 모드
+  _admPcSetSizeUnit((r.width_px || r.height_px) ? 'px' : 'pct');
+  // 미리보기 갱신
+  _admPcRefreshLocalAdPreview();
   document.getElementById('apc-la-save-btn').textContent = '💾 수정 저장';
   // 폼 영역으로 스크롤
   var form = document.getElementById('apc-local-ad-form');
@@ -17333,16 +17456,29 @@ async function _admPcSaveLocalAd() {
   var title = (document.getElementById('apc-la-title').value || '').trim();
   if (!context) { showToast('위치 context 가 없어요'); return; }
   if (!title) { showToast('제목을 입력해주세요'); return; }
+  // 크기: 선택된 단위에 따라 분기 저장
+  var unit = window._admPcLocalAdSizeUnit || 'pct';
   var payload = {
     zone: context,
     title: title,
     image_url: (document.getElementById('apc-la-img').value || '').trim() || null,
     link_url:  (document.getElementById('apc-la-link').value || '').trim() || null,
     sort_order: parseInt(document.getElementById('apc-la-sort').value || '0', 10) || 0,
-    width_pct:  parseInt(document.getElementById('apc-la-width').value || '100', 10) || 100,
-    aspect_pct: parseInt(document.getElementById('apc-la-aspect').value || '40', 10) || 40,
     is_active:  document.getElementById('apc-la-active').checked
   };
+  if (unit === 'px') {
+    var wpx = parseInt(document.getElementById('apc-la-width-px').value || '', 10);
+    var hpx = parseInt(document.getElementById('apc-la-height-px').value || '', 10);
+    payload.width_px  = (wpx > 0) ? wpx : null;
+    payload.height_px = (hpx > 0) ? hpx : null;
+    payload.width_pct  = null;
+    payload.aspect_pct = null;
+  } else {
+    payload.width_pct  = parseInt(document.getElementById('apc-la-width-pct').value  || '100', 10) || 100;
+    payload.aspect_pct = parseInt(document.getElementById('apc-la-aspect-pct').value || '40',  10) || 40;
+    payload.width_px  = null;
+    payload.height_px = null;
+  }
   var btn = document.getElementById('apc-la-save-btn');
   btn.disabled = true; var prev = btn.textContent; btn.textContent = '저장 중...';
   var res;
@@ -20035,7 +20171,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 276;
+window.__APP_BUILD__ = 277;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
