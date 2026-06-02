@@ -17126,7 +17126,7 @@ var _admPcMenus = {
       mount:'ov-admin-pricing',
       load:function(){ if (typeof openAdminPricing === 'function') openAdminPricing(); } },
     { key:'coins', icon:'✨', label:'치리 발급',
-      fn:function(){ showToast('치리 발급 통계는 메인 대시보드에서 확인 (별도 페이지 Phase 3 예정)'); } },
+      customRender:function(){ if (typeof _admPcRenderChiriIssued === 'function') _admPcRenderChiriIssued(); } },
     { key:'items', icon:'🛍️', label:'치리스토어 상품',
       mount:'ov-admin-items',
       load:function(){ if (typeof openAdminStoreItems === 'function') openAdminStoreItems(); } },
@@ -17336,6 +17336,221 @@ async function _admPcLoadAdPagesStats() {
     html += '</div></div>';
   });
   list.innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════════════
+   Phase 3.B — 치리 발급 통계 화면
+   - coin_transactions 테이블 기반
+   - 기간 필터 (오늘/7일/30일/365일/전체)
+   - 타입별 그룹 + 사용자별 Top 10
+   ════════════════════════════════════════════════════════════ */
+var CHIRI_TYPE_LABELS = {
+  attendance:'📅 출석',
+  ad:'📺 광고 시청',
+  bonus:'🎁 추가 광고 보상',
+  reward:'⭐ 자발 광고',
+  scan:'📸 영수증 스캔',
+  publish:'✨ 치리 공개',
+  post:'📝 게시글 작성',
+  pin:'📍 가격 핀',
+  photo:'📷 사진 업로드',
+  referral:'👥 추천 보상',
+  draw:'🎰 뽑기/이벤트',
+  shop:'🛒 상점 교환',
+  boost:'⚡ 부스트',
+  admin_set:'🛡️ 운영자 조정'
+};
+window._admPcChiriPeriod = 'all';
+
+function _admPcChiriSetPeriod(p) {
+  window._admPcChiriPeriod = p;
+  _admPcRenderChiriIssued();
+}
+
+function _admPcRenderChiriIssued() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  var periods = [
+    { key:'today', label:'오늘' },
+    { key:'7d',    label:'7일' },
+    { key:'30d',   label:'30일' },
+    { key:'365d',  label:'1년' },
+    { key:'all',   label:'전체' }
+  ];
+  var cur = window._admPcChiriPeriod || 'all';
+  var tabHtml = periods.map(function(p){
+    var active = (p.key === cur);
+    return '<button onclick="_admPcChiriSetPeriod(\''+p.key+'\')" '
+      + 'style="padding:7px 16px;border:1px solid '+(active?'#172C58':'#E3E6EB')+';border-radius:18px;'
+      + 'background:'+(active?'#172C58':'#fff')+';color:'+(active?'#fff':'#374151')+';'
+      + 'font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">' + p.label + '</button>';
+  }).join('');
+
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">치리 발급 통계</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">coin_transactions 기반 · 발급(+) / 사용(-) / 누적</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcRenderChiriIssued()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap;">' + tabHtml + '</div>'
+    + '<div id="apc-chiri-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;">'
+    +   '<div style="background:#F0FDF4;border:1px solid #BBF7D0;border-radius:12px;padding:14px;">'
+    +     '<div style="font-size:11px;color:#059669;font-weight:700;margin-bottom:4px;">발급 총량 (+)</div>'
+    +     '<div id="apc-chiri-issued" style="font-size:20px;font-weight:900;color:#065F46;">—</div>'
+    +     '<div id="apc-chiri-issued-yen" style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">—</div>'
+    +   '</div>'
+    +   '<div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:14px;">'
+    +     '<div style="font-size:11px;color:#DC2626;font-weight:700;margin-bottom:4px;">사용 총량 (-)</div>'
+    +     '<div id="apc-chiri-spent" style="font-size:20px;font-weight:900;color:#991B1B;">—</div>'
+    +     '<div id="apc-chiri-spent-yen" style="font-size:10px;color:#DC2626;font-weight:700;margin-top:2px;">—</div>'
+    +   '</div>'
+    +   '<div style="background:#F4F5F8;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
+    +     '<div style="font-size:11px;color:#172C58;font-weight:700;margin-bottom:4px;">순 발급 (잔여)</div>'
+    +     '<div id="apc-chiri-net" style="font-size:20px;font-weight:900;color:#172C58;">—</div>'
+    +     '<div id="apc-chiri-net-yen" style="font-size:10px;color:#172C58;font-weight:700;margin-top:2px;">—</div>'
+    +   '</div>'
+    +   '<div style="background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:14px;">'
+    +     '<div style="font-size:11px;color:#2563EB;font-weight:700;margin-bottom:4px;">트랜잭션 수</div>'
+    +     '<div id="apc-chiri-count" style="font-size:20px;font-weight:900;color:#1E40AF;">—</div>'
+    +     '<div id="apc-chiri-users" style="font-size:10px;color:#2563EB;font-weight:700;margin-top:2px;">—</div>'
+    +   '</div>'
+    + '</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:10px;">📊 타입별 발급</div>'
+    +     '<div id="apc-chiri-by-type" style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;overflow:hidden;"></div>'
+    +   '</div>'
+    +   '<div>'
+    +     '<div style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:10px;">👤 사용자별 발급 Top 10</div>'
+    +     '<div id="apc-chiri-by-user" style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;overflow:hidden;"></div>'
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+  _admPcLoadChiriStats();
+}
+
+async function _admPcLoadChiriStats() {
+  var byType = document.getElementById('apc-chiri-by-type');
+  var byUser = document.getElementById('apc-chiri-by-user');
+  if (byType) byType.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div>';
+  if (byUser) byUser.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div>';
+  if (!_sb) return;
+
+  var period = window._admPcChiriPeriod || 'all';
+  var since = null;
+  if (period !== 'all') {
+    var d = new Date();
+    if (period === 'today') d.setHours(0,0,0,0);
+    else if (period === '7d')   d.setDate(d.getDate() - 7);
+    else if (period === '30d')  d.setDate(d.getDate() - 30);
+    else if (period === '365d') d.setDate(d.getDate() - 365);
+    since = d.toISOString();
+  }
+
+  try {
+    var q = _sb.from('coin_transactions').select('user_id,amount,type,created_at');
+    if (since) q = q.gte('created_at', since);
+    var res = await q;
+    var rows = res.data || [];
+
+    // 집계
+    var issued = 0, spent = 0, userSet = {}, byTypeMap = {}, byUserMap = {};
+    rows.forEach(function(r){
+      var amt = r.amount || 0;
+      if (amt > 0) issued += amt; else spent += amt;
+      if (r.user_id) userSet[r.user_id] = true;
+      var t = r.type || 'unknown';
+      if (!byTypeMap[t]) byTypeMap[t] = { issued:0, spent:0, count:0 };
+      byTypeMap[t].count++;
+      if (amt > 0) byTypeMap[t].issued += amt; else byTypeMap[t].spent += amt;
+      if (r.user_id) {
+        if (!byUserMap[r.user_id]) byUserMap[r.user_id] = { issued:0, spent:0, count:0 };
+        byUserMap[r.user_id].count++;
+        if (amt > 0) byUserMap[r.user_id].issued += amt; else byUserMap[r.user_id].spent += amt;
+      }
+    });
+
+    var net = issued + spent; // spent 가 음수
+    var yen = function(c){ return '¥' + (c * 0.08).toLocaleString('en-US', {maximumFractionDigits:0}); };
+    var setTxt = function(id, v){ var el=document.getElementById(id); if(el) el.textContent = v; };
+    setTxt('apc-chiri-issued',     '+' + issued.toLocaleString() + ' 치리');
+    setTxt('apc-chiri-issued-yen', yen(issued) + ' 환산');
+    setTxt('apc-chiri-spent',      spent.toLocaleString() + ' 치리');
+    setTxt('apc-chiri-spent-yen',  yen(Math.abs(spent)) + ' 환산');
+    setTxt('apc-chiri-net',        net.toLocaleString() + ' 치리');
+    setTxt('apc-chiri-net-yen',    yen(net) + ' 환산');
+    setTxt('apc-chiri-count',      rows.length.toLocaleString() + ' 건');
+    setTxt('apc-chiri-users',      Object.keys(userSet).length.toLocaleString() + ' 명 활동');
+
+    // 타입별 — 발급량 기준 정렬
+    var typeArr = Object.keys(byTypeMap).map(function(k){ return Object.assign({ type:k }, byTypeMap[k]); });
+    typeArr.sort(function(a,b){ return b.issued - a.issued; });
+    if (byType) {
+      if (typeArr.length === 0) {
+        byType.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:12px;">데이터 없음</div>';
+      } else {
+        var html = '';
+        typeArr.forEach(function(t, idx){
+          var label = CHIRI_TYPE_LABELS[t.type] || ('❓ ' + t.type);
+          var border = (idx === typeArr.length - 1) ? '' : 'border-bottom:1px solid #F4F5F8;';
+          html += '<div style="padding:12px 14px;display:flex;align-items:center;gap:10px;'+border+'">'
+                + '<div style="flex:1;min-width:0;">'
+                +   '<div style="font-size:12px;font-weight:700;color:#172C58;">' + label + '</div>'
+                +   '<div style="font-size:10px;color:#6B7280;margin-top:2px;font-family:monospace;">' + t.type + ' · ' + t.count + '건</div>'
+                + '</div>'
+                + '<div style="text-align:right;">'
+                +   (t.issued > 0 ? '<div style="font-size:13px;font-weight:900;color:#065F46;">+' + t.issued.toLocaleString() + '</div>' : '')
+                +   (t.spent  < 0 ? '<div style="font-size:13px;font-weight:900;color:#991B1B;">' + t.spent.toLocaleString() + '</div>' : '')
+                +   '<div style="font-size:9px;color:#6B7280;margin-top:2px;">' + yen(t.issued + Math.abs(t.spent)) + '</div>'
+                + '</div>'
+              + '</div>';
+        });
+        byType.innerHTML = html;
+      }
+    }
+
+    // 사용자별 Top 10
+    var userArr = Object.keys(byUserMap).map(function(uid){ return Object.assign({ uid:uid }, byUserMap[uid]); });
+    userArr.sort(function(a,b){ return b.issued - a.issued; });
+    var top10 = userArr.slice(0, 10);
+    if (byUser) {
+      if (top10.length === 0) {
+        byUser.innerHTML = '<div style="padding:24px;text-align:center;color:#6B7280;font-size:12px;">데이터 없음</div>';
+      } else {
+        // 닉네임/이메일 가져오기
+        var uids = top10.map(function(u){ return u.uid; });
+        var profRes = await _sb.from('profiles').select('id,nickname,email').in('id', uids);
+        var profMap = {};
+        (profRes.data || []).forEach(function(p){ profMap[p.id] = p; });
+        var html = '';
+        top10.forEach(function(u, idx){
+          var p = profMap[u.uid] || {};
+          var name = p.nickname || (p.email ? p.email.split('@')[0] : null) || u.uid.slice(0,8);
+          var border = (idx === top10.length - 1) ? '' : 'border-bottom:1px solid #F4F5F8;';
+          var rank = idx + 1;
+          var rankColor = rank <= 3 ? '#172C58' : '#9CA3AF';
+          html += '<div style="padding:12px 14px;display:flex;align-items:center;gap:10px;'+border+'">'
+                + '<div style="width:24px;height:24px;border-radius:50%;background:'+rankColor+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;flex-shrink:0;">' + rank + '</div>'
+                + '<div style="flex:1;min-width:0;">'
+                +   '<div style="font-size:12px;font-weight:700;color:#172C58;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + name + '</div>'
+                +   '<div style="font-size:10px;color:#6B7280;margin-top:2px;">' + u.count + '건 · 순 ' + (u.issued + u.spent).toLocaleString() + '</div>'
+                + '</div>'
+                + '<div style="text-align:right;">'
+                +   '<div style="font-size:13px;font-weight:900;color:#065F46;">+' + u.issued.toLocaleString() + '</div>'
+                +   '<div style="font-size:9px;color:#6B7280;margin-top:2px;">' + yen(u.issued) + '</div>'
+                + '</div>'
+              + '</div>';
+        });
+        byUser.innerHTML = html;
+      }
+    }
+  } catch(e) {
+    console.warn('[chiri-stats] load failed', e);
+    if (byType) byType.innerHTML = '<div style="padding:24px;text-align:center;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message||'') + '</div>';
+  }
 }
 
 /* ──── i18n 페이지별 로딩 — prefix select 자동 채움 + 데이터 로드 ──── */
@@ -20301,7 +20516,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 281;
+window.__APP_BUILD__ = 282;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
