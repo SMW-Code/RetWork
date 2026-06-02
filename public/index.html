@@ -2548,9 +2548,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div id="ov-admin-pc" style="display:none;position:fixed;inset:0;z-index:9500;background:#0E1218;flex-direction:column;font-family:var(--font);">
   <!-- 톱바 (인디고 #172C58) -->
   <div style="height:56px;background:#172C58;flex:none;display:flex;align-items:center;padding:0 20px;box-shadow:0 2px 12px rgba(0,0,0,.25);">
-    <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px;margin-right:32px;display:flex;align-items:center;gap:8px;">
-      <span style="font-size:18px;">🛡️</span>RetWork Admin
-    </div>
+    <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px;margin-right:32px;">RetWork Admin</div>
     <div style="display:flex;height:100%;flex:1;">
       <button onclick="_admPcSwitchTab('overview')" id="apc-tab-overview" class="apc-tab apc-tab-active">RetWork (전체)</button>
       <button onclick="_admPcSwitchTab('i18n')" id="apc-tab-i18n" class="apc-tab">언어시트</button>
@@ -16931,9 +16929,19 @@ var _admPcMenus = {
     { key:'receipts',      icon:'🧾', label:'영수증',         fn:function(){ openAdminDetail('receipts'); } },
     { key:'stores',        icon:'🏪', label:'가게',           fn:function(){ openAdminDetail('stores'); } },
     { key:'pins',          icon:'📍', label:'가게핀',         fn:function(){ openAdminDetail('pins'); } },
-    { key:'editreqs',      icon:'🛠️', label:'가게수정요청',   fn:function(){ openAdminEditReqs(); }, badgeId:'apc-badge-editreqs' },
+    /* ★ Phase 2 마운트: mount = 콘텐츠 영역에 시트 이동, load = 데이터 로드 */
+    { key:'editreqs',      icon:'🛠️', label:'가게수정요청',
+      mount:'ov-admin-edit-reqs',
+      load:function(){ if (typeof loadAdminEditReqs === 'function') loadAdminEditReqs('open'); },
+      badgeId:'apc-badge-editreqs' },
     { key:'reports',       icon:'💬', label:'댓글모더',       fn:function(){ openAdminReports(); }, badgeId:'apc-badge-reports' },
-    { key:'announcements', icon:'📢', label:'공지사항',       fn:function(){ openAdminAnnouncements(); } },
+    { key:'announcements', icon:'📢', label:'공지사항',
+      mount:'ov-admin-ann',
+      load:function(){
+        ['ann-title','ann-content','ann-banner','ann-ends'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+        var typeSel=document.getElementById('ann-type'); if(typeSel) typeSel.value='info';
+        if (typeof _loadAdminAnnouncementList === 'function') _loadAdminAnnouncementList();
+      } },
   ],
   i18n: [
     { key:'i18n-all',      icon:'🌐', label:'전체 언어시트',  fn:function(){ if (typeof openAdminI18n === 'function') openAdminI18n(); else showToast('i18n CMS 미연결'); } },
@@ -16965,12 +16973,14 @@ function openAdminPc() {
 }
 
 function closeAdminPc() {
+  _admPcUnmountAll();  // 마운트된 시트가 있으면 원래 모달로 복귀
   var el = document.getElementById('ov-admin-pc');
   if (el) el.style.display = 'none';
   _admPcCurrentMenu = null;
 }
 
 function _admPcSwitchTab(tab) {
+  _admPcUnmountAll();  // 탭 전환 시에도 복귀
   _admPcCurrentTab = tab;
   ['overview','i18n','chiri','ads'].forEach(function(k){
     var btn = document.getElementById('apc-tab-' + k);
@@ -17012,13 +17022,99 @@ function _admPcSelectMenu(key) {
     if (it.getAttribute('data-key') === key) it.classList.add('active');
     else it.classList.remove('active');
   });
-  _admPcRenderContent(key);
-  // 메뉴 정의에서 fn 찾아 실행 (기존 모달 열기 — Phase 1)
   var menus = _admPcMenus[_admPcCurrentTab] || [];
   var menu = menus.find(function(m){ return m.key === key; });
-  if (menu && typeof menu.fn === 'function') {
+  if (!menu) { _admPcRenderContent(null); return; }
+  // ★ Phase 2: menu.mount 가 있으면 시트를 콘텐츠 영역에 마운트
+  if (menu.mount) {
+    _admPcMountSheet(menu.mount, menu.load);
+  } else if (typeof menu.fn === 'function') {
+    // Phase 1 폴백 — 기존 모달 호출 (점진적 마이그레이션 중)
+    _admPcRenderContent(key);
     try { menu.fn(); } catch(e) { console.warn('[admPc] menu fn failed', e); }
+  } else {
+    _admPcRenderContent(key);
   }
+}
+
+/* ──── PC 모드 — 어드민 모달의 시트를 콘텐츠 영역에 마운트(이동) ────
+   - 모달 자체는 안 열고 시트만 PC 영역에 옮김
+   - 모바일/탭 전환/메뉴 전환 시 _admPcUnmountAll 으로 원래 모달로 복귀
+   - 시트의 인라인 스타일은 dataset 에 백업, 복귀 시 원복 */
+function _admPcMountSheet(modalId, dataLoader) {
+  if (!_isAdmin) return;
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  var modal = document.getElementById(modalId);
+  if (!modal) { console.warn('[admPc] modal not found:', modalId); return; }
+  // 시트 찾기 (대부분 .sheet 클래스, 일부는 직속 div)
+  var sheet = modal.querySelector('.sheet') || modal.firstElementChild;
+  if (!sheet) { console.warn('[admPc] sheet not found in:', modalId); return; }
+
+  // 다른 마운트가 있으면 먼저 복귀
+  _admPcUnmountAll();
+
+  // 스타일 백업 후 PC 마운트용으로 덮어쓰기 (CSS .sheet 무효화)
+  sheet.dataset.originalStyle = sheet.getAttribute('style') || '';
+  sheet.dataset.originalParent = modalId;
+  sheet.setAttribute('style',
+    'max-width:none !important;width:100% !important;max-height:none !important;' +
+    'border-radius:0 !important;box-shadow:none !important;animation:none !important;' +
+    'background:transparent !important;padding:0 !important;overflow:visible !important;');
+
+  // sheet-handle 숨김
+  var handle = sheet.querySelector('.sheet-handle');
+  if (handle) { handle.dataset.pcOriginalDisplay = handle.style.display || ''; handle.style.display = 'none'; }
+
+  // ✕ 닫기 버튼 숨김 (PC 에선 사이드바로 전환)
+  var closeBtns = sheet.querySelectorAll('[onclick*="closeOv"]');
+  closeBtns.forEach(function(btn){
+    if (btn.textContent.trim() === '✕') {
+      btn.dataset.pcOriginalDisplay = btn.style.display || '';
+      btn.style.display = 'none';
+    }
+  });
+
+  // 콘텐츠 영역에 마운트
+  ct.innerHTML = '';
+  ct.appendChild(sheet);
+
+  // 데이터 로드
+  if (typeof dataLoader === 'function') {
+    try { dataLoader(); } catch(e) { console.warn('[admPc] dataLoader failed', e); }
+  }
+}
+
+function _admPcUnmountAll() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  var sheets = ct.querySelectorAll('[data-original-parent]');
+  sheets.forEach(function(sheet){
+    var modalId = sheet.dataset.originalParent;
+    var modal = document.getElementById(modalId);
+    if (!modal) return;
+    // 스타일 원복
+    if (sheet.dataset.originalStyle !== undefined) {
+      sheet.setAttribute('style', sheet.dataset.originalStyle);
+      delete sheet.dataset.originalStyle;
+    } else {
+      sheet.removeAttribute('style');
+    }
+    delete sheet.dataset.originalParent;
+    // 핸들 + 닫기 복원
+    var handle = sheet.querySelector('.sheet-handle');
+    if (handle && handle.dataset.pcOriginalDisplay !== undefined) {
+      handle.style.display = handle.dataset.pcOriginalDisplay;
+      delete handle.dataset.pcOriginalDisplay;
+    }
+    var hiddenBtns = sheet.querySelectorAll('[data-pc-original-display]');
+    hiddenBtns.forEach(function(btn){
+      btn.style.display = btn.dataset.pcOriginalDisplay || '';
+      delete btn.dataset.pcOriginalDisplay;
+    });
+    // 원래 모달로 복귀
+    modal.appendChild(sheet);
+  });
 }
 
 function _admPcRenderContent(key) {
@@ -19497,7 +19593,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 270;
+window.__APP_BUILD__ = 271;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
