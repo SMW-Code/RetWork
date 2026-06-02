@@ -3513,7 +3513,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
 
       <!-- 영역별 노출/클릭 + 수익 -->
-      <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📊 영역별 성과 (로컬 광고)</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
+        <div style="font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.3px;" id="adm-ad-stats-title">📊 영역별 성과 (로컬 광고)</div>
+        <div style="display:flex;background:var(--bg-2);border-radius:8px;padding:2px;font-family:var(--font);">
+          <button id="adm-ad-source-local" onclick="adAdminSetSource('local')" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;">🎨 로컬</button>
+          <button id="adm-ad-source-adsense" onclick="adAdminSetSource('adsense')" style="background:transparent;color:var(--text-3);border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;">📐 AdSense</button>
+        </div>
+      </div>
       <div id="adm-ad-stats" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
         <div style="font-size:12px;color:var(--text-3);text-align:center;padding:14px;">불러오는 중…</div>
       </div>
@@ -18785,8 +18791,91 @@ function openAdminAds() {
   loadAdminAdStats(); loadLocalAdList(); loadAdRevenue();
 }
 
+// 광고 성과 표시 소스: 'local' (local_ads) / 'adsense' (ad_views)
+window._admAdSource = window._admAdSource || 'local';
+
+function adAdminSetSource(source) {
+  window._admAdSource = source;
+  // 토글 UI 갱신
+  var lb = document.getElementById('adm-ad-source-local');
+  var ab = document.getElementById('adm-ad-source-adsense');
+  if (lb && ab) {
+    var active = 'background:var(--green);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;';
+    var idle   = 'background:transparent;color:var(--text-3);border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;';
+    lb.style.cssText = (source==='local')   ? active : idle;
+    ab.style.cssText = (source==='adsense') ? active : idle;
+  }
+  var title = document.getElementById('adm-ad-stats-title');
+  if (title) title.textContent = (source==='adsense')
+    ? '📊 영역별 성과 (AdSense — 예상 수익)'
+    : '📊 영역별 성과 (로컬 광고)';
+  loadAdminAdStats();
+}
+
 async function loadAdminAdStats() {
   var el = document.getElementById('adm-ad-stats'); if (!el || !_sb) return;
+  var source = window._admAdSource || 'local';
+  el.innerHTML = '<div style="font-size:12px;color:var(--text-3);text-align:center;padding:14px;">불러오는 중…</div>';
+
+  if (source === 'adsense') {
+    // ad_views 기반 영역별 시청 + 예상 수익 (AD_POSITIONS 단가 매핑)
+    try {
+      var avRes = await _sb.from('ad_views').select('ad_context');
+      if (avRes.error) throw avRes.error;
+      // 영역(context) 별 카운트
+      var byCtx = {};
+      (avRes.data || []).forEach(function(r){
+        var c = r.ad_context || 'unknown';
+        byCtx[c] = (byCtx[c] || 0) + 1;
+      });
+      // 단가 매핑 (AD_POSITIONS 기준)
+      var rateMap = {};
+      var labelMap = {};
+      if (typeof AD_POSITIONS !== 'undefined') {
+        AD_POSITIONS.forEach(function(p){
+          rateMap[p.context] = (p.type === 'fullscreen') ? (p.cpv || 17) : (p.cpm || 0.15);
+          labelMap[p.context] = p.name;
+        });
+      }
+      var ctxs = Object.keys(byCtx);
+      if (!ctxs.length) {
+        el.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px;">AdSense 데이터 없음 (ad_views 비어있음)</div>';
+        return;
+      }
+      // 영역별 합계
+      var rows = ctxs.map(function(c){
+        var views = byCtx[c];
+        var rate = rateMap[c] != null ? rateMap[c] : 0.15;
+        var revenue = views * rate;
+        return { context:c, label: labelMap[c] || c, views:views, rate:rate, revenue:revenue };
+      }).sort(function(a,b){ return b.revenue - a.revenue; });
+      var total = rows.reduce(function(s,r){ return s + r.revenue; }, 0);
+      var totalViews = rows.reduce(function(s,r){ return s + r.views; }, 0);
+      el.innerHTML = '<div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">'
+                  + '<span style="font-size:11px;font-weight:800;color:#1E40AF;">총 ' + totalViews.toLocaleString() + '회 노출</span>'
+                  + '<span style="font-size:13px;font-weight:900;color:#1E40AF;">예상 ¥' + Math.round(total).toLocaleString() + '</span>'
+                  + '</div>'
+                  + rows.map(function(r){
+                      var unitLabel = (rateMap[r.context] === (r.rate)) ? ('¥'+r.rate+'/노출') : '';
+                      return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:8px 12px;">'
+                        + '<div style="flex:1;min-width:0;">'
+                        +   '<div style="font-size:12px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</div>'
+                        +   '<div style="font-size:9px;color:var(--text-3);font-family:monospace;margin-top:1px;">' + r.context + ' · ¥' + r.rate + '/회</div>'
+                        + '</div>'
+                        + '<div style="text-align:right;flex-shrink:0;">'
+                        +   '<div style="font-size:12px;font-weight:800;color:var(--text-1);">' + r.views.toLocaleString() + '회</div>'
+                        +   '<div style="font-size:11px;font-weight:900;color:var(--green);margin-top:1px;">¥' + Math.round(r.revenue).toLocaleString() + '</div>'
+                        + '</div>'
+                        + '</div>';
+                    }).join('');
+    } catch(e) {
+      console.warn('[adm-ad-stats] AdSense load failed', e);
+      el.innerHTML = '<div style="font-size:11px;color:var(--red);padding:10px;">' + (e.message || 'AdSense 데이터 로드 실패') + '</div>';
+    }
+    return;
+  }
+
+  // 기본: 로컬 광고 (local_ads)
   var res = await _sb.from('local_ads').select('zone,impressions,clicks');
   if (res.error) { el.innerHTML = '<div style="font-size:11px;color:var(--red);padding:10px;">'+res.error.message+'</div>'; return; }
   var agg = {};
@@ -21257,7 +21346,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 292;
+window.__APP_BUILD__ = 293;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
