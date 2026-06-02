@@ -2674,7 +2674,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px;margin-right:32px;">RetWork Admin</div>
     <div style="display:flex;height:100%;flex:1;">
       <button onclick="_admPcSwitchTab('overview')" id="apc-tab-overview" class="apc-tab apc-tab-active">RetWork (전체)</button>
-      <button onclick="_admPcSwitchTab('comments')" id="apc-tab-comments" class="apc-tab">댓글관리</button>
+      <button onclick="_admPcSwitchTab('comments')" id="apc-tab-comments" class="apc-tab">게시글 관리</button>
       <button onclick="_admPcSwitchTab('i18n')" id="apc-tab-i18n" class="apc-tab">언어시트</button>
       <button onclick="_admPcSwitchTab('chiri')" id="apc-tab-chiri" class="apc-tab">치리관리</button>
       <button onclick="_admPcSwitchTab('ads')" id="apc-tab-ads" class="apc-tab">광고관리</button>
@@ -17137,7 +17137,9 @@ var _admPcMenus = {
       } },
   ],
   comments: [
-    /* ★ Phase 4 — 댓글관리 톱바 */
+    /* ★ Phase 4 — 게시글 관리 톱바 */
+    { key:'post-list', icon:'📝', label:'게시글 리스트',
+      customRender:function(){ if (typeof _admPcRenderPostList === 'function') _admPcRenderPostList(); } },
     { key:'comment-list', icon:'💬', label:'댓글 리스트',
       customRender:function(){ if (typeof _admPcRenderCommentList === 'function') _admPcRenderCommentList(); } },
     { key:'comment-reports', icon:'🚨', label:'신고된 댓글',
@@ -17837,6 +17839,157 @@ async function _admPcLoadExrBadge() {
 }
 
 /* ════════════════════════════════════════════════════════════
+   Phase 4 — 게시글 리스트 (ct_posts 기반)
+   - 글 + 이미지(images 배열) + 작성자 + 카테고리 + 댓글 수
+   - 게시글 클릭 → 상세 (이미지 풀뷰 + 삭제 + 작성자 패널티)
+   ════════════════════════════════════════════════════════════ */
+window._admPcPostFilter = 'all';
+
+function _admPcPostSetFilter(key) {
+  window._admPcPostFilter = key;
+  _admPcRenderPostList();
+}
+
+async function _admPcRenderPostList() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+  var filters = [
+    { key:'all',     label:'전체' },
+    { key:'image',   label:'이미지 있음' },
+    { key:'no-img',  label:'텍스트만' }
+  ];
+  var cur = window._admPcPostFilter || 'all';
+  var tabHtml = filters.map(function(p){
+    var active = (p.key === cur);
+    return '<button onclick="_admPcPostSetFilter(\''+p.key+'\')" style="padding:7px 16px;border:1px solid '+(active?'#172C58':'#E3E6EB')+';border-radius:18px;background:'+(active?'#172C58':'#fff')+';color:'+(active?'#fff':'#374151')+';font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">'+p.label+'</button>';
+  }).join('');
+
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">게시글 리스트</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">치리톡 게시글 (ct_posts) · 본문 + 이미지 + 작성자 · 즉시 삭제 / 패널티 부여</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcRenderPostList()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    + '</div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabHtml + '</div>'
+    + '<div id="apc-post-list"></div>'
+    + '</div>';
+  _admPcLoadPostList();
+}
+
+async function _admPcLoadPostList() {
+  var list = document.getElementById('apc-post-list');
+  if (!list || !_sb) return;
+  list.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div>';
+  try {
+    var res = await _sb.from('ct_posts')
+      .select('id,user_id,user_name,user_avatar,cat,title,content,images,likes,comments,created_at')
+      .order('created_at', { ascending:false })
+      .limit(200);
+    var rows = res.data || [];
+    var filter = window._admPcPostFilter || 'all';
+    if (filter === 'image')  rows = rows.filter(function(p){ return p.images && p.images.length > 0; });
+    if (filter === 'no-img') rows = rows.filter(function(p){ return !p.images || p.images.length === 0; });
+
+    if (rows.length === 0) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;background:#F4F5F8;border-radius:12px;">게시글이 없어요.</div>';
+      return;
+    }
+
+    // 사용자 추천코드 한 번에 가져오기
+    var uids = Array.from(new Set(rows.map(function(p){ return p.user_id; }).filter(Boolean)));
+    var profMap = {};
+    if (uids.length > 0) {
+      var pRes = await _sb.from('profiles').select('id,nickname,referral_code').in('id', uids);
+      (pRes.data || []).forEach(function(p){ profMap[p.id] = p; });
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:12px;">';
+    rows.forEach(function(p){
+      var prof = profMap[p.user_id] || {};
+      var name = prof.nickname || p.user_name || '匿名';
+      var refCode = prof.referral_code ? ('<span style="font-family:monospace;background:#F4F5F8;color:#374151;font-size:10px;padding:2px 6px;border-radius:6px;">🎟️ '+_esc(prof.referral_code)+'</span>') : '';
+      var dt = (p.created_at||'').slice(0,16).replace('T',' ');
+      var content = _esc(p.content || '');
+      var snap = content.replace(/'/g, "\\'").substring(0,80);
+      var imgs = Array.isArray(p.images) ? p.images : [];
+      var imgHtml = '';
+      if (imgs.length > 0) {
+        imgHtml = '<div style="display:flex;gap:6px;overflow-x:auto;margin:8px 0;padding-bottom:4px;">';
+        imgs.forEach(function(url){
+          var safeUrl = (url || '').replace(/'/g, "\\'");
+          imgHtml += '<img src="'+_esc(url)+'" onclick="_admPcPreviewImage(\''+safeUrl+'\')" style="width:140px;height:140px;object-fit:cover;border-radius:8px;border:1px solid #E3E6EB;cursor:pointer;flex-shrink:0;" onerror="this.style.display=\'none\'">';
+        });
+        imgHtml += '</div>';
+      }
+      html += '<div id="apc-post-card-'+p.id+'" style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
+            + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;">'
+            +   '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">'
+            +     '<span style="font-size:18px;line-height:1;">' + (p.user_avatar || '😊') + '</span>'
+            +     '<span style="font-size:13px;font-weight:800;color:#172C58;">' + _esc(name) + '</span>'
+            +     refCode
+            +     '<span id="apc-pen-badge-'+p.user_id+'" style="font-size:9px;padding:2px 7px;border-radius:6px;background:#F4F5F8;color:#6B7280;font-weight:700;">패널티 조회중...</span>'
+            +     (p.cat ? '<span style="font-size:10px;padding:2px 7px;border-radius:6px;background:#EFF6FF;color:#1E40AF;font-weight:700;">'+_esc(p.cat)+'</span>' : '')
+            +   '</div>'
+            +   '<span style="font-size:10px;color:#6B7280;white-space:nowrap;">' + dt + '</span>'
+            + '</div>'
+            + (p.title ? '<div style="font-size:15px;font-weight:800;color:#172C58;margin-bottom:6px;">' + _esc(p.title) + '</div>' : '')
+            + '<div style="font-size:13px;color:#374151;line-height:1.6;white-space:pre-wrap;margin-bottom:6px;">' + content + '</div>'
+            + imgHtml
+            + '<div style="display:flex;align-items:center;gap:14px;font-size:11px;color:#6B7280;margin-top:6px;">'
+            +   '<span>👍 ' + (p.likes||0) + '</span>'
+            +   '<span>💬 ' + (p.comments||0) + '</span>'
+            +   '<span>🖼️ ' + imgs.length + '</span>'
+            +   '<span style="font-family:monospace;color:#9CA3AF;">UID: ' + (p.user_id||'').substring(0,8) + '…</span>'
+            + '</div>'
+            + '<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid #F4F5F8;">'
+            +   '<span style="font-size:10px;color:#6B7280;font-weight:700;">패널티 부여:</span>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',1,\''+snap+'\')" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">1시간</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',6,\''+snap+'\')" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">6시간</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',12,\''+snap+'\')" style="background:#FEF3C7;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">12시간</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',24,\''+snap+'\')" style="background:#FED7AA;color:#9A3412;border:1px solid #FDBA74;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">1일</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',72,\''+snap+'\')" style="background:#FED7AA;color:#9A3412;border:1px solid #FDBA74;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">3일</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',168,\''+snap+'\')" style="background:#FECACA;color:#991B1B;border:1px solid #FCA5A5;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">7일</button>'
+            +   '<button onclick="_admPcGrantPenalty(\''+p.user_id+'\',-1,\''+snap+'\')" style="background:#7F1D1D;color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">⛔ 영구</button>'
+            +   '<span style="flex:1;"></span>'
+            +   '<button onclick="_admPcDeletePost(\''+p.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">🗑️ 게시글 삭제</button>'
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+    // 패널티 카운트 비동기 로드
+    uids.forEach(function(uid){ _admPcLoadPenaltyBadge(uid); });
+  } catch(e) {
+    console.warn('[post-list] load failed', e);
+    list.innerHTML = '<div style="padding:40px;text-align:center;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message||'') + '</div>';
+  }
+}
+
+/* 이미지 클릭 → 풀스크린 미리보기 (간단 라이트박스) */
+function _admPcPreviewImage(url) {
+  var lb = document.createElement('div');
+  lb.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:24px;cursor:zoom-out;';
+  lb.onclick = function(){ lb.remove(); };
+  lb.innerHTML = '<img src="'+url+'" style="max-width:96vw;max-height:92vh;object-fit:contain;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6);">';
+  document.body.appendChild(lb);
+}
+
+async function _admPcDeletePost(id) {
+  if (!_sb || !id) return;
+  if (!confirm('이 게시글을 삭제할까요?\n(복구 불가, 댓글은 별도 처리)')) return;
+  var res = await _sb.from('ct_posts').delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('🗑️ 삭제됨');
+  var card = document.getElementById('apc-post-card-' + id);
+  if (card) card.remove();
+}
+
+/* ════════════════════════════════════════════════════════════
    Phase 4 — 댓글 리스트 + 패널티 부여 화면
    - ct_comments (치리톡 게시글 댓글) + store_comments (가게 리뷰) 통합
    - 카드: 내용/사용자 닉네임+추천코드/패널티 누적 + 액션 (삭제/패널티)
@@ -18343,7 +18496,7 @@ function _admPcRenderSidebar(tab) {
   // 섹션 헤더: 이모지 제거 (사이드바 클린)
   var labels = {
     overview: 'RetWork 전체',
-    comments: '댓글관리',
+    comments: '게시글 관리',
     i18n:     '언어시트',
     chiri:    '치리관리',
     ads:      '광고관리'
@@ -21095,7 +21248,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 290;
+window.__APP_BUILD__ = 291;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
