@@ -16973,14 +16973,16 @@ function openAdminPc() {
 }
 
 function closeAdminPc() {
-  _admPcUnmountAll();  // 마운트된 시트가 있으면 원래 모달로 복귀
+  _admPcUnmountAll();              // 마운트된 시트가 있으면 원래 모달로 복귀
+  _admPcCloseAllAdminModals();     // 사용자가 폴백 메뉴로 띄운 어드민 모달도 닫기
   var el = document.getElementById('ov-admin-pc');
   if (el) el.style.display = 'none';
   _admPcCurrentMenu = null;
 }
 
 function _admPcSwitchTab(tab) {
-  _admPcUnmountAll();  // 탭 전환 시에도 복귀
+  _admPcUnmountAll();              // 탭 전환 시에도 복귀
+  _admPcCloseAllAdminModals();     // 폴백 메뉴로 띄운 모달도 닫기
   _admPcCurrentTab = tab;
   ['overview','i18n','chiri','ads'].forEach(function(k){
     var btn = document.getElementById('apc-tab-' + k);
@@ -17030,6 +17032,8 @@ function _admPcSelectMenu(key) {
     _admPcMountSheet(menu.mount, menu.load);
   } else if (typeof menu.fn === 'function') {
     // Phase 1 폴백 — 기존 모달 호출 (점진적 마이그레이션 중)
+    _admPcUnmountAll();              // 이전 마운트가 있으면 복귀
+    _admPcCloseAllAdminModals();     // 누적된 모달 정리
     _admPcRenderContent(key);
     try { menu.fn(); } catch(e) { console.warn('[admPc] menu fn failed', e); }
   } else {
@@ -17045,14 +17049,17 @@ function _admPcMountSheet(modalId, dataLoader) {
   if (!_isAdmin) return;
   var ct = document.getElementById('apc-content');
   if (!ct) return;
+
+  // ★ 시트 찾기 전에 먼저 unmount + 모든 어드민 모달 닫기
+  //   (이전 마운트로 시트가 콘텐츠 영역에 있을 수 있음)
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+
   var modal = document.getElementById(modalId);
   if (!modal) { console.warn('[admPc] modal not found:', modalId); return; }
   // 시트 찾기 (대부분 .sheet 클래스, 일부는 직속 div)
   var sheet = modal.querySelector('.sheet') || modal.firstElementChild;
   if (!sheet) { console.warn('[admPc] sheet not found in:', modalId); return; }
-
-  // 다른 마운트가 있으면 먼저 복귀
-  _admPcUnmountAll();
 
   // 스타일 백업 후 PC 마운트용으로 덮어쓰기 (CSS .sheet 무효화)
   sheet.dataset.originalStyle = sheet.getAttribute('style') || '';
@@ -17083,6 +17090,17 @@ function _admPcMountSheet(modalId, dataLoader) {
   if (typeof dataLoader === 'function') {
     try { dataLoader(); } catch(e) { console.warn('[admPc] dataLoader failed', e); }
   }
+}
+
+/* PC 어드민 동작 중 누적된 어드민 모달들 일괄 닫기
+   - 사이드바 메뉴 전환 시 / 톱바 전환 시 / closeAdminPc 시 호출
+   - ov-admin-pc 자체는 제외 */
+function _admPcCloseAllAdminModals() {
+  var modals = document.querySelectorAll('.overlay[id^="ov-admin"]');
+  modals.forEach(function(modal){
+    if (modal.id === 'ov-admin-pc') return; // PC 자체는 스킵
+    if (modal.classList.contains('open')) modal.classList.remove('open');
+  });
 }
 
 function _admPcUnmountAll() {
@@ -19593,7 +19611,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 271;
+window.__APP_BUILD__ = 272;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
