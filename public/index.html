@@ -17122,17 +17122,22 @@ var _admPcMenus = {
    - 자동재생: ¥0.15/노출, 풀스크린: ¥17/시청 가정
    ════════════════════════════════════════════════════════════ */
 var AD_POSITIONS = [
+  // 홈
+  { page:'home',       name:'홈 상단 가로 배너',             context:'home',                    type:'inline',     cpm:0.15,  desc:'홈 화면 상단 인라인 배너' },
   // 영수증
   { page:'receipt',    name:'영수증 저장 풀스크린',          context:'save',                    type:'fullscreen', cpv:17,    desc:'영수증 저장 시 15초 동영상' },
+  { page:'receipt',    name:'저장 모달 가로 배너 (인라인)',  context:'modal',                   type:'inline',     cpm:0.15,  desc:'영수증 저장 광고 모달 내 인라인' },
   // 치리맵
-  { page:'chirimap',   name:'가게 상세 인라인',              context:'store',                   type:'inline',     cpm:0.15,  desc:'가게 상세 모달 인라인' },
+  { page:'chirimap',   name:'치리맵 하단 가로 배너',         context:'map',                     type:'inline',     cpm:0.15,  desc:'치리맵 화면 하단 인라인 배너' },
+  { page:'chirimap',   name:'가게 상세 가로 배너 (인라인)',  context:'store',                   type:'inline',     cpm:0.15,  desc:'가게 상세 모달 인라인' },
   { page:'chirimap',   name:'치리 공개 풀스크린',            context:'chiri',                   type:'fullscreen', cpv:17,    desc:'치리 공개 시 15초 동영상' },
   { page:'chirimap',   name:'메뉴 사진 업로드 풀스크린',     context:'menu_photo',              type:'fullscreen', cpv:17,    desc:'메뉴 사진 등록 시' },
   { page:'chirimap',   name:'프라이빗 전환 풀스크린',        context:'private',                 type:'fullscreen', cpv:17,    desc:'프라이빗 모드 전환 시' },
   // 치리톡
+  { page:'chiritalk',  name:'치리톡 인라인 (가로형)',        context:'feed',                    type:'inline',     cpm:0.15,  desc:'치리톡 피드 안 인라인 광고' },
   { page:'chiritalk',  name:'댓글 한도 풀스크린',            context:'comment_quota',           type:'fullscreen', cpv:17,    desc:'댓글 한도 초과 시 +4회 권한' },
   // 리워드
-  { page:'reward',     name:'자발 광고 풀스크린',            context:'reward',                  type:'fullscreen', cpv:17,    desc:'+50치리 보상 (1일 3회)' },
+  { page:'reward',     name:'자발 광고 풀스크린 (정사각)',   context:'reward',                  type:'fullscreen', cpv:17,    desc:'리워드 탭 +50치리 보상 광고' },
   { page:'reward',     name:'추가 광고 보상 풀스크린',       context:'bonus',                   type:'fullscreen', cpv:17,    desc:'+15치리 (출석 슬롯당 2회)' },
   // 출석
   { page:'attendance', name:'출석 완료 풀스크린',            context:'attendance',              type:'fullscreen', cpv:17,    desc:'+15치리 (출석 슬롯 1회당)' },
@@ -17140,7 +17145,6 @@ var AD_POSITIONS = [
   { page:'attendance', name:'출석 완료 모달 자동재생',       context:'attendance_modal_auto',   type:'autoplay',   cpm:0.15,  desc:'출석 완료 모달 내 자동재생' },
   // 추천
   { page:'referral',   name:'추천 보상 청구 풀스크린',       context:'referral',                type:'fullscreen', cpv:17,    desc:'+200치리 청구 (1일 10회 상한)' },
-  // 홈 (현재 인라인 광고 거의 없음 — 향후 확장 시 추가)
 ];
 
 var AD_PAGE_LABELS = {
@@ -17161,7 +17165,7 @@ function _admPcReloadAdPages() {
 function _admPcRenderAdPages() {
   var ct = document.getElementById('apc-content');
   if (!ct) return;
-  var pages = ['all','receipt','chirimap','chiritalk','reward','attendance','referral'];
+  var pages = ['all','home','receipt','chirimap','chiritalk','reward','attendance','referral'];
   var filter = window._admPcAdPagesFilter || 'all';
 
   var tabHtml = pages.map(function(p){
@@ -20243,7 +20247,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 279;
+window.__APP_BUILD__ = 280;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
