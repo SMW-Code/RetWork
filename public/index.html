@@ -18847,7 +18847,7 @@ async function _loadAdminDetailData(type) {
   var res;
   if (type === 'users') {
     res = await _sb.from('profiles')
-      .select('id,nickname,is_admin,created_at')
+      .select('id,nickname,is_admin,created_at,referral_code,referred_by')
       .order('created_at', { ascending:false })
       .limit(500);
   } else if (type === 'receipts') {
@@ -18976,11 +18976,13 @@ function _admDetailGotoPage(p) {
 function _renderUserRow(u) {
   var date = (u.created_at||'').slice(0,10);
   var adminBadge = u.is_admin ? '<span style="background:var(--gold-light);color:var(--gold-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;">🛡️ ADMIN</span>' : '';
+  var refCode = u.referral_code ? ('<span style="font-family:monospace;background:var(--bg-2);color:var(--text-2);font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;">🎟️ '+_esc(u.referral_code)+'</span>') : '';
   return '<div onclick="openAdminUserDetail(\''+u.id+'\')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 12px;transition:transform .12s;">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">'
-    +   '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;">'
+    +   '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
     +     '<span style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(u.nickname||'(닉네임 없음)')+' ›</span>'
     +     adminBadge
+    +     refCode
     +     _newBadgeIfRecent(u.created_at)
     +   '</div>'
     +   '<span style="font-size:10px;color:var(--text-3);">'+date+'</span>'
@@ -19473,21 +19475,116 @@ function _renderPinRow(p) {
     + '</div>';
 }
 
-// 가격 핀 → 가게 클릭 시 사용자 측 가게 상세 모달 열기 (어드민 권한으로 모든 편집 가능)
+// 가격 핀 → 가게 클릭
+// PC 어드민 활성 시: 어드민 전용 가게+핀 화면 (콘텐츠 영역 드릴다운)
+// 모바일: 사용자 측 ov-store-detail 모달
 function openAdminStoreFromPin(name, lat, lng, cat) {
-  if (typeof openStoreDetail !== 'function') return;
-  // PC 어드민 활성 시 ov-store-detail 이 PC 어드민(9500) 뒤로 가지 않도록 z-index 강제
-  var pcEl = document.getElementById('ov-admin-pc');
-  var sdEl = document.getElementById('ov-store-detail');
-  if (sdEl && pcEl && pcEl.style.display === 'flex') {
-    sdEl.style.zIndex = '10001';
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcOpenPinStoreView(name);
+    return;
   }
+  if (typeof openStoreDetail !== 'function') return;
   openStoreDetail({
     name: name,
     lat: (lat != null && !isNaN(lat)) ? parseFloat(lat) : null,
     lng: (lng != null && !isNaN(lng)) ? parseFloat(lng) : null,
     cat: cat || 'other'
   });
+}
+
+/* ──── PC 어드민 — 가게핀 어드민 전용 화면 ──── */
+async function _admPcOpenPinStoreView(storeName) {
+  var ct = document.getElementById('apc-content');
+  if (!ct || !_sb) return;
+  ct.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:13px;">로딩 중...</div>';
+  try {
+    // 가게 정보 + 핀 목록 동시 fetch
+    var [sRes, pRes] = await Promise.all([
+      _sb.from('stores').select('*').eq('name', storeName).maybeSingle(),
+      _sb.from('price_pins').select('id,item_name,price,comment,user_id,store_id,created_at,stores(id,name)').eq('stores.name', storeName).order('created_at', { ascending:false }).limit(200)
+    ]);
+    var s = sRes.data;
+    var pins = (pRes.data || []).filter(function(p){ return p.stores && p.stores.name === storeName; });
+
+    // breadcrumb + 가게 정보 + 핀 목록 렌더
+    var gmapLink = s && s.google_maps_url
+      ? '<a href="'+s.google_maps_url+'" target="_blank" style="color:#172C58;text-decoration:underline;font-size:11px;font-weight:700;">🔗 Google 지도 열기</a>'
+      : '<span style="font-size:11px;color:#991B1B;font-weight:700;">❌ Google 지도 링크 없음</span>';
+    var featured = s && s.featured_price
+      ? '⭐ 대표: ' + (s.featured_menu_name || '') + ' ¥' + s.featured_price.toLocaleString()
+      : '대표 메뉴 미지정';
+
+    var html =
+      '<div id="apc-breadcrumb" style="padding:14px 24px;background:#F4F5F8;border-bottom:1px solid #E3E6EB;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;">'
+      + '<button onclick="_admPcBackToMenu(\'pins\')" style="background:#fff;border:1px solid #E3E6EB;color:#172C58;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;font-family:var(--font);">← 가게핀 목록</button>'
+      + '<span style="color:#9CA3AF;">/</span>'
+      + '<span style="color:#172C58;font-weight:800;">가게 + 핀 상세</span>'
+      + '</div>'
+      + '<div style="padding:24px;">'
+      // 가게 정보 카드
+      + '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:14px;padding:18px;margin-bottom:18px;">'
+      +   '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;">'
+      +     '<div style="flex:1;min-width:0;">'
+      +       '<div style="font-size:20px;font-weight:900;color:#172C58;margin-bottom:4px;">🏪 ' + _esc(storeName) + '</div>'
+      +       '<div style="font-size:11px;color:#6B7280;margin-bottom:6px;">' + (s ? ('카테고리: ' + _esc(s.category||'-')) : '<span style="color:#991B1B;">DB에 가게 정보 없음</span>') + '</div>'
+      +       '<div style="display:flex;flex-wrap:wrap;gap:8px;font-size:11px;color:#374151;">'
+      +         (s ? ('<span>📍 ' + (s.lat||'?') + ', ' + (s.lng||'?') + '</span>') : '')
+      +         (s ? ('<span>📦 영수증: <strong>' + (s.receipt_count||0) + '</strong>장</span>') : '')
+      +         (s ? ('<span>💴 평균가: ¥<strong>' + (s.avg_price||0).toLocaleString() + '</strong></span>') : '')
+      +       '</div>'
+      +       '<div style="margin-top:8px;font-size:11px;color:#374151;">' + featured + '</div>'
+      +       '<div style="margin-top:6px;">' + gmapLink + '</div>'
+      +     '</div>'
+      +     (s ? '<button onclick="openAdminEditStore(\''+(s.id||'')+'\')" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">✏️ 가게 편집</button>' : '')
+      +   '</div>'
+      + '</div>'
+      // 핀 목록 헤더
+      + '<div style="font-size:14px;font-weight:800;color:#172C58;margin-bottom:10px;">📍 가격 핀 (' + pins.length + '개)</div>';
+
+    // 핀 리스트
+    if (pins.length === 0) {
+      html += '<div style="background:#F4F5F8;border-radius:12px;padding:32px;text-align:center;color:#6B7280;font-size:12px;">등록된 가격 핀이 없어요.</div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      pins.forEach(function(p){
+        var date = (p.created_at||'').slice(0,10);
+        var comment = p.comment ? ('<div style="font-size:11px;color:#6B7280;margin-top:4px;line-height:1.4;">💬 ' + _esc(p.comment) + '</div>') : '';
+        html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:10px;padding:12px 14px;">'
+              + '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">'
+              +   '<div style="flex:1;min-width:0;">'
+              +     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">'
+              +       '<span style="font-size:14px;font-weight:800;color:#172C58;">' + _esc(p.item_name||'(이름 없음)') + '</span>'
+              +       '<span style="font-size:14px;font-weight:900;color:#10B981;">¥' + (p.price||0).toLocaleString() + '</span>'
+              +     '</div>'
+              +     '<div style="font-size:10px;color:#6B7280;">UID: ' + (p.user_id||'').substring(0,8) + '... · ' + date + '</div>'
+              +     comment
+              +   '</div>'
+              +   '<div style="display:flex;gap:4px;flex-shrink:0;">'
+              +     '<button onclick="openAdminPinDetail(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">편집</button>'
+              +     '<button onclick="_admPcDeletePinFromList(\''+p.id+'\',\''+_esc(storeName).replace(/'/g,"\\'")+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">삭제</button>'
+              +   '</div>'
+              + '</div>'
+              + '</div>';
+      });
+      html += '</div>';
+    }
+
+    html += '</div>'; // padding 컨테이너 끝
+    ct.innerHTML = html;
+  } catch(e) {
+    console.warn('[admPcPinStore] load failed', e);
+    ct.innerHTML = '<div style="padding:24px;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message || '') + '</div>';
+  }
+}
+
+/* 가게핀 화면에서 직접 핀 삭제 */
+async function _admPcDeletePinFromList(pinId, storeName) {
+  if (!_sb) return;
+  if (!confirm('이 가격 핀을 삭제할까요?')) return;
+  var res = await _sb.from('price_pins').delete().eq('id', pinId);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('🗑️ 삭제됨');
+  _admPcOpenPinStoreView(storeName); // 화면 갱신
 }
 
 /* ══════════════════════════════
@@ -20800,7 +20897,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 287;
+window.__APP_BUILD__ = 288;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
