@@ -17961,84 +17961,91 @@ function _admPcRenderThemeManager() {
 
 /* ──── 미리보기 패널: 실제 컴포넌트들이 현재 테마/변수로 어떻게 보이는지 ──── */
 function _admPcRenderThemePreviewHtml() {
+  // 클릭 가능한 요소에 onclick + cursor:pointer + title (어떤 변수로 이동하는지 hint)
+  var clk = function(varName){
+    return 'onclick="_admPcThemeJumpToVar(\''+varName+'\')" title="' + varName + ' 카드로 이동" style="cursor:pointer;';
+  };
   return ''
     + '<div style="margin-bottom:24px;">'
-    + '<div style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:10px;text-transform:uppercase;letter-spacing:.3px;">🖼️ 미리보기 (실시간)</div>'
+    + '<div style="font-size:13px;font-weight:800;color:#172C58;margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px;">🖼️ 미리보기 (실시간 · 영역 클릭 시 변수 카드로 이동)</div>'
     + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">'
     // 카드 1: 메인 헤더 (테마 그라디언트)
-    + '<div style="border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface);">'
-    +   '<div style="background:var(--green);color:var(--on-theme);padding:14px 16px;">'
-    +     '<div style="font-size:11px;opacity:.85;font-weight:700;">[ 헤더/테마색 배경 ]</div>'
-    +     '<div style="font-size:18px;font-weight:900;margin-top:4px;">RetWork</div>'
-    +     '<div style="font-size:10px;opacity:.8;margin-top:2px;">테마색 위 흰 글자 가독성 확인</div>'
+    + '<div ' + clk('--surface') + 'border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface);">'
+    +   '<div ' + clk('--green') + 'background:var(--green);color:var(--on-theme);padding:14px 16px;">'
+    +     '<div style="font-size:11px;opacity:.85;font-weight:700;pointer-events:none;">[ 헤더/테마색 배경 ]</div>'
+    +     '<div ' + clk('--on-theme') + 'font-size:18px;font-weight:900;margin-top:4px;background:rgba(255,255,255,.08);display:inline-block;padding:2px 8px;border-radius:6px;" title="--on-theme 카드로 이동">RetWork</div>'
+    +     '<div style="font-size:10px;opacity:.8;margin-top:4px;pointer-events:none;">테마색 위 글자 가독성</div>'
     +   '</div>'
     +   '<div style="padding:12px 14px;">'
-    +     '<div style="font-size:11px;color:var(--text-3);">--text-3 (힌트)</div>'
-    +     '<div style="font-size:13px;color:var(--text-2);font-weight:600;">--text-2 (서브)</div>'
-    +     '<div style="font-size:15px;color:var(--text-1);font-weight:800;margin-top:2px;">--text-1 (본문)</div>'
+    +     '<div ' + clk('--text-3') + 'font-size:11px;color:var(--text-3);padding:2px 0;">--text-3 (힌트)</div>'
+    +     '<div ' + clk('--text-2') + 'font-size:13px;color:var(--text-2);font-weight:600;padding:2px 0;">--text-2 (서브)</div>'
+    +     '<div ' + clk('--text-1') + 'font-size:15px;color:var(--text-1);font-weight:800;margin-top:2px;padding:2px 0;">--text-1 (본문)</div>'
     +   '</div>'
     + '</div>'
     // 카드 2: 버튼 모음
     + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">'
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">버튼</div>'
-    +   '<button style="background:var(--green);color:var(--on-theme);border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);cursor:pointer;">메인</button>'
-    +   '<button style="background:var(--surface);color:var(--text-1);border:1px solid var(--border-mid);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;margin-right:6px;font-family:var(--font);cursor:pointer;">보조</button>'
-    +   '<button style="background:var(--red);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;font-family:var(--font);cursor:pointer;">위험</button>'
+    +   '<button ' + clk('--green') + 'background:var(--green);color:var(--on-theme);border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);">메인</button>'
+    +   '<button ' + clk('--border-mid') + 'background:var(--surface);color:var(--text-1);border:1px solid var(--border-mid);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;margin-right:6px;font-family:var(--font);">보조</button>'
+    +   '<button ' + clk('--red') + 'background:var(--red);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;font-family:var(--font);">위험</button>'
     +   '<div style="margin-top:10px;">'
-    +     '<button style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);cursor:pointer;">✨ 골드</button>'
-    +     '<button disabled style="background:var(--bg-2,#F4F5F8);color:var(--text-3);border:1px solid var(--border-mid);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;font-family:var(--font);cursor:not-allowed;">비활성</button>'
+    +     '<button ' + clk('--gold') + 'background:var(--gold);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);">✨ 골드</button>'
+    +     '<button ' + clk('--text-3') + 'background:var(--bg-2,#F4F5F8);color:var(--text-3);border:1px solid var(--border-mid);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;font-family:var(--font);">비활성</button>'
     +   '</div>'
     + '</div>'
     // 카드 3: 입력창
     + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">'
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">입력창</div>'
-    +   '<input type="text" placeholder="플레이스홀더 색 확인" style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:6px;">'
-    +   '<input type="text" value="입력된 텍스트" style="width:100%;padding:10px 12px;border:1px solid var(--green);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">'
+    +   '<div ' + clk('--border-mid') + 'margin-bottom:6px;"><input type="text" placeholder="플레이스홀더 색 확인" readonly style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;pointer-events:none;"></div>'
+    +   '<div ' + clk('--green') + '"><input type="text" value="포커스 시 테마 보더" readonly style="width:100%;padding:10px 12px;border:1px solid var(--green);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;pointer-events:none;"></div>'
     +   '<div style="font-size:10px;color:var(--text-3);margin-top:6px;">테두리 색 = 테마 메인</div>'
     + '</div>'
     // 카드 4: 시스템 알림 (토스트 4종)
     + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">'
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">알림/배지</div>'
-    +   '<div style="background:var(--green-light);color:var(--green-dark);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:6px;">✅ 성공 (--green-light/dark)</div>'
-    +   '<div style="background:var(--yellow-bg);color:#92400E;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ 경고 (--yellow-bg)</div>'
-    +   '<div style="background:var(--blue-bg);color:#1E40AF;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:6px;">ℹ️ 정보 (--blue-bg)</div>'
-    +   '<div style="background:var(--red-bg);color:var(--red);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;">❌ 오류 (--red-bg/--red)</div>'
+    +   '<div ' + clk('--green-light') + 'background:var(--green-light);color:var(--green-dark);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:6px;">✅ 성공 (--green-light/dark)</div>'
+    +   '<div ' + clk('--yellow-bg') + 'background:var(--yellow-bg);color:#92400E;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:6px;">⚠️ 경고 (--yellow-bg)</div>'
+    +   '<div ' + clk('--blue-bg') + 'background:var(--blue-bg);color:#1E40AF;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;margin-bottom:6px;">ℹ️ 정보 (--blue-bg)</div>'
+    +   '<div ' + clk('--red-bg') + 'background:var(--red-bg);color:var(--red);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;">❌ 오류 (--red-bg/--red)</div>'
     + '</div>'
     // 카드 5: 별 평점 + 칩
     + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">'
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">평점/칩</div>'
-    +   '<div style="font-size:22px;line-height:1;margin-bottom:8px;"><span style="color:var(--star);">★★★★</span><span style="color:var(--star-empty);">★</span></div>'
+    +   '<div style="font-size:22px;line-height:1;margin-bottom:8px;">'
+    +     '<span ' + clk('--star') + 'color:var(--star);">★★★★</span>'
+    +     '<span ' + clk('--star-empty') + 'color:var(--star-empty);">★</span>'
+    +   '</div>'
     +   '<div style="display:flex;gap:6px;flex-wrap:wrap;">'
-    +     '<span style="background:var(--green-light);color:var(--green-dark);font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">초록 칩</span>'
-    +     '<span style="background:var(--gold-light);color:var(--gold-dark);font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">골드 칩</span>'
-    +     '<span style="background:var(--purple-bg);color:#5B21B6;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">보라 칩</span>'
-    +     '<span style="background:var(--orange-bg);color:#9A3412;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">주황 칩</span>'
+    +     '<span ' + clk('--green-light') + 'background:var(--green-light);color:var(--green-dark);font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">초록 칩</span>'
+    +     '<span ' + clk('--gold-light') + 'background:var(--gold-light);color:var(--gold-dark);font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">골드 칩</span>'
+    +     '<span ' + clk('--purple-bg') + 'background:var(--purple-bg);color:#5B21B6;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">보라 칩</span>'
+    +     '<span ' + clk('--orange-bg') + 'background:var(--orange-bg);color:#9A3412;font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;">주황 칩</span>'
     +   '</div>'
     + '</div>'
     // 카드 6: 가짜 영수증 카드 (실제 화면 닮게)
-    + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));">'
-    +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">영수증 카드 모사</div>'
+    + '<div ' + clk('--surface') + 'background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.06));">'
+    +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;pointer-events:none;">영수증 카드 모사</div>'
     +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
     +     '<div style="display:flex;align-items:center;gap:8px;">'
-    +       '<div style="width:32px;height:32px;background:var(--green-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;">🛒</div>'
-    +       '<div>'
+    +       '<div style="width:32px;height:32px;background:var(--green-light);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;pointer-events:none;">🛒</div>'
+    +       '<div style="pointer-events:none;">'
     +         '<div style="font-size:13px;font-weight:800;color:var(--text-1);">セブンイレブン</div>'
     +         '<div style="font-size:10px;color:var(--text-3);">2026-06-02 · 食料品</div>'
     +       '</div>'
     +     '</div>'
-    +     '<div style="font-size:15px;font-weight:900;color:var(--green);">¥1,234</div>'
+    +     '<div style="font-size:15px;font-weight:900;color:var(--green);pointer-events:none;">¥1,234</div>'
     +   '</div>'
-    +   '<div style="border-top:1px solid var(--border);padding-top:8px;font-size:11px;color:var(--text-2);">おにぎり 2 · お茶 1</div>'
+    +   '<div style="border-top:1px solid var(--border);padding-top:8px;font-size:11px;color:var(--text-2);pointer-events:none;">おにぎり 2 · お茶 1</div>'
     + '</div>'
     // 카드 7: 댓글/리스트 아이템
     + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">'
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">댓글 카드 모사</div>'
     +   '<div style="display:flex;gap:8px;">'
-    +     '<div style="width:32px;height:32px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">😊</div>'
+    +     '<div style="width:32px;height:32px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;pointer-events:none;">😊</div>'
     +     '<div style="flex:1;min-width:0;">'
-    +       '<div style="font-size:12px;font-weight:800;color:var(--text-1);">節約マニア</div>'
-    +       '<div style="font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5;">이 가게 정말 가성비 좋네요!</div>'
-    +       '<div style="display:flex;gap:10px;margin-top:4px;font-size:10px;color:var(--text-3);">'
+    +       '<div ' + clk('--text-1') + 'font-size:12px;font-weight:800;color:var(--text-1);">節約マニア</div>'
+    +       '<div ' + clk('--text-2') + 'font-size:11px;color:var(--text-2);margin-top:2px;line-height:1.5;">이 가게 정말 가성비 좋네요!</div>'
+    +       '<div ' + clk('--text-3') + 'display:flex;gap:10px;margin-top:4px;font-size:10px;color:var(--text-3);">'
     +         '<span>👍 5</span><span>💬 답글</span>'
     +       '</div>'
     +     '</div>'
@@ -18049,12 +18056,12 @@ function _admPcRenderThemePreviewHtml() {
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">토글/진행률</div>'
     +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
     +     '<span style="font-size:13px;color:var(--text-1);font-weight:600;">다크모드</span>'
-    +     '<div style="width:42px;height:24px;background:var(--green);border-radius:12px;position:relative;cursor:pointer;">'
-    +       '<div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;right:3px;box-shadow:0 1px 3px rgba(0,0,0,.2);"></div>'
+    +     '<div ' + clk('--green') + 'width:42px;height:24px;background:var(--green);border-radius:12px;position:relative;">'
+    +       '<div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;right:3px;box-shadow:0 1px 3px rgba(0,0,0,.2);pointer-events:none;"></div>'
     +     '</div>'
     +   '</div>'
-    +   '<div style="height:6px;background:var(--bg-2,#F4F5F8);border-radius:3px;overflow:hidden;margin-bottom:4px;">'
-    +     '<div style="width:65%;height:100%;background:var(--green);"></div>'
+    +   '<div ' + clk('--green') + 'height:6px;background:var(--bg-2,#F4F5F8);border-radius:3px;overflow:hidden;margin-bottom:4px;">'
+    +     '<div style="width:65%;height:100%;background:var(--green);pointer-events:none;"></div>'
     +   '</div>'
     +   '<div style="font-size:10px;color:var(--text-3);">예산 65% 사용</div>'
     + '</div>'
@@ -18077,7 +18084,8 @@ function _admPcRenderThemeVarsHtml() {
         // alpha 또는 rgba 변형 → input 에 못 넣지만 표시는 그대로
       }
       var hexForPicker = /^#[0-9a-fA-F]{6}$/.test(raw) ? raw : (/^#[0-9a-fA-F]{3}$/.test(raw) ? ('#'+raw.slice(1).split('').map(function(c){return c+c;}).join('')) : '#888888');
-      html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:10px;padding:12px;display:flex;gap:10px;align-items:center;">'
+      var cardId = 'apc-tv-' + v.name.replace(/--/g,'').replace(/[^a-z0-9-]/gi,'-');
+      html += '<div id="'+cardId+'" style="background:#fff;border:1px solid #E3E6EB;border-radius:10px;padding:12px;display:flex;gap:10px;align-items:center;transition:box-shadow .3s ease, transform .3s ease;">'
             + '<input type="color" data-var="'+v.name+'" value="'+hexForPicker+'" oninput="_admPcThemeChangeVar(\''+v.name+'\', this.value)" '
             +    'style="width:48px;height:48px;border:1px solid #E3E6EB;border-radius:8px;padding:0;cursor:pointer;background:none;flex-shrink:0;">'
             + '<div style="flex:1;min-width:0;">'
@@ -18098,6 +18106,17 @@ function _admPcRenderThemeVarsHtml() {
 }
 
 window._admPcThemeChanges = window._admPcThemeChanges || {};
+
+/* 미리보기 영역 클릭 → 해당 변수 카드로 스크롤 + 인디고 외곽선 1.5초 펄스 */
+function _admPcThemeJumpToVar(varName) {
+  var key = varName.replace(/--/g,'').replace(/[^a-z0-9-]/gi,'-');
+  var card = document.getElementById('apc-tv-' + key);
+  if (!card) { console.warn('[theme] no card for', varName); return; }
+  card.scrollIntoView({ behavior:'smooth', block:'center' });
+  card.style.boxShadow = '0 0 0 3px #172C58, 0 8px 24px rgba(23,44,88,.35)';
+  card.style.transform = 'scale(1.02)';
+  setTimeout(function(){ card.style.boxShadow = ''; card.style.transform = ''; }, 1500);
+}
 
 function _admPcThemeChangeVar(name, value) {
   document.documentElement.style.setProperty(name, value);
@@ -21644,7 +21663,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 295;
+window.__APP_BUILD__ = 296;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
