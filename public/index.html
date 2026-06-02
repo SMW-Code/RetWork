@@ -4983,9 +4983,22 @@ async function ctStoreExchangeDB(itemId) {
     return;
   }
   if (!confirm('「' + it.name + '」と交換しますか？\n' + it.cost_chiri + ' チリを消費します。')) return;
-  // 코인 차감 (현재 Phase B에서는 단순 차감, Phase C에서 exchange_requests에 저장)
+  // 1) 코인 차감
   ctAddCoin(-it.cost_chiri, '🎁 「' + it.name + '」交換', 'shop');
-  // 재고가 유한이면 차감
+  // 2) exchange_requests 에 신청 기록 (Phase 3.C, build 283+)
+  try {
+    await _sb.from('exchange_requests').insert({
+      user_id:        _currentUser.id,
+      item_id:        it.id,
+      item_name:      it.name,
+      item_image_url: it.image_url || null,
+      cost_chiri:     it.cost_chiri,
+      user_email:     _currentUser.email || null,
+      user_nickname:  (typeof _userNickname !== 'undefined' && _userNickname) ? _userNickname : null,
+      status:         'pending'
+    });
+  } catch(e) { console.warn('[exr] insert failed', e); }
+  // 3) 재고가 유한이면 차감
   if (it.stock > 0) {
     await _sb.from('store_items').update({ stock: it.stock - 1 }).eq('id', it.id);
     _ctStoreCache = null; // 캐시 무효화 → 다음 로드 시 갱신
@@ -17131,7 +17144,8 @@ var _admPcMenus = {
       mount:'ov-admin-items',
       load:function(){ if (typeof openAdminStoreItems === 'function') openAdminStoreItems(); } },
     { key:'exchange', icon:'📋', label:'교환요청',
-      fn:function(){ showToast('교환 요청 처리 — Phase 3에서 구축'); } },
+      customRender:function(){ if (typeof _admPcRenderExchangeReqs === 'function') _admPcRenderExchangeReqs(); },
+      badgeId:'apc-badge-exchange' },
   ],
   ads: [
     { key:'ad-pages', icon:'📐', label:'광고 페이지/위치',
@@ -17553,6 +17567,185 @@ async function _admPcLoadChiriStats() {
   }
 }
 
+/* ════════════════════════════════════════════════════════════
+   Phase 3.C — 교환요청 처리 화면
+   - exchange_requests 테이블 기반
+   - 탭: 대기 / 발송 / 완료 / 취소 / 전체
+   - 상태 변경 + admin_note 입력
+   ════════════════════════════════════════════════════════════ */
+var EXR_STATUS_META = {
+  pending:   { label:'대기',   bg:'#FEF3C7', color:'#92400E', icon:'⏳' },
+  shipped:   { label:'발송',   bg:'#DBEAFE', color:'#1E40AF', icon:'📦' },
+  completed: { label:'완료',   bg:'#D1FAE5', color:'#065F46', icon:'✅' },
+  cancelled: { label:'취소',   bg:'#FEE2E2', color:'#991B1B', icon:'❌' }
+};
+window._admPcExrFilter = 'pending';
+
+function _admPcExrSetFilter(key) {
+  window._admPcExrFilter = key;
+  _admPcRenderExchangeReqs();
+}
+
+function _admPcRenderExchangeReqs() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  var tabs = [
+    { key:'pending',   label:'⏳ 대기' },
+    { key:'shipped',   label:'📦 발송' },
+    { key:'completed', label:'✅ 완료' },
+    { key:'cancelled', label:'❌ 취소' },
+    { key:'all',       label:'전체' }
+  ];
+  var cur = window._admPcExrFilter || 'pending';
+  var tabHtml = tabs.map(function(p){
+    var active = (p.key === cur);
+    return '<button onclick="_admPcExrSetFilter(\''+p.key+'\')" '
+      + 'style="padding:7px 16px;border:1px solid '+(active?'#172C58':'#E3E6EB')+';border-radius:18px;'
+      + 'background:'+(active?'#172C58':'#fff')+';color:'+(active?'#fff':'#374151')+';'
+      + 'font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">' + p.label + '</button>';
+  }).join('');
+
+  ct.innerHTML =
+    '<div style="padding:24px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">교환요청 처리</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">치리스토어 교환 신청 · 발송 · 완료/취소 관리</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcRenderExchangeReqs()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    + '</div>'
+    + '<div id="apc-exr-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;"></div>'
+    + '<div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;">' + tabHtml + '</div>'
+    + '<div id="apc-exr-list"></div>'
+    + '</div>';
+  _admPcLoadExrList();
+}
+
+async function _admPcLoadExrList() {
+  var list = document.getElementById('apc-exr-list');
+  var summary = document.getElementById('apc-exr-summary');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7280;font-size:12px;">로딩 중...</div>';
+  if (!_sb) return;
+
+  try {
+    // 전체 카운트 + 필터된 목록 동시 fetch
+    var allRes = await _sb.from('exchange_requests').select('status', { count:'exact', head:false });
+    var counts = { pending:0, shipped:0, completed:0, cancelled:0 };
+    (allRes.data || []).forEach(function(r){ if (counts[r.status] !== undefined) counts[r.status]++; });
+
+    if (summary) {
+      var card = function(key){
+        var m = EXR_STATUS_META[key];
+        return '<div style="background:'+m.bg+';border-radius:10px;padding:12px;text-align:center;">'
+             + '<div style="font-size:11px;color:'+m.color+';font-weight:700;margin-bottom:3px;">'+m.icon+' '+m.label+'</div>'
+             + '<div style="font-size:20px;font-weight:900;color:'+m.color+';">'+counts[key]+'</div>'
+             + '</div>';
+      };
+      summary.innerHTML = ['pending','shipped','completed','cancelled'].map(card).join('');
+    }
+
+    var filter = window._admPcExrFilter || 'pending';
+    var q = _sb.from('exchange_requests').select('*').order('created_at', { ascending:false }).limit(200);
+    if (filter !== 'all') q = q.eq('status', filter);
+    var res = await q;
+    var rows = res.data || [];
+
+    if (rows.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7280;font-size:12px;background:#F4F5F8;border-radius:12px;">해당 상태의 교환요청이 없어요.</div>';
+      return;
+    }
+
+    var html = '<div style="display:flex;flex-direction:column;gap:10px;">';
+    rows.forEach(function(r){
+      var meta = EXR_STATUS_META[r.status] || EXR_STATUS_META.pending;
+      var img = r.item_image_url
+        ? '<img src="'+r.item_image_url+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid #E3E6EB;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+        : '<div style="width:64px;height:64px;background:#F4F5F8;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:24px;color:#9CA3AF;flex-shrink:0;">🎁</div>';
+      var date = (r.created_at || '').slice(0,10) + ' ' + (r.created_at || '').slice(11,16);
+      var userName = r.user_nickname || (r.user_email ? r.user_email.split('@')[0] : r.user_id.slice(0,8));
+      var actions = '';
+      if (r.status === 'pending') {
+        actions = '<button onclick="_admPcExrSetStatus(\''+r.id+'\',\'shipped\')" style="background:#1E40AF;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">📦 발송</button>'
+                + '<button onclick="_admPcExrSetStatus(\''+r.id+'\',\'cancelled\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">❌ 취소</button>';
+      } else if (r.status === 'shipped') {
+        actions = '<button onclick="_admPcExrSetStatus(\''+r.id+'\',\'completed\')" style="background:#065F46;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">✅ 완료</button>'
+                + '<button onclick="_admPcExrSetStatus(\''+r.id+'\',\'pending\')" style="background:#fff;color:#374151;border:1px solid #E3E6EB;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">↶ 대기</button>';
+      } else {
+        actions = '<button onclick="_admPcExrSetStatus(\''+r.id+'\',\'pending\')" style="background:#fff;color:#374151;border:1px solid #E3E6EB;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">↶ 대기로</button>';
+      }
+      var noteVal = (r.admin_note || '').replace(/"/g,'&quot;');
+      html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;display:flex;gap:12px;align-items:flex-start;">'
+            + img
+            + '<div style="flex:1;min-width:0;">'
+            +   '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;">'
+            +     '<div style="font-size:13px;font-weight:800;color:#172C58;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.item_name || '(이름 없음)') + '</div>'
+            +     '<span style="font-size:10px;padding:3px 8px;border-radius:8px;background:'+meta.bg+';color:'+meta.color+';font-weight:800;white-space:nowrap;">' + meta.icon + ' ' + meta.label + '</span>'
+            +   '</div>'
+            +   '<div style="font-size:11px;color:#6B7280;margin-bottom:6px;">'
+            +     '<strong style="color:#172C58;">' + userName + '</strong>'
+            +     (r.user_email ? ' · <span style="font-family:monospace;font-size:10px;">' + r.user_email + '</span>' : '')
+            +   '</div>'
+            +   '<div style="font-size:11px;color:#6B7280;margin-bottom:8px;display:flex;gap:14px;flex-wrap:wrap;">'
+            +     '<span>💰 <strong style="color:#172C58;">' + r.cost_chiri.toLocaleString() + ' 치리</strong></span>'
+            +     '<span>📅 ' + date + '</span>'
+            +   '</div>'
+            +   '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">'
+            +     '<input type="text" id="exr-note-'+r.id+'" placeholder="운영 메모 (선택)" value="' + noteVal + '" '
+            +     'style="flex:1;padding:6px 10px;border:1px solid #E3E6EB;border-radius:6px;font-size:11px;font-family:var(--font);background:#F4F5F8;">'
+            +     '<button onclick="_admPcExrSaveNote(\''+r.id+'\')" style="background:#fff;color:#172C58;border:1px solid #E3E6EB;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">💾</button>'
+            +   '</div>'
+            +   '<div style="display:flex;gap:6px;">' + actions + '</div>'
+            + '</div>'
+            + '</div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+  } catch(e) {
+    console.warn('[exr] load failed', e);
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message || '') + '</div>';
+  }
+}
+
+async function _admPcExrSetStatus(id, status) {
+  if (!_sb || !_currentUser) return;
+  if (status === 'cancelled' && !confirm('취소하시겠어요? (치리 환불은 별도 처리 필요)')) return;
+  var payload = {
+    status: status,
+    processed_by: _currentUser.id,
+    processed_at: new Date().toISOString()
+  };
+  var res = await _sb.from('exchange_requests').update(payload).eq('id', id);
+  if (res.error) { showToast('변경 실패: ' + res.error.message); return; }
+  showToast('✅ ' + (EXR_STATUS_META[status] || {label:status}).label + ' 으로 변경');
+  _admPcLoadExrList();
+  _admPcLoadExrBadge();
+}
+
+async function _admPcExrSaveNote(id) {
+  if (!_sb) return;
+  var el = document.getElementById('exr-note-' + id);
+  if (!el) return;
+  var note = el.value || '';
+  var res = await _sb.from('exchange_requests').update({ admin_note: note }).eq('id', id);
+  if (res.error) { showToast('저장 실패: ' + res.error.message); return; }
+  showToast('💾 메모 저장됨');
+}
+
+/* pending 카운트 배지 — 사이드바 메뉴에 표시 */
+async function _admPcLoadExrBadge() {
+  if (!_sb) return;
+  try {
+    var res = await _sb.from('exchange_requests').select('id', { count:'exact', head:true }).eq('status','pending');
+    var n = res.count || 0;
+    var badge = document.getElementById('apc-badge-exchange');
+    if (badge) {
+      if (n > 0) { badge.style.display = 'inline-block'; badge.textContent = n > 99 ? '99+' : n; }
+      else badge.style.display = 'none';
+    }
+  } catch(e) {}
+}
+
 /* ──── i18n 페이지별 로딩 — prefix select 자동 채움 + 데이터 로드 ──── */
 function _admI18nLoadWithPrefix(prefix) {
   if (typeof openAdminI18n !== 'function') return;
@@ -17857,6 +18050,7 @@ function openAdminPc() {
   // 기존 통계/뱃지 로드 호출
   if (typeof _loadAdminStats === 'function') _loadAdminStats();
   if (typeof _loadEditReqBadge === 'function') _loadEditReqBadge();
+  if (typeof _admPcLoadExrBadge === 'function') _admPcLoadExrBadge();
 }
 
 function closeAdminPc() {
@@ -20516,7 +20710,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 282;
+window.__APP_BUILD__ = 283;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
