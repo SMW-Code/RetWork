@@ -2544,6 +2544,67 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <input type="file" id="sd-card-photo-gal" accept="image/*"                       style="display:none" onchange="sdHandleCardPhoto(this)">
 
 <!-- ══ 어드민 대시보드 모달 ══ -->
+<!-- ════ PC 어드민 — 위치별 로컬 광고 관리 모달 (z-index 9999, PC 위에 표시) ════ -->
+<div id="ov-apc-local-ad" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:24px;font-family:var(--font);" onclick="if(event.target===this)_admPcCloseLocalAdMgr()">
+  <div style="background:#fff;border-radius:14px;width:100%;max-width:680px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+    <div style="padding:18px 22px;border-bottom:1px solid #E3E6EB;display:flex;align-items:center;justify-content:space-between;">
+      <div>
+        <div style="font-size:16px;font-weight:900;color:#172C58;">🎨 로컬 광고 관리</div>
+        <div id="apc-local-ad-pos-name" style="font-size:11px;color:#6B7280;margin-top:2px;">—</div>
+      </div>
+      <div onclick="_admPcCloseLocalAdMgr()" style="cursor:pointer;font-size:18px;color:#6B7280;padding:6px;">✕</div>
+    </div>
+    <div style="padding:18px 22px;">
+      <!-- 등록 폼 -->
+      <div id="apc-local-ad-form" style="background:#F4F5F8;border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:12px;font-weight:800;color:#172C58;margin-bottom:10px;">✏️ 새 광고 등록 / 수정</div>
+        <input type="hidden" id="apc-la-id">
+        <input type="hidden" id="apc-la-context">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+          <div>
+            <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">제목 (내부 식별용)</div>
+            <input id="apc-la-title" type="text" maxlength="80" placeholder="예: 봄 신메뉴 캠페인" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          </div>
+          <div>
+            <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">우선순위 (높을수록 우선)</div>
+            <input id="apc-la-sort" type="number" value="0" min="0" max="999" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          </div>
+        </div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">이미지 URL</div>
+          <input id="apc-la-img" type="url" placeholder="https://...image.jpg" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+        </div>
+        <div style="margin-bottom:8px;">
+          <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">클릭 시 이동 URL</div>
+          <input id="apc-la-link" type="url" placeholder="https://... (선택)" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+          <div>
+            <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">폭 %</div>
+            <input id="apc-la-width" type="number" value="100" min="30" max="100" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          </div>
+          <div>
+            <div style="font-size:10px;color:#6B7280;font-weight:700;margin-bottom:3px;">세로/가로 %</div>
+            <input id="apc-la-aspect" type="number" value="40" min="10" max="100" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;box-sizing:border-box;font-family:var(--font);">
+          </div>
+          <div style="display:flex;flex-direction:column;justify-content:flex-end;">
+            <label style="display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff;border:1px solid #E3E6EB;border-radius:8px;cursor:pointer;font-size:11px;font-weight:700;color:#374151;">
+              <input id="apc-la-active" type="checkbox" checked> 활성
+            </label>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="_admPcSaveLocalAd()" id="apc-la-save-btn" style="flex:1;background:#172C58;color:#fff;border:none;border-radius:8px;padding:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+          <button onclick="_admPcResetLocalAdForm()" style="background:#fff;color:#374151;border:1px solid #E3E6EB;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">초기화</button>
+        </div>
+      </div>
+      <!-- 등록된 광고 목록 -->
+      <div style="font-size:12px;font-weight:800;color:#172C58;margin-bottom:8px;">📋 등록된 광고</div>
+      <div id="apc-local-ad-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ════ PC 어드민 풀스크린 (가로 1024px 이상 데스크탑 전용) ════ -->
 <div id="ov-admin-pc" style="display:none;position:fixed;inset:0;z-index:9500;background:#0E1218;flex-direction:column;font-family:var(--font);">
   <!-- 톱바 (인디고 #172C58) -->
@@ -17065,7 +17126,7 @@ async function _admPcLoadAdPagesStats() {
   if (!list) return;
   list.innerHTML = '<div style="text-align:center;padding:40px;color:#6B7280;font-size:12px;">로딩 중...</div>';
 
-  var todayMap = {}, allMap = {};
+  var todayMap = {}, allMap = {}, localAdsByContext = {};
   if (_sb) {
     try {
       var todayStart = new Date(); todayStart.setHours(0,0,0,0);
@@ -17074,6 +17135,8 @@ async function _admPcLoadAdPagesStats() {
       var t = await _sb.from('ad_views').select('ad_context, reward_chiri').gte('viewed_at', todayIso);
       // 전체 누적
       var a = await _sb.from('ad_views').select('ad_context, reward_chiri');
+      // 로컬 광고 카운트 (zone = AD_POSITIONS.context)
+      var la = await _sb.from('local_ads').select('id,zone,is_active');
       function agg(rows){
         var m = {};
         (rows||[]).forEach(function(r){
@@ -17087,6 +17150,13 @@ async function _admPcLoadAdPagesStats() {
       }
       todayMap = agg(t.data || []);
       allMap   = agg(a.data || []);
+      (la.data || []).forEach(function(ad){
+        var c = ad.zone || '';
+        if (!localAdsByContext[c]) localAdsByContext[c] = { total:0, active:0 };
+        localAdsByContext[c].total++;
+        if (ad.is_active) localAdsByContext[c].active++;
+      });
+      window._admPcLocalAdsByContext = localAdsByContext;
     } catch(e) { console.warn('[adpages] stats load failed', e); }
   }
 
@@ -17149,11 +17219,152 @@ async function _admPcLoadAdPagesStats() {
             +   '<span style="font-size:10px;color:#6B7280;">' + pos.context + '</span>'
             +   '<span style="font-size:10px;color:#10B981;font-weight:700;">● 활성</span>'
             + '</div>'
+            // ── 로컬 광고 섹션 (자체 광고 등록 가능) ──
+            + (function(){
+                var la = (localAdsByContext[pos.context]) || { total:0, active:0 };
+                return '<button onclick="_admPcOpenLocalAdMgr(\''+pos.context+'\', \''+pos.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')" '
+                  + 'style="width:100%;margin-top:8px;background:#172C58;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:space-between;">'
+                  + '<span>🎨 로컬 광고 ' + la.active + (la.total>la.active ? '/'+la.total : '') + '개</span>'
+                  + '<span style="font-size:10px;opacity:.8;">관리 ›</span>'
+                  + '</button>';
+              })()
           + '</div>';
     });
     html += '</div></div>';
   });
   list.innerHTML = html;
+}
+
+/* ──── 위치별 로컬 광고 관리 (zone = AD_POSITIONS.context) ──── */
+window._admPcCurrentLocalAdContext = null;
+window._admPcEditingLocalAdId = null;
+
+async function _admPcOpenLocalAdMgr(context, posName) {
+  if (!_isAdmin) return;
+  window._admPcCurrentLocalAdContext = context;
+  document.getElementById('apc-local-ad-pos-name').textContent = '위치: ' + (posName || context);
+  document.getElementById('apc-la-context').value = context;
+  _admPcResetLocalAdForm();
+  document.getElementById('ov-apc-local-ad').style.display = 'flex';
+  await _admPcLoadLocalAdList(context);
+}
+
+function _admPcCloseLocalAdMgr() {
+  document.getElementById('ov-apc-local-ad').style.display = 'none';
+  // 카드 광고 카운트 갱신
+  if (typeof _admPcLoadAdPagesStats === 'function') _admPcLoadAdPagesStats();
+}
+
+function _admPcResetLocalAdForm() {
+  window._admPcEditingLocalAdId = null;
+  ['apc-la-id','apc-la-title','apc-la-img','apc-la-link'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('apc-la-sort').value = '0';
+  document.getElementById('apc-la-width').value = '100';
+  document.getElementById('apc-la-aspect').value = '40';
+  document.getElementById('apc-la-active').checked = true;
+  document.getElementById('apc-la-save-btn').textContent = '💾 저장';
+}
+
+async function _admPcLoadLocalAdList(context) {
+  var list = document.getElementById('apc-local-ad-list');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;padding:14px;color:#6B7280;font-size:11px;">로딩 중...</div>';
+  if (!_sb) return;
+  try {
+    var res = await _sb.from('local_ads').select('*').eq('zone', context).order('sort_order', { ascending:false }).order('created_at', { ascending:false });
+    var rows = res.data || [];
+    if (rows.length === 0) {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:#6B7280;font-size:11px;background:#F4F5F8;border-radius:8px;">등록된 광고가 없어요. 위 폼에서 추가해주세요.</div>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(r){
+      var imgHtml = r.image_url
+        ? '<img src="'+r.image_url+'" style="width:60px;height:60px;object-fit:cover;border-radius:6px;border:1px solid #E3E6EB;flex-shrink:0;" onerror="this.style.display=\'none\'">'
+        : '<div style="width:60px;height:60px;background:#F4F5F8;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#9CA3AF;flex-shrink:0;">🖼️</div>';
+      html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:10px;padding:10px;display:flex;gap:10px;align-items:flex-start;">'
+            + imgHtml
+            + '<div style="flex:1;min-width:0;">'
+            +   '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
+            +     '<div style="font-size:12px;font-weight:800;color:#172C58;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (r.title || '(제목 없음)') + '</div>'
+            +     '<span style="font-size:9px;padding:2px 7px;border-radius:8px;background:'+(r.is_active?'#D1FAE5':'#FEE2E2')+';color:'+(r.is_active?'#065F46':'#991B1B')+';font-weight:700;">'+(r.is_active?'활성':'비활성')+'</span>'
+            +   '</div>'
+            +   '<div style="font-size:10px;color:#6B7280;margin-bottom:4px;">우선 ' + (r.sort_order||0) + ' · 폭 ' + (r.width_pct||100) + '% · 비율 ' + (r.aspect_pct||40) + '%</div>'
+            +   '<div style="font-size:10px;color:#6B7280;display:flex;gap:10px;">'
+            +     '<span>📊 노출 <strong>' + (r.impressions||0) + '</strong></span>'
+            +     '<span>👆 클릭 <strong>' + (r.clicks||0) + '</strong></span>'
+            +   '</div>'
+            + '</div>'
+            + '<div style="display:flex;flex-direction:column;gap:4px;">'
+            +   '<button onclick="_admPcEditLocalAd(\''+r.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">수정</button>'
+            +   '<button onclick="_admPcDeleteLocalAd(\''+r.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">삭제</button>'
+            + '</div>'
+            + '</div>';
+    });
+    list.innerHTML = html;
+  } catch(e) { console.warn('[localad] list load failed', e); list.innerHTML = '<div style="padding:14px;font-size:11px;color:#991B1B;">로딩 실패: '+(e.message||'')+'</div>'; }
+}
+
+async function _admPcEditLocalAd(id) {
+  if (!_sb) return;
+  var res = await _sb.from('local_ads').select('*').eq('id', id).maybeSingle();
+  if (!res.data) { showToast('광고를 찾을 수 없어요'); return; }
+  var r = res.data;
+  window._admPcEditingLocalAdId = id;
+  document.getElementById('apc-la-id').value = id;
+  document.getElementById('apc-la-title').value = r.title || '';
+  document.getElementById('apc-la-img').value = r.image_url || '';
+  document.getElementById('apc-la-link').value = r.link_url || '';
+  document.getElementById('apc-la-sort').value = r.sort_order || 0;
+  document.getElementById('apc-la-width').value = r.width_pct || 100;
+  document.getElementById('apc-la-aspect').value = r.aspect_pct || 40;
+  document.getElementById('apc-la-active').checked = !!r.is_active;
+  document.getElementById('apc-la-save-btn').textContent = '💾 수정 저장';
+  // 폼 영역으로 스크롤
+  var form = document.getElementById('apc-local-ad-form');
+  if (form && form.scrollIntoView) form.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+async function _admPcSaveLocalAd() {
+  if (!_isAdmin || !_sb) return;
+  var context = window._admPcCurrentLocalAdContext;
+  var title = (document.getElementById('apc-la-title').value || '').trim();
+  if (!context) { showToast('위치 context 가 없어요'); return; }
+  if (!title) { showToast('제목을 입력해주세요'); return; }
+  var payload = {
+    zone: context,
+    title: title,
+    image_url: (document.getElementById('apc-la-img').value || '').trim() || null,
+    link_url:  (document.getElementById('apc-la-link').value || '').trim() || null,
+    sort_order: parseInt(document.getElementById('apc-la-sort').value || '0', 10) || 0,
+    width_pct:  parseInt(document.getElementById('apc-la-width').value || '100', 10) || 100,
+    aspect_pct: parseInt(document.getElementById('apc-la-aspect').value || '40', 10) || 40,
+    is_active:  document.getElementById('apc-la-active').checked
+  };
+  var btn = document.getElementById('apc-la-save-btn');
+  btn.disabled = true; var prev = btn.textContent; btn.textContent = '저장 중...';
+  var res;
+  if (window._admPcEditingLocalAdId) {
+    res = await _sb.from('local_ads').update(payload).eq('id', window._admPcEditingLocalAdId);
+  } else {
+    res = await _sb.from('local_ads').insert(payload);
+  }
+  btn.disabled = false; btn.textContent = prev;
+  if (res.error) { showToast('저장 실패: ' + res.error.message); console.warn('[localad] save error', res.error); return; }
+  showToast('✅ 저장 완료');
+  _admPcResetLocalAdForm();
+  await _admPcLoadLocalAdList(context);
+}
+
+async function _admPcDeleteLocalAd(id) {
+  if (!_isAdmin || !_sb) return;
+  if (!confirm('이 광고를 삭제할까요?')) return;
+  var res = await _sb.from('local_ads').delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('삭제됨');
+  await _admPcLoadLocalAdList(window._admPcCurrentLocalAdContext);
 }
 
 function openAdminPc() {
@@ -19824,7 +20035,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 275;
+window.__APP_BUILD__ = 276;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
