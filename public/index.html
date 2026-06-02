@@ -17307,14 +17307,23 @@ async function _admPcLoadAdPagesStats() {
       var a = await _sb.from('ad_views').select('ad_context, reward_chiri');
       // 로컬 광고 카운트 (zone = AD_POSITIONS.context)
       var la = await _sb.from('local_ads').select('id,zone,is_active');
+      // ad_context → AD_POSITIONS 단가 매핑 테이블 (fullscreen ¥cpv/시청, 그 외 ¥cpm/노출)
+      var ctxRateMap = {};
+      AD_POSITIONS.forEach(function(p){
+        ctxRateMap[p.context] = (p.type === 'fullscreen') ? (p.cpv || 17) : (p.cpm || 0.15);
+      });
+      function rateFor(context) {
+        if (ctxRateMap[context] != null) return ctxRateMap[context];
+        // AD_POSITIONS 에 없는 context (legacy/외부) — 기본값
+        return 0.15;
+      }
       function agg(rows){
         var m = {};
         (rows||[]).forEach(function(r){
           var c = r.ad_context || 'unknown';
           if (!m[c]) m[c] = { views:0, revenue:0 };
           m[c].views += 1;
-          // reward_chiri > 0 면 풀스크린 시청(¥17) 으로 가정, 아니면 자동재생(¥0.15)
-          m[c].revenue += (r.reward_chiri && r.reward_chiri > 0) ? 17 : 0.15;
+          m[c].revenue += rateFor(c);
         });
         return m;
       }
@@ -21248,7 +21257,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 291;
+window.__APP_BUILD__ = 292;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
