@@ -19496,6 +19496,10 @@ function openAdminStoreFromPin(name, lat, lng, cat) {
 async function _admPcOpenPinStoreView(storeName) {
   var ct = document.getElementById('apc-content');
   if (!ct || !_sb) return;
+  // ★ 콘텐츠 영역에 마운트된 시트가 있으면 먼저 원래 모달로 복귀
+  //   (innerHTML 직접 주입 전에 — 안 그러면 시트가 통째로 사라져 뒤로가기 시 복원 불가)
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
   ct.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:13px;">로딩 중...</div>';
   try {
     // 가게 정보 + 핀 목록 동시 fetch
@@ -20897,7 +20901,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 288;
+window.__APP_BUILD__ = 289;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
