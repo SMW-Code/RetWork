@@ -9983,7 +9983,16 @@ S-6. 검증:
 4. 가격: ¥/\\/*/#/円/JP¥/末尾- 엔화. 점(.)은 천단위 (¥21.911=21911)
 5. 할인줄은 discount에 음수, 독립할인은 discount_total에 합산
 6. 합계는 마지막 合計. 現金/クレジット行은 합계 아님
-7. 和暦: 令和N→2018+N, 平成N→1988+N
+7. 날짜 (build 323 — 한국인 일본 거주자 영수증 처리 강화):
+   - 元号(令和/平成/昭和) 명시적으로 적혀있을 때만 西暦 변환:
+     * 令和N年 → 2018+N (令和8年=2026, 令和7年=2025)
+     * 平成N年 → 1988+N (平成26年=2014)
+     * 昭和N年 → 1925+N
+   - 元号 없이 2자리 연도만 있으면 (예 "26年", "26.06.03", "26/6/3"):
+     반드시 西暦 20xx 로 해석 (26→2026, 24→2024).
+     절대 平成으로 변환하지 말 것.
+   - 4자리 연도는 그대로 (2026 → 2026)
+   - 60 이상 2자리 (예 "98") 는 19xx (1998) — 흔치 않음
 8. 주유소: 연료종류 품목명 / 주차장: "駐車料金"
 9. 손글씨/금액만 있고 품목 없으면: items=[{"name":"お食事代","qty":1,"price":total}]
 
@@ -10722,6 +10731,82 @@ function addOcrItem() {
   if (newEl) { newEl.focus(); document.execCommand('selectAll', false, null); }
 }
 
+/* build 323 — 영수증 날짜 sanitize:
+   GPT 가 元号(平成 26) 으로 오역하거나 2자리 연도(26) 를 잘못 처리한 경우를 마지막 방어선에서 보정.
+   - "YYYY-MM-DD" 표준 그대로
+   - "YY-MM-DD" 2자리 연도는 60 기준 20xx/19xx
+   - 클라까지 元号 표기가 오면 자체 변환
+   - 5년 이상 과거 / 1년 이상 미래는 경고 토스트 (자동 수정 X, 사용자가 영수증 편집에서 확인)
+*/
+function _todayYMD(){
+  var d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function _formatYMD(y, mo, d){
+  return y + '-' + String(mo).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+}
+function _checkAndFormatYMD(y, mo, d, raw){
+  var now = new Date();
+  var dt = new Date(y, mo - 1, d);
+  if (isNaN(dt.getTime()) || y < 1900 || y > 2100) {
+    console.warn('[receipt date] invalid:', raw, '→', y, mo, d);
+    return _todayYMD();
+  }
+  var diffYears = (now.getTime() - dt.getTime()) / (365 * 24 * 3600 * 1000);
+  if (diffYears > 5) {
+    console.warn('[receipt date] 5+ years past — possible 平成 misread:', raw, '→', y);
+    if (typeof showToast === 'function') {
+      setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 (5년+ 과거). 확인해 주세요'); }, 600);
+    }
+  } else if (diffYears < -1) {
+    console.warn('[receipt date] 1+ year future:', raw, '→', y);
+    if (typeof showToast === 'function') {
+      setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 (미래). 확인해 주세요'); }, 600);
+    }
+  }
+  return _formatYMD(y, mo, d);
+}
+function _sanitizeReceiptDate(s){
+  if (!s) return _todayYMD();
+  var str = String(s).trim();
+  var m;
+
+  // 1) ISO 4자리 연도: 2026-06-03 / 2026/06/03 / 2026.06.03
+  m = /^(\d{4})[\-./](\d{1,2})[\-./](\d{1,2})$/.exec(str);
+  if (m) return _checkAndFormatYMD(+m[1], +m[2], +m[3], str);
+
+  // 2) 2자리 연도: 26-06-03 / 26/6/3 / 26.06.03
+  m = /^(\d{2})[\-./](\d{1,2})[\-./](\d{1,2})$/.exec(str);
+  if (m) {
+    var yy = +m[1];
+    var y = yy < 60 ? 2000 + yy : 1900 + yy;   // 60 미만 = 20xx, 그 외 19xx
+    return _checkAndFormatYMD(y, +m[2], +m[3], str);
+  }
+
+  // 3) 일본 元号 표기가 클라까지 오면 자체 변환
+  m = /令和\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日?/.exec(str);
+  if (m) return _checkAndFormatYMD(2018 + +m[1], +m[2], +m[3], str);
+  m = /平成\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日?/.exec(str);
+  if (m) return _checkAndFormatYMD(1988 + +m[1], +m[2], +m[3], str);
+  m = /昭和\s*(\d+)\s*年\s*(\d+)\s*月\s*(\d+)\s*日?/.exec(str);
+  if (m) return _checkAndFormatYMD(1925 + +m[1], +m[2], +m[3], str);
+
+  // 4) "YYYY年M月D日" 일본식
+  m = /(\d{4})\s*年\s*(\d+)\s*月\s*(\d+)\s*日?/.exec(str);
+  if (m) return _checkAndFormatYMD(+m[1], +m[2], +m[3], str);
+
+  // 5) "YY年M月D日" 2자리
+  m = /(\d{2})\s*年\s*(\d+)\s*月\s*(\d+)\s*日?/.exec(str);
+  if (m) {
+    var yy2 = +m[1];
+    var y2 = yy2 < 60 ? 2000 + yy2 : 1900 + yy2;
+    return _checkAndFormatYMD(y2, +m[2], +m[3], str);
+  }
+
+  console.warn('[receipt date] unparseable, fallback to today:', s);
+  return _todayYMD();
+}
+
 function saveOcrResult() {
   console.log('[save] 저장 버튼 클릭됨');
   syncOcrItems();
@@ -10768,6 +10853,8 @@ function _doSaveOcrResult() {
   // 영수증 날짜 우선, 없으면 오늘
   var now = new Date();
   var dateStr = r.date || (now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'));
+  // build 323 — 일본 元号 / 2자리 연도 오역 자동 보정 + 의심 날짜 경고
+  dateStr = _sanitizeReceiptDate(dateStr);
   // DB에 저장
   var newEntry = {
     id: nextId++,
@@ -22968,7 +23055,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 322;
+window.__APP_BUILD__ = 323;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
