@@ -6704,7 +6704,7 @@ function _unlockReport(){
       _applyReportLock();
       // 콘텐츠 재렌더 (display:none 였던 동안 누락된 렌더 보강)
       try { renderCatBreakdown(); renderRadar(); } catch(e){}
-      showToast('🔓 리포트 펼침');
+      // build 326 — 토스트는 ctOpenFullscreenAd 완료 분기에서 context 별로 표시 (중복 제거)
     }, 'report_unlock');
   } else {
     // showAdModal 없으면 바로 풀기
@@ -15565,6 +15565,12 @@ function ctOpenFullscreenAd(mode, callback) {
         iconTxt = '✨'; titleTxt = 'チリに公開しました！'; toastTxt = '✨ チリ에 공개했어요！';
       } else if (_adContext === 'menu_photo') {
         iconTxt = '📸'; titleTxt = '메뉴 사진을 등록했어요！'; toastTxt = '📸 메뉴 사진 등록 완료！';
+      } else if (_adContext === 'monthreport') {
+        // build 326 — 달력 자세히 보기 (월별 리포트)
+        iconTxt = '🧾'; titleTxt = '월별 리포트가 준비됐어요'; toastTxt = '🧾 월별 리포트를 확인하세요';
+      } else if (_adContext === 'report_unlock') {
+        // build 326 — 리포트 카테고리 분석 펼침
+        iconTxt = '📊'; titleTxt = '리포트가 펼쳐졌어요'; toastTxt = '📊 카테고리 분석·물가 레이더 확인하세요';
       } else {
         iconTxt = '✅'; titleTxt = '가계부에 저장했습니다！'; toastTxt = '✅ 가계부에 저장했습니다！';
       }
@@ -23115,7 +23121,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 325;
+window.__APP_BUILD__ = 326;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
