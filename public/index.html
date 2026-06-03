@@ -22660,7 +22660,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 315;
+window.__APP_BUILD__ = 316;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -22721,6 +22721,16 @@ window._redeemPendingRef = async function _redeemPendingRef(){
     if (d.ok){
       try{localStorage.removeItem('pending_ref');}catch(e){}
       if (typeof showToast === 'function') showToast('🎁 추천이 완료됐어요! 추천해주신 분께 보상이 적립됩니다.');
+      // build 316 — 추천자에게 푸시 알림 (친구 가입 알림)
+      if (d.referrer) {
+        var myName = (document.getElementById('sp-nickname-display') || {}).textContent || 'ゲスト';
+        _sendSocialPush(
+          d.referrer,
+          '🎁 추천 보상이 적립됐어요!',
+          myName + ' 님이 가입했어요 · 광고 보고 +200 치리 받기',
+          { url: '/', tag: 'referral-' + d.referrer, priority: 'normal' }
+        );
+      }
     } else if (d.err === 'already_redeemed' || d.err === 'code_not_found' || d.err === 'self_referral') {
       // 재시도 무의미 → 정리
       try{localStorage.removeItem('pending_ref');}catch(e){}
