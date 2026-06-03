@@ -4652,8 +4652,31 @@ function ctCloseAttendance(){
   closeOv('ov-attendance');
 }
 
+// build 315 — 출석 화면 열려있는 동안 슬롯 전환 자동 감지 + 재렌더
+var _ctAttCurSlotSnapshot = null;
+var _ctAttAutoRefreshTimer = null;
+function _ctAttStartAutoRefresh(){
+  if (_ctAttAutoRefreshTimer) clearInterval(_ctAttAutoRefreshTimer);
+  _ctAttCurSlotSnapshot = _ctAttSlot();
+  _ctAttAutoRefreshTimer = setInterval(function(){
+    var ov = document.getElementById('ov-attendance');
+    if (!ov || !ov.classList.contains('open')) {
+      clearInterval(_ctAttAutoRefreshTimer);
+      _ctAttAutoRefreshTimer = null;
+      return;
+    }
+    var nowSlot = _ctAttSlot();
+    if (nowSlot !== _ctAttCurSlotSnapshot) {
+      _ctAttCurSlotSnapshot = nowSlot;
+      _ctRenderAttendance();   // 슬롯 바뀌면 즉시 재렌더 (보너스 0/2 리셋 표시)
+    }
+  }, 30000);  // 30초마다 체크 (너무 자주는 X)
+}
+
 function _ctRenderAttendance(){
   var body = document.getElementById('att-body'); if(!body) return;
+  // 자동 재렌더 타이머 시작 (한 번만)
+  if (!_ctAttAutoRefreshTimer) _ctAttStartAutoRefresh();
   var todaySlots = _ctAttTodaySlots();
   var todayCount = todaySlots.length;
   var streak = _ctAttStreak();
@@ -4728,20 +4751,25 @@ function _ctRenderAttendance(){
     + '</div>';
 
   // ─── 카드2.5: 추가 광고 보상 (출석 슬롯당 2회까지) ───
+  // build 315 — 슬롯 명시 + 메시지 명확화
   var bonusUsed = _ctBonusCurSlotCount();
   var bonusLeft = BONUS_PER_SLOT - bonusUsed;
   var _bypass = (typeof _BYPASS_ADS !== 'undefined' && _BYPASS_ADS);
   var bonusCanClaim = _bypass ? true : (bonusLeft > 0);
+  var slotIdx = _ctAttSlot();
+  var slotLabel = slotIdx === 0 ? '00–08시' : slotIdx === 1 ? '08–16시' : '16–24시';
   var bonusSubText, bonusBtnLabel;
   if (bonusCanClaim) {
     if (_bypass && bonusLeft <= 0) {
       bonusSubText = '🔓 베타: 한도 우회 중 (정식 출시 시 슬롯당 ' + BONUS_PER_SLOT + '회 제한)';
     } else {
-      bonusSubText = '이번 슬롯에서 ' + bonusLeft + '회 받을 수 있어요. (' + bonusUsed + ' / ' + BONUS_PER_SLOT + ')';
+      // 더 명확하게: "현재 슬롯 · 남은 횟수 강조 · 진행 표시"
+      bonusSubText = '<strong style="color:var(--gold-dark);">' + bonusLeft + '회</strong> 더 받을 수 있어요 · '
+                   + '<span style="color:var(--text-3);">' + slotLabel + ' 슬롯 (' + bonusUsed + '/' + BONUS_PER_SLOT + ')</span>';
     }
     bonusBtnLabel = '추가 광고 보상 받기';
   } else {
-    bonusSubText = '이번 슬롯은 모두 받았어요. 다음 슬롯까지 ' + _ctAttFmtMs(_ctAttNextSlotMs());
+    bonusSubText = '이번 슬롯은 모두 받았어요 · 다음 슬롯까지 <strong>' + _ctAttFmtMs(_ctAttNextSlotMs()) + '</strong>';
     bonusBtnLabel = '다음 슬롯 대기 중';
   }
   h += '<div class="att-card">'
@@ -4749,7 +4777,7 @@ function _ctRenderAttendance(){
     +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);">📺 추가 광고 보상</div>'
     +   '<div style="font-size:13px;font-weight:900;color:var(--gold-dark);">+15 치리</div>'
     + '</div>'
-    + '<div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;">' + bonusSubText + '</div>'
+    + '<div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;font-weight:600;">' + bonusSubText + '</div>'
     + '<button class="att-go-btn" onclick="ctOpenBonusAd()" '+(bonusCanClaim?'':'disabled')+'>' + bonusBtnLabel + '</button>'
     + '</div>';
 
@@ -22632,7 +22660,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 314;
+window.__APP_BUILD__ = 315;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
