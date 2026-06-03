@@ -2171,11 +2171,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div id="theme-swatches" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px 0;width:100%;"></div>
         </div>
       </div>
-      <!-- 어드민 진입 — _isAdmin === true 일 때만 노출 (기본 display:none) -->
-      <div class="sg" id="admin-entry-group" style="display:none;">
-        <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">🛡️ 운영자 메뉴</div>
-        <div class="si" onclick="openAdminDashboard()" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl">어드민 대시보드</span><span class="si-val">›</span></div>
-        <!-- 받은 쪽지함 (build 304→305: 좌측 아이콘 제거, 우선순위 칩만 표시) -->
+      <!-- 받은 쪽지함 — 모든 사용자 공통 (build 311: 어드민 그룹에서 분리) -->
+      <div class="sg">
         <div class="si" onclick="openUserInbox()" style="cursor:pointer;">
           <!-- 좌측 정렬을 위해 빈 자리 유지 (다른 메뉴들과 텍스트 라인 맞춤) -->
           <span style="font-size:15px;width:22px;text-align:center;"></span>
@@ -2185,6 +2182,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <span id="settings-inbox-badge" style="display:none;background:#E53935;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:auto;margin-right:4px;">0</span>
           <span class="si-val">›</span>
         </div>
+      </div>
+
+      <!-- 어드민 진입 — _isAdmin === true 일 때만 노출 (기본 display:none) -->
+      <div class="sg" id="admin-entry-group" style="display:none;">
+        <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">🛡️ 운영자 메뉴</div>
+        <div class="si" onclick="openAdminDashboard()" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl">어드민 대시보드</span><span class="si-val">›</span></div>
       </div>
       <!-- 친구 초대 / 레퍼럴 코드 -->
       <div class="sg">
@@ -22579,7 +22582,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 310;
+window.__APP_BUILD__ = 311;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
