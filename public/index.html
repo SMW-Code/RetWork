@@ -6792,6 +6792,8 @@ function renderRadar() {
    홈 렌더링
 ══════════════════════════════ */
 function renderHome() {
+  // build 322 — 새 달 진입 시 예산 자동 리셋 (체크만, 클라우드 fetch 는 로그인 hook 에서)
+  if (typeof _budgetCheckMonthReset === 'function') { try { _budgetCheckMonthReset(); } catch(e){} }
   var now   = new Date();
   var m     = now.getMonth()+1;
   var y     = now.getFullYear();
@@ -14536,6 +14538,56 @@ function _updateMobileBarColor(){
 /* ══════════════════════════════
    예산 설정
 ══════════════════════════════ */
+/* build 322 — 이달 예산: Supabase 동기화 + 매달 1일 자동 리셋 */
+function _budgetYMKey(){
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+/** renderHome 진입 시 호출 — 새 달이면 자동 리셋 */
+function _budgetCheckMonthReset(){
+  var saved = localStorage.getItem('receiptiq_budget_month');
+  if (saved && saved !== _budgetYMKey()) {
+    localStorage.removeItem('receiptiq_budget');
+    localStorage.removeItem('receiptiq_budget_month');
+    console.log('[budget] new month → auto reset (' + saved + ' → ' + _budgetYMKey() + ')');
+  }
+}
+
+/** 로그인 후 호출 — 클라우드에서 예산 복원 (현재 월만) */
+async function _budgetLoadFromCloud(){
+  if (!_currentUser || !_sb) return;
+  var res = await _sb.from('profiles')
+    .select('budget_amount,budget_month')
+    .eq('id', _currentUser.id)
+    .maybeSingle();
+  if (res.error || !res.data) return;
+  var b = res.data;
+  var ym = _budgetYMKey();
+  if (b.budget_amount > 0 && b.budget_month === ym) {
+    // 같은 월 → 복원
+    localStorage.setItem('receiptiq_budget', String(b.budget_amount));
+    localStorage.setItem('receiptiq_budget_month', ym);
+  } else {
+    // 다른 월 또는 미설정 → 로컬도 클리어 (다른 디바이스 동기)
+    localStorage.removeItem('receiptiq_budget');
+    localStorage.removeItem('receiptiq_budget_month');
+  }
+  // 홈 화면 떠있으면 즉시 갱신
+  try { if (typeof renderHome === 'function') renderHome(); } catch(e){}
+}
+
+/** 저장 시 클라우드에도 업데이트 */
+async function _budgetSaveToCloud(amount){
+  if (!_currentUser || !_sb) return;
+  var ym = _budgetYMKey();
+  var res = await _sb.from('profiles').update({
+    budget_amount: amount,
+    budget_month: amount > 0 ? ym : null
+  }).eq('id', _currentUser.id);
+  if (res.error) console.warn('[budget cloud save]', res.error);
+}
+
 function openBudgetSet() {
   var cur = localStorage.getItem('receiptiq_budget') || '';
   var inp = document.getElementById('budget-input');
@@ -14550,6 +14602,8 @@ function saveBudget() {
   var val = parseInt(document.getElementById('budget-input').value || '0');
   if (val > 0) {
     localStorage.setItem('receiptiq_budget', val);
+    localStorage.setItem('receiptiq_budget_month', _budgetYMKey());  // build 322
+    _budgetSaveToCloud(val);                                          // build 322
     showToast(t('toast.budget_saved', {amount: val.toLocaleString()}));
   }
   closeOv('ov-budget');
@@ -14557,6 +14611,8 @@ function saveBudget() {
 }
 function clearBudget() {
   localStorage.removeItem('receiptiq_budget');
+  localStorage.removeItem('receiptiq_budget_month');  // build 322
+  _budgetSaveToCloud(0);                              // build 322 — 클라우드도 클리어
   closeOv('ov-budget');
   renderHome();
   showToast(t('toast.budget_cleared'));
@@ -15415,6 +15471,8 @@ function showApp() {
   if (typeof _syncProfileFromSupabase === 'function') _syncProfileFromSupabase();
   // 받은 쪽지함 realtime 구독 시작 + 헤더 아바타 배지 즉시 갱신 (build 305)
   if (typeof _startInboxRealtime === 'function') setTimeout(_startInboxRealtime, 800);
+  // 이달 예산 클라우드 동기화 (build 322) — Supabase 의 budget_amount/month 복원
+  if (typeof _budgetLoadFromCloud === 'function') setTimeout(_budgetLoadFromCloud, 600);
   // 본인 비공개 메모 가게 목록 캐시 (프라이빗 모드 필터링용)
   if (typeof _loadMyPrivateNoteStores === 'function') _loadMyPrivateNoteStores();
   // 최종 활동 시각 갱신
@@ -22910,7 +22968,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 321;
+window.__APP_BUILD__ = 322;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
