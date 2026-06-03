@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-02 / build 300 / v0.9.0
+> **최종 갱신**: 2026-06-02 / build 303 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -12,9 +12,31 @@
 - **배포 URL**: https://retwork.jp (Vercel 자동 배포)
 - **GitHub**: SMW-Code/RetWork (`main` 브랜치 → Vercel 자동 빌드)
 - **로컬 경로**: `C:\Users\minus\Desktop\receiptiq`
-- **구조**: 단일 파일 PWA — `public/index.html` (~20,400+ 줄) + `public/sw.js`
+- **구조**: 단일 파일 PWA — `public/index.html` (~20,500+ 줄) + `public/sw.js`
 - **백엔드**: Supabase (`fkvfbxfgidrvymoftkdd.supabase.co`)
-- **현재 버전**: `v0.9.0` (semantic) / `build 300` (internal)
+- **현재 버전**: `v0.9.0` (semantic) / `build 303` (internal)
+
+---
+
+## 🆕 build 301 → 303 미니 변경 로그
+
+### build 301 — 홈 → 내역 이동 글리치 + 디버그 로그
+- `goToHistoryEntry(cat, id)`: switchTab 호출 전에 `currentFilter`/`_currentCatFilter` 미리 cat 으로 설정 → 첫 렌더부터 5월+cat 정확히 표시
+- `renderHistory(cat)` 중복 호출 제거
+- `console.log('[goToHistoryEntry] id=... date=... → Y/M cat=...')` 디버그 — 정식 출시 직전 일괄 정리 예정
+
+### build 302 — 설정 친구 초대 카드 4개 언어 번역
+- 신규 i18n 키 12개 (`inv.*` prefix): title/my_code/copy/stat_friends/stat_earned/stat_pending/desc/share/reward_count/reward_sub_can/reward_sub_capped/reward_btn
+- ja/ko/en/zh 전체 번역
+- 정적 부분 → `data-i18n` 자동 갱신
+- 동적 부분 (reward banner count/sub) → `renderReferralRewardUI` 안에서 `t()` 호출
+- 어드민 → 언어시트 → `🎟️ 친구 초대` 카테고리 신규 추가
+
+### build 303 — 가성비맵 race condition 수정
+- 증상: 진입 직후 가게 "탭해서 이동하기" 누르면 → 가게 위치 → (몇 초 후) 현 위치로 튕김
+- 원인: `initGoogleMap()` 의 `navigator.geolocation.getCurrentPosition` 콜백이 늦게 도착하면서 `_map.setCenter(_mapUserPos)` 가 사용자 panTo 를 덮어씀
+- fix: `window._mapUserInteracted` 플래그 + `dragstart`/`zoom_changed` 리스너 + 가게 panTo 호출 시 명시 set + geolocation cb 에서 `if(!_mapUserInteracted) setCenter`
+- 치리톡 맵(`_ctMap`) 동일 패턴 fix 도 같이 적용
 
 ---
 
