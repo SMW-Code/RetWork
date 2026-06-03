@@ -22577,7 +22577,11 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 308;
+window.__APP_BUILD__ = 309;
+// Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
+//   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
+//   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
+window.__VAPID_PUBLIC_KEY__ = 'BLbeE-rgbHXgwam9fEA3WCb0k8bPvos0J1kyTi7rvHwFTMODEA9S9xwj_C8EeTEucRZ1Uh2VPWZePmDW5h179kM';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
