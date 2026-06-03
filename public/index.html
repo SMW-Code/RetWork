@@ -2143,6 +2143,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="sg" id="admin-entry-group" style="display:none;">
         <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">🛡️ 운영자 메뉴</div>
         <div class="si" onclick="openAdminDashboard()" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl">어드민 대시보드</span><span class="si-val">›</span></div>
+        <!-- 받은 쪽지함 (build 304) -->
+        <div class="si" onclick="openUserInbox()" style="cursor:pointer;">
+          <span style="font-size:15px;width:22px;text-align:center;">📩</span>
+          <span class="si-lbl" data-i18n="settings.inbox">받은 쪽지함</span>
+          <span id="settings-inbox-badge" style="display:none;background:#E53935;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:auto;margin-right:4px;">0</span>
+          <span class="si-val">›</span>
+        </div>
       </div>
       <!-- 친구 초대 / 레퍼럴 코드 -->
       <div class="sg">
@@ -2947,6 +2954,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </div>
       </div>
 
+      <!-- ✉️ 쪽지 보내기 (build 304) -->
+      <div style="background:linear-gradient(135deg,rgba(91,155,213,.10),var(--surface));border:1px solid #5B9BD5;border-radius:12px;padding:12px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);">✉️ 이 사용자에게 쪽지 보내기</div>
+        </div>
+        <button onclick="admOpenSendMsg()" style="width:100%;padding:9px;border:none;border-radius:8px;background:#5B9BD5;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">✉️ 새 쪽지 작성</button>
+      </div>
+
       <!-- 권한 관리 (어드민 토글, 일시정지, 영구차단) -->
       <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;">🔧 권한 / 상태</div>
@@ -3002,6 +3017,77 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <button onclick="admMarkUserDeleted()" style="width:100%;padding:10px;border:none;border-radius:8px;background:var(--red);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 탈퇴 처리 (soft delete)</button>
         <div style="font-size:10px;color:var(--text-3);margin-top:6px;line-height:1.4;">profiles.deleted_at에 시각을 기록합니다. 데이터는 보존되고 사용자만 표시상 비활성. 영구 삭제는 Supabase Dashboard에서 직접.</div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 쪽지 발송 모달 (build 304) ══ -->
+<div class="overlay" id="ov-admin-send-msg" style="z-index:10003;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeOv('ov-admin-send-msg')">
+  <div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:fadeInScale .25s var(--anim);">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:16px;font-weight:900;color:var(--text-1);">✉️ 쪽지 발송</div>
+      <div onclick="closeOv('ov-admin-send-msg')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:4px 8px;">✕</div>
+    </div>
+    <div style="padding:18px 22px;">
+      <div id="adm-send-msg-target" style="background:var(--bg-2);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--text-2);font-weight:600;">받는 사람: —</div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">제목 (필수)</div>
+        <input id="adm-msg-title" type="text" maxlength="80" placeholder="예: 환영합니다 / 안내 / 점검 공지" style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:9px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">본문 (필수)</div>
+        <textarea id="adm-msg-body" maxlength="1000" rows="6" placeholder="사용자에게 전달할 내용을 입력하세요 (최대 1000자)" style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:9px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;resize:vertical;line-height:1.5;"></textarea>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">우선순위</div>
+          <select id="adm-msg-priority" style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:9px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);">
+            <option value="low">🔽 낮음</option>
+            <option value="normal" selected>📩 보통</option>
+            <option value="high">⚠️ 높음</option>
+            <option value="urgent">🚨 긴급</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">만료 (선택)</div>
+          <select id="adm-msg-expires" style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:9px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);">
+            <option value="">영구 보관</option>
+            <option value="1">1일 후 만료</option>
+            <option value="3">3일 후 만료</option>
+            <option value="7">7일 후 만료</option>
+            <option value="30">30일 후 만료</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:18px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">링크 URL (선택)</div>
+        <input id="adm-msg-link" type="url" placeholder="https://... (탭하면 이동)" style="width:100%;padding:10px 12px;border:1px solid var(--border-mid);border-radius:9px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button onclick="closeOv('ov-admin-send-msg')" style="flex:1;padding:11px;border:none;border-radius:9px;background:var(--bg-2);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">취소</button>
+        <button onclick="admSendMessage()" style="flex:2;padding:11px;border:none;border-radius:9px;background:#5B9BD5;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">📤 발송</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 사용자: 받은 쪽지함 모달 (build 304) ══ -->
+<div class="overlay" id="ov-user-inbox" style="z-index:945;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeOv('ov-user-inbox')">
+  <div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:18px;max-width:480px;width:100%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:fadeInScale .25s var(--anim);">
+    <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:16px;font-weight:900;color:var(--text-1);">📩 받은 쪽지함 <span id="inbox-unread-cnt" style="font-size:11px;color:#E53935;font-weight:800;margin-left:4px;"></span></div>
+      <div onclick="closeOv('ov-user-inbox')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:4px 8px;">✕</div>
+    </div>
+    <div id="inbox-list" style="flex:1;overflow-y:auto;padding:8px 0;">
+      <div style="text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;">로딩 중...</div>
+    </div>
+    <div style="padding:10px 22px;border-top:1px solid var(--border);display:flex;gap:6px;">
+      <button onclick="markAllInboxRead()" style="flex:1;padding:9px;border:none;border-radius:8px;background:var(--bg-2);color:var(--text-2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">✅ 모두 읽음 처리</button>
     </div>
   </div>
 </div>
@@ -11217,6 +11303,8 @@ var I18N = {
     'inv.reward_sub_can':'広告を見て200チリずつ受け取る（本日 {n}件可能）',
     'inv.reward_sub_capped':'本日の上限（{n}件）到達 · 明日また受け取る',
     'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
+    // 受信ボックス (build 304)
+    'settings.inbox':'📩 受信ボックス','inbox.empty':'まだメッセージはありません','inbox.from_admin':'運営から','inbox.read_all':'✅ すべて既読にする',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
@@ -11451,6 +11539,8 @@ var I18N = {
     'inv.reward_sub_can':'광고 보고 200치리씩 받기 (오늘 {n}건 가능)',
     'inv.reward_sub_capped':'오늘 한도({n}건) 도달 · 내일 다시 받기',
     'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
+    // 받은 쪽지함 (build 304)
+    'settings.inbox':'📩 받은 쪽지함','inbox.empty':'아직 메시지가 없어요','inbox.from_admin':'운영진으로부터','inbox.read_all':'✅ 모두 읽음 처리',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
@@ -11680,6 +11770,8 @@ var I18N = {
     'inv.reward_sub_can':'Watch an ad to claim 200 chiri each ({n} claimable today)',
     'inv.reward_sub_capped':'Daily cap ({n}) reached · try again tomorrow',
     'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
+    // Inbox (build 304)
+    'settings.inbox':'📩 Inbox','inbox.empty':'No messages yet','inbox.from_admin':'From admin','inbox.read_all':'✅ Mark all read',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
@@ -11909,6 +12001,8 @@ var I18N = {
     'inv.reward_sub_can':'观看广告每次领200塵积（今日还可 {n} 次）',
     'inv.reward_sub_capped':'今日上限（{n}件）已达 · 明日再领',
     'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
+    // 收件箱 (build 304)
+    'settings.inbox':'📩 收件箱','inbox.empty':'还没有消息','inbox.from_admin':'来自管理员','inbox.read_all':'✅ 全部标为已读',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
@@ -13662,6 +13756,8 @@ function openOv(id){
     renderThemeSwatches();
     loadProfileToSettings();
     loadReferralCodeToSettings(); // 레퍼럴 코드 로드
+    // 받은 쪽지함 배지 갱신 (build 304)
+    if (typeof _refreshInboxBadge === 'function') { try { _refreshInboxBadge(); } catch(e){} }
     // 저장된 GPT 키 상태 표시
     var inp = document.getElementById('gpt-key-input');
     var st  = document.getElementById('gpt-status');
@@ -20406,6 +20502,159 @@ async function admUnsuspendUser() {
   await openAdminUserDetail(_admEditUserId);
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   ✉️ 어드민 → 특정 유저 쪽지 발송 (build 304)
+   ══════════════════════════════════════════════════════════════════════ */
+function admOpenSendMsg() {
+  if (!_isAdmin || !_admEditUserId) return;
+  // 받는 사람 표시 (사용자 상세 모달의 현재 닉네임 추출)
+  var titleEl = document.getElementById('adm-user-title');
+  var name = titleEl ? (titleEl.textContent || '').replace(/^👤\s*/, '').trim() : '사용자';
+  var tgt = document.getElementById('adm-send-msg-target');
+  if (tgt) tgt.innerHTML = '받는 사람: <strong style="color:var(--text-1);">' + _esc(name) + '</strong> <span style="color:var(--text-3);font-size:10px;">(' + _admEditUserId.substring(0,8) + '…)</span>';
+  // 입력 초기화
+  document.getElementById('adm-msg-title').value    = '';
+  document.getElementById('adm-msg-body').value     = '';
+  document.getElementById('adm-msg-priority').value = 'normal';
+  document.getElementById('adm-msg-expires').value  = '';
+  document.getElementById('adm-msg-link').value     = '';
+  openOv('ov-admin-send-msg');
+  setTimeout(function(){ document.getElementById('adm-msg-title').focus(); }, 200);
+}
+
+async function admSendMessage() {
+  if (!_isAdmin || !_admEditUserId) return;
+  var title    = (document.getElementById('adm-msg-title').value || '').trim();
+  var body     = (document.getElementById('adm-msg-body').value  || '').trim();
+  var priority = document.getElementById('adm-msg-priority').value || 'normal';
+  var expDays  = document.getElementById('adm-msg-expires').value;
+  var linkUrl  = (document.getElementById('adm-msg-link').value  || '').trim() || null;
+
+  if (!title) { showToast('제목을 입력해 주세요'); return; }
+  if (!body)  { showToast('본문을 입력해 주세요'); return; }
+
+  var expiresAt = null;
+  if (expDays) {
+    var d = new Date();
+    d.setDate(d.getDate() + parseInt(expDays, 10));
+    expiresAt = d.toISOString();
+  }
+
+  var res = await _sb.rpc('admin_send_message', {
+    p_recipient_ids: [_admEditUserId],
+    p_title: title,
+    p_body: body,
+    p_priority: priority,
+    p_link_url: linkUrl,
+    p_expires_at: expiresAt
+  });
+  if (res.error) { showToast('발송 실패: ' + res.error.message); return; }
+  var data = res.data || {};
+  if (!data.ok) { showToast('발송 실패: ' + (data.err || 'unknown')); return; }
+  showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건)');
+  closeOv('ov-admin-send-msg');
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   📩 사용자 → 받은 쪽지함 (build 304)
+   ══════════════════════════════════════════════════════════════════════ */
+async function openUserInbox() {
+  openOv('ov-user-inbox');
+  await _loadInboxMessages();
+}
+
+async function _loadInboxMessages() {
+  var listEl = document.getElementById('inbox-list');
+  if (!listEl) return;
+  if (!_currentUser) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;">로그인이 필요해요</div>';
+    return;
+  }
+  listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;">로딩 중...</div>';
+
+  var res = await _sb.from('admin_messages')
+    .select('id,title,body,priority,link_url,is_read,read_at,created_at')
+    .eq('recipient_id', _currentUser.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (res.error) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--red);font-size:13px;">' + _esc(res.error.message) + '</div>';
+    return;
+  }
+  var msgs = res.data || [];
+  var unreadEl = document.getElementById('inbox-unread-cnt');
+  var unreadN = msgs.filter(function(m){ return !m.is_read; }).length;
+  if (unreadEl) unreadEl.textContent = unreadN > 0 ? '(' + unreadN + ')' : '';
+
+  if (msgs.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text-3);font-size:13px;">' + t('inbox.empty') + '</div>';
+    return;
+  }
+
+  var PRI_BADGE = {
+    low:    '<span style="font-size:10px;color:var(--text-3);font-weight:700;padding:1px 6px;border-radius:6px;background:var(--bg-2);">🔽 낮음</span>',
+    normal: '',
+    high:   '<span style="font-size:10px;color:#E68900;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(230,137,0,.15);">⚠️ 높음</span>',
+    urgent: '<span style="font-size:10px;color:#fff;font-weight:800;padding:1px 6px;border-radius:6px;background:#E53935;">🚨 긴급</span>'
+  };
+
+  listEl.innerHTML = msgs.map(function(m){
+    var dt = new Date(m.created_at);
+    var dateStr = dt.getFullYear()+'/'+String(dt.getMonth()+1).padStart(2,'0')+'/'+String(dt.getDate()).padStart(2,'0')
+                +' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    var unread = !m.is_read;
+    var pri = PRI_BADGE[m.priority] || '';
+    var linkBtn = m.link_url
+      ? '<a href="'+_esc(m.link_url)+'" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" style="display:inline-block;margin-top:6px;font-size:11px;color:#5B9BD5;text-decoration:underline;">🔗 링크 열기</a>'
+      : '';
+    return '<div onclick="_inboxClickMsg(\''+m.id+'\')" style="padding:12px 22px;border-bottom:.5px solid var(--border);cursor:pointer;background:'+(unread?'rgba(91,155,213,.06)':'transparent')+';">'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">'
+        + (unread ? '<span style="width:7px;height:7px;border-radius:50%;background:#5B9BD5;flex-shrink:0;"></span>' : '')
+        + '<div style="flex:1;font-size:13px;font-weight:'+(unread?'800':'600')+';color:var(--text-1);">'+_esc(m.title)+'</div>'
+        + pri
+      + '</div>'
+      + '<div style="font-size:12px;color:var(--text-2);line-height:1.5;white-space:pre-wrap;word-break:break-word;">'+_esc(m.body)+'</div>'
+      + linkBtn
+      + '<div style="font-size:10px;color:var(--text-3);margin-top:6px;font-weight:600;">'+t('inbox.from_admin')+' · '+dateStr+'</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function _inboxClickMsg(id) {
+  // 클릭 시 자동 읽음 처리
+  var res = await _sb.rpc('mark_admin_message_read', { p_message_id: id });
+  if (!res.error) {
+    await _loadInboxMessages();
+    await _refreshInboxBadge();
+  }
+}
+
+async function markAllInboxRead() {
+  if (!_currentUser) return;
+  var res = await _sb.rpc('mark_admin_message_read', { p_message_id: null });
+  if (res.error) { showToast('실패: ' + res.error.message); return; }
+  var data = res.data || {};
+  showToast('✅ ' + (data.updated || 0) + '건 읽음 처리됨');
+  await _loadInboxMessages();
+  await _refreshInboxBadge();
+}
+
+/** 설정창 진입 시 배지 갱신 (안 읽은 메시지 수) */
+async function _refreshInboxBadge() {
+  var badgeEl = document.getElementById('settings-inbox-badge');
+  if (!badgeEl || !_currentUser) return;
+  var res = await _sb.rpc('get_unread_admin_messages_count');
+  if (res.error) { badgeEl.style.display = 'none'; return; }
+  var n = parseInt(res.data, 10) || 0;
+  if (n > 0) {
+    badgeEl.textContent = n > 99 ? '99+' : n;
+    badgeEl.style.display = '';
+  } else {
+    badgeEl.style.display = 'none';
+  }
+}
+
 // ── 탈퇴 처리 (soft delete) ──
 async function admMarkUserDeleted() {
   if (!_isAdmin || !_admEditUserId) return;
@@ -22007,7 +22256,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 303;
+window.__APP_BUILD__ = 304;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
