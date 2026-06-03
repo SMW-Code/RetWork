@@ -16814,6 +16814,12 @@ async function adminProcessReport(reportId, commentTable, commentId, action, use
   }[action];
   if (confirmMsg && !confirm(confirmMsg)) return;
 
+  // build 318 — 신고자 정보 미리 조회 (push 발송용)
+  var reporterRes = await _sb.from('comment_reports')
+    .select('reporter_id')
+    .eq('id', reportId)
+    .maybeSingle();
+
   // 1. 댓글 삭제 (remove 또는 remove_and_ban)
   if (action === 'remove' || action === 'remove_and_ban') {
     var delRes = await _sb.from(commentTable).delete().eq('id', commentId);
@@ -16857,6 +16863,22 @@ async function adminProcessReport(reportId, commentTable, commentId, action, use
     dismiss:        '⏭️ 무시 처리됨'
   };
   showToast(msgMap[action] || '처리됨');
+
+  // build 318 — 신고자에게 처리 결과 푸시
+  if (reporterRes && reporterRes.data && reporterRes.data.reporter_id) {
+    var pushMsg = {
+      remove:         '신고하신 댓글이 삭제되었어요',
+      remove_and_ban: '신고하신 댓글 삭제 + 작성자 차단 처리되었어요',
+      dismiss:        '신고하신 댓글이 검토 후 무시 처리되었어요'
+    }[action] || '신고가 처리되었어요';
+    _sendSocialPush(
+      reporterRes.data.reporter_id,
+      '🚨 신고 처리 결과',
+      pushMsg,
+      { url: '/', tag: 'report-' + reportId, priority: 'normal' }
+    );
+  }
+
   await _loadAdminReportList();
 }
 
@@ -18140,6 +18162,13 @@ async function _admPcLoadExrList() {
 async function _admPcExrSetStatus(id, status) {
   if (!_sb || !_currentUser) return;
   if (status === 'cancelled' && !confirm('취소하시겠어요? (치리 환불은 별도 처리 필요)')) return;
+
+  // build 318 — 신청자 정보 미리 조회 (push 발송용)
+  var fetchRes = await _sb.from('exchange_requests')
+    .select('user_id, item_name')
+    .eq('id', id)
+    .maybeSingle();
+
   var payload = {
     status: status,
     processed_by: _currentUser.id,
@@ -18148,6 +18177,30 @@ async function _admPcExrSetStatus(id, status) {
   var res = await _sb.from('exchange_requests').update(payload).eq('id', id);
   if (res.error) { showToast('변경 실패: ' + res.error.message); return; }
   showToast('✅ ' + (EXR_STATUS_META[status] || {label:status}).label + ' 으로 변경');
+
+  // build 318 — 신청자에게 상태 변경 푸시
+  if (fetchRes && fetchRes.data && fetchRes.data.user_id) {
+    var itemName = fetchRes.data.item_name || '상품';
+    var pushTitleMap = {
+      shipped:   '📦 교환 상품 발송 완료',
+      completed: '✅ 교환 완료',
+      cancelled: '❌ 교환 취소'
+    };
+    var pushBodyMap = {
+      shipped:   '「' + itemName + '」 발송됐어요 · 도착까지 1~7일 소요',
+      completed: '「' + itemName + '」 교환이 완료 처리되었어요',
+      cancelled: '「' + itemName + '」 교환이 취소되었어요 · 치리는 별도 환불'
+    };
+    if (pushTitleMap[status]) {
+      _sendSocialPush(
+        fetchRes.data.user_id,
+        pushTitleMap[status],
+        pushBodyMap[status],
+        { url: '/', tag: 'exr-' + id, priority: 'normal' }
+      );
+    }
+  }
+
   _admPcLoadExrList();
   _admPcLoadExrBadge();
 }
@@ -19651,12 +19704,29 @@ function renderEditReqCard(r){
 async function markEditReqDone(id, done){
   if(!_isAdmin||!_sb) return;
   try {
+    // build 318 — 신청자 정보 미리 조회 (push 발송용)
+    var fetchRes = await _sb.from('store_edit_requests')
+      .select('user_id, store_name')
+      .eq('id', id)
+      .maybeSingle();
+
     var res=await _sb.from('store_edit_requests').update({
       status: done?'done':'open',
       resolved_at: done?new Date().toISOString():null
     }).eq('id', id);
     if(res.error){ showToast('처리 실패: '+res.error.message); return; }
     showToast(done?'✅ 처리완료로 표시했어요':'↩ 미처리로 되돌렸어요');
+
+    // build 318 — 처리완료 시 신청자에게 푸시
+    if (done && fetchRes.data && fetchRes.data.user_id) {
+      _sendSocialPush(
+        fetchRes.data.user_id,
+        '🏪 가게 수정요청 처리됐어요',
+        '신청하신 「' + (fetchRes.data.store_name || '가게') + '」 수정이 반영됐어요',
+        { url: '/', tag: 'edit-req-' + id, priority: 'normal' }
+      );
+    }
+
     // 현재 활성 탭 유지하며 새로고침
     loadAdminEditReqs(window._admSerFilter||'open');
     _loadEditReqBadge();
@@ -22707,7 +22777,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 317;
+window.__APP_BUILD__ = 318;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
