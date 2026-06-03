@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v0.9.0-b309';
+const CACHE_NAME = 'receiptiq-v0.9.0-b310';
 // manifest.json은 인라인 Blob URL로 처리됨 (Vercel 방화벽 차단 회피)
 const STATIC_CACHE = ['/icons/icon.png', '/icons/icon.svg'];
 
@@ -66,15 +66,26 @@ self.addEventListener('push', event => {
     payload = { title: 'RetWork', body: event.data ? event.data.text() : '' };
   }
   const title = payload.title || 'RetWork';
+  const priority = (payload.priority || 'normal').toString();
+  const isUrgent = priority === 'urgent';
+  const isHigh   = priority === 'high';
+
   const opts = {
     body:  payload.body || '',
     icon:  payload.icon  || '/icons/icon.png',
     badge: payload.badge || '/icons/icon.png',
     tag:   payload.tag   || 'retwork-msg',  // 같은 tag 면 알림 덮어쓰기 (스팸 방지)
-    renotify: !!payload.renotify,
+    // build 310 — 헤즈업/배너 표시 강화
+    renotify: isUrgent || isHigh,                  // 같은 tag 라도 새로 알림
+    requireInteraction: isUrgent,                  // urgent 면 사용자가 닫기 전까지 유지 (Android)
+    silent: false,                                  // 소리/진동 ON
+    vibrate: isUrgent ? [300, 100, 300, 100, 300]   // 긴급: 강하게
+            : isHigh   ? [200, 100, 200]            // 높음: 보통
+                       : [150],                     // 일반: 짧게
     data: {
       url: payload.url || payload.link || '/',
-      messageId: payload.messageId || null
+      messageId: payload.messageId || null,
+      priority: priority
     },
     // 액션 버튼 (Android 만 표시)
     actions: payload.actions || []

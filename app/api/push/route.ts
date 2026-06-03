@@ -81,6 +81,7 @@ export async function POST(request: Request) {
   const tag = (body?.tag || 'retwork-msg').toString();
   const messageId = body?.messageId || null;
   const broadcast = body?.broadcast === true;  // true = 전체 발송
+  const priority = (body?.priority || 'normal').toString();  // build 310 — 헤즈업 강화용
 
   if (!title || !msgBody) {
     return Response.json({ ok: false, err: 'title and body required' }, { status: 400 });
@@ -106,10 +107,17 @@ export async function POST(request: Request) {
 
   // 6) 각 구독에 발송 (병렬)
   const payload = JSON.stringify({
-    title, body: msgBody, url, tag, messageId,
+    title, body: msgBody, url, tag, messageId, priority,
     icon: '/icons/icon.png',
     badge: '/icons/icon.png'
   });
+
+  // build 310 — Web Push 표준 옵션: urgency 'high' 면 OS 가 즉시 헤즈업 표시 유도
+  const isUrgent = (priority === 'urgent' || priority === 'high');
+  const pushOptions = {
+    TTL: 86400,                              // 1일 보관 후 만료 (기본 4주 → 단축)
+    urgency: isUrgent ? 'high' : 'normal'    // VAPID urgency 헤더
+  } as any;
 
   const expiredIds: string[] = [];
   const results = await Promise.allSettled(subs.map(async (s) => {
@@ -118,7 +126,7 @@ export async function POST(request: Request) {
       keys: { p256dh: s.p256dh, auth: s.auth }
     };
     try {
-      await webpush.sendNotification(subscription as any, payload);
+      await webpush.sendNotification(subscription as any, payload, pushOptions);
       // 성공 시 last_sent_at 업데이트 (비동기, 결과 기다리지 않음)
       sb.from('push_subscriptions').update({
         last_sent_at: new Date().toISOString(), last_error: null
