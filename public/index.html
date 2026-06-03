@@ -3013,10 +3013,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div style="font-size:11px;font-weight:700;color:var(--text-3);">✉️ 이 사용자에게 쪽지 보내기</div>
         </div>
         <button onclick="admOpenSendMsg()" style="width:100%;padding:9px;border:none;border-radius:8px;background:#5B9BD5;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:10px;">✉️ 새 쪽지 작성</button>
-        <!-- 보낸 쪽지 이력 (build 319) -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:4px;">
-          <div style="font-size:11px;font-weight:700;color:var(--text-3);">📨 보낸 쪽지 이력 <span id="adm-msg-history-cnt" style="color:var(--text-3);font-weight:600;"></span></div>
+        <!-- 보낸 쪽지 이력 (build 319, 320 — 전체 삭제 추가) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:4px;gap:4px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);flex:1;">📨 보낸 쪽지 이력 <span id="adm-msg-history-cnt" style="color:var(--text-3);font-weight:600;"></span></div>
           <button onclick="_admLoadUserMsgHistory()" style="background:transparent;border:.5px solid var(--border);color:var(--text-3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>
+          <button onclick="_admDeleteAllUserMsgs()" style="background:transparent;border:.5px solid var(--red);color:var(--red);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑 전체 삭제</button>
         </div>
         <div id="adm-msg-history-list" style="max-height:280px;overflow-y:auto;font-size:11px;color:var(--text-3);"></div>
       </div>
@@ -20312,7 +20313,25 @@ async function _loadAdminDetailData(type) {
   }
   _admDetailData = res.data || [];
   _admDetailPage = 0;
+  // build 320 — 사용자 타입이면 admin_messages 의 receipient 셋 미리 채워서 ✉️ 배지 표시
+  if (_admDetailType === 'users') {
+    try {
+      await _admPreloadMsgRecipients();
+    } catch(e) { console.warn('[adm msg recipients]', e); }
+  }
   _renderAdminDetail();
+}
+
+/* build 320 — 어드민이 쪽지 보낸 적 있는 유저 ID 셋 캐시 */
+window._admMsgRecipientIds = null;
+async function _admPreloadMsgRecipients() {
+  if (!_sb) return;
+  var res = await _sb.from('admin_messages')
+    .select('recipient_id');
+  if (res.error) { window._admMsgRecipientIds = new Set(); return; }
+  var s = new Set();
+  (res.data || []).forEach(function(r){ if (r.recipient_id) s.add(r.recipient_id); });
+  window._admMsgRecipientIds = s;
 }
 
 function _admDetailFilter() {
@@ -20385,10 +20404,15 @@ function _renderUserRow(u) {
   var date = (u.created_at||'').slice(0,10);
   var adminBadge = u.is_admin ? '<span style="background:var(--gold-light);color:var(--gold-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;">🛡️ ADMIN</span>' : '';
   var refCode = u.referral_code ? ('<span style="font-family:monospace;background:var(--bg-2);color:var(--text-2);font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;">🎟️ '+_esc(u.referral_code)+'</span>') : '';
+  // build 320 — 어드민이 쪽지 보낸 적 있으면 ✉️ 배지 (직관적 표시)
+  var msgBadge = (window._admMsgRecipientIds && window._admMsgRecipientIds.has(u.id))
+    ? '<span title="어드민이 쪽지 보낸 사용자" style="background:rgba(91,155,213,.15);color:#5B9BD5;font-size:11px;font-weight:800;padding:1px 6px;border-radius:8px;">✉️</span>'
+    : '';
   return '<div onclick="openAdminUserDetail(\''+u.id+'\')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 12px;transition:transform .12s;">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;">'
     +   '<div style="flex:1;min-width:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'
     +     '<span style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(u.nickname||'(닉네임 없음)')+' ›</span>'
+    +     msgBadge
     +     adminBadge
     +     refCode
     +     _newBadgeIfRecent(u.created_at)
@@ -20798,6 +20822,23 @@ async function _admDeleteUserMsg(msgId) {
   if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
   showToast('🗑 쪽지가 삭제됐어요');
   await _admLoadUserMsgHistory();
+  // build 320 — 마지막 1개였으면 Set 에서 제거 (사용자 카드 ✉️ 배지 사라짐)
+  var cntEl = document.getElementById('adm-msg-history-cnt');
+  if (cntEl && cntEl.textContent === '(0건)') {
+    if (window._admMsgRecipientIds) window._admMsgRecipientIds.delete(_admEditUserId);
+  }
+}
+
+/* build 320 — 이 유저에게 보낸 모든 쪽지 일괄 삭제 */
+async function _admDeleteAllUserMsgs() {
+  if (!_isAdmin || !_admEditUserId || !_sb) return;
+  if (!confirm('⚠️ 이 사용자에게 보낸 모든 쪽지를 삭제할까요?\n\n(수신자 측에서도 즉시 사라집니다. 이 작업은 되돌릴 수 없어요)')) return;
+  var res = await _sb.from('admin_messages').delete().eq('recipient_id', _admEditUserId);
+  if (res.error) { showToast('전체 삭제 실패: ' + res.error.message); return; }
+  showToast('🗑 모든 쪽지가 삭제됐어요');
+  // Set 에서 제거 → 사용자 카드의 ✉️ 배지도 다음 렌더 시 사라짐
+  if (window._admMsgRecipientIds) window._admMsgRecipientIds.delete(_admEditUserId);
+  await _admLoadUserMsgHistory();
 }
 
 async function admSendMessage() {
@@ -20862,6 +20903,8 @@ async function admSendMessage() {
   closeOv('ov-admin-send-msg');
   // build 319 — 발송 직후 이력 갱신
   if (typeof _admLoadUserMsgHistory === 'function') { try { _admLoadUserMsgHistory(); } catch(e){} }
+  // build 320 — Set 에 추가 (사용자 카드 ✉️ 배지 즉시 반영)
+  if (window._admMsgRecipientIds) window._admMsgRecipientIds.add(_admEditUserId);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -22857,7 +22900,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 319;
+window.__APP_BUILD__ = 320;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
