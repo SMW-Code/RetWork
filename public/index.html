@@ -8225,6 +8225,14 @@ var MR_SUPER_CATS  = ['food','life','shop','med','beauty','other','fuel'];
 var MR_DINING_CATS = ['eat','cafe','drink'];
 
 function openMonthReport(){
+  // build 324 — 미구독 유저는 광고 시청 후 진입 (구독 유저는 즉시)
+  if (!_isPremium && typeof showAdModal === 'function') {
+    showAdModal(function(){ _openMonthReportInner(); }, 'monthreport');
+    return;
+  }
+  _openMonthReportInner();
+}
+function _openMonthReportInner(){
   var now = new Date();
   _mrY = (typeof calYear !== 'undefined' && calYear) ? calYear : now.getFullYear();
   _mrM = (typeof calMonth !== 'undefined' && calMonth) ? calMonth : now.getMonth()+1;
@@ -15360,6 +15368,10 @@ function showAdModal(callback, context) {
     if (pubBtn)    pubBtn.style.display = 'none';
   } else if (_adContext === 'menu_photo') {
     if (mainLabel) mainLabel.textContent = '광고 보고 메뉴 사진 등록';
+    if (pubBtn)    pubBtn.style.display = 'none';
+  } else if (_adContext === 'monthreport') {
+    // build 324 — 달력 자세히 보기 (월별 리포트) 진입 광고
+    if (mainLabel) mainLabel.textContent = '광고 보고 내용 확인하기';
     if (pubBtn)    pubBtn.style.display = 'none';
   } else {
     if (mainLabel) mainLabel.textContent = t('ad.save_free');
@@ -23055,7 +23067,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 323;
+window.__APP_BUILD__ = 324;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
