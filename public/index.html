@@ -2137,10 +2137,15 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="prem-banner"><div><div style="font-size:13px;font-weight:800;" data-i18n="premium.title">프리미엄 업그레이드</div><div style="font-size:11px;opacity:.8;margin-top:3px;" data-i18n="premium.sub">무제한 스캔 · 광고 제거</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:900;">¥320</div><div style="font-size:10px;opacity:.75;" data-i18n="premium.unit">/월</div></div></div>
       <div class="sg">
         <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🌙</span><span class="si-lbl" data-i18n="settings.dark">다크모드</span><div class="toggle off" id="dark-toggle" onclick="toggleDarkMode()"></div></div>
-        <!-- 알림 토글 — 실제 푸시 알림 인프라 구축 후 노출 예정 (정식 출시 시) -->
-        <!-- <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🔔</span><span class="si-lbl" data-i18n="settings.notif.save">절약 알림</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div> -->
-        <!-- <div class="si"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl" data-i18n="settings.notif.weekly">주간 리포트</span><div class="toggle" onclick="this.classList.toggle('off')"></div></div> -->
-        <!-- <div class="si"><span style="font-size:15px;width:22px;text-align:center;">💡</span><span class="si-lbl" data-i18n="settings.notif.compare">가격 비교 알림</span><div class="toggle off" onclick="this.classList.toggle('off')"></div></div> -->
+        <!-- 푸시 알림 토글 (build 306) — 운영팀 쪽지 + 공지 알림 -->
+        <div class="si" style="flex-direction:column;align-items:stretch;gap:4px;padding-bottom:6px;">
+          <div style="display:flex;align-items:center;width:100%;">
+            <span style="font-size:15px;width:22px;text-align:center;">🔔</span>
+            <span class="si-lbl" data-i18n="settings.push">푸시 알림</span>
+            <div id="settings-push-toggle" class="toggle off" onclick="togglePushNotifications()" style="margin-left:auto;"></div>
+          </div>
+          <div id="settings-push-hint" style="font-size:10px;color:var(--text-3);font-weight:600;padding-left:22px;"></div>
+        </div>
       </div>
       <div class="sg">
         <div class="si"><span style="font-size:15px;width:22px;text-align:center;">🌐</span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
@@ -11327,6 +11332,7 @@ var I18N = {
     'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
     // 受信ボックス (build 304)
     'settings.inbox':'受信ボックス','inbox.empty':'まだメッセージはありません','inbox.from_admin':'運営から','inbox.read_all':'✅ すべて既読にする',
+    'settings.push':'プッシュ通知',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
@@ -11563,6 +11569,7 @@ var I18N = {
     'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
     // 받은 쪽지함 (build 304)
     'settings.inbox':'받은 쪽지함','inbox.empty':'아직 메시지가 없어요','inbox.from_admin':'운영진으로부터','inbox.read_all':'✅ 모두 읽음 처리',
+    'settings.push':'푸시 알림',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
@@ -11794,6 +11801,7 @@ var I18N = {
     'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
     // Inbox (build 304)
     'settings.inbox':'Inbox','inbox.empty':'No messages yet','inbox.from_admin':'From admin','inbox.read_all':'✅ Mark all read',
+    'settings.push':'Push notifications',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
@@ -12025,6 +12033,7 @@ var I18N = {
     'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
     // 收件箱 (build 304)
     'settings.inbox':'收件箱','inbox.empty':'还没有消息','inbox.from_admin':'来自管理员','inbox.read_all':'✅ 全部标为已读',
+    'settings.push':'推送通知',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
@@ -13780,6 +13789,8 @@ function openOv(id){
     loadReferralCodeToSettings(); // 레퍼럴 코드 로드
     // 받은 쪽지함 배지 갱신 (build 304)
     if (typeof _refreshInboxBadge === 'function') { try { _refreshInboxBadge(); } catch(e){} }
+    // 푸시 알림 토글 상태 동기화 (build 306)
+    if (typeof _syncPushToggleUI === 'function') { try { _syncPushToggleUI(); } catch(e){} }
     // 저장된 GPT 키 상태 표시
     var inp = document.getElementById('gpt-key-input');
     var st  = document.getElementById('gpt-status');
@@ -17141,7 +17152,31 @@ async function adminCreateAnnouncement() {
     showToast('공지 발송 실패: ' + res.error.message);
     return;
   }
-  showToast('📢 공지가 발송됐어요');
+  // ─── build 306 — 모든 사용자에게 푸시 broadcast (구독자만 받음) ───
+  try {
+    var sess = await _sb.auth.getSession();
+    var tok  = sess.data && sess.data.session && sess.data.session.access_token;
+    if (tok) {
+      var prRes = await fetch('/api/push', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          broadcast: true,
+          title: '📢 ' + title,
+          body: content.length > 100 ? content.substring(0, 97) + '...' : content,
+          url: '/',
+          tag: 'announcement'
+        })
+      });
+      var pj = await prRes.json();
+      showToast('📢 공지 발송 + 푸시 ' + (pj && pj.sent || 0) + '개 디바이스');
+    } else {
+      showToast('📢 공지가 발송됐어요');
+    }
+  } catch (e) {
+    console.warn('[push] announcement broadcast failed:', e);
+    showToast('📢 공지가 발송됐어요 (푸시 실패)');
+  }
   ['ann-title','ann-content','ann-banner','ann-ends'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
@@ -20575,7 +20610,35 @@ async function admSendMessage() {
   if (res.error) { showToast('발송 실패: ' + res.error.message); return; }
   var data = res.data || {};
   if (!data.ok) { showToast('발송 실패: ' + (data.err || 'unknown')); return; }
-  showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건)');
+  // ─── build 306 — 푸시 알림 동시 발송 (Vercel API) ───
+  try {
+    var sess = await _sb.auth.getSession();
+    var tok  = sess.data && sess.data.session && sess.data.session.access_token;
+    if (tok) {
+      var prRes = await fetch('/api/push', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient_ids: [_admEditUserId],
+          title: title,
+          body: body,
+          url: linkUrl || '/',
+          tag: 'admin-msg-' + Date.now()
+        })
+      });
+      var pj = await prRes.json();
+      if (pj && pj.ok) {
+        showToast('📤 쪽지 발송 완료 · 푸시 ' + (pj.sent || 0) + '개 디바이스');
+      } else {
+        showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건) · 푸시: ' + (pj && pj.err || '구독 없음'));
+      }
+    } else {
+      showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건)');
+    }
+  } catch (e) {
+    console.warn('[push] send failed:', e);
+    showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건) · 푸시 발송 실패');
+  }
   closeOv('ov-admin-send-msg');
 }
 
@@ -20666,7 +20729,164 @@ async function markAllInboxRead() {
   await _refreshInboxBadge();
 }
 
-/* build 305 — 헤더 아바타 배지 + 설정 메뉴 우선순위 칩 + realtime 구독 */
+/* ══════════════════════════════════════════════════════════════════════
+   🔔 푸시 알림 (Web Push) — build 306
+   ══════════════════════════════════════════════════════════════════════ */
+
+// VAPID Public Key — Vercel 환경변수와 일치해야 함 (사용자가 NEXT_PUBLIC_VAPID_PUBLIC_KEY 로 등록 후 빌드 타임에 주입)
+// 임시: HTML 안에 직접 박을 수 있도록 window 에서 읽기. 미설정 시 푸시 기능 비활성화.
+window.__VAPID_PUBLIC_KEY__ = window.__VAPID_PUBLIC_KEY__ || '';
+
+function _isPushSupported() {
+  return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
+}
+
+function _urlBase64ToUint8Array(base64String) {
+  var padding = '='.repeat((4 - base64String.length % 4) % 4);
+  var base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  var rawData = atob(base64);
+  var outputArray = new Uint8Array(rawData.length);
+  for (var i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+function _detectDeviceLabel() {
+  var ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua)) return /CriOS/.test(ua) ? 'iOS Chrome' : 'iOS Safari';
+  if (/Android/.test(ua))           return /Chrome/.test(ua) ? 'Android Chrome' : 'Android Browser';
+  if (/Windows/.test(ua))           return /Edg/.test(ua) ? 'Windows Edge' : 'Windows Chrome';
+  if (/Mac OS X/.test(ua))          return /Safari/.test(ua) && !/Chrome/.test(ua) ? 'Mac Safari' : 'Mac Chrome';
+  return 'Other';
+}
+
+/** 현재 알림 상태 — 'unsupported' | 'denied' | 'default' | 'granted-no-sub' | 'granted-subscribed' */
+async function _pushStatus() {
+  if (!_isPushSupported()) return 'unsupported';
+  if (Notification.permission === 'denied') return 'denied';
+  if (Notification.permission !== 'granted') return 'default';
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    return sub ? 'granted-subscribed' : 'granted-no-sub';
+  } catch (e) { return 'default'; }
+}
+
+/** 사용자가 '알림 켜기' 토글 ON 시 호출 — 권한 요청 + 구독 + DB 저장 */
+async function enablePushNotifications() {
+  if (!_isPushSupported()) {
+    showToast('이 브라우저는 푸시 알림을 지원하지 않아요');
+    return false;
+  }
+  if (!window.__VAPID_PUBLIC_KEY__) {
+    showToast('서버 설정 중 — 관리자에게 문의해 주세요 (VAPID 키 미설정)');
+    console.warn('[push] VAPID_PUBLIC_KEY not configured (window.__VAPID_PUBLIC_KEY__)');
+    return false;
+  }
+  // iOS 16.4+ 는 PWA 홈화면 추가 필수
+  var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isIOS && !isStandalone) {
+    showToast('아이폰은 홈 화면 추가 후 PWA 에서만 알림 받을 수 있어요');
+    return false;
+  }
+
+  try {
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showToast('알림 권한이 거부되었어요. 브라우저 설정에서 변경 가능합니다.');
+      return false;
+    }
+    var reg = await navigator.serviceWorker.ready;
+    // 기존 구독 있으면 재사용
+    var sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: _urlBase64ToUint8Array(window.__VAPID_PUBLIC_KEY__)
+      });
+    }
+    var subJson = sub.toJSON();
+    // DB 저장 (upsert on endpoint)
+    var res = await _sb.from('push_subscriptions').upsert({
+      user_id: _currentUser.id,
+      endpoint: subJson.endpoint,
+      p256dh: subJson.keys.p256dh,
+      auth: subJson.keys.auth,
+      device_label: _detectDeviceLabel(),
+      user_agent: navigator.userAgent.substring(0, 300),
+      enabled: true,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'endpoint' });
+    if (res.error) {
+      showToast('구독 저장 실패: ' + res.error.message);
+      return false;
+    }
+    showToast('🔔 알림이 켜졌어요');
+    return true;
+  } catch (e) {
+    console.error('[push] enable failed:', e);
+    showToast('알림 등록 실패: ' + (e.message || 'unknown'));
+    return false;
+  }
+}
+
+/** 사용자가 '알림 끄기' 토글 OFF 시 호출 — DB 에서 비활성화 + 구독 해제 */
+async function disablePushNotifications() {
+  try {
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      var ep = sub.endpoint;
+      await sub.unsubscribe();
+      // DB 에서 삭제 (또는 enabled=false 로 비활성)
+      await _sb.from('push_subscriptions').delete().eq('endpoint', ep);
+    }
+    showToast('🔕 알림이 꺼졌어요');
+    return true;
+  } catch (e) {
+    console.error('[push] disable failed:', e);
+    showToast('알림 해제 실패: ' + (e.message || 'unknown'));
+    return false;
+  }
+}
+
+/** 설정창 토글 UI 동기화 (열릴 때마다 호출) */
+async function _syncPushToggleUI() {
+  var toggleEl = document.getElementById('settings-push-toggle');
+  if (!toggleEl) return;
+  var st = await _pushStatus();
+  // .toggle 의 'off' 클래스 = OFF 상태
+  if (st === 'granted-subscribed') toggleEl.classList.remove('off');
+  else                              toggleEl.classList.add('off');
+  // 상태 라벨
+  var hintEl = document.getElementById('settings-push-hint');
+  if (hintEl) {
+    var msg = {
+      'unsupported':         '이 브라우저는 지원 안 함',
+      'denied':              '⚠️ 권한 거부됨 — 브라우저 설정에서 변경',
+      'default':             '눌러서 알림 권한 요청',
+      'granted-no-sub':      '권한 OK — 다시 눌러 구독',
+      'granted-subscribed':  '✓ 활성화됨'
+    }[st] || '';
+    hintEl.textContent = msg;
+  }
+}
+
+/** 토글 클릭 핸들러 */
+async function togglePushNotifications() {
+  var toggleEl = document.getElementById('settings-push-toggle');
+  if (!toggleEl) return;
+  var isOff = toggleEl.classList.contains('off');
+  // 낙관적 UI 토글
+  toggleEl.classList.toggle('off');
+  var ok = isOff ? await enablePushNotifications() : await disablePushNotifications();
+  if (!ok) toggleEl.classList.toggle('off');  // 실패 시 원복
+  await _syncPushToggleUI();
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   build 305 — 헤더 아바타 배지 + 설정 메뉴 우선순위 칩 + realtime 구독
+   ══════════════════════════════════════════════════════════════════════ */
 
 /** 모든 .hdr-avatar 에 빨간 동그라미 배지 적용/해제 (CSS ::after data-badge) */
 function _setAvatarBadge(n) {
@@ -22349,7 +22569,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 305;
+window.__APP_BUILD__ = 306;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });

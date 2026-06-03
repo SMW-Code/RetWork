@@ -12,8 +12,10 @@
     "@supabase/supabase-js": "^2.105.4",
     "next": "16.2.6",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "web-push": "^3.6.7"
   },
+  "devDependencies-comment": "web-push 의 @types 는 선택 — TS 안 쓰는 route 라 생략",
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

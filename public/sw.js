@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v0.9.0-b305';
+const CACHE_NAME = 'receiptiq-v0.9.0-b306';
 // manifest.json은 인라인 Blob URL로 처리됨 (Vercel 방화벽 차단 회피)
 const STATIC_CACHE = ['/icons/icon.png', '/icons/icon.svg'];
 
@@ -51,4 +51,56 @@ self.addEventListener('fetch', event => {
       })
     );
   }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// build 306 — Web Push 알림 처리
+//   서버(/api/push) → push 이벤트 → 시스템 알림 표시
+//   사용자가 알림 탭 → notificationclick → 앱 열고 link 로 이동
+// ════════════════════════════════════════════════════════════════════════════
+self.addEventListener('push', event => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (e) {
+    payload = { title: 'RetWork', body: event.data ? event.data.text() : '' };
+  }
+  const title = payload.title || 'RetWork';
+  const opts = {
+    body:  payload.body || '',
+    icon:  payload.icon  || '/icons/icon.png',
+    badge: payload.badge || '/icons/icon.png',
+    tag:   payload.tag   || 'retwork-msg',  // 같은 tag 면 알림 덮어쓰기 (스팸 방지)
+    renotify: !!payload.renotify,
+    data: {
+      url: payload.url || payload.link || '/',
+      messageId: payload.messageId || null
+    },
+    // 액션 버튼 (Android 만 표시)
+    actions: payload.actions || []
+  };
+  event.waitUntil(self.registration.showNotification(title, opts));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/';
+  // 이미 열린 앱 창이 있으면 focus, 없으면 새로 열기
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clients => {
+      for (const c of clients) {
+        // 같은 origin 창이 이미 있으면 focus + navigate
+        try {
+          const cu = new URL(c.url);
+          if (cu.origin === self.location.origin) {
+            return c.focus().then(() => {
+              if ('navigate' in c) c.navigate(url);
+            });
+          }
+        } catch (e) {}
+      }
+      // 없으면 새 창
+      return self.clients.openWindow(url);
+    })
+  );
 });
