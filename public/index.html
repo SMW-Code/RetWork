@@ -3012,7 +3012,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-3);">✉️ 이 사용자에게 쪽지 보내기</div>
         </div>
-        <button onclick="admOpenSendMsg()" style="width:100%;padding:9px;border:none;border-radius:8px;background:#5B9BD5;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">✉️ 새 쪽지 작성</button>
+        <button onclick="admOpenSendMsg()" style="width:100%;padding:9px;border:none;border-radius:8px;background:#5B9BD5;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:10px;">✉️ 새 쪽지 작성</button>
+        <!-- 보낸 쪽지 이력 (build 319) -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:4px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);">📨 보낸 쪽지 이력 <span id="adm-msg-history-cnt" style="color:var(--text-3);font-weight:600;"></span></div>
+          <button onclick="_admLoadUserMsgHistory()" style="background:transparent;border:.5px solid var(--border);color:var(--text-3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>
+        </div>
+        <div id="adm-msg-history-list" style="max-height:280px;overflow-y:auto;font-size:11px;color:var(--text-3);"></div>
       </div>
 
       <!-- 권한 관리 (어드민 토글, 일시정지, 영구차단) -->
@@ -20493,6 +20499,8 @@ async function openAdminUserDetail(userId) {
   } else {
     openOv('ov-admin-user-detail');
   }
+  // build 319 — 보낸 쪽지 이력 자동 로드
+  if (typeof _admLoadUserMsgHistory === 'function') { try { _admLoadUserMsgHistory(); } catch(e){} }
 }
 
 // 시간 경과 표시 ("2시간 전", "3일 전")
@@ -20722,6 +20730,76 @@ function admOpenSendMsg() {
   setTimeout(function(){ document.getElementById('adm-msg-title').focus(); }, 200);
 }
 
+/* build 319 — 사용자 상세에서 어드민이 그 유저에게 보낸 쪽지 이력 + 삭제 */
+async function _admLoadUserMsgHistory() {
+  if (!_isAdmin || !_admEditUserId || !_sb) return;
+  var listEl = document.getElementById('adm-msg-history-list');
+  var cntEl  = document.getElementById('adm-msg-history-cnt');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--text-3);font-size:11px;">로딩 중...</div>';
+
+  var res = await _sb.from('admin_messages')
+    .select('id,title,body,priority,is_read,read_at,expires_at,created_at')
+    .eq('recipient_id', _admEditUserId)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (res.error) {
+    listEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--red);font-size:11px;">' + _esc(res.error.message) + '</div>';
+    if (cntEl) cntEl.textContent = '';
+    return;
+  }
+  var msgs = res.data || [];
+  if (cntEl) cntEl.textContent = '(' + msgs.length + '건)';
+
+  if (msgs.length === 0) {
+    listEl.innerHTML = '<div style="text-align:center;padding:14px;color:var(--text-3);font-size:11px;">보낸 쪽지가 없어요</div>';
+    return;
+  }
+
+  var PRI = {
+    low:    { ico:'🔽', clr:'var(--text-3)', bg:'var(--bg-2)' },
+    normal: { ico:'📩', clr:'var(--text-2)', bg:'var(--bg-2)' },
+    high:   { ico:'⚠️', clr:'#E68900',        bg:'rgba(230,137,0,.12)' },
+    urgent: { ico:'🚨', clr:'#fff',            bg:'#E53935' }
+  };
+
+  listEl.innerHTML = msgs.map(function(m){
+    var dt = new Date(m.created_at);
+    var dateStr = (dt.getMonth()+1)+'/'+dt.getDate()+' '+String(dt.getHours()).padStart(2,'0')+':'+String(dt.getMinutes()).padStart(2,'0');
+    var pri = PRI[m.priority] || PRI.normal;
+    var readBadge = m.is_read
+      ? '<span style="color:var(--green);font-weight:700;">✓ 읽음</span>'
+      : '<span style="color:var(--text-3);font-weight:600;">○ 안읽음</span>';
+    var expBadge = m.expires_at
+      ? (new Date(m.expires_at) < new Date()
+          ? '<span style="color:var(--red);font-weight:700;">⏱ 만료</span>'
+          : '<span style="color:var(--text-3);">⏱ ' + new Date(m.expires_at).toLocaleDateString() + '</span>')
+      : '';
+    return '<div style="background:var(--bg);border:.5px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:6px;">'
+      + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">'
+        + '<span style="font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;background:'+pri.bg+';color:'+pri.clr+';">'+pri.ico+'</span>'
+        + '<span style="flex:1;font-size:12px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(m.title)+'</span>'
+        + '<span style="font-size:9px;">'+readBadge+'</span>'
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--text-2);line-height:1.4;margin-bottom:5px;max-height:48px;overflow:hidden;text-overflow:ellipsis;white-space:pre-wrap;word-break:break-word;">'+_esc(m.body)+'</div>'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:9px;color:var(--text-3);font-weight:600;">'
+        + '<span>'+dateStr+(expBadge?' · '+expBadge:'')+'</span>'
+        + '<button onclick="_admDeleteUserMsg(\''+m.id+'\')" style="background:transparent;border:.5px solid var(--red);color:var(--red);border-radius:6px;padding:3px 8px;font-size:9px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑 삭제</button>'
+      + '</div>'
+    + '</div>';
+  }).join('');
+}
+
+async function _admDeleteUserMsg(msgId) {
+  if (!_isAdmin || !_sb) return;
+  if (!confirm('이 쪽지를 삭제할까요?\n(수신자 측에서도 즉시 사라집니다)')) return;
+  var res = await _sb.from('admin_messages').delete().eq('id', msgId);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('🗑 쪽지가 삭제됐어요');
+  await _admLoadUserMsgHistory();
+}
+
 async function admSendMessage() {
   if (!_isAdmin || !_admEditUserId) return;
   var title    = (document.getElementById('adm-msg-title').value || '').trim();
@@ -20782,6 +20860,8 @@ async function admSendMessage() {
     showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건) · 푸시 발송 실패');
   }
   closeOv('ov-admin-send-msg');
+  // build 319 — 발송 직후 이력 갱신
+  if (typeof _admLoadUserMsgHistory === 'function') { try { _admLoadUserMsgHistory(); } catch(e){} }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -22777,7 +22857,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 318;
+window.__APP_BUILD__ = 319;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
