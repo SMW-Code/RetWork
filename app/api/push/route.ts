@@ -17,7 +17,8 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
-import webpush from 'web-push';
+// web-push 는 CommonJS — namespace import 가 가장 호환성 좋음
+import * as webpush from 'web-push';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
