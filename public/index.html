@@ -1294,12 +1294,21 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 결제수단 랭킹 -->
       <div id="report-pay-ranking" style="padding:4px 16px 0;"></div>
 
+      <!-- ⭐ build 325: 미구독 유저 잠금 가능 섹션 시작 (cat-breakdown 부터 물가 레이더까지) -->
+      <!-- 더보기 (광고 시청 후 펼치기) — 미구독만 노출 -->
+      <div id="rep-more-btn" style="display:none;margin:8px 16px 12px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1.5px dashed var(--gold);border-radius:14px;padding:18px 16px;text-align:center;cursor:pointer;" onclick="_unlockReport()">
+        <div style="font-size:20px;margin-bottom:6px;">📊</div>
+        <div style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:4px;">더 자세한 리포트 보기</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5;">카테고리별 분석 · 결제수단별 지출<br>아이템 랭킹 · 물가 레이더</div>
+        <div style="display:inline-block;padding:8px 18px;background:var(--gold);color:#fff;border-radius:10px;font-size:12px;font-weight:800;">📺 광고 보고 더보기</div>
+      </div>
+
       <!-- 물가 레이더 -->
-      <div style="padding:14px 16px 6px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+      <div id="rep-radar-header" style="padding:14px 16px 6px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
         <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.5px;" data-i18n="rep.radar">📊 物価レーダー</div>
         <div style="font-size:10px;color:var(--text-3);" data-i18n="rep.radar_sub">品目別の価格変動を追跡</div>
       </div>
-      <div class="bar-card" style="margin-bottom:4px;padding:0;overflow:hidden;">
+      <div class="bar-card" id="rep-radar-card" style="margin-bottom:4px;padding:0;overflow:hidden;">
         <!-- 필터 탭 -->
         <div style="display:flex;border-bottom:0.5px solid var(--border);">
           <div onclick="switchRadar('up')" id="rtab-up" style="flex:1;text-align:center;padding:10px 0;font-size:12px;font-weight:700;color:#e53935;border-bottom:2px solid #e53935;cursor:pointer;" data-i18n="rep.up">🔴 上昇中</div>
@@ -6666,6 +6675,41 @@ function switchSubtab(name) {
     _reportPeriod = 'month';
     document.querySelectorAll('.period-bar .chip').forEach(function(c,i){c.classList.toggle('active',i===1);});
     renderReportSummary(); renderBars('month'); renderCatBreakdown(); renderRadar();
+    // build 325 — 미구독 잠금 적용
+    if (typeof _applyReportLock === 'function') { try { _applyReportLock(); } catch(e){} }
+  }
+}
+
+/* build 325 — 미구독 유저: 도넛 차트 밑 콘텐츠 (카테고리 목록 / 아이템·결제 랭킹 / 물가 레이더) 잠금
+   → 광고 시청 후 펼침. 세션 동안만 unlock 유지. */
+window._isReportUnlocked = false;
+function _applyReportLock(){
+  var locked = !_isPremium && !window._isReportUnlocked;
+  // 잠금 대상 요소 5개 (도넛 자체는 항상 보임)
+  var ids = ['cat-breakdown','report-ranking','report-pay-ranking','rep-radar-header','rep-radar-card'];
+  ids.forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.style.display = locked ? 'none' : '';
+  });
+  // 더보기 카드 표시
+  var moreBtn = document.getElementById('rep-more-btn');
+  if (moreBtn) moreBtn.style.display = locked ? 'block' : 'none';
+}
+function _unlockReport(){
+  // 이미 풀려있으면 무시
+  if (window._isReportUnlocked || _isPremium) { _applyReportLock(); return; }
+  if (typeof showAdModal === 'function') {
+    showAdModal(function(){
+      window._isReportUnlocked = true;
+      _applyReportLock();
+      // 콘텐츠 재렌더 (display:none 였던 동안 누락된 렌더 보강)
+      try { renderCatBreakdown(); renderRadar(); } catch(e){}
+      showToast('🔓 리포트 펼침');
+    }, 'report_unlock');
+  } else {
+    // showAdModal 없으면 바로 풀기
+    window._isReportUnlocked = true;
+    _applyReportLock();
   }
 }
 
@@ -15373,6 +15417,10 @@ function showAdModal(callback, context) {
     // build 324 — 달력 자세히 보기 (월별 리포트) 진입 광고
     if (mainLabel) mainLabel.textContent = '광고 보고 내용 확인하기';
     if (pubBtn)    pubBtn.style.display = 'none';
+  } else if (_adContext === 'report_unlock') {
+    // build 325 — 리포트 잠금 해제 광고
+    if (mainLabel) mainLabel.textContent = '📊 광고 보고 리포트 펼치기';
+    if (pubBtn)    pubBtn.style.display = 'none';
   } else {
     if (mainLabel) mainLabel.textContent = t('ad.save_free');
     if (pubBtn) {
@@ -23067,7 +23115,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 324;
+window.__APP_BUILD__ = 325;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
