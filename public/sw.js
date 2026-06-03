@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v0.9.0-b311';
+const CACHE_NAME = 'receiptiq-v0.9.0-b312';
 // manifest.json은 인라인 Blob URL로 처리됨 (Vercel 방화벽 차단 회피)
 const STATIC_CACHE = ['/icons/icon.png', '/icons/icon.svg'];
 
@@ -76,25 +76,32 @@ self.addEventListener('push', event => {
     badge: payload.badge || '/icons/icon.png',
     tag:   payload.tag   || 'retwork-msg',  // 같은 tag 면 알림 덮어쓰기 (스팸 방지)
     // build 310 — 헤즈업/배너 표시 강화
-    renotify: isUrgent || isHigh,                  // 같은 tag 라도 새로 알림
+    renotify: true,                                 // build 312 — 항상 ON (모든 알림 새로 표시)
     requireInteraction: isUrgent,                  // urgent 면 사용자가 닫기 전까지 유지 (Android)
     silent: false,                                  // 소리/진동 ON
     vibrate: isUrgent ? [300, 100, 300, 100, 300]   // 긴급: 강하게
             : isHigh   ? [200, 100, 200]            // 높음: 보통
                        : [150],                     // 일반: 짧게
+    timestamp: Date.now(),                          // build 312 — 최신 알림 표시
+    image: payload.image || undefined,              // build 312 — 큰 이미지 있으면 Big Picture
     data: {
       url: payload.url || payload.link || '/',
       messageId: payload.messageId || null,
       priority: priority
     },
-    // 액션 버튼 (Android 만 표시)
-    actions: payload.actions || []
+    // build 312 — 액션 버튼 2개 (Android 에서 rich notification 인식 → 헤즈업 우선)
+    actions: payload.actions || [
+      { action: 'open', title: '확인' },
+      { action: 'dismiss', title: '닫기' }
+    ]
   };
   event.waitUntil(self.registration.showNotification(title, opts));
 });
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
+  // build 312 — 'dismiss' 액션은 알림만 닫고 앱 안 열기
+  if (event.action === 'dismiss') return;
   const url = (event.notification.data && event.notification.data.url) || '/';
   // 이미 열린 앱 창이 있으면 focus, 없으면 새로 열기
   event.waitUntil(
