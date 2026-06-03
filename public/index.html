@@ -5926,6 +5926,13 @@ async function ctLikePost(id) {
       from_user_name: myName, from_user_avatar: myAvatar, content: null
     });
     if (nRes.error) console.warn('like notif error:', nRes.error.message);
+    // build 314 — 글 작성자에게 시스템 푸시 (priority low — 좋아요는 자주 옴)
+    _sendSocialPush(
+      p.user_id,
+      '❤️ 좋아요를 받았어요',
+      myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요',
+      { url: '/', tag: 'like-' + id, priority: 'low' }
+    );
   }
 }
 
@@ -6092,6 +6099,13 @@ async function ctAddComment(id) {
         from_user_name: myName, from_user_avatar: myAvatar, content: preview
       });
       if (nRes.error) console.warn('notif insert error:', nRes.error.message);
+      // build 314 — 글 작성자에게 시스템 푸시 (priority normal — 댓글은 적당히 중요)
+      _sendSocialPush(
+        p.user_id,
+        '💬 새 댓글이 달렸어요',
+        myName + ': ' + preview,
+        { url: '/', tag: 'comment-' + id, priority: 'normal' }
+      );
     }
   }
 
@@ -20752,6 +20766,33 @@ async function markAllInboxRead() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
+   소셜 푸시 헬퍼 (build 314) — 좋아요/댓글 시 상대방에게 시스템 푸시
+   ══════════════════════════════════════════════════════════════════════ */
+async function _sendSocialPush(recipientId, title, body, options) {
+  try {
+    if (!recipientId || !_currentUser || recipientId === _currentUser.id) return;
+    var sess = await _sb.auth.getSession();
+    var tok = sess.data && sess.data.session && sess.data.session.access_token;
+    if (!tok) return;
+    await fetch('/api/push', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + tok, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'social',
+        recipient_ids: [recipientId],
+        title: title,
+        body: body,
+        url: (options && options.url) || '/',
+        tag: (options && options.tag) || 'social-' + Date.now(),
+        priority: (options && options.priority) || 'normal'
+      })
+    });
+  } catch (e) {
+    console.warn('[push] social send failed:', e);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
    🔔 푸시 알림 (Web Push) — build 306
    ══════════════════════════════════════════════════════════════════════ */
 
@@ -22591,7 +22632,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 313;
+window.__APP_BUILD__ = 314;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

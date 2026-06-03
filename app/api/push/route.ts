@@ -57,15 +57,17 @@ export async function POST(request: Request) {
   }
   const senderId = userData.user.id;
 
-  // 3) 어드민 검증
+  // 3) 권한 검증 — type 따라 분기 (build 314)
+  //    - admin (기본): 어드민만 발송 가능
+  //    - social: 일반 사용자도 발송 가능 (다른 사용자에게만, 본인에게는 금지)
+  //    - broadcast: 어드민만
+  // 어드민 여부 조회 (실제 권한 분기는 본문 파싱 후 reqKind 따라)
   const { data: prof } = await sb
     .from('profiles')
     .select('is_admin')
     .eq('id', senderId)
     .maybeSingle();
-  if (!prof || !prof.is_admin) {
-    return Response.json({ ok: false, err: 'forbidden (admin only)' }, { status: 403 });
-  }
+  const isAdmin = !!(prof && prof.is_admin);
 
   // 4) 본문 파싱
   let body: any;
@@ -82,6 +84,28 @@ export async function POST(request: Request) {
   const messageId = body?.messageId || null;
   const broadcast = body?.broadcast === true;  // true = 전체 발송
   const priority = (body?.priority || 'normal').toString();  // build 310 — 헤즈업 강화용
+  const reqKind  = (body?.type || 'admin').toString();        // build 314 — admin | social
+
+  // build 314 — 권한 분기
+  //   broadcast → 어드민만
+  //   admin     → 어드민만
+  //   social    → 누구든 (단 본인에게 발송 금지)
+  if (broadcast && !isAdmin) {
+    return Response.json({ ok: false, err: 'broadcast forbidden (admin only)' }, { status: 403 });
+  }
+  if (reqKind === 'admin' && !isAdmin) {
+    return Response.json({ ok: false, err: 'forbidden (admin only)' }, { status: 403 });
+  }
+  if (reqKind === 'social') {
+    // 본인에게 알림 금지 (셀프 push 어뷰져 방지)
+    if (recipientIds.includes(senderId)) {
+      return Response.json({ ok: false, err: 'cannot send social to self' }, { status: 400 });
+    }
+    // social 은 최대 1명만 (좋아요/댓글 같은 1:1 알림)
+    if (recipientIds.length > 1) {
+      return Response.json({ ok: false, err: 'social must be 1 recipient' }, { status: 400 });
+    }
+  }
 
   if (!title || !msgBody) {
     return Response.json({ ok: false, err: 'title and body required' }, { status: 400 });
