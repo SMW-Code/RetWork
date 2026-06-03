@@ -50,8 +50,11 @@
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="RetWork">
 <meta name="twitter:card" content="summary_large_image">
-<!-- PWA — manifest를 인라인 Blob URL로 제공 (Vercel 방화벽 우회)
-     Blob URL 기준 상대경로 해석을 피하기 위해 모든 URL을 절대경로로 작성 -->
+<!-- PWA manifest — 정적 link (PWA Builder/TWA 빌드 도구 인식용) + 동적 blob (Vercel 방화벽 fallback) -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- (build 64 이후) Vercel 방화벽 우회용 inline blob — TWA 빌드 시엔 위 정적 link 가 우선
+     blob 의 icons 정보도 정적 manifest.json 과 일치하게 갱신 -->
 <script>
 (function(){
   try {
@@ -69,17 +72,23 @@
       theme_color: "#FFFFFF",
       lang: "ja",
       icons: [
-        { src: origin + "/icons/icon.png", sizes: "any", type: "image/png", purpose: "any" },
-        { src: origin + "/icons/icon.png", sizes: "any", type: "image/png", purpose: "maskable" }
+        { src: origin + "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+        { src: origin + "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+        { src: origin + "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
+        { src: origin + "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" }
       ],
       categories: ["finance", "utilities"],
       screenshots: []
     };
     var blob = new Blob([JSON.stringify(m)], { type: "application/manifest+json" });
-    var link = document.createElement("link");
-    link.rel = "manifest";
-    link.href = URL.createObjectURL(blob);
-    document.head.appendChild(link);
+    // 정적 link 가 이미 있으면 blob 은 fallback 으로만 추가 (이중 등록 방지)
+    var existingLinks = document.querySelectorAll('link[rel="manifest"]');
+    if (existingLinks.length === 0) {
+      var link = document.createElement("link");
+      link.rel = "manifest";
+      link.href = URL.createObjectURL(blob);
+      document.head.appendChild(link);
+    }
   } catch(e) { /* silent */ }
 })();
 </script>
@@ -22582,7 +22591,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 312;
+window.__APP_BUILD__ = 313;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
