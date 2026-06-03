@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-02 / build 303 / v0.9.0
+> **최종 갱신**: 2026-06-03 / build 317 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -12,31 +12,209 @@
 - **배포 URL**: https://retwork.jp (Vercel 자동 배포)
 - **GitHub**: SMW-Code/RetWork (`main` 브랜치 → Vercel 자동 빌드)
 - **로컬 경로**: `C:\Users\minus\Desktop\receiptiq`
-- **구조**: 단일 파일 PWA — `public/index.html` (~20,500+ 줄) + `public/sw.js`
+- **구조**: 단일 파일 PWA — `public/index.html` (~20,800+ 줄) + `public/sw.js`
 - **백엔드**: Supabase (`fkvfbxfgidrvymoftkdd.supabase.co`)
-- **현재 버전**: `v0.9.0` (semantic) / `build 303` (internal)
+- **현재 버전**: `v0.9.0` (semantic) / `build 317` (internal)
+- **본인용 TWA APK**: PWA Builder 로 빌드된 별도 Android 앱 (assetlinks.json 등록됨, jp.retwork.app)
 
 ---
 
-## 🆕 build 301 → 303 미니 변경 로그
+## 🆕 build 301 → 317 미니 변경 로그
 
 ### build 301 — 홈 → 내역 이동 글리치 + 디버그 로그
 - `goToHistoryEntry(cat, id)`: switchTab 호출 전에 `currentFilter`/`_currentCatFilter` 미리 cat 으로 설정 → 첫 렌더부터 5월+cat 정확히 표시
-- `renderHistory(cat)` 중복 호출 제거
-- `console.log('[goToHistoryEntry] id=... date=... → Y/M cat=...')` 디버그 — 정식 출시 직전 일괄 정리 예정
+- console.log 디버그 — 정식 출시 직전 일괄 정리 예정
 
-### build 302 — 설정 친구 초대 카드 4개 언어 번역
-- 신규 i18n 키 12개 (`inv.*` prefix): title/my_code/copy/stat_friends/stat_earned/stat_pending/desc/share/reward_count/reward_sub_can/reward_sub_capped/reward_btn
-- ja/ko/en/zh 전체 번역
-- 정적 부분 → `data-i18n` 자동 갱신
-- 동적 부분 (reward banner count/sub) → `renderReferralRewardUI` 안에서 `t()` 호출
-- 어드민 → 언어시트 → `🎟️ 친구 초대` 카테고리 신규 추가
+### build 302 — 친구 초대 카드 4개 언어 번역
+- `inv.*` 12개 i18n 키 + 어드민 언어시트 카테고리
 
-### build 303 — 가성비맵 race condition 수정
-- 증상: 진입 직후 가게 "탭해서 이동하기" 누르면 → 가게 위치 → (몇 초 후) 현 위치로 튕김
-- 원인: `initGoogleMap()` 의 `navigator.geolocation.getCurrentPosition` 콜백이 늦게 도착하면서 `_map.setCenter(_mapUserPos)` 가 사용자 panTo 를 덮어씀
-- fix: `window._mapUserInteracted` 플래그 + `dragstart`/`zoom_changed` 리스너 + 가게 panTo 호출 시 명시 set + geolocation cb 에서 `if(!_mapUserInteracted) setCenter`
-- 치리톡 맵(`_ctMap`) 동일 패턴 fix 도 같이 적용
+### build 303 — 가성비맵/치리톡맵 race condition
+- `_mapUserInteracted` 플래그 + `dragstart`/`zoom_changed` 리스너 + 가게 panTo 시 명시 set
+
+### build 304 — 어드민 → 유저 쪽지 시스템 Phase 1
+- `admin_messages.sql` 신규 (제목/본문/우선순위/링크/만료)
+- 4 RPC: admin_send_message / admin_broadcast_message / get_unread_admin_messages_count / mark_admin_message_read
+- 어드민 사용자 상세에 "✉️ 쪽지 보내기" + 발송 모달
+- 사용자 받은쪽지함 모달 (`ov-user-inbox`) + 우선순위 배지
+
+### build 305 — 헤더 아바타 빨간 배지 + realtime
+- 모든 화면 `.hdr-avatar` 7곳에 펄스 빨간 배지 (`data-badge::after`)
+- Supabase realtime 채널 `admin_messages_user_<uid>` 구독
+- 최고 우선순위 칩 (🚨/⚠️) 설정창 메뉴에 표시
+
+### build 306 — Web Push 푸시 알림 인프라 Phase A~F
+- `push_subscriptions.sql` 테이블 + RLS
+- VAPID 키 (서버 + 클라 분리)
+- Service Worker push 이벤트 핸들러
+- `/api/push` route — Bearer JWT 검증 + 어드민 권한
+- 어드민 쪽지/공지 발송 시 자동 푸시 발송
+- 설정창 🔔 푸시 알림 토글 + iOS PWA 안내
+
+### build 308 — 헤더 아바타 배지 잘림 fix
+- `.hdr-avatar` + `.hdr` overflow:visible
+- 배지 위치 top:-8 right:-8 + z-index:10 + pointer-events:none
+
+### build 309~310 — VAPID Public Key 주입 + 헤즈업 강화
+- `window.__VAPID_PUBLIC_KEY__` HTML 안 직접 박음
+- SW push 옵션: `requireInteraction`(urgent), `renotify`(true), `vibrate`(우선순위별), `urgency:'high'`(VAPID 헤더)
+
+### build 311 — 받은쪽지함 메뉴 가시성 버그
+- 어드민 전용 그룹(`id="admin-entry-group"`)에 잘못 넣어서 일반 사용자에게 안 보이던 문제
+- 별도 그룹으로 분리
+
+### build 312 — 헤즈업 강화 (rich notification)
+- SW: actions 기본 추가 ([확인][닫기]) + timestamp + image option
+- notificationclick 에서 'dismiss' 액션 처리
+
+### build 313 — Digital Asset Links (TWA standalone)
+- `public/.well-known/assetlinks.json` (sha256 fingerprint)
+- `next.config.ts` headers — Content-Type: application/json
+- TWA APK 가 진짜 standalone 활성화 → 상단 X 사라짐 + 자체 알림 채널
+
+### build 314 — 댓글/좋아요 푸시 + social type
+- `/api/push` 에 `type: 'social'` 권한 분기 추가
+  - 일반 사용자도 다른 사용자에게 push 발송 가능
+  - 본인 자신에게 발송 금지 (셀프 어뷰져 방지)
+  - 1:1 알림만 (다중은 어드민/broadcast 만)
+- `_sendSocialPush()` 헬퍼 함수
+- 좋아요 (priority:low) / 댓글 (priority:normal) 시 글 작성자에게 자동 푸시
+
+### build 315 — 추가 광고 보상 슬롯 UI 명확화
+- 메시지 명확화: `2회 더 받을 수 있어요 · 08–16시 슬롯 (0/2)`
+- 슬롯 전환 시 자동 재렌더 (setInterval 30초마다)
+
+### build 316 — 친구 추천 가입 푸시
+- `_redeemPendingRef()` 에서 `response.referrer` UUID 받으면 자동 push
+- 추천자에게: "🎁 추천 보상이 적립됐어요! · {친구닉네임} 가입"
+
+### build 317 — 출석 슬롯 가능 푸시 (cron)
+- `push_attendance_optin.sql` — `push_subscriptions.attendance_optin` 컬럼 추가
+- `app/api/cron/attendance/route.ts` — Bearer CRON_SECRET 검증 + 옵트인 사용자 푸시
+- `.github/workflows/attendance-push.yml` — UTC 23/7시 (JST 8/16시) cron
+- 설정창에 ⏰ 출석 알림 별도 토글 (4개 언어 i18n)
+- 환경변수 신규: `CRON_SECRET` (Vercel + GitHub Secrets 양쪽 일치)
+- GitHub Secrets: `CRON_SECRET`, `PRODUCTION_URL`
+
+---
+
+## 📨 푸시 알림 시스템 전체 정리 (build 304~317)
+
+### 8가지 푸시 트리거 (현재 작동 중)
+
+| # | 트리거 | type | priority | 발송자 |
+|---|---|---|---|---|
+| 1 | 어드민 → 유저 쪽지 | admin | 가변 | 어드민 (직접) |
+| 2 | 공지 발행 (broadcast) | broadcast | high | 어드민 (직접) |
+| 3 | 댓글 받음 | social | normal | 댓글 작성자 (자동) |
+| 4 | 좋아요 받음 | social | low | 좋아요 누른 사람 (자동) |
+| 5 | 친구 가입 (추천) | social | normal | 가입 친구 (자동) |
+| 6 | 출석 슬롯 시작 (JST 8시) | cron | normal | GitHub Actions |
+| 7 | 출석 슬롯 시작 (JST 16시) | cron | normal | GitHub Actions |
+| 8 | 헤더 아바타 빨간 배지 | in-app | — | Supabase realtime |
+
+### 인프라 아키텍처
+
+```
+사용자 클라이언트 (브라우저/PWA/TWA APK)
+    ├─ 설정 → 푸시 토글 ON
+    │       └─ pushManager.subscribe() → push_subscriptions INSERT
+    │
+    ├─ 알림 표시
+    │   └─ Service Worker push 이벤트 → showNotification (Chrome 사이트 채널)
+    │
+    └─ in-app 헤더 배지 (Supabase realtime → admin_messages 구독)
+
+서버 (Vercel)
+    ├─ /api/push     — 어드민/social/broadcast 발송
+    ├─ /api/cron/attendance — GitHub Actions 호출 (Bearer CRON_SECRET)
+    └─ web-push 라이브러리 (Node.js)
+
+DB (Supabase)
+    ├─ push_subscriptions
+    │   - endpoint UNIQUE + p256dh + auth + enabled + attendance_optin
+    │   - last_sent_at / last_error 트래킹
+    │   - 410/404 만료 시 자동 삭제 (서버에서)
+    ├─ admin_messages (Phase 1)
+    └─ ct_notifications (in-app, 푸시는 social 헬퍼로 별도 호출)
+
+스케줄러 (GitHub Actions)
+    └─ .github/workflows/attendance-push.yml
+       - UTC 23시 cron → JST 8시 (오전 슬롯)
+       - UTC 7시 cron → JST 16시 (오후 슬롯)
+       - workflow_dispatch 수동 트리거 가능
+```
+
+### Service Worker 푸시 옵션 (헤즈업 강화)
+
+```js
+{
+  requireInteraction: priority === 'urgent',  // 닫을 때까지 유지 (Android)
+  renotify: true,                              // 항상 새 알림
+  vibrate: priority === 'urgent' ? [300,100,...]
+        : priority === 'high'   ? [200,100,200]
+                                : [150],
+  actions: [{action:'open',title:'확인'},{action:'dismiss',title:'닫기'}],
+  tag: 'admin-msg-...' / 'social-...' / 'attendance-morning' 등
+}
+```
+
+### web-push 옵션 (FCM/APNs 우선순위 신호)
+
+```ts
+const pushOptions = {
+  TTL: 86400,            // 1일 (출석은 28800 = 8시간)
+  urgency: 'high'        // VAPID 표준 — OS 가 즉시 헤즈업 표시 유도
+};
+```
+
+### 알림 헤즈업 (Android Chrome) — 알려진 한계
+
+**Web Push 의 진짜 한계**: PWA/TWA 모두 Chrome 의 사이트 알림 통합 시스템 사용
+- 알림 발신자 = Chrome (앱 이름 X)
+- 알림 채널 = Chrome 의 사이트별 채널 (`retwork.jp`)
+- 헤즈업은 시스템 채널 importance 가 "긴급" 이어야 작동
+
+**해결 방법**: 사용자가 폰 설정에서 채널 importance 변경
+- 알림 길게 누르기 → 추가 설정 → 중요도 → "긴급"
+- 또는 폰 설정 → 앱 → Chrome → 알림 → 사이트 카테고리
+
+**iOS 16.4+ PWA**: 시스템 통합 잘 되어 있어 헤즈업 정상 작동
+
+---
+
+## 📱 TWA APK 빌드 (build 313 노하우)
+
+### 빌드 도구
+**PWA Builder** (https://www.pwabuilder.com/) — 웹 기반, GUI
+
+### 단계
+1. https://www.pwabuilder.com/ → `https://retwork.jp` 입력
+2. Package For Stores → Android → Google Play 탭
+3. 설정:
+   - Package ID: `jp.retwork.app`
+   - Signing key: **"New"** (자동 생성) ⭐ 반드시 None X
+   - Display mode: Standalone
+   - Include source code: OFF
+4. Download Package → ZIP
+5. ZIP 안 `app-release-signed.apk` 만 폰 설치 (aab 는 무시)
+6. `signing.keystore` + `signing-key-info.txt` ⭐ 백업 필수
+
+### standalone 활성화 (필수)
+- ZIP 안 `assetlinks.json` 내용 확인 (sha256_cert_fingerprints)
+- 그 내용을 `public/.well-known/assetlinks.json` 에 저장
+- git push → Vercel 배포 → `https://retwork.jp/.well-known/assetlinks.json` 접근 가능
+- next.config.ts headers 에 Content-Type: application/json 명시
+- TWA APK 재실행 시 Chrome 이 자동 검증 → standalone 활성
+
+### 현재 등록된 SHA-256 (jp.retwork.app)
+```
+7D:38:51:F4:D8:A1:61:1A:91:84:57:F2:87:AA:B1:44:74:FD:2C:88:EC:25:35:F5:B1:EC:C3:FC:69:ED:B3:91
+```
+
+### 정식 출시 시 (Play Store)
+- 동일 키스토어 사용해서 재빌드 → 동일 SHA-256 → assetlinks.json 변경 불필요
+- Play Console $25 일회성 → AAB 업로드
+- 사용자는 Play Store 에서 다운로드 → 자동 업데이트는 그대로 (Web 콘텐츠 fetch 모델)
 
 ---
 
@@ -138,18 +316,50 @@ PC 어드민에서 카드 클릭 시 **모달 X / 콘텐츠 영역 전환 + brea
 ## ⚠️ SQL 파일 — 실행 상태
 
 ```
-✅ security_patch_v4.sql       (베타 적용 중)
-⏳ security_patch_v3.sql        (v1.0.0 직전 재실행)
-✅ referral_v2.sql             (추천 보상 pending/광고 청구)
-✅ referral_v2_stats.sql       (get_referral_status 통계 확장)
-✅ store_edit_requests.sql     (가게 수정요청)
-✅ local_ads.sql               (로컬 광고 + bump RPC)
-✅ local_ads_px.sql            (width_px/height_px ALTER)
-✅ exchange_requests.sql       (치리스토어 교환요청, build 283)
-✅ comment_penalties.sql       (댓글 패널티, build 290)
-✅ quotes.sql                  (홈 명언 카드 테이블, build 298)
-✅ quotes_seed.sql             (정적 명언 48개 시드, build 298)
+✅ security_patch_v4.sql        (베타 적용 중)
+⏳ security_patch_v3.sql         (v1.0.0 직전 재실행)
+✅ referral_v2.sql              (추천 보상 pending/광고 청구)
+✅ referral_v2_stats.sql        (get_referral_status 통계 확장)
+✅ store_edit_requests.sql      (가게 수정요청)
+✅ local_ads.sql                (로컬 광고 + bump RPC)
+✅ local_ads_px.sql             (width_px/height_px ALTER)
+✅ exchange_requests.sql        (치리스토어 교환요청, build 283)
+✅ comment_penalties.sql        (댓글 패널티, build 290)
+✅ quotes.sql                   (홈 명언 카드 테이블, build 298)
+✅ quotes_seed.sql              (정적 명언 48개 시드, build 298)
+✅ admin_messages.sql           (어드민→유저 쪽지, build 304)
+✅ push_subscriptions.sql       (Web Push 구독, build 306)
+✅ push_attendance_optin.sql    (출석 푸시 옵트인, build 317)
 ```
+
+---
+
+## 🔐 환경변수 (Vercel + GitHub Secrets)
+
+### Vercel 환경변수 (모두 Production 필수)
+| Key | 용도 | Sensitive |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | 클라/서버 공통 | OFF |
+| `SUPABASE_SERVICE_ROLE_KEY` | 서버 admin client | ✅ ON |
+| `VAPID_PUBLIC_KEY` | web-push setVapidDetails | OFF |
+| `VAPID_PRIVATE_KEY` | web-push setVapidDetails | ✅ ON |
+| `VAPID_SUBJECT` | `mailto:admin@retwork.jp` | OFF |
+| `CRON_SECRET` | /api/cron/attendance 인증 | ✅ ON |
+| `VISION_KEY` | Google Vision API | OFF |
+| `OPENAI_API_KEY` | GPT 파싱 (기존) | ✅ ON |
+
+### GitHub Repo Secrets (Actions → Secrets)
+| Name | Value |
+|---|---|
+| `CRON_SECRET` | Vercel 과 **정확히 동일** |
+| `PRODUCTION_URL` | `https://retwork.jp` |
+
+### VAPID Public Key 클라 주입
+`public/index.html` 상단:
+```js
+window.__VAPID_PUBLIC_KEY__ = 'BLbeE-rgbHX...';
+```
+Vercel 의 VAPID_PUBLIC_KEY 와 동일해야 함.
 
 ---
 
