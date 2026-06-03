@@ -1,0 +1,55 @@
+# 출석 슬롯 시작 알림 — 일 2회 (JST 8시 / 16시)
+# build 317 — GitHub Actions cron
+#
+# JST(UTC+9) ↔ UTC 변환:
+#   JST  8:00 → UTC 23:00 (전날)
+#   JST 16:00 → UTC  7:00
+#
+# 환경변수 (Repo Settings → Secrets and variables → Actions):
+#   CRON_SECRET    — Vercel 환경변수와 동일한 토큰
+#   PRODUCTION_URL — https://retwork.jp
+
+name: Attendance Push
+
+on:
+  schedule:
+    # JST 08:00 (오전 슬롯 시작) = UTC 23:00 (전날)
+    - cron: '0 23 * * *'
+    # JST 16:00 (오후 슬롯 시작) = UTC 07:00
+    - cron: '0 7 * * *'
+  workflow_dispatch:  # 수동 테스트 가능
+    inputs:
+      slot:
+        description: 'Slot type (morning/afternoon)'
+        required: false
+        default: 'morning'
+
+jobs:
+  send-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Determine slot
+        id: slot
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            # UTC 23시 트리거 = JST 8시 = morning
+            # UTC 7시 트리거 = JST 16시 = afternoon
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" = "23" ]; then
+              echo "slot=morning" >> $GITHUB_OUTPUT
+            else
+              echo "slot=afternoon" >> $GITHUB_OUTPUT
+            fi
+          else
+            # 수동 트리거 시 input 사용
+            echo "slot=${{ github.event.inputs.slot || 'morning' }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Send attendance push
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{"slot":"${{ steps.slot.outputs.slot }}"}' \
+            --fail-with-body \
+            "${{ secrets.PRODUCTION_URL }}/api/cron/attendance"
