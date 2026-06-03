@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
           { key: "Expires",       value: "0" },
         ],
       },
+      {
+        // TWA Digital Asset Links — Chrome 이 정확한 Content-Type 으로 검증
+        source: "/.well-known/assetlinks.json",
+        headers: [
+          { key: "Content-Type",  value: "application/json" },
+          { key: "Cache-Control", value: "public, max-age=86400" },
+        ],
+      },
     ];
   },
 };

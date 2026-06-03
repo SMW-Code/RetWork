@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "jp.retwork.app",
+    "sha256_cert_fingerprints": ["7D:38:51:F4:D8:A1:61:1A:91:84:57:F2:87:AA:B1:44:74:FD:2C:88:EC:25:35:F5:B1:EC:C3:FC:69:ED:B3:91"]
+  }
+}]
