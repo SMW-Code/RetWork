@@ -316,6 +316,25 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .hdr-date{font-size:11px;color:var(--text-3);font-weight:500;margin-left:8px;letter-spacing:.1px;}
 .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--green-light),var(--green-mid));border:1.5px solid var(--theme-a18);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--green);cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-xs);transition:transform .15s;}
 .avatar:active{transform:scale(.9);}
+/* build 305 — 헤더 아바타에 안 읽은 쪽지 수 빨간 배지 */
+.hdr-avatar{position:relative;}
+.hdr-avatar[data-badge]::after{
+  content:attr(data-badge);
+  position:absolute; top:-4px; right:-4px;
+  min-width:18px; height:18px; padding:0 5px;
+  border-radius:9px; background:#E53935; color:#fff;
+  font-size:10px; font-weight:800; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  border:2px solid var(--bg); box-sizing:border-box;
+  font-family:var(--font);
+  box-shadow:0 2px 6px rgba(229,57,53,.4);
+  animation:pulseRing 1.6s ease-out infinite;
+}
+@keyframes pulseRing{
+  0%{box-shadow:0 2px 6px rgba(229,57,53,.4), 0 0 0 0 rgba(229,57,53,.55);}
+  70%{box-shadow:0 2px 6px rgba(229,57,53,.4), 0 0 0 8px rgba(229,57,53,0);}
+  100%{box-shadow:0 2px 6px rgba(229,57,53,.4), 0 0 0 0 rgba(229,57,53,0);}
+}
 
 .chip{padding:7px 15px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;box-shadow:var(--shadow-xs);}
 .chip.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 3px 10px var(--theme-a30);}
@@ -2143,10 +2162,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="sg" id="admin-entry-group" style="display:none;">
         <div class="sp-sg-title" style="padding:8px 16px 4px;font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.5px;">🛡️ 운영자 메뉴</div>
         <div class="si" onclick="openAdminDashboard()" style="cursor:pointer;"><span style="font-size:15px;width:22px;text-align:center;">📊</span><span class="si-lbl">어드민 대시보드</span><span class="si-val">›</span></div>
-        <!-- 받은 쪽지함 (build 304) -->
+        <!-- 받은 쪽지함 (build 304→305: 좌측 아이콘 제거, 우선순위 칩만 표시) -->
         <div class="si" onclick="openUserInbox()" style="cursor:pointer;">
-          <span style="font-size:15px;width:22px;text-align:center;">📩</span>
+          <!-- 좌측 정렬을 위해 빈 자리 유지 (다른 메뉴들과 텍스트 라인 맞춤) -->
+          <span style="font-size:15px;width:22px;text-align:center;"></span>
           <span class="si-lbl" data-i18n="settings.inbox">받은 쪽지함</span>
+          <!-- 최고 우선순위 아이콘 (긴급/높음만, 보통/낮음/없음은 비표시) -->
+          <span id="settings-inbox-pri" style="display:none;font-size:13px;margin-left:6px;"></span>
           <span id="settings-inbox-badge" style="display:none;background:#E53935;color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;margin-left:auto;margin-right:4px;">0</span>
           <span class="si-val">›</span>
         </div>
@@ -11304,7 +11326,7 @@ var I18N = {
     'inv.reward_sub_capped':'本日の上限（{n}件）到達 · 明日また受け取る',
     'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
     // 受信ボックス (build 304)
-    'settings.inbox':'📩 受信ボックス','inbox.empty':'まだメッセージはありません','inbox.from_admin':'運営から','inbox.read_all':'✅ すべて既読にする',
+    'settings.inbox':'受信ボックス','inbox.empty':'まだメッセージはありません','inbox.from_admin':'運営から','inbox.read_all':'✅ すべて既読にする',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
@@ -11540,7 +11562,7 @@ var I18N = {
     'inv.reward_sub_capped':'오늘 한도({n}건) 도달 · 내일 다시 받기',
     'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
     // 받은 쪽지함 (build 304)
-    'settings.inbox':'📩 받은 쪽지함','inbox.empty':'아직 메시지가 없어요','inbox.from_admin':'운영진으로부터','inbox.read_all':'✅ 모두 읽음 처리',
+    'settings.inbox':'받은 쪽지함','inbox.empty':'아직 메시지가 없어요','inbox.from_admin':'운영진으로부터','inbox.read_all':'✅ 모두 읽음 처리',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
@@ -11771,7 +11793,7 @@ var I18N = {
     'inv.reward_sub_capped':'Daily cap ({n}) reached · try again tomorrow',
     'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
     // Inbox (build 304)
-    'settings.inbox':'📩 Inbox','inbox.empty':'No messages yet','inbox.from_admin':'From admin','inbox.read_all':'✅ Mark all read',
+    'settings.inbox':'Inbox','inbox.empty':'No messages yet','inbox.from_admin':'From admin','inbox.read_all':'✅ Mark all read',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
@@ -12002,7 +12024,7 @@ var I18N = {
     'inv.reward_sub_capped':'今日上限（{n}件）已达 · 明日再领',
     'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
     // 收件箱 (build 304)
-    'settings.inbox':'📩 收件箱','inbox.empty':'还没有消息','inbox.from_admin':'来自管理员','inbox.read_all':'✅ 全部标为已读',
+    'settings.inbox':'收件箱','inbox.empty':'还没有消息','inbox.from_admin':'来自管理员','inbox.read_all':'✅ 全部标为已读',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
@@ -15293,6 +15315,8 @@ function showApp() {
   if (typeof _checkSelfBanned === 'function') _checkSelfBanned();
   // 프로필 동기화 (다른 디바이스에서 저장한 닉네임·아바타 가져오기)
   if (typeof _syncProfileFromSupabase === 'function') _syncProfileFromSupabase();
+  // 받은 쪽지함 realtime 구독 시작 + 헤더 아바타 배지 즉시 갱신 (build 305)
+  if (typeof _startInboxRealtime === 'function') setTimeout(_startInboxRealtime, 800);
   // 본인 비공개 메모 가게 목록 캐시 (프라이빗 모드 필터링용)
   if (typeof _loadMyPrivateNoteStores === 'function') _loadMyPrivateNoteStores();
   // 최종 활동 시각 갱신
@@ -20561,6 +20585,8 @@ async function admSendMessage() {
 async function openUserInbox() {
   openOv('ov-user-inbox');
   await _loadInboxMessages();
+  // 헤더 아바타 배지 즉시 동기화 (build 305)
+  if (typeof _refreshInboxBadge === 'function') _refreshInboxBadge();
 }
 
 async function _loadInboxMessages() {
@@ -20640,20 +20666,87 @@ async function markAllInboxRead() {
   await _refreshInboxBadge();
 }
 
-/** 설정창 진입 시 배지 갱신 (안 읽은 메시지 수) */
+/* build 305 — 헤더 아바타 배지 + 설정 메뉴 우선순위 칩 + realtime 구독 */
+
+/** 모든 .hdr-avatar 에 빨간 동그라미 배지 적용/해제 (CSS ::after data-badge) */
+function _setAvatarBadge(n) {
+  document.querySelectorAll('.hdr-avatar').forEach(function(el){
+    if (n > 0) {
+      el.setAttribute('data-badge', n > 99 ? '99+' : String(n));
+    } else {
+      el.removeAttribute('data-badge');
+    }
+  });
+}
+
+/** 설정창 진입/realtime 갱신 시 — 안 읽은 메시지 수 + 최고 우선순위 동시 조회 */
 async function _refreshInboxBadge() {
+  if (!_currentUser) { _setAvatarBadge(0); return; }
+
+  // 1) 카운트만 빠르게
+  var cntRes = await _sb.rpc('get_unread_admin_messages_count');
+  if (cntRes.error) { _setAvatarBadge(0); return; }
+  var n = parseInt(cntRes.data, 10) || 0;
+
+  // 2) 헤더 아바타 배지 (전 화면 공통)
+  _setAvatarBadge(n);
+
+  // 3) 설정창 메뉴 항목 배지/우선순위 (열려있을 때만 의미 있음)
   var badgeEl = document.getElementById('settings-inbox-badge');
-  if (!badgeEl || !_currentUser) return;
-  var res = await _sb.rpc('get_unread_admin_messages_count');
-  if (res.error) { badgeEl.style.display = 'none'; return; }
-  var n = parseInt(res.data, 10) || 0;
-  if (n > 0) {
-    badgeEl.textContent = n > 99 ? '99+' : n;
-    badgeEl.style.display = '';
-  } else {
-    badgeEl.style.display = 'none';
+  var priEl   = document.getElementById('settings-inbox-pri');
+  if (badgeEl) {
+    if (n > 0) { badgeEl.textContent = n > 99 ? '99+' : n; badgeEl.style.display = ''; }
+    else       { badgeEl.style.display = 'none'; }
+  }
+
+  // 4) 최고 우선순위 조회 — 안 읽은 메시지 중에서만, 'urgent' > 'high' 만 표시
+  //    (어드민이 '높음/긴급' 으로 보낸 것만 좌측에 시각 표시 — 보통/낮음은 글씨만)
+  if (priEl) {
+    if (n > 0) {
+      var pRes = await _sb.from('admin_messages')
+        .select('priority')
+        .eq('recipient_id', _currentUser.id)
+        .eq('is_read', false)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+        .in('priority', ['high','urgent'])
+        .order('priority', { ascending: false })  // urgent 가 사전순 뒤 → desc 하면 u가 먼저
+        .limit(1);
+      var topPri = (pRes.data && pRes.data[0] && pRes.data[0].priority) || null;
+      if (topPri === 'urgent')    { priEl.textContent = '🚨'; priEl.style.display = ''; }
+      else if (topPri === 'high') { priEl.textContent = '⚠️'; priEl.style.display = ''; }
+      else                         { priEl.style.display = 'none'; }
+    } else {
+      priEl.style.display = 'none';
+    }
   }
 }
+
+/** 앱 시작/인증 후 1회 + realtime 구독 시작 (중복 호출 방지) */
+var _inboxRealtimeSub = null;
+function _startInboxRealtime() {
+  if (_inboxRealtimeSub || !_currentUser || !_sb) return;
+  _refreshInboxBadge();  // 진입 시 즉시 갱신
+  try {
+    _inboxRealtimeSub = _sb.channel('admin_messages_user_' + _currentUser.id)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'admin_messages',
+        filter: 'recipient_id=eq.' + _currentUser.id
+      }, function(payload){
+        // 새 메시지 INSERT, 또는 본인이 읽음 처리 (UPDATE) → 모두 카운트 갱신
+        _refreshInboxBadge();
+      })
+      .subscribe();
+  } catch(e) { console.warn('[inbox realtime] subscribe failed:', e); }
+}
+
+// 인증 완료 후 + 화면 표시 시 호출되는 hook: 페이지 visible 일 때마다 한 번 더 갱신
+document.addEventListener('visibilitychange', function(){
+  if (document.visibilityState === 'visible' && _currentUser) {
+    _refreshInboxBadge();
+  }
+});
 
 // ── 탈퇴 처리 (soft delete) ──
 async function admMarkUserDeleted() {
@@ -22256,7 +22349,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 304;
+window.__APP_BUILD__ = 305;
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
 document.querySelectorAll('.app-version-text').forEach(function(el){ el.textContent = window.__APP_VERSION__; });
