@@ -1,6 +1,6 @@
 # 🔄 RetWork (チリつも) — 인수인계 문서
 
-> **최종 갱신**: 2026-06-03 / build 317 / v0.9.0
+> **최종 갱신**: 2026-06-03 / build 326 / v0.9.0
 > 다른 컴퓨터에서 이어 작업할 때 이 파일부터 읽으세요.
 
 ---
@@ -12,9 +12,9 @@
 - **배포 URL**: https://retwork.jp (Vercel 자동 배포)
 - **GitHub**: SMW-Code/RetWork (`main` 브랜치 → Vercel 자동 빌드)
 - **로컬 경로**: `C:\Users\minus\Desktop\receiptiq`
-- **구조**: 단일 파일 PWA — `public/index.html` (~20,800+ 줄) + `public/sw.js`
+- **구조**: 단일 파일 PWA — `public/index.html` (~21,000+ 줄) + `public/sw.js`
 - **백엔드**: Supabase (`fkvfbxfgidrvymoftkdd.supabase.co`)
-- **현재 버전**: `v0.9.0` (semantic) / `build 317` (internal)
+- **현재 버전**: `v0.9.0` (semantic) / `build 326` (internal)
 - **본인용 TWA APK**: PWA Builder 로 빌드된 별도 Android 앱 (assetlinks.json 등록됨, jp.retwork.app)
 
 ---
@@ -94,6 +94,78 @@
 - 설정창에 ⏰ 출석 알림 별도 토글 (4개 언어 i18n)
 - 환경변수 신규: `CRON_SECRET` (Vercel + GitHub Secrets 양쪽 일치)
 - GitHub Secrets: `CRON_SECRET`, `PRODUCTION_URL`
+
+### build 318 — 운영 알림 3종 푸시
+- 🏪 가게 수정요청 처리 완료 → 신청자 (markEditReqDone)
+- 🚨 신고 처리 결과 → 신고자 (adminProcessReport, comment_reports.reporter_id)
+- 💸 교환요청 상태 변경 (shipped/completed/cancelled) → 신청자 (_admPcExrSetStatus)
+
+### build 319 — 어드민 사용자 상세에 보낸 쪽지 이력 + 삭제
+- `_admLoadUserMsgHistory()` 신규 — admin_messages SELECT WHERE recipient_id
+- 우선순위 칩 / 읽음여부 / 만료 시각 표시
+- `_admDeleteUserMsg(id)` — 개별 삭제 (어드민 RLS 통과)
+- openAdminUserDetail / admSendMessage 종료 시 자동 갱신
+
+### build 320 — 사용자 카드 ✉️ 배지 + 전체 삭제
+- `_admPreloadMsgRecipients()` — admin_messages 의 recipient_id 일괄 Set 캐시 (N+1 회피)
+- `_renderUserRow()` 가 Set.has(uid) 시 ✉️ 파란 배지 표시
+- `_admDeleteAllUserMsgs()` — 이 유저에게 보낸 모든 쪽지 일괄 DELETE
+- 발송/삭제 시 Set 즉시 동기화 (UX 반영)
+
+### build 321 — 가성비맵 가게 InfoWindow 닫기 X
+- content 에 우상단 absolute X 버튼 (24x24 둥근 회색)
+- 다크모드 색상 대응 + 가게명 padding-right 보호
+
+### build 322 — 이달 예산 클라우드 동기화 + 매달 자동 리셋
+- `profiles_budget.sql` — profiles 에 budget_amount + budget_month 컬럼
+- `_budgetYMKey()` / `_budgetCheckMonthReset()` / `_budgetLoadFromCloud()` / `_budgetSaveToCloud(amount)`
+- saveBudget/clearBudget 가 양쪽 (localStorage + Supabase) 모두 갱신
+- 로그인 후 800ms 시점 클라우드 fetch
+- renderHome 진입 시 budget_month 와 현재 월 비교 → 다르면 자동 클리어
+
+### build 323 — 일본 영수증 날짜 파싱 강화
+- 증상: `26.06.03` OCR → `2014-06-03` 저장 (平成26 오역)
+- GPT 프롬프트 강화: 元号(令和/平成/昭和) 명시적일 때만 변환, 그 외 2자리는 西暦
+- 클라 `_sanitizeReceiptDate()` 최종 방어선:
+  - YYYY-/YY-/令和/平成/昭和/年月日 5가지 패턴 자체 인식
+  - 5년 이상 과거 / 1년 이상 미래 → 토스트 경고
+
+### build 324 — 달력 자세히 보기 미구독 광고 게이트
+- `openMonthReport()` 분기: 미구독 → showAdModal('monthreport') → ctOpenFullscreenAd
+- `_openMonthReportInner()` 신규 (기존 로직 분리)
+- showAdModal context 'monthreport' → '광고 보고 내용 확인하기' 버튼
+
+### build 325 — 리포트 카테고리 분석 미구독 광고 게이트
+- 도넛 차트는 항상 노출, 그 아래 5개 영역 잠금:
+  - cat-breakdown / report-ranking / report-pay-ranking / rep-radar-header / rep-radar-card
+- `rep-more-btn` 카드 (📊 광고 보고 더보기) 도넛 아래 표시
+- `_applyReportLock()` / `_unlockReport()`
+- 세션 변수 `window._isReportUnlocked` — 한 번 풀면 탭 이동 후에도 유지
+- showAdModal context 'report_unlock'
+
+### build 326 — 광고 완료 메시지 context 별 분기
+- ctOpenFullscreenAd 완료 분기에 monthreport / report_unlock 추가
+- monthreport: 🧾 '월별 리포트가 준비됐어요' / 토스트 '월별 리포트를 확인하세요'
+- report_unlock: 📊 '리포트가 펼쳐졌어요' / 토스트 '카테고리 분석·물가 레이더 확인하세요'
+- 더 이상 '가계부에 저장했습니다' 토스트가 잘못 표시되지 않음
+
+---
+
+## 🎬 광고 완료 메시지 매트릭스 (build 326 기준)
+
+| Context | 아이콘 | 완료 타이틀 | 토스트 |
+|---|---|---|---|
+| save | ✅ | 가계부에 저장했습니다 | ✅ 가계부에 저장 |
+| chiri | ✨ | チリに公開 | ✨ 치리 공개 |
+| private | 🔒 | 프라이빗 모드로 전환 | 🔒 프라이빗 활성화 |
+| menu_photo | 📸 | 메뉴 사진 등록 | 📸 메뉴 사진 등록 |
+| reward | ✨ | +50チリ 獲得 | +50チリ |
+| attendance | 🎉 | +20チリ 獲得 | 출석+5 광고+15 |
+| bonus | 🎁 | +15チリ 獲得 | 追加広告ボーナス |
+| comment_quota | 📝 | +4회 댓글 가능 | +4회 댓글 작성 가능 |
+| referral | 🎁 | +200チリ 獲得 | 추천 보상 +200 |
+| **monthreport** | 🧾 | 월별 리포트가 준비됐어요 | 월별 리포트를 확인하세요 |
+| **report_unlock** | 📊 | 리포트가 펼쳐졌어요 | 카테고리 분석·물가 레이더 확인 |
 
 ---
 
@@ -330,6 +402,7 @@ PC 어드민에서 카드 클릭 시 **모달 X / 콘텐츠 영역 전환 + brea
 ✅ admin_messages.sql           (어드민→유저 쪽지, build 304)
 ✅ push_subscriptions.sql       (Web Push 구독, build 306)
 ✅ push_attendance_optin.sql    (출석 푸시 옵트인, build 317)
+✅ profiles_budget.sql          (이달 예산 클라우드 컬럼, build 322)
 ```
 
 ---
