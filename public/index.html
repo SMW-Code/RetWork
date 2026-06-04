@@ -17140,6 +17140,24 @@ async function _sdLoadStoreComments(){
       wrap.innerHTML = '';
       return;
     }
+    // build 376 — profiles 의 최신 닉네임 fetch 후 덮어쓰기
+    //   store_comments.user_name 은 댓글 등록 시점의 닉네임(스냅샷)이라 변경 반영 X
+    //   메뉴 댓글과 일관된 방식으로 profiles.nickname (현재 닉네임) 으로 표시
+    try {
+      var uidSet = {};
+      rows.forEach(function(r){ if(r.user_id) uidSet[r.user_id] = true; });
+      var uids = Object.keys(uidSet);
+      if (uids.length > 0) {
+        var profRes = await _sb.from('profiles').select('id,nickname').in('id', uids);
+        var nickMap = {};
+        (profRes.data || []).forEach(function(p){ nickMap[p.id] = p.nickname; });
+        rows.forEach(function(r){
+          var latest = nickMap[r.user_id];
+          if (latest) r.user_name = latest;
+        });
+      }
+    } catch(e) { console.warn('[SD] profiles 닉네임 동기화 실패:', e); }
+
     var html = '<div style="padding:14px 16px 6px;font-size:12px;font-weight:800;color:var(--text-2);">'+t('sd.reviews',{n:rows.length})+'</div>';
     html += '<div style="padding:0 16px 14px;">';
     rows.forEach(function(c){
@@ -17151,7 +17169,7 @@ async function _sdLoadStoreComments(){
         : '';
       html += '<div style="padding:10px 12px;border:.5px solid var(--border);border-radius:10px;margin-bottom:8px;background:var(--surface);">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">'
-        +   '<span style="font-size:12px;font-weight:700;color:var(--text-1);">'+(c.user_name||'匿名')+'</span>'
+        +   '<span style="font-size:12px;font-weight:700;color:var(--text-1);">'+_esc(c.user_name||'匿名')+'</span>'
         +   '<div style="display:flex;align-items:center;gap:6px;">'
         +     (stars ? '<span style="font-size:11px;color:var(--star);">'+stars+'</span>' : '')
         +     reportBtn
@@ -24973,7 +24991,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 375;
+window.__APP_BUILD__ = 376;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
