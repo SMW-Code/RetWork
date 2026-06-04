@@ -2400,34 +2400,68 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
-<!-- ══ 스캔 선택 모달 ══ -->
+<!-- ══ 스캔 선택 모달 (build 332: 카메라 / 갤러리 / 수동기입 3개로 정리) ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-scan" onclick="closeOvOutside(event,'ov-scan')">
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" data-i18n="scan.title">レシートをスキャン</div>
     <div class="sheet-sub" data-i18n="scan.subtitle">スキャン方法を選択</div>
-    <!-- 1장 촬영 -->
-    <label class="scan-opt" style="display:flex;">
+    <!-- 1. 카메라 (한 장 / 긴 영수증 sub 선택) -->
+    <div class="scan-opt" style="display:flex;cursor:pointer;" onclick="_openScanCameraChoice()">
       <span style="font-size:26px;">📷</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.camera.title">カメラで撮影</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.camera.sub">リアルタイム OCR · Google Vision API</div></div>
-      <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleImageFile(this)">
-    </label>
-    <!-- 갤러리 1장 -->
-    <label class="scan-opt" style="display:flex;">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.camera.title">カメラで撮影</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">1枚 또는 緊いレシート 多枚 옵션</div>
+      </div>
+      <span style="margin-left:auto;font-size:14px;color:var(--text-3);align-self:center;">›</span>
+    </div>
+    <!-- 2. 갤러리 1장 -->
+    <label class="scan-opt" style="display:flex;cursor:pointer;">
       <span style="font-size:26px;">🖼️</span>
-      <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.gallery.title">ギャラリーから選択</div><div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.gallery.sub">保存済みのレシート写真</div></div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.gallery.title">ギャラリーから選択</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.gallery.sub">保存済みのレシート写真</div>
+      </div>
       <input type="file" accept="image/*" style="display:none;" onchange="handleImageFile(this)">
     </label>
-    <!-- 긴 영수증 분할 촬영 -->
-    <div class="scan-opt" style="display:flex;" onclick="startMultiScan()">
+    <!-- 3. 수동 기입 (build 332 신규) -->
+    <div class="scan-opt" style="display:flex;cursor:pointer;" onclick="closeOv('ov-scan');setTimeout(openManualEntry,150);">
+      <span style="font-size:26px;">✏️</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);">手動入力</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">레시트 없이 직접 입력</div>
+      </div>
+      <span style="margin-left:auto;font-size:14px;color:var(--text-3);align-self:center;">›</span>
+    </div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan')" data-i18n="btn.cancel">キャンセル</div>
+  </div>
+</div>
+
+<!-- ══ 카메라 sub-옵션 (build 332): 한 장 vs 긴 영수증 여러 장 ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-scan-camera" onclick="closeOvOutside(event,'ov-scan-camera')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">📷 カメラで撮影</div>
+    <div class="sheet-sub">1枚 또는 緊いレシート 複数枚を選択</div>
+    <!-- 한 장 -->
+    <label class="scan-opt" style="display:flex;cursor:pointer;">
+      <span style="font-size:26px;">📸</span>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);">1枚 撮影</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">普通のレシート · 1枚で完了</div>
+      </div>
+      <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="_scanCameraSingleDone(this)">
+    </label>
+    <!-- 긴 영수증 여러 장 -->
+    <div class="scan-opt" style="display:flex;cursor:pointer;" onclick="closeOv('ov-scan-camera');setTimeout(startMultiScan,150);">
       <span style="font-size:26px;">📜</span>
       <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.multi.title">長いレシート · 複数枚撮影</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.multi.sub">分けて撮影 → AI が合体して分析</div>
+        <div style="font-size:14px;font-weight:700;color:var(--text-1);">長いレシート · 複数枚撮影</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">分けて撮影 → AI が合体して分析</div>
       </div>
       <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--green);background:rgba(29,158,117,0.12);padding:3px 8px;border-radius:10px;align-self:center;">NEW</span>
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan')" data-i18n="btn.cancel">キャンセル</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan-camera')" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -8674,9 +8708,21 @@ function selectDay(y,m,d){
 var multiPages = []; // 각 장 { base64, previewSrc, rawText }
 
 // 분할 촬영 시작 - ov-scan 닫고 ov-multi 열기
+/* build 332 — 카메라 옵션 클릭 시 sub-모달 (한 장 vs 여러 장) */
+function _openScanCameraChoice(){
+  closeOv('ov-scan');
+  setTimeout(function(){ openOv('ov-scan-camera'); }, 150);
+}
+/* build 332 — 한 장 촬영 완료 후 sub-모달 닫고 handleImageFile 호출 */
+function _scanCameraSingleDone(inputEl){
+  closeOv('ov-scan-camera');
+  if (typeof handleImageFile === 'function') handleImageFile(inputEl);
+}
+
 function startMultiScan() {
   multiPages = []; // 초기화
   closeOv('ov-scan');
+  closeOv('ov-scan-camera');  // build 332 — sub-모달도 닫기
   updateMultiUI();
   openOv('ov-multi');
 }
@@ -23234,7 +23280,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 331;
+window.__APP_BUILD__ = 332;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
