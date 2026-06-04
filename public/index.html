@@ -16371,6 +16371,7 @@ var _sdCmtPage   = {};   // {cardId: 댓글 현재 페이지 (0부터)}
 var SD_CMT_PER_PAGE = 5; // 댓글 페이지당 개수
 var _sdCards     = [];   // 현재 가게의 메뉴카드 리스트 (모달용)
 var _mdCardId    = null; // 현재 열린 메뉴 상세 모달의 cardId
+var _mdPhotos    = []; // build 359 — 메뉴 카드 사진 캐시 (legacy + store_menu_photos)
 var _mdComments  = [];   // 현재 모달의 댓글 캐시
 
 /* ── 메뉴 카테고리 (대분류 → 소분류) ── */
@@ -23946,16 +23947,60 @@ async function openMenuDetail(cardId){
   _mdCardId = cardId;
   _sdCmtPage[cardId] = 0;
   _mdComments = [];
+  _mdPhotos = [];
   openOv('ov-menu-detail');
   _mdRender(); // 즉시 스켈레톤 표시
-  // 댓글 로드 후 재렌더
-  _mdComments = await _sdLoadCommentsForCard(cardId);
+  // 댓글 + 사진 병렬 로드 후 재렌더
+  var results = await Promise.all([
+    _sdLoadCommentsForCard(cardId),
+    _mdLoadPhotos(cardId)
+  ]);
+  _mdComments = results[0] || [];
   _mdRender();
 }
 function closeMenuDetail(){
   closeOv('ov-menu-detail');
   _mdCardId = null;
   _mdComments = [];
+  _mdPhotos = [];
+}
+
+/* build 359 — 메뉴 카드 사진 로드 (legacy image_url + store_menu_photos) */
+async function _mdLoadPhotos(cardId) {
+  _mdPhotos = [];
+  if (!cardId || !_sb) return;
+  // 가상 핀 카드(_isPricePinOnly) 는 사진 없음 — 핀에는 사진 없음
+  if (String(cardId).indexOf('pin-') === 0) return;
+
+  var card = _sdCards.find(function(c){ return c.id === cardId; });
+  var legacyUrl = card && card.image_url;
+
+  try {
+    var res = await _sb.from('store_menu_photos')
+      .select('id,image_url,is_primary,sort_order,created_at')
+      .eq('menu_card_id', cardId)
+      .order('is_primary', { ascending:false })
+      .order('sort_order', { ascending:true, nullsFirst:false })
+      .order('created_at', { ascending:false });
+
+    var photos = [];
+    if (legacyUrl) photos.push({ photo_url: legacyUrl, is_primary: true, _src:'legacy' });
+    (res.data || []).forEach(function(p) {
+      if (p.image_url && p.image_url !== legacyUrl) {
+        photos.push({ photo_url: p.image_url, is_primary: !!p.is_primary, _src:'extra' });
+      }
+    });
+    _mdPhotos = photos;
+  } catch(e) {
+    console.warn('[mdLoadPhotos] failed:', e);
+  }
+}
+
+/* build 359 — 메뉴 상세 사진 클릭 → 가게 상세와 동일 뷰어 재사용 */
+function mdOpenPhotoViewer(idx) {
+  if (!_mdPhotos || _mdPhotos.length === 0) return;
+  window._sdPhotoList = _mdPhotos.map(function(p){ return p.photo_url; });
+  sdOpenPhotoViewer(idx);
 }
 function mdCloseOutside(e){
   if(e.target === document.getElementById('ov-menu-detail')) closeMenuDetail();
@@ -24025,11 +24070,38 @@ function _mdRender(){
       +'<div onclick="closeMenuDetail()" style="width:34px;height:34px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-2);">✕</div>'
     +'</div></div>';
 
-  // 카드 hero 이미지
-  if(card.image_url){
-    h += '<img src="'+card.image_url+'" style="width:100%;height:260px;object-fit:cover;display:block;background:var(--bg-2);">';
-  } else {
+  // 카드 hero 이미지 (build 359 — 슬라이드 + 전체화면 뷰어)
+  var photos = _mdPhotos || [];
+  if (photos.length === 0 && card.image_url) {
+    // 사진 캐시 아직 로드 안 됨 → 일단 legacy 1장 임시 표시 (캐시 로드 후 _mdRender 다시 호출됨)
+    photos = [{ photo_url: card.image_url, is_primary: true }];
+  }
+  if (photos.length === 0) {
     h += '<div style="width:100%;height:260px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:72px;">🍽️</div>';
+  } else if (photos.length === 1) {
+    h += '<div style="position:relative;cursor:pointer;background:var(--bg-2);" onclick="mdOpenPhotoViewer(0)">'
+       + '<img src="'+_esc(photos[0].photo_url)+'" loading="lazy" style="width:100%;height:260px;object-fit:cover;display:block;" onerror="this.style.display=\'none\';this.parentElement.insertAdjacentHTML(\'afterbegin\',\'<div style=&quot;width:100%;height:260px;display:flex;align-items:center;justify-content:center;font-size:72px;&quot;>🍽️</div>\');">'
+       + (photos[0].is_primary ? '<div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;">⭐ 대표</div>' : '')
+       + '</div>';
+  } else {
+    // 가로 슬라이드
+    h += '<div class="md-photo-scroll" style="position:relative;background:var(--bg-2);overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;">'
+       + '<div style="display:flex;gap:3px;height:260px;">';
+    photos.forEach(function(p, idx) {
+      var primaryBadge = p.is_primary
+        ? '<div style="position:absolute;top:10px;left:10px;background:rgba(0,0,0,.65);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:8px;z-index:1;">⭐ 대표</div>'
+        : '';
+      h += '<div style="position:relative;height:260px;width:340px;flex-shrink:0;cursor:pointer;" onclick="mdOpenPhotoViewer('+idx+')">'
+         + primaryBadge
+         + '<img src="'+_esc(p.photo_url)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\';this.parentElement.style.background=\'var(--bg-2)\';this.parentElement.insertAdjacentHTML(\'afterbegin\',\'<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#aaa;&quot;>🍽️</div>\');">'
+         + '</div>';
+    });
+    h += '</div>'
+       + '<div style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:700;padding:3px 8px;border-radius:10px;pointer-events:none;">'+photos.length+'장</div>'
+       + '</div>';
+    setTimeout(function(){
+      if (typeof _sdEnableDragScroll === 'function') _sdEnableDragScroll('.md-photo-scroll');
+    }, 30);
   }
   // 메뉴 정보
   var stars=card.rating_avg>0?('★'+parseFloat(card.rating_avg).toFixed(1)):'─';
@@ -24635,7 +24707,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 358;
+window.__APP_BUILD__ = 359;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
