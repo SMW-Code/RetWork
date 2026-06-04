@@ -3909,6 +3909,54 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 광고 시청 풀스크린 페이지 (build 334) ══
+     출석체크 스타일 — 상단 ← 뒤로 + 설명 카드 + 자동재생 광고 카드 + 하단 큰 버튼.
+     monthreport / report_unlock 등 컨텍스트에서 사용 (영수증 저장은 기존 바텀시트 유지). -->
+<div class="overlay" id="ov-watch-ad-page" style="z-index:10004;background:var(--bg);">
+  <div style="width:100%;height:100%;display:flex;flex-direction:column;">
+    <!-- 헤더 -->
+    <div style="background:var(--bg);padding:14px 16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
+      <div onclick="closeWatchAdPage()" style="font-size:22px;cursor:pointer;color:var(--text-1);padding:4px 8px;">←</div>
+      <div id="watch-ad-title" style="font-size:17px;font-weight:900;color:var(--text-1);">광고 시청</div>
+    </div>
+
+    <!-- 스크롤 영역 -->
+    <div style="flex:1;overflow-y:auto;padding:14px 16px 20px;">
+      <!-- 카드 1: 설명문 -->
+      <div style="background:var(--surface);border-radius:14px;padding:18px 16px;margin-bottom:12px;box-shadow:var(--shadow-sm);border:.5px solid var(--border);">
+        <div id="watch-ad-desc-icon" style="font-size:32px;margin-bottom:8px;">📊</div>
+        <div id="watch-ad-desc-title" style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:5px;">광고 보고 내용 확인하기</div>
+        <div id="watch-ad-desc-sub" style="font-size:12px;color:var(--text-3);line-height:1.6;">광고 1회 시청하시면 내용을 보실 수 있어요.</div>
+      </div>
+
+      <!-- 카드 2: 자동재생 광고 영역 -->
+      <div style="background:var(--surface);border-radius:14px;overflow:hidden;margin-bottom:12px;border:.5px solid var(--border);box-shadow:var(--shadow-sm);">
+        <div style="background:linear-gradient(135deg,#1a1a3a,#3a1a5e);padding:8px 12px;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:space-between;">
+          <span>📢 SPONSORED VIDEO AD</span>
+          <span style="color:#5B9BD5;">自動再生 ▶</span>
+        </div>
+        <div id="watch-ad-slot" style="min-height:260px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3a5cdf,#9b3dd6);">
+          <!-- 광고 영역 — 베타 placeholder (정식 출시 시 AdSense 주입) -->
+          <div style="text-align:center;color:#fff;padding:30px;">
+            <div style="font-size:48px;margin-bottom:14px;animation:ct-ad-pulse 1.2s ease-in-out infinite;">▶️</div>
+            <div style="font-size:15px;font-weight:800;margin-bottom:6px;">広告 自動再生中</div>
+            <div style="font-size:11px;opacity:.85;">毎日見て チリ をもっと貯めよう ✨</div>
+          </div>
+        </div>
+        <div style="padding:8px 12px;font-size:10px;color:var(--text-3);display:flex;justify-content:space-between;background:var(--surface);">
+          <span>📢 광고</span>
+          <span>AdSense 승인 후 실광고 표시</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 버튼 -->
+    <div style="padding:14px 16px 24px;background:var(--bg);border-top:.5px solid var(--border);flex-shrink:0;">
+      <button onclick="watchAdPageStart()" style="width:100%;padding:16px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--green),var(--green-dark));color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);box-shadow:0 4px 14px rgba(13,122,95,.35);">📺 광고 보고 내용 확인하기</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 出席 완료 바텀시트 (광고 시청 옵션) ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-att-complete" onclick="acCloseOutside(event)">
   <div id="att-complete-panel" style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-height:90vh;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.25);overflow-y:auto;">
@@ -6753,16 +6801,19 @@ function _applyReportLock(){
 function _unlockReport(){
   // 이미 풀려있으면 무시
   if (window._isReportUnlocked || _isPremium) { _applyReportLock(); return; }
-  if (typeof showAdModal === 'function') {
-    showAdModal(function(){
+  // build 334 — 풀스크린 광고 시청 페이지 (출석체크 스타일)
+  if (typeof openWatchAdPage === 'function') {
+    openWatchAdPage('report_unlock', function(){
       window._isReportUnlocked = true;
       _applyReportLock();
-      // 콘텐츠 재렌더 (display:none 였던 동안 누락된 렌더 보강)
       try { renderCatBreakdown(); renderRadar(); } catch(e){}
-      // build 326 — 토스트는 ctOpenFullscreenAd 완료 분기에서 context 별로 표시 (중복 제거)
-    }, 'report_unlock');
+    }, {
+      title: '📊 리포트 상세',
+      icon: '📊',
+      descTitle: '광고 보고 리포트 펼치기',
+      descSub: '카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.'
+    });
   } else {
-    // showAdModal 없으면 바로 풀기
     window._isReportUnlocked = true;
     _applyReportLock();
   }
@@ -8324,9 +8375,14 @@ var MR_SUPER_CATS  = ['food','life','shop','med','beauty','other','fuel'];
 var MR_DINING_CATS = ['eat','cafe','drink'];
 
 function openMonthReport(){
-  // build 324 — 미구독 유저는 광고 시청 후 진입 (구독 유저는 즉시)
-  if (!_isPremium && typeof showAdModal === 'function') {
-    showAdModal(function(){ _openMonthReportInner(); }, 'monthreport');
+  // build 324 → 334 — 미구독 유저는 풀스크린 광고 시청 페이지 (출석체크 스타일)
+  if (!_isPremium && typeof openWatchAdPage === 'function') {
+    openWatchAdPage('monthreport', function(){ _openMonthReportInner(); }, {
+      title: '🧾 월별 리포트',
+      icon: '🧾',
+      descTitle: '광고 보고 월별 리포트 확인하기',
+      descSub: '한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.'
+    });
     return;
   }
   _openMonthReportInner();
@@ -15458,6 +15514,40 @@ var _rvAdMode    = 'save'; // 'save' | 'reward'
 /* 바텀시트 열기 (영수증 저장 시)
    context: 'save'  = 영수증 결과 화면에서 가계부 저장 흐름 (기본)
             'chiri' = 이미 치리 모달을 거친 흐름 (저장+공개 한 번에) */
+/* build 334 — 풀스크린 광고 시청 페이지 (출석체크 스타일)
+   monthreport / report_unlock 등 콘텐츠 잠금 해제 컨텍스트 전용 */
+var _watchAdCallback = null;
+var _watchAdRetCtx = null;
+function openWatchAdPage(context, callback, opts){
+  opts = opts || {};
+  _watchAdCallback = callback;
+  _watchAdRetCtx = context;
+  document.getElementById('watch-ad-title').textContent = opts.title || '광고 시청';
+  document.getElementById('watch-ad-desc-icon').textContent = opts.icon || '📊';
+  document.getElementById('watch-ad-desc-title').textContent = opts.descTitle || '광고 보고 내용 확인하기';
+  document.getElementById('watch-ad-desc-sub').textContent = opts.descSub || '광고 1회 시청하시면 내용을 보실 수 있어요.';
+  openOv('ov-watch-ad-page');
+}
+function closeWatchAdPage(){
+  closeOv('ov-watch-ad-page');
+  _watchAdCallback = null;
+  _watchAdRetCtx = null;
+}
+function watchAdPageStart(){
+  var cb  = _watchAdCallback;
+  var ctx = _watchAdRetCtx;
+  closeOv('ov-watch-ad-page');
+  // 풀스크린 동영상 광고 — _adContext 설정해서 완료 메시지 분기 동작
+  _adContext = ctx || 'save';
+  if (typeof ctOpenFullscreenAd === 'function') {
+    ctOpenFullscreenAd('save', cb);
+  } else if (typeof cb === 'function') {
+    cb();
+  }
+  _watchAdCallback = null;
+  _watchAdRetCtx = null;
+}
+
 /* build 333 — 광고 모달 닫기 (콜백 실행 X, 광고 안 보고 나가기)
    - monthreport / report_unlock 컨텍스트에서 명시 닫기 가능
    - 영수증 저장 등에서도 닫으면 저장 안 됨 (사용자 의도 그대로) */
@@ -23296,7 +23386,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 333;
+window.__APP_BUILD__ = 334;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
