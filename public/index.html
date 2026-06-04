@@ -626,7 +626,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* ── 가게 상세 패널 ── */
 #ov-store-detail{z-index:980;}
-#store-detail-panel{background:var(--surface);border-radius:28px 28px 0 0;max-height:92vh;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:0 -10px 48px rgba(0,0,0,.28);width:100%;display:flex;flex-direction:column;}
+#store-detail-panel{background:var(--surface);border-radius:36px 36px 0 0;max-height:92vh;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:0 -12px 56px rgba(0,0,0,.32);width:100%;display:flex;flex-direction:column;}
 /* 섹션 순서: 공개 모드 기본 (사진 → 가게정보 → 광고 → 메뉴 → 댓글 → 비공개) */
 #store-detail-panel > .sheet-handle{order:1;}
 #store-detail-panel > #sd-header{order:2;}
@@ -11768,10 +11768,10 @@ var I18N = {
     // 가게 상세 모달 추가
     'sd.no_address':'住所情報なし','sd.no_rating':'評価なし',
     'sd.add_photo':'写真追加','sd.first_photo':'最初の写真をアップロード','sd.map':'マップ','sd.website':'ウェブサイト','sd.no_website':'サイト<br>なし',
-    'sd.google_info':'📍 Google情報','sd.google_loading':'Google情報を読み込み中...','sd.today':'🕐 今日:','sd.all_hours':'▼ 全営業時間',
+    'sd.google_info':'Google情報','sd.google_loading':'Google情報を読み込み中...','sd.today':'今日:','sd.all_hours':'▼ 全営業時間',
     'sd.reviews':'💬 訪問者レビュー ({n})','sd.receipt_verified':'🧾 レシート認証',
     'sd.private_title':'🔒 マイ非公開メモ','sd.rating_title':'評価 (1~10)','sd.rating_prompt':'評価を選んでください','sd.memo_ph':'個人メモ（任意・最大500文字）','sd.memo_save':'🔒 非公開で保存','sd.memo_update':'✏️ 修正を保存',
-    'sd.req_edit':'✏️ 修正リクエスト','sd.share':'📤 共有する','sd.close':'✕ 閉じる','sd.req_edit_done':'修正リクエストを受け付けました。確認後に反映されます。',
+    'sd.req_edit':'修正リクエスト','sd.share':'共有','sd.close':'閉じる','sd.req_edit_done':'修正リクエストを受け付けました。確認後に反映されます。',
     'sd.weekdays_full':'日曜日,月曜日,火曜日,水曜日,木曜日,金曜日,土曜日','sd.closed':'定休日','sd.open_24':'24時間営業','sd.open_now':'🟢 営業中','sd.closed_now':'🔴 営業終了',
     // 온보딩 슬라이드 1~4
     'onb1.title':'ReceiptIQへようこそ！','onb1.desc':'レシート1枚から始まる<br>日本生活のスマート家計簿。<br>AIが自動で入力します。',
@@ -12022,10 +12022,10 @@ var I18N = {
     'ct.reward.title':'🎁 치리워드','ct.reward.sub':'포인트 적립 & 드로우',
     'sd.no_address':'주소 정보 없음','sd.no_rating':'평가 없음',
     'sd.add_photo':'사진 추가','sd.first_photo':'첫 사진을 올려보세요','sd.map':'맵','sd.website':'웹사이트','sd.no_website':'웹사이트<br>없음',
-    'sd.google_info':'📍 Google 정보','sd.google_loading':'Google 정보 로딩 중...','sd.today':'🕐 오늘:','sd.all_hours':'▼ 전체 영업시간',
+    'sd.google_info':'Google 정보','sd.google_loading':'Google 정보 로딩 중...','sd.today':'오늘:','sd.all_hours':'▼ 전체 영업시간',
     'sd.reviews':'💬 방문자 리뷰 ({n})','sd.receipt_verified':'🧾 영수증 인증',
     'sd.private_title':'🔒 내 비공개 메모','sd.rating_title':'평가 (1~10)','sd.rating_prompt':'평가를 선택하세요','sd.memo_ph':'개인 메모 (선택, 최대 500자)','sd.memo_save':'🔒 비공개 저장','sd.memo_update':'✏️ 수정 저장',
-    'sd.req_edit':'✏️ 수정 요청','sd.share':'📤 공유하기','sd.close':'✕ 닫기','sd.req_edit_done':'수정 요청이 접수됐어요. 검토 후 반영됩니다.',
+    'sd.req_edit':'수정 요청','sd.share':'공유하기','sd.close':'닫기','sd.req_edit_done':'수정 요청이 접수됐어요. 검토 후 반영됩니다.',
     'sd.weekdays_full':'일요일,월요일,화요일,수요일,목요일,금요일,토요일','sd.closed':'정기휴일','sd.open_24':'24시간 영업','sd.open_now':'🟢 영업 중','sd.closed_now':'🔴 영업 종료',
     'onb1.title':'ReceiptIQ에 오신 걸 환영해요!','onb1.desc':'영수증 한 장으로 시작하는<br>일본 생활 스마트 가계부예요.<br>AI가 다 알아서 입력해줘요.',
     'onb2.title':'찍으면 바로 자동 입력!','onb2.desc':'영수증 사진을 찍으면<br>AI가 가게명 · 품목 · 금액을<br>자동으로 인식해서 기록해줘요.',
@@ -12254,10 +12254,10 @@ var I18N = {
     'ct.reward.title':'🎁 Chiri-ward','ct.reward.sub':'Earn points & lottery',
     'sd.no_address':'No address','sd.no_rating':'No rating',
     'sd.add_photo':'Add Photo','sd.first_photo':'Upload the first photo','sd.map':'Map','sd.website':'Website','sd.no_website':'No<br>website',
-    'sd.google_info':'📍 Google Info','sd.google_loading':'Loading Google info...','sd.today':'🕐 Today:','sd.all_hours':'▼ All hours',
+    'sd.google_info':'Google Info','sd.google_loading':'Loading Google info...','sd.today':'Today:','sd.all_hours':'▼ All hours',
     'sd.reviews':'💬 Visitor reviews ({n})','sd.receipt_verified':'🧾 Receipt verified',
     'sd.private_title':'🔒 My private memo','sd.rating_title':'Rating (1-10)','sd.rating_prompt':'Pick a rating','sd.memo_ph':'Personal memo (optional, max 500)','sd.memo_save':'🔒 Save privately','sd.memo_update':'✏️ Update',
-    'sd.req_edit':'✏️ Request edit','sd.share':'📤 Share','sd.close':'✕ Close','sd.req_edit_done':'Edit request received. It will be applied after review.',
+    'sd.req_edit':'Request edit','sd.share':'Share','sd.close':'Close','sd.req_edit_done':'Edit request received. It will be applied after review.',
     'sd.weekdays_full':'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday','sd.closed':'Closed','sd.open_24':'Open 24 hours','sd.open_now':'🟢 Open','sd.closed_now':'🔴 Closed',
     'onb1.title':'Welcome to ReceiptIQ!','onb1.desc':'A smart budget app for life in Japan,<br>starting from a single receipt.<br>AI handles the entry for you.',
     'onb2.title':'Snap & auto-entry!','onb2.desc':'Take a photo of a receipt and<br>AI recognizes store · items · total<br>then records it automatically.',
@@ -12486,10 +12486,10 @@ var I18N = {
     'ct.reward.title':'🎁 奖励','ct.reward.sub':'积分获取 & 抽奖',
     'sd.no_address':'无地址信息','sd.no_rating':'无评价',
     'sd.add_photo':'添加照片','sd.first_photo':'上传第一张照片','sd.map':'地图','sd.website':'网站','sd.no_website':'无<br>网站',
-    'sd.google_info':'📍 Google信息','sd.google_loading':'正在加载 Google 信息...','sd.today':'🕐 今天:','sd.all_hours':'▼ 全部营业时间',
+    'sd.google_info':'Google信息','sd.google_loading':'正在加载 Google 信息...','sd.today':'今天:','sd.all_hours':'▼ 全部营业时间',
     'sd.reviews':'💬 访客评价 ({n})','sd.receipt_verified':'🧾 票据认证',
     'sd.private_title':'🔒 我的私密备注','sd.rating_title':'评价 (1~10)','sd.rating_prompt':'请选择评分','sd.memo_ph':'个人备注（可选，最多500字）','sd.memo_save':'🔒 私密保存','sd.memo_update':'✏️ 保存修改',
-    'sd.req_edit':'✏️ 请求修改','sd.share':'📤 分享','sd.close':'✕ 关闭','sd.req_edit_done':'修改请求已收到，审核后将反映。',
+    'sd.req_edit':'请求修改','sd.share':'分享','sd.close':'关闭','sd.req_edit_done':'修改请求已收到，审核后将反映。',
     'sd.weekdays_full':'星期日,星期一,星期二,星期三,星期四,星期五,星期六','sd.closed':'休息日','sd.open_24':'24小时营业','sd.open_now':'🟢 营业中','sd.closed_now':'🔴 已打烊',
     'onb1.title':'欢迎使用 ReceiptIQ！','onb1.desc':'从一张票据开始的<br>日本生活智能记账本。<br>AI 自动帮你记录。',
     'onb2.title':'拍照即自动录入！','onb2.desc':'拍下票据，<br>AI 自动识别店名·商品·金额<br>并记录下来。',
@@ -16626,7 +16626,7 @@ function _sdRenderPlacesInfo(place, sData) {
     // localized 는 월~일 순. today(0=일)을 그 순서의 인덱스로 변환
     var todayPos = (today === 0) ? 6 : (today - 1);
     var todayTxt = (localized[todayPos] && localized[todayPos].html.replace(/^<b[^>]*>.*?<\/b>:\s*/, '')) || '';
-    hoursTodayHtml = '<span style="font-size:11px;font-weight:700;color:var(--text-1);">'+t('sd.today')+'</span>'
+    hoursTodayHtml = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text-1);">'+icon('clock',13,'var(--text-1)')+'<span>'+t('sd.today')+'</span></span>'
       + '<span style="font-size:11px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+todayTxt+'</span>';
     hoursFullHtml = '<details style="margin-top:6px;cursor:pointer;"><summary style="font-size:10px;color:var(--green);font-weight:700;list-style:none;">'+t('sd.all_hours')+'</summary>'
       + '<div style="margin-top:6px;padding:8px 10px;background:var(--bg-2);border-radius:8px;font-size:10px;line-height:1.8;color:var(--text-2);">'
@@ -16637,7 +16637,7 @@ function _sdRenderPlacesInfo(place, sData) {
     var today2 = new Date().getDay();
     var googleIdx = today2 === 0 ? 6 : (today2 - 1);
     var todayLine = oh.weekday_text[googleIdx] || '';
-    hoursTodayHtml = '<span style="font-size:11px;font-weight:700;color:var(--text-1);">'+t('sd.today')+'</span>'
+    hoursTodayHtml = '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--text-1);">'+icon('clock',13,'var(--text-1)')+'<span>'+t('sd.today')+'</span></span>'
       + '<span style="font-size:11px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(todayLine.replace(/^[^:]+:\s*/, ''))+'</span>';
     hoursFullHtml = '<details style="margin-top:6px;cursor:pointer;"><summary style="font-size:10px;color:var(--green);font-weight:700;list-style:none;">'+t('sd.all_hours')+'</summary>'
       + '<div style="margin-top:6px;padding:8px 10px;background:var(--bg-2);border-radius:8px;font-size:10px;line-height:1.8;color:var(--text-2);">'
@@ -16646,9 +16646,12 @@ function _sdRenderPlacesInfo(place, sData) {
   }
 
   wrap.innerHTML = '<div style="background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;">'
-    // 첫 줄: 📍 Google 정보 + 평점 + 영업 중 + 전화
+    // 첫 줄: 📍 Google 정보 + 평점 + 영업 중 + 전화 (build 369 — SVG)
     + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;'+(hoursTodayHtml?'margin-bottom:8px;':'')+'">'
-    +   '<div style="font-size:12px;font-weight:800;color:var(--text-1);flex-shrink:0;">'+t('sd.google_info')+'</div>'
+    +   '<div style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--text-1);flex-shrink:0;">'
+    +     icon('map_pin', 14, 'var(--text-1)')
+    +     '<span>'+t('sd.google_info')+'</span>'
+    +   '</div>'
     +   ratingHtml
     +   openBadge
     +   phoneHtml
@@ -16964,31 +16967,31 @@ function _sdRenderSideActions() {
   var btnBase = 'flex:1;min-height:0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;';
 
   var h = '';
-  // 1. 사진 추가
+  // 1. 사진 추가 (build 369 — SVG camera)
   h += '<div onclick="sdPhotoSheet()" style="'+btnBase+'background:var(--green-light);border:1px solid var(--green);color:var(--green);">'
-    + '<span style="font-size:18px;">📷</span>'
+    + icon('camera', 20, 'var(--green)')
     + '<span style="font-size:10px;font-weight:700;">'+t('sd.add_photo')+'</span>'
     + '</div>';
   // 2. 맵
   h += '<a href="'+gmUrl+'" target="_blank" rel="noopener" style="'+btnBase+'background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;color:var(--text-2);">'
-    + '<span style="font-size:18px;">🗺️</span>'
+    + icon('map_pin', 20, 'var(--text-2)')
     + '<span style="font-size:10px;font-weight:700;">'+t('sd.map')+'</span>'
     + '</a>';
   // 3. 웹사이트 (있을 때만 활성, 없으면 회색 비활성)
   if (website) {
     h += '<a href="'+_esc(website)+'" target="_blank" rel="noopener" style="'+btnBase+'background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;color:var(--text-2);">'
-      + '<span style="font-size:18px;">🌐</span>'
+      + icon('globe', 20, 'var(--text-2)')
       + '<span style="font-size:10px;font-weight:700;">'+t('sd.website')+'</span>'
       + '</a>';
   } else {
     h += '<div style="'+btnBase+'background:var(--bg-2);border:.5px dashed var(--border-mid);color:var(--text-3);opacity:.5;">'
-      + '<span style="font-size:18px;">🌐</span>'
+      + icon('globe', 20, 'var(--text-3)')
       + '<span style="font-size:9px;font-weight:600;line-height:1.1;text-align:center;">'+t('sd.no_website')+'</span>'
       + '</div>';
   }
-  // 4. 공유하기 (build 367)
+  // 4. 공유하기 (build 367 — SVG share, build 369 변경)
   h += '<div onclick="sdShareStore()" style="'+btnBase+'background:var(--bg-2);border:.5px solid var(--border);color:var(--text-2);">'
-    + '<span style="font-size:18px;">📤</span>'
+    + icon('share', 20, 'var(--text-2)')
     + '<span style="font-size:10px;font-weight:700;">'+t('sd.share')+'</span>'
     + '</div>';
   wrap.innerHTML = h;
@@ -24874,6 +24877,9 @@ window.__LICO_SET__ = {
   ticket:       '<path d="M2 9a3 3 0 010 6v2a2 2 0 002 2h16a2 2 0 002-2v-2a3 3 0 010-6V7a2 2 0 00-2-2H4a2 2 0 00-2 2z"/><path d="M13 5v2M13 17v2M13 11v2"/>',
   logout:       '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
   copy:         '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>',
+  // build 369 — 가게 상세 SVG 보강
+  share:        '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+  more:         '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>',
 };
 function icon(name, size, color){
   var svg = window.__LICO_SET__[name];
@@ -24907,7 +24913,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 368;
+window.__APP_BUILD__ = 369;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
