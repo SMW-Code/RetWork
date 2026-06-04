@@ -3221,6 +3221,19 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="font-size:10px;color:var(--text-3);margin-top:4px;line-height:1.4;">💡 Google 지도에서 정확한 가게 찾아서 공유 링크 복사·붙여넣기. 비우면 자동 검색 사용.</div>
       </div>
 
+      <!-- 가게 사진 관리 (build 350) -->
+      <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">📷 가게 사진</div>
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;">
+        <label style="display:block;background:var(--green);color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:8px;">
+          📤 사진 업로드 (복수 선택 가능)
+          <input type="file" accept="image/*" multiple onchange="_admUploadStorePhotos(this)" style="display:none;">
+        </label>
+        <div id="adm-store-photo-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+          <div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4;">⭐ = 대표 사진 (유저측 가게 상세 첫 표시). ☆ 클릭으로 지정 / 해제. ↑↓ 로 순서 변경. ✕ 로 삭제 (Storage 파일도 함께 삭제).</div>
+      </div>
+
       <!-- 메뉴 카드 대표 선정 -->
       <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">⭐ 대표 메뉴 선정 (지도 마커 가격에 표시)</div>
       <div id="adm-store-menu-list" style="margin-bottom:14px;display:flex;flex-direction:column;gap:6px;"></div>
@@ -22548,6 +22561,7 @@ async function openAdminStoreDetail(storeId) {
   document.getElementById('adm-store-gmap').value = s.google_maps_url || '';
   document.getElementById('adm-store-meta').textContent = '평균가: ¥'+(s.avg_price||0).toLocaleString()+' · 영수증: '+(s.receipt_count||0)+'장';
   _admLoadStoreMenus(s.name);
+  _admLoadStorePhotos(s.name);  // build 350 — 가게 사진 로드
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
     _admPcDrilldownTo('ov-admin-edit-store', { backMenuKey:'stores', backLabel:'가게 목록', title:'가게 편집' });
   } else {
@@ -22678,6 +22692,174 @@ async function _admLoadStoreMenus(storeName) {
       + '<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥'+(m.price||0).toLocaleString()+'</div>'
       + '</div>';
   }).join('');
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   build 350 — 가게 사진 관리 (어드민 전용)
+   - store_photos 테이블 (store_name, photo_url, is_primary, sort_order)
+   - Supabase Storage bucket: store-photos
+   ────────────────────────────────────────────────────────────────── */
+async function _admLoadStorePhotos(storeName) {
+  var wrap = document.getElementById('adm-store-photo-list');
+  if (!wrap || !_sb || !storeName) return;
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
+  var res = await _sb.from('store_photos')
+    .select('id,photo_url,is_primary,sort_order,created_at')
+    .eq('store_name', storeName)
+    .order('is_primary', { ascending:false })
+    .order('sort_order', { ascending:true, nullsFirst:false })
+    .order('created_at', { ascending:false });
+  if (res.error) {
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--red);padding:12px;grid-column:1/-1;">로드 실패: '+_esc(res.error.message)+'</div>';
+    return;
+  }
+  var rows = res.data || [];
+  if (rows.length === 0) {
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">등록된 사진이 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(function(p, idx) {
+    var starColor = p.is_primary ? 'var(--gold)' : '#bbb';
+    var starIcon  = p.is_primary ? '⭐' : '☆';
+    var borderColor = p.is_primary ? 'var(--gold)' : 'transparent';
+    return '<div style="position:relative;border:2px solid '+borderColor+';border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
+      + '<img src="'+_esc(p.photo_url||'')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+      // 좌상단 — 대표 토글
+      + '<button onclick="_admTogglePrimaryPhoto(\''+p.id+'\')" style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.92);border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:'+starColor+';padding:0;line-height:1;" title="대표 사진 토글">'+starIcon+'</button>'
+      // 우상단 — 삭제
+      + '<button onclick="_admDeleteStorePhoto(\''+p.id+'\')" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:11px;cursor:pointer;padding:0;line-height:1;" title="삭제">✕</button>'
+      // 하단 — 순서 ↑↓
+      + '<div style="position:absolute;bottom:4px;left:4px;right:4px;display:flex;gap:4px;">'
+      +   '<button onclick="_admMoveStorePhoto(\''+p.id+'\',-1)" '+(idx===0?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:4px;font-size:11px;cursor:pointer;'+(idx===0?'opacity:.3;cursor:not-allowed;':'')+'">↑</button>'
+      +   '<button onclick="_admMoveStorePhoto(\''+p.id+'\',1)" '+(idx===rows.length-1?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:4px;font-size:11px;cursor:pointer;'+(idx===rows.length-1?'opacity:.3;cursor:not-allowed;':'')+'">↓</button>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+async function _admUploadStorePhotos(input) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!_admEditStoreId) { showToast('가게 정보 로드 전'); return; }
+  var files = input.files;
+  if (!files || files.length === 0) return;
+  var storeName = document.getElementById('adm-store-name').value.trim();
+  if (!storeName) { showToast('가게명을 먼저 확인'); return; }
+
+  showToast('📤 업로드 중... (' + files.length + '장)');
+  var ok = 0;
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i];
+    if (!f.type || f.type.indexOf('image/') !== 0) { console.warn('not image, skip:', f.name); continue; }
+    if (f.size > 5 * 1024 * 1024) { showToast('5MB 초과: ' + f.name); continue; }
+    try {
+      var extMatch = f.name.match(/\.([a-zA-Z0-9]{1,5})$/);
+      var ext = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
+      var path = 'stores/' + _admEditStoreId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
+      var up = await _sb.storage.from('store-photos').upload(path, f, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: f.type
+      });
+      if (up.error) { console.warn('[admUploadPhoto] upload err:', up.error); showToast('업로드 실패: ' + up.error.message); continue; }
+      var pub = _sb.storage.from('store-photos').getPublicUrl(path);
+      var publicUrl = pub.data && pub.data.publicUrl;
+      if (!publicUrl) { console.warn('publicUrl 없음'); continue; }
+
+      var ins = await _sb.from('store_photos').insert({
+        store_name: storeName,
+        photo_url:  publicUrl,
+        user_id:    _currentUser ? _currentUser.id : null,
+        is_primary: false,
+        sort_order: null
+      });
+      if (ins.error) { console.warn('[admUploadPhoto] insert err:', ins.error); showToast('등록 실패: ' + ins.error.message); continue; }
+      ok++;
+    } catch(e) {
+      console.error('[admUploadPhoto] exception:', e);
+    }
+  }
+  input.value = '';
+  if (ok > 0) showToast('✅ ' + ok + '장 등록 완료');
+  _admLoadStorePhotos(storeName);
+}
+
+async function _admTogglePrimaryPhoto(photoId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  var storeName = document.getElementById('adm-store-name').value.trim();
+  if (!storeName) return;
+  try {
+    var cur = await _sb.from('store_photos').select('is_primary').eq('id', photoId).maybeSingle();
+    if (cur.error || !cur.data) { showToast('로드 실패'); return; }
+    if (cur.data.is_primary) {
+      await _sb.from('store_photos').update({ is_primary:false }).eq('id', photoId);
+      showToast('대표 해제');
+    } else {
+      // 가게당 1장만 대표 → 모두 해제 후 이것만 지정 (UNIQUE 제약 충돌 방지)
+      await _sb.from('store_photos').update({ is_primary:false }).eq('store_name', storeName);
+      var upd = await _sb.from('store_photos').update({ is_primary:true }).eq('id', photoId);
+      if (upd.error) { showToast('지정 실패: ' + upd.error.message); return; }
+      showToast('⭐ 대표 사진 지정');
+    }
+    _admLoadStorePhotos(storeName);
+  } catch(e) {
+    console.error('[admTogglePrimary] exception:', e);
+  }
+}
+
+async function _admMoveStorePhoto(photoId, direction) {
+  if (!_sb || !_isAdmin) return;
+  var storeName = document.getElementById('adm-store-name').value.trim();
+  if (!storeName) return;
+  try {
+    var res = await _sb.from('store_photos')
+      .select('id')
+      .eq('store_name', storeName)
+      .order('is_primary', { ascending:false })
+      .order('sort_order', { ascending:true, nullsFirst:false })
+      .order('created_at', { ascending:false });
+    if (res.error || !res.data) return;
+    var arr = res.data.slice();
+    var idx = arr.findIndex(function(p){ return p.id === photoId; });
+    if (idx < 0) return;
+    var ti = idx + direction;
+    if (ti < 0 || ti >= arr.length) return;
+    var tmp = arr[idx]; arr[idx] = arr[ti]; arr[ti] = tmp;
+
+    // 전체 sort_order 재할당 (0,1,2,...)
+    var updates = arr.map(function(p, i){
+      return _sb.from('store_photos').update({ sort_order:i }).eq('id', p.id);
+    });
+    await Promise.all(updates);
+    _admLoadStorePhotos(storeName);
+  } catch(e) {
+    console.error('[admMovePhoto] exception:', e);
+  }
+}
+
+async function _admDeleteStorePhoto(photoId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!confirm('이 사진을 삭제할까요?\n(Supabase Storage 의 원본 파일도 함께 삭제)')) return;
+  var storeName = document.getElementById('adm-store-name').value.trim();
+  try {
+    var cur = await _sb.from('store_photos').select('photo_url').eq('id', photoId).maybeSingle();
+    var del = await _sb.from('store_photos').delete().eq('id', photoId);
+    if (del.error) { showToast('삭제 실패: ' + del.error.message); return; }
+    // Storage 파일도 best-effort 삭제 (publicUrl 에서 path 추출)
+    if (cur.data && cur.data.photo_url) {
+      try {
+        var url = String(cur.data.photo_url);
+        var m = url.match(/\/store-photos\/(.+)$/);
+        if (m && m[1]) {
+          await _sb.storage.from('store-photos').remove([m[1]]);
+        }
+      } catch(_){}
+    }
+    showToast('🗑️ 삭제됨');
+    if (storeName) _admLoadStorePhotos(storeName);
+  } catch(e) {
+    console.error('[admDeletePhoto] exception:', e);
+    showToast('삭제 실패: ' + (e.message||''));
+  }
 }
 
 // 대표 메뉴 토글 — 가게당 한 개만 대표로 (라디오 방식)
@@ -23761,7 +23943,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 348;
+window.__APP_BUILD__ = 350;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
