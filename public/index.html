@@ -10836,9 +10836,13 @@ function showOcrResult(previewSrc, result) {
     +'</div>'
     +'<span id="ocr-total-disp" style="font-size:22px;font-weight:900;color:var(--green);letter-spacing:-1px;">¥'+result.total.toLocaleString()+'</span>'
     +'</div>'
-    +'<button class="save-btn" onclick="saveOcrResult()">'+t('ocr.save_budget')+'</button>'
+    +'<button class="save-btn" onclick="saveOcrResult()" style="display:flex;align-items:center;justify-content:center;gap:8px;">'
+    +'<span class="lico" data-lico="receipt" data-size="17" data-color="#fff"></span>'
+    +'<span data-i18n="ocr.save_budget">'+t('ocr.save_budget')+'</span>'
+    +'</button>'
     +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
-    +'<span>📍 チリつもに公開する</span>'
+    +'<span class="lico" data-lico="map_pin" data-size="17" data-color="#fff"></span>'
+    +'<span data-i18n="ocr.save_publish">'+t('ocr.save_publish')+'</span>'
     +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>'
     +'</button>'
     +'<div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;" onclick="closeOv(\'ov-ocr\')">'+t('btn.cancel')+'</div>';
@@ -11649,7 +11653,7 @@ var I18N = {
     'ocr.select_category':'カテゴリ選択','ocr.no_items':'品目なし。下の + ボタンで追加してください。',
     'ocr.qty':'数量','ocr.subtotal':'小計','ocr.tax':'税','ocr.total':'合計',
     'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
-    'ocr.store_unknown':'不明','ocr.save_budget':'💾 家計簿に保存','ocr.item_unit':'品目',
+    'ocr.store_unknown':'不明','ocr.save_budget':'家計簿に保存','ocr.save_publish':'家計簿に保存 ＆ チリつもに公開','ocr.item_unit':'品目',
     'ocr.title':'📷 レシート解析中...','ocr.title_split':'📜 分割レシート解析中...','ocr.checking':'レシートを確認しています','ocr.organizing':'商品を整理しています','ocr.wait':'しばらくお待ちください','ocr.reading_page':'{i}/{n}枚目を読み取り中','ocr.ad_badge':'分析中...',
     'ocr.debug.parse_result':'解析結果','ocr.debug.store':'店名','ocr.debug.items':'認識品目','ocr.debug.total':'合計','ocr.debug.raw_text':'API元テキスト','ocr.debug.count_n':'{n}件','ocr.debug.lines_n':'{n}行',
     // 편집 모달
@@ -11891,7 +11895,7 @@ var I18N = {
     'ocr.select_category':'카테고리 선택','ocr.no_items':'품목 없음. 아래 + 버튼으로 추가해주세요.',
     'ocr.qty':'수량','ocr.subtotal':'소계','ocr.tax':'세금','ocr.total':'합계',
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
-    'ocr.store_unknown':'불명','ocr.save_budget':'💾 가계부에 저장하기','ocr.item_unit':'품목',
+    'ocr.store_unknown':'불명','ocr.save_budget':'가계부에 저장하기','ocr.save_publish':'가계부 저장 ＆ 치리츠모 공개','ocr.item_unit':'품목',
     'ocr.title':'📷 영수증 분석 중...','ocr.title_split':'📜 분할 영수증 분석 중...','ocr.checking':'영수증을 확인하고 있어요','ocr.organizing':'품목을 정리하고 있어요','ocr.wait':'잠시만 기다려주세요','ocr.reading_page':'{i}/{n}장 읽고 있어요','ocr.ad_badge':'분석 중...',
     'ocr.debug.parse_result':'파싱 결과','ocr.debug.store':'점포명','ocr.debug.items':'인식 품목','ocr.debug.total':'합계','ocr.debug.raw_text':'API 원본 텍스트','ocr.debug.count_n':'{n}개','ocr.debug.lines_n':'{n}줄',
     'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
@@ -12123,7 +12127,7 @@ var I18N = {
     'ocr.select_category':'Select Category','ocr.no_items':'No items. Tap + below to add.',
     'ocr.qty':'Qty','ocr.subtotal':'Subtotal','ocr.tax':'Tax','ocr.total':'Total',
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
-    'ocr.store_unknown':'Unknown','ocr.save_budget':'💾 Save to Budget','ocr.item_unit':'items',
+    'ocr.store_unknown':'Unknown','ocr.save_budget':'Save to Budget','ocr.save_publish':'Save & Publish to Chiri','ocr.item_unit':'items',
     'ocr.title':'📷 Analyzing receipt...','ocr.title_split':'📜 Analyzing split receipt...','ocr.checking':'Reading your receipt','ocr.organizing':'Organizing items','ocr.wait':'Please wait a moment','ocr.reading_page':'Reading page {i}/{n}','ocr.ad_badge':'Analyzing...',
     'ocr.debug.parse_result':'Parse result','ocr.debug.store':'Store','ocr.debug.items':'Items','ocr.debug.total':'Total','ocr.debug.raw_text':'API raw text','ocr.debug.count_n':'{n}','ocr.debug.lines_n':'{n} lines',
     'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
@@ -12355,7 +12359,7 @@ var I18N = {
     'ocr.select_category':'选择类别','ocr.no_items':'无商品。点击下方 + 添加。',
     'ocr.qty':'数量','ocr.subtotal':'小计','ocr.tax':'税','ocr.total':'合计',
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
-    'ocr.store_unknown':'未知','ocr.save_budget':'💾 保存到账本','ocr.item_unit':'件',
+    'ocr.store_unknown':'未知','ocr.save_budget':'保存到账本','ocr.save_publish':'保存账本并发布到Chiri','ocr.item_unit':'件',
     'ocr.title':'📷 正在分析票据...','ocr.title_split':'📜 正在分析分割票据...','ocr.checking':'正在确认票据','ocr.organizing':'正在整理商品','ocr.wait':'请稍候','ocr.reading_page':'正在读取第 {i}/{n} 张','ocr.ad_badge':'分析中...',
     'ocr.debug.parse_result':'解析结果','ocr.debug.store':'店名','ocr.debug.items':'识别商品','ocr.debug.total':'合计','ocr.debug.raw_text':'API原始文本','ocr.debug.count_n':'{n}件','ocr.debug.lines_n':'{n}行',
     'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
@@ -23562,7 +23566,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 341;
+window.__APP_BUILD__ = 342;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
