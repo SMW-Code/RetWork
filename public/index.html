@@ -10813,6 +10813,11 @@ function showOcrResult(previewSrc, result) {
     +'<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;">'+t('ocr.store_name')+'</div>'
     +'<div style="font-size:15px;font-weight:800;color:var(--text-1);" contenteditable="true" id="ocr-store">'+_esc(result.store)+'</div>'
     +'</div>'
+    // build 345 — 영수증 날짜 편집 카드 (GPT 오역 시 사용자 즉시 수정 가능)
+    +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">'
+    +'<div style="flex:1;"><div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;" data-i18n="ocr.date">날짜</div>'
+    +'<input type="date" id="ocr-date" value="'+_esc(_sanitizeReceiptDate(result.date || ''))+'" style="background:transparent;border:none;font-size:15px;font-weight:800;color:var(--text-1);font-family:var(--font);width:100%;padding:0;outline:none;">'
+    +'</div></div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.items_recognized')+' (<span id=\'item-count\'>'+window._ocrItems.length+'</span>)</div>'
     +'<button onclick="addOcrItem()" style="background:var(--green);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">'+t('ocr.add_item')+'</button>'
@@ -10945,27 +10950,13 @@ function _checkAndFormatYMD(y, mo, d, raw){
   }
   var diffYears = (now.getTime() - dt.getTime()) / (365 * 24 * 3600 * 1000);
 
-  // build 344 — 元号 표기가 없는데 5년 이상 과거이면 GPT 가 西暦 2자리(YY)를 平成 N年 으로
-  //             잘못 환산했을 가능성 → 자동 보정 시도
-  //   예: raw="26年6月4日" 또는 GPT 반환 "2014-06-04" (元号 없음)
-  //       y=2014 → yy=2014-1988=26 → 2000+26=2026 으로 재환산
-  if (diffYears > 5 && !hasGengo) {
-    var hy = y - 1988;  // 平成 N년 가정
-    if (hy >= 1 && hy <= 31) {
-      var corrected = 2000 + hy;
-      // 현재 연도보다 1년 이상 미래면 100년 빼서 1900년대로 (거의 안 일어남)
-      if (corrected > now.getFullYear() + 1) corrected -= 100;
-      console.warn('[receipt date] 平成 오역 자동보정:', raw, '→', y, '→', corrected);
-      y = corrected;
-      if (typeof showToast === 'function') {
-        setTimeout(function(){ showToast('📅 영수증 날짜 자동 보정: ' + y + '년 ' + mo + '월'); }, 600);
-      }
-      return _formatYMD(y, mo, d);
-    }
-    // 보정 실패 (보정 후 연도가 비현실적) → 경고만
-    console.warn('[receipt date] 5+ years past — possible 平成 misread:', raw, '→', y);
+  // build 345 — 자동 보정 제거 (잘못 보정 위험 — 진짜 과거 영수증 무시함)
+  //   대신 OCR 결과 화면에서 사용자가 날짜를 직접 확인/수정할 수 있는 input 제공.
+  //   여기는 경고 토스트만 띄움 (사용자 주의 환기).
+  if (diffYears > 5) {
+    console.warn('[receipt date] 5+ years past — 확인 필요:', raw, '→', y);
     if (typeof showToast === 'function') {
-      setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 (5년+ 과거). 확인해 주세요'); }, 600);
+      setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 — 확인해 주세요'); }, 600);
     }
   } else if (diffYears < -1) {
     console.warn('[receipt date] 1+ year future:', raw, '→', y);
@@ -11059,11 +11050,19 @@ function _doSaveOcrResult() {
   // items를 window._ocrItems에서 읽기 (수정 반영)
   var finalItems = (window._ocrItems || r.items || []).filter(function(it){ return it.price > 0; });
   var finalTotal = window._originalTotal || r.total || finalItems.reduce(function(a,it){ return a + it.price; }, 0);
-  // 영수증 날짜 우선, 없으면 오늘
+  // build 345 — 사용자가 편집한 날짜 input 값을 최우선으로 사용
+  var dateInputEl = document.getElementById('ocr-date');
+  var userDate = dateInputEl ? dateInputEl.value : '';
   var now = new Date();
-  var dateStr = r.date || (now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'));
-  // build 323 — 일본 元号 / 2자리 연도 오역 자동 보정 + 의심 날짜 경고
-  dateStr = _sanitizeReceiptDate(dateStr);
+  var dateStr;
+  if (userDate && /^\d{4}-\d{2}-\d{2}$/.test(userDate)) {
+    // 사용자가 직접 입력/수정한 날짜 그대로 신뢰
+    dateStr = userDate;
+  } else {
+    // fallback: GPT 결과 → sanitize, 없으면 오늘
+    dateStr = r.date || (now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'));
+    dateStr = _sanitizeReceiptDate(dateStr);
+  }
   // DB에 저장
   var newEntry = {
     id: nextId++,
@@ -11674,7 +11673,7 @@ var I18N = {
     'home.vs_prev_save':'前月比 ▼ ¥{amt} 節約中 🎉','home.vs_prev_up':'前月比 ▲ ¥{amt} 増加',
     // OCR 결과 저장 화면
     'ocr.result.title':'✅ 認識結果の確認','ocr.result.multipage':'📜 分割撮影',
-    'ocr.store_name':'店名','ocr.items_recognized':'認識された品目','ocr.add_item':'+ 品目追加',
+    'ocr.store_name':'店名','ocr.date':'日付','ocr.items_recognized':'認識された品目','ocr.add_item':'+ 品目追加',
     'ocr.select_category':'カテゴリ選択','ocr.no_items':'品目なし。下の + ボタンで追加してください。',
     'ocr.qty':'数量','ocr.subtotal':'小計','ocr.tax':'税','ocr.total':'合計',
     'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
@@ -11916,7 +11915,7 @@ var I18N = {
     'home.month_total':'{m}月 합계 지출 · {n}건',
     'home.vs_prev_save':'전월 대비 ▼ ¥{amt} 절약 중 🎉','home.vs_prev_up':'전월 대비 ▲ ¥{amt} 증가',
     'ocr.result.title':'✅ 인식 결과 확인','ocr.result.multipage':'📜 분할촬영',
-    'ocr.store_name':'가게 이름','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
+    'ocr.store_name':'가게 이름','ocr.date':'날짜','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
     'ocr.select_category':'카테고리 선택','ocr.no_items':'품목 없음. 아래 + 버튼으로 추가해주세요.',
     'ocr.qty':'수량','ocr.subtotal':'소계','ocr.tax':'세금','ocr.total':'합계',
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
@@ -12148,7 +12147,7 @@ var I18N = {
     'home.month_total':'{m}/ Total spend · {n}',
     'home.vs_prev_save':'▼ ¥{amt} saved vs last month 🎉','home.vs_prev_up':'▲ ¥{amt} more than last month',
     'ocr.result.title':'✅ Confirm Recognition','ocr.result.multipage':'📜 Multi-shot',
-    'ocr.store_name':'Store Name','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
+    'ocr.store_name':'Store Name','ocr.date':'Date','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
     'ocr.select_category':'Select Category','ocr.no_items':'No items. Tap + below to add.',
     'ocr.qty':'Qty','ocr.subtotal':'Subtotal','ocr.tax':'Tax','ocr.total':'Total',
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
@@ -12380,7 +12379,7 @@ var I18N = {
     'home.month_total':'{m}月 总支出 · {n}笔',
     'home.vs_prev_save':'较上月 ▼ ¥{amt} 节省中 🎉','home.vs_prev_up':'较上月 ▲ ¥{amt} 增加',
     'ocr.result.title':'✅ 确认识别结果','ocr.result.multipage':'📜 分段拍摄',
-    'ocr.store_name':'店名','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
+    'ocr.store_name':'店名','ocr.date':'日期','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
     'ocr.select_category':'选择类别','ocr.no_items':'无商品。点击下方 + 添加。',
     'ocr.qty':'数量','ocr.subtotal':'小计','ocr.tax':'税','ocr.total':'合计',
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
@@ -23591,7 +23590,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 344;
+window.__APP_BUILD__ = 345;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
