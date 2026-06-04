@@ -3256,7 +3256,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- sticky 헤더 -->
     <div style="position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:5;flex-shrink:0;">
-      <button onclick="closeOv('ov-admin-edit-menu-card')" style="background:transparent;border:1px solid var(--border-mid);border-radius:8px;color:var(--text-1);font-size:16px;font-weight:700;cursor:pointer;padding:6px 12px;font-family:var(--font);display:flex;align-items:center;gap:4px;">← 뒤로</button>
+      <button onclick="_admPcBackFromMenuCard()" style="background:transparent;border:1px solid var(--border-mid);border-radius:8px;color:var(--text-1);font-size:16px;font-weight:700;cursor:pointer;padding:6px 12px;font-family:var(--font);display:flex;align-items:center;gap:4px;">← 뒤로</button>
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:900;color:var(--text-1);">🍽️ 메뉴 카드 수정 (운영자)</div>
         <div id="amc-meta" style="font-size:11px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
@@ -22460,15 +22460,37 @@ async function openAdminEditMenuCard(menuCardId) {
   await _admLoadMenuPhotos(menuCardId);
   await _admLoadMenuComments(menuCardId);
 
-  // build 353 — PC 어드민 모드면 풀스크린 drilldown, 모바일은 일반 오버레이
+  // build 355 — PC 어드민 모드면 풀스크린 drilldown, 모바일은 일반 오버레이
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
     _admPcDrilldownTo('ov-admin-edit-menu-card', {
       backMenuKey:'pins',
       backLabel:'가게핀',
       title:'메뉴 카드 수정'
     });
+    // 메뉴 카드 모달은 자체 ← 뒤로 헤더가 있으므로 drilldown 의 breadcrumb 숨김
+    setTimeout(function(){
+      var bc = document.getElementById('apc-breadcrumb');
+      if (bc) bc.style.display = 'none';
+    }, 60);
   } else {
     openOv('ov-admin-edit-menu-card');
+  }
+}
+
+/* build 355 — 메뉴 카드 수정 화면의 ← 뒤로 버튼
+   PC 어드민: 가게핀 상세 페이지로 복귀 (시트 unmount + ct 재렌더)
+   모바일: 일반 closeOv */
+function _admPcBackFromMenuCard() {
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    closeOv('ov-admin-edit-menu-card');
+    if (typeof _admPcUnmountAll === 'function') _admPcUnmountAll();
+    if (window._admPcCurrentStoreName) {
+      _admPcOpenPinStoreView(window._admPcCurrentStoreName);
+    } else if (typeof _admPcBackToMenu === 'function') {
+      _admPcBackToMenu('pins');
+    }
+  } else {
+    closeOv('ov-admin-edit-menu-card');
   }
 }
 
@@ -24512,7 +24534,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 355;
+window.__APP_BUILD__ = 356;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
