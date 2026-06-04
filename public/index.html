@@ -6817,8 +6817,9 @@ function _unlockReport(){
       _applyReportLock();
       try { renderCatBreakdown(); renderRadar(); } catch(e){}
     }, {
-      title: '📊 리포트 상세',
-      icon: '📊',
+      // build 337 — emoji 제거, ico 명시
+      title: '리포트 상세',
+      ico: 'chart',
       descTitle: '광고 보고 리포트 펼치기',
       descSub: '카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.'
     });
@@ -8386,9 +8387,10 @@ var MR_DINING_CATS = ['eat','cafe','drink'];
 function openMonthReport(){
   // build 324 → 334 — 미구독 유저는 풀스크린 광고 시청 페이지 (출석체크 스타일)
   if (!_isPremium && typeof openWatchAdPage === 'function') {
+    // build 337 — emoji 제거, ico 명시 (헤더에 SVG 라인 아이콘 자동 표시)
     openWatchAdPage('monthreport', function(){ _openMonthReportInner(); }, {
-      title: '🧾 월별 리포트',
-      icon: '🧾',
+      title: '월별 리포트',
+      ico: 'receipt',
       descTitle: '광고 보고 월별 리포트 확인하기',
       descSub: '한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.'
     });
@@ -15551,9 +15553,15 @@ function openWatchAdPage(context, callback, opts){
   _watchAdCallback = callback;
   _watchAdRetCtx = context;
   _watchAdSecondaryCb = opts.secondaryCallback || null;
-  document.getElementById('watch-ad-title').textContent = opts.title || base.title;
-  // build 336 — SVG 라인 아이콘으로 렌더 (이전 emoji 텍스트 대신)
+  // build 337 — 헤더에 ico SVG + 텍스트 (왼쪽 ← 옆에 통일된 아이콘)
   var icoName = opts.ico || base.ico || 'play';
+  var titleEl = document.getElementById('watch-ad-title');
+  if (titleEl) {
+    titleEl.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;">'
+      + icon(icoName, 20, 'var(--text-1)')
+      + '<span>' + (opts.title || base.title) + '</span></span>';
+  }
+  // 설명 카드 아이콘
   var iconEl = document.getElementById('watch-ad-desc-icon');
   if (iconEl) iconEl.innerHTML = icon(icoName, 36, 'var(--green)');
   document.getElementById('watch-ad-desc-title').textContent = opts.descTitle || base.descTitle;
@@ -23547,7 +23555,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 336;
+window.__APP_BUILD__ = 337;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
