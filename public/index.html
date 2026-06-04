@@ -16838,6 +16838,12 @@ function sdOpenPhotoViewer(idx) {
   if (!window._sdPhotoList || !window._sdPhotoList.length) return;
   window._sdPhotoIdx = Math.max(0, Math.min(idx||0, window._sdPhotoList.length - 1));
   _sdPhotoViewerRender();
+  // build 360 — 가게 상세 모달의 stacking context 안에 갇히지 않도록
+  //   뷰어를 document.body 로 강제 이동 후 open
+  var ov = document.getElementById('ov-sd-photo-viewer');
+  if (ov && ov.parentElement !== document.body) {
+    document.body.appendChild(ov);
+  }
   openOv('ov-sd-photo-viewer');
 }
 function _sdPhotoViewerRender() {
@@ -23924,6 +23930,11 @@ async function _sdDoCardPhotoUpload(file) {
 var _ucCallback = null;
 function showUploadConfirm(onConfirm){
   _ucCallback = onConfirm;
+  // build 360 — 가게 상세 모달의 stacking context 회피 → document.body 로 이동
+  var ov = document.getElementById('ov-upload-confirm');
+  if (ov && ov.parentElement !== document.body) {
+    document.body.appendChild(ov);
+  }
   openOv('ov-upload-confirm');
 }
 function ucCancel(){
@@ -24707,7 +24718,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 359;
+window.__APP_BUILD__ = 360;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
