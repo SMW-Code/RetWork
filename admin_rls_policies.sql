@@ -80,6 +80,34 @@ END $$;
 
 
 -- ────────────────────────────────────────────────────────────────────────────
+-- receipts — 어드민 UPDATE/DELETE 허용 (build 362)
+-- ────────────────────────────────────────────────────────────────────────────
+ALTER TABLE receipts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "receipts_admin_update" ON receipts;
+CREATE POLICY "receipts_admin_update" ON receipts
+  FOR UPDATE TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+
+DROP POLICY IF EXISTS "receipts_admin_delete" ON receipts;
+CREATE POLICY "receipts_admin_delete" ON receipts
+  FOR DELETE TO authenticated
+  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));
+
+-- items 도 receipts CASCADE 가 안 걸려있다면 별도 정책 필요
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'items') THEN
+    EXECUTE 'ALTER TABLE items ENABLE ROW LEVEL SECURITY';
+    EXECUTE 'DROP POLICY IF EXISTS "items_admin_delete" ON items';
+    EXECUTE 'CREATE POLICY "items_admin_delete" ON items
+      FOR DELETE TO authenticated
+      USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE))';
+  END IF;
+END $$;
+
+
+-- ────────────────────────────────────────────────────────────────────────────
 -- stores — 어드민 UPDATE/DELETE 허용
 -- ────────────────────────────────────────────────────────────────────────────
 ALTER TABLE stores ENABLE ROW LEVEL SECURITY;

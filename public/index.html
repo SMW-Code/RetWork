@@ -21134,7 +21134,42 @@ function _renderAdminDetail() {
     pins:     _renderPinRow
   }[_admDetailType];
 
+  // build 362 — 영수증 중복 의심 자동 마킹
+  //   같은 (store_name + receipt_date + total_amount + user_id) 2개 이상 → _isDup=true
+  var dupBanner = '';
+  if (_admDetailType === 'receipts') {
+    var dupGroups = {};
+    filtered.forEach(function(r) {
+      var key = (r.user_id||'')+'|'+(r.store_name||'')+'|'+(r.receipt_date||'')+'|'+(r.total_amount||0);
+      if (!dupGroups[key]) dupGroups[key] = [];
+      dupGroups[key].push(r);
+    });
+    var dupTotal = 0;
+    Object.keys(dupGroups).forEach(function(k){
+      var arr = dupGroups[k];
+      if (arr.length > 1) {
+        // 가장 오래된 것 보존 (created_at ASC) — 첫 번째는 원본, 나머지는 중복 의심
+        arr.sort(function(a,b){ return (a.created_at||'').localeCompare(b.created_at||''); });
+        arr.forEach(function(r, idx){
+          r._isDup    = idx > 0;     // 두번째 이후 = 중복 의심
+          r._isOrigin = idx === 0;
+          r._dupGroupSize = arr.length;
+        });
+        dupTotal += (arr.length - 1);
+      } else {
+        arr[0]._isDup = false;
+      }
+    });
+    if (dupTotal > 0) {
+      dupBanner = '<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:8px 10px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;">'
+        + '<span style="font-size:11px;color:#92400E;font-weight:700;">🔁 중복 의심 영수증 ' + dupTotal + '개 — 같은 가게/날짜/금액/사용자 조합</span>'
+        + '<button onclick="_admDeleteAllDupReceipts()" style="background:#92400E;color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">중복 일괄 삭제</button>'
+        + '</div>';
+    }
+  }
+
   listEl.innerHTML = '<div style="font-size:10px;color:var(--text-3);font-weight:700;margin-bottom:6px;">총 '+filtered.length+'개 · '+(_admDetailPage+1)+'/'+totalPages+' 페이지</div>'
+    + dupBanner
     + pageRows.map(renderer).join('');
 
   // 페이지네이션 컨트롤
@@ -22067,13 +22102,72 @@ async function admMarkUserDeleted() {
 function _renderReceiptRow(r) {
   var date = r.receipt_date || (r.created_at||'').slice(0,10);
   var total = (r.total_amount||0).toLocaleString();
-  return '<div onclick="openAdminReceiptDetail(\''+r.id+'\')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 12px;transition:transform .12s;">'
-    + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;">'
-    +   '<span style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">'+_esc(r.store_name||'(가게명 없음)')+' ›'+_newBadgeIfRecent(r.created_at)+'</span>'
-    +   '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥'+total+'</span>'
+  // build 362 — 중복 의심 / 원본 뱃지
+  var dupBadge = '';
+  var borderColor = 'var(--border)';
+  var bgColor = 'var(--surface)';
+  if (r._isDup) {
+    dupBadge = '<span style="background:#FEF3C7;color:#92400E;font-size:9px;font-weight:800;padding:1px 6px;border-radius:6px;margin-left:4px;">🔁 중복의심</span>';
+    borderColor = '#F59E0B';
+    bgColor = '#FFFBEB';
+  } else if (r._isOrigin) {
+    dupBadge = '<span style="background:#DCFCE7;color:#166534;font-size:9px;font-weight:800;padding:1px 6px;border-radius:6px;margin-left:4px;">원본 (그룹 '+r._dupGroupSize+')</span>';
+  }
+  // build 362 — 어드민 직접 삭제 버튼 (중복 의심에만 표시)
+  var delBtn = r._isDup
+    ? '<button onclick="event.stopPropagation();_admDeleteReceipt(\''+r.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;margin-left:6px;">🗑️ 삭제</button>'
+    : '';
+  return '<div style="background:'+bgColor+';border:1px solid '+borderColor+';border-radius:10px;padding:9px 12px;transition:transform .12s;display:flex;align-items:center;gap:6px;">'
+    + '<div onclick="openAdminReceiptDetail(\''+r.id+'\')" style="cursor:pointer;flex:1;min-width:0;">'
+    +   '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;">'
+    +     '<span style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">'+_esc(r.store_name||'(가게명 없음)')+dupBadge+' ›'+_newBadgeIfRecent(r.created_at)+'</span>'
+    +     '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥'+total+'</span>'
+    +   '</div>'
+    +   '<div style="font-size:10px;color:var(--text-3);">'+date+' · UID: '+(r.user_id||'').substring(0,8)+'...</div>'
     + '</div>'
-    + '<div style="font-size:10px;color:var(--text-3);">'+date+' · UID: '+(r.user_id||'').substring(0,8)+'...</div>'
+    + delBtn
     + '</div>';
+}
+
+/* build 362 — 어드민 영수증 단건 삭제 */
+async function _admDeleteReceipt(receiptId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!confirm('이 영수증을 삭제할까요?\n(연결된 items 도 cascade 로 같이 삭제)')) return;
+  try {
+    var del = await _sb.from('receipts').delete().eq('id', receiptId).select();
+    if (del.error) { alert('삭제 실패: ' + del.error.message); return; }
+    if (!del.data || del.data.length === 0) {
+      alert('삭제 실패 — RLS 차단.\n\nSupabase SQL Editor 에서 정책 추가:\n\nCREATE POLICY "receipts_admin_delete" ON receipts\n  FOR DELETE TO authenticated\n  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));');
+      return;
+    }
+    showToast('🗑️ 영수증 삭제됨');
+    // 목록 새로고침
+    if (typeof _loadAdminDetailData === 'function') await _loadAdminDetailData('receipts');
+  } catch(e) {
+    console.error('[admDeleteReceipt] exception:', e);
+    showToast('삭제 실패: ' + (e.message||''));
+  }
+}
+
+/* build 362 — 중복 의심 일괄 삭제 */
+async function _admDeleteAllDupReceipts() {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  var dupIds = (_admDetailData || []).filter(function(r){ return r._isDup; }).map(function(r){ return r.id; });
+  if (dupIds.length === 0) { showToast('중복 의심 영수증이 없어요'); return; }
+  if (!confirm('중복 의심 영수증 ' + dupIds.length + '개를 일괄 삭제할까요?\n(원본 1개씩은 보존, 연결된 items 도 함께 삭제)')) return;
+  try {
+    var del = await _sb.from('receipts').delete().in('id', dupIds).select();
+    if (del.error) { alert('삭제 실패: ' + del.error.message); return; }
+    if (!del.data || del.data.length === 0) {
+      alert('삭제 실패 — RLS 차단.\n\nreceipts 의 admin DELETE 정책을 먼저 추가하세요:\n\nCREATE POLICY "receipts_admin_delete" ON receipts\n  FOR DELETE TO authenticated\n  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));');
+      return;
+    }
+    showToast('🗑️ ' + del.data.length + '건 삭제됨');
+    if (typeof _loadAdminDetailData === 'function') await _loadAdminDetailData('receipts');
+  } catch(e) {
+    console.error('[admDeleteAllDupReceipts] exception:', e);
+    showToast('삭제 실패: ' + (e.message||''));
+  }
 }
 
 /* ══════════════════════════════
@@ -24723,7 +24817,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 361;
+window.__APP_BUILD__ = 362;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
