@@ -11422,20 +11422,60 @@ async function submitChiriPublish() {
 
   // ★ 선택된 메뉴 품목들을 store_menu_cards에도 insert
   //   → 가게 상세 모달의 메뉴 카드 영역에 표시됨
+  //   build 348 — 중복 방지: 동일 (store_name, menu_name) 카드 있으면 insert 스킵
+  //               → 새 카드 안 만들고 기존 카드에 댓글/평점만 추가
   if (_currentUser && _sb && _cpSelectedItems.length > 0) {
-    var menuCardRows = _cpSelectedItems.map(function(item) {
-      return {
-        store_name:   store,
-        menu_name:    item.name,
-        category:     _cpCategory || r.cat || 'other',
-        price:        item.price,
-        image_url:    null,
-        rating_avg:   _savedStarRating > 0 ? _savedStarRating : 0,
-        rating_count: _savedStarRating > 0 ? 1 : 0,
-        created_by:   _currentUser.id
-      };
+    // 1) 기존 카드 fetch (정규화 비교용)
+    var _normMenu = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
+    var existRes = await _sb.from('store_menu_cards')
+      .select('id,menu_name')
+      .eq('store_name', store);
+    var existCards = existRes.data || [];
+    var existMap = {};
+    existCards.forEach(function(c){ existMap[_normMenu(c.menu_name)] = c; });
+
+    // 2) 신규 카드 / 기존 카드 분류
+    var newRows = [];
+    var existingCardsForRating = [];
+    _cpSelectedItems.forEach(function(item) {
+      var key = _normMenu(item.name);
+      if (existMap[key]) {
+        existingCardsForRating.push(existMap[key]); // 평점만 추가
+      } else {
+        newRows.push({
+          store_name:   store,
+          menu_name:    item.name,
+          category:     _cpCategory || r.cat || 'other',
+          price:        item.price,
+          image_url:    null,
+          rating_avg:   _savedStarRating > 0 ? _savedStarRating : 0,
+          rating_count: _savedStarRating > 0 ? 1 : 0,
+          created_by:   _currentUser.id
+        });
+      }
     });
-    _sb.from('store_menu_cards').insert(menuCardRows).select().then(function(res) {
+    console.log('[chiri-publish] menu_cards: new=' + newRows.length + ', existing=' + existingCardsForRating.length);
+
+    // 3) 기존 카드들에 별점 댓글 추가 (별점 입력했을 때만)
+    if (_savedStarRating > 0 && existingCardsForRating.length > 0) {
+      var existingCommentRows = existingCardsForRating.map(function(card) {
+        return {
+          menu_card_id: card.id,
+          user_id:      _currentUser.id,
+          rating:       _savedStarRating,
+          content:      commentText || null
+        };
+      });
+      _sb.from('store_menu_comments').insert(existingCommentRows).then(function(r2){
+        if (r2 && r2.error) console.warn('[chiri-publish] existing menu_comments insert error:', r2.error.message);
+      });
+    }
+
+    // 4) 신규 카드만 insert
+    if (newRows.length === 0) {
+      console.log('[chiri-publish] 모든 메뉴 카드 이미 존재 — insert 스킵');
+    } else
+    _sb.from('store_menu_cards').insert(newRows).select().then(function(res) {
       if (res.error) {
         console.warn('[chiri-publish] store_menu_cards insert error:', res.error.message);
         return;
@@ -22213,15 +22253,53 @@ async function _admPcEditMenuCardFromPin(pinId) {
     var storeName = (pin.stores && pin.stores.name) || window._admPcCurrentStoreName;
     if (!storeName) { showToast('가게명 확인 실패'); return; }
 
-    // 2) 매칭 store_menu_cards 찾기 (store_name + menu_name 으로)
+    // 2) 매칭 store_menu_cards 찾기 (build 348 — maybeSingle 제거, 중복행/공백 대응)
+    var itemName = (pin.item_name || '').trim();
+    // 2-a) 정확 매칭 (limit 1)
     var cRes = await _sb.from('store_menu_cards')
       .select('id,menu_name,price,is_featured')
       .eq('store_name', storeName)
-      .eq('menu_name', pin.item_name || '')
-      .maybeSingle();
-    var card = cRes.data;
+      .eq('menu_name', itemName)
+      .order('created_at', { ascending:false })
+      .limit(1);
+    var card = (cRes.data && cRes.data[0]) || null;
+    console.log('[admPcEditMenuCard] 정확 매칭:', storeName, '|', itemName, '→', card ? 'id='+card.id : 'miss');
+
+    // 2-b) 정확 매칭 실패 → 같은 가게의 카드 전체 목록 fetch (사용자 선택 또는 fuzzy)
     if (!card) {
-      if (!confirm('해당 메뉴 카드가 없어요.\n핀("' + (pin.item_name||'') + '" ¥' + (pin.price||0).toLocaleString() + ')으로 새 메뉴 카드를 생성할까요?')) return;
+      var allCardsRes = await _sb.from('store_menu_cards')
+        .select('id,menu_name,price,is_featured')
+        .eq('store_name', storeName)
+        .order('created_at', { ascending:false });
+      var allCards = allCardsRes.data || [];
+      console.log('[admPcEditMenuCard] 같은 가게 카드 수:', allCards.length);
+
+      if (allCards.length > 0) {
+        // fuzzy: 트리밍/normalize 비교
+        var normalize = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
+        var target = normalize(itemName);
+        card = allCards.find(function(c){ return normalize(c.menu_name) === target; });
+        if (card) console.log('[admPcEditMenuCard] fuzzy 매칭 성공: id='+card.id);
+      }
+
+      // 그래도 못 찾으면 → 같은 가게에 1개 이상 카드 있으면 목록 보여주고 선택
+      if (!card) {
+        if (allCards.length > 0) {
+          var listMsg = '"' + itemName + '" 와 정확히 일치하는 메뉴 카드가 없어요.\n\n같은 가게의 메뉴 카드들:\n';
+          allCards.forEach(function(c, i){ listMsg += '  ' + (i+1) + '. ' + c.menu_name + ' (¥' + (c.price||0).toLocaleString() + ')\n'; });
+          listMsg += '\n어느 카드를 편집할까요? 번호 입력 (취소=새로 생성):';
+          var sel = window.prompt(listMsg, '1');
+          if (sel === null) return;
+          var selIdx = parseInt(sel, 10) - 1;
+          if (selIdx >= 0 && selIdx < allCards.length) {
+            card = allCards[selIdx];
+          }
+        }
+      }
+    }
+
+    if (!card) {
+      if (!confirm('해당 메뉴 카드가 없어요.\n핀("' + itemName + '" ¥' + (pin.price||0).toLocaleString() + ')으로 새 메뉴 카드를 생성할까요?')) return;
       var ins = await _sb.from('store_menu_cards').insert({
         store_name:   storeName,
         menu_name:    pin.item_name || '(이름 없음)',
@@ -23683,7 +23761,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 347;
+window.__APP_BUILD__ = 348;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
