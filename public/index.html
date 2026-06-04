@@ -24280,13 +24280,19 @@ function _mdRender(){
   }
 
   // 댓글 페이지네이션
-  var totalCmts = comments.length;
+  // build 365 — 댓글 리스트는 content 있는 row 만 (별점만 등록된 row 는 위 평점 분포에만 카운트)
+  //   치리 공개 흐름에서 같은 영수증의 모든 메뉴에 commentText 복제됐던 케이스를
+  //   화면 단에서 즉시 차단 — DB 정리 SQL 미실행 환경에서도 안전
+  var displayComments = comments.filter(function(c){
+    return c.content && String(c.content).trim().length > 0;
+  });
+  var totalCmts = displayComments.length;
   var totalPages = Math.max(1, Math.ceil(totalCmts / SD_CMT_PER_PAGE));
   var curPage = _sdCmtPage[cardId] || 0;
   if(curPage >= totalPages) curPage = 0;
   var pageStart = curPage * SD_CMT_PER_PAGE;
   var pageEnd = pageStart + SD_CMT_PER_PAGE;
-  var pageComments = comments.slice(pageStart, pageEnd);
+  var pageComments = displayComments.slice(pageStart, pageEnd);
   if(totalCmts > 0){
     h += '<div style="padding:8px 18px 4px;display:flex;align-items:center;justify-content:space-between;">'
       +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('md.comments_count',{n:totalCmts})+'</div>'
@@ -24851,7 +24857,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 364;
+window.__APP_BUILD__ = 365;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
