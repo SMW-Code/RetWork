@@ -17121,24 +17121,12 @@ function _sdRenderMenus(cards,loaded){
     var photoBtn = (!c.image_url && !c._isPricePinOnly)
       ? '<button onclick="event.stopPropagation();sdStartCardPhoto(\''+c.id+'\')" class="sd-photo-upload-btn" title="이 가게 근처에서만 가능">📸 <span class="badge">+10チリ</span></button>'
       : '';
-    // ★ 어드민용 컨트롤 (대표 토글 + 정렬 화살표) — 진짜 메뉴 카드만
-    var adminCtrl = '';
-    if (_isAdmin && !c._isPricePinOnly) {
-      var starIcon = c.is_featured ? '⭐' : '☆';
-      var starColor = c.is_featured ? '#FFC107' : 'rgba(255,255,255,.7)';
-      var canLeft  = idx > 0;
-      var canRight = idx < cards.length - 1;
-      adminCtrl =
-        '<div style="position:absolute;top:8px;left:8px;display:flex;gap:4px;z-index:3;">'
-        + '<button onclick="event.stopPropagation();admFeatureMenu(\''+c.id+'\')" title="대표 메뉴" style="background:rgba(0,0,0,.7);border:none;border-radius:18px;width:30px;height:30px;cursor:pointer;font-size:14px;color:'+starColor+';backdrop-filter:blur(6px);">'+starIcon+'</button>'
-        + (canLeft ? '<button onclick="event.stopPropagation();admMoveMenu(\''+c.id+'\',-1)" title="앞으로" style="background:rgba(0,0,0,.7);border:none;border-radius:18px;width:30px;height:30px;cursor:pointer;font-size:13px;color:#fff;backdrop-filter:blur(6px);">◀</button>' : '')
-        + (canRight ? '<button onclick="event.stopPropagation();admMoveMenu(\''+c.id+'\',1)" title="뒤로" style="background:rgba(0,0,0,.7);border:none;border-radius:18px;width:30px;height:30px;cursor:pointer;font-size:13px;color:#fff;backdrop-filter:blur(6px);">▶</button>' : '')
-        + '</div>';
-    }
-    var featBadge = (c.is_featured && !_isAdmin) ? '<span style="position:absolute;top:8px;left:8px;background:var(--gold);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;z-index:3;">⭐ 대표</span>' : '';
+    // build 366 — 가게 상세 페이지는 어드민도 일반 유저 뷰로 통일
+    //   메뉴 카드 순서 조정은 어드민 PC '가게 편집' 영역에서만 처리
+    //   ⭐ 대표 뱃지는 모두에게 노출
+    var featBadge = c.is_featured ? '<span style="position:absolute;top:8px;left:8px;background:var(--gold);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;z-index:3;">⭐ 대표</span>' : '';
     h+='<div class="sd-menu-card" onclick="openMenuDetail(\''+c.id+'\')">'
       +photoBtn
-      +adminCtrl
       +featBadge
       +imgH
       +'<div class="sd-menu-card-info">'
@@ -24857,7 +24845,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 365;
+window.__APP_BUILD__ = 366;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
