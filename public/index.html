@@ -712,7 +712,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-dot-item:last-child{border-bottom:none;}
 .sd-dot-item:active{background:var(--bg-2);}
 /* ── 메뉴카드 상세 모달 (카드가 커지듯 펼쳐짐) ── */
-#ov-menu-detail{z-index:960;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
+#ov-menu-detail{z-index:1200;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);}
 #menu-detail-panel{background:var(--surface);border-radius:22px 22px 0 0;max-height:92vh;width:100%;display:flex;flex-direction:column;animation:slideUp .3s var(--anim);box-shadow:0 -10px 50px rgba(0,0,0,.3),0 4px 20px var(--theme-a15);overflow:hidden;border:1.5px solid var(--green);border-bottom:none;}
 #md-content{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1;scrollbar-width:thin;}
 #md-content::-webkit-scrollbar{width:5px;}
@@ -23959,6 +23959,11 @@ async function openMenuDetail(cardId){
   _sdCmtPage[cardId] = 0;
   _mdComments = [];
   _mdPhotos = [];
+  // build 361 — 가게 상세 모달의 stacking context 회피 → body 로 이동
+  var ov = document.getElementById('ov-menu-detail');
+  if (ov && ov.parentElement !== document.body) {
+    document.body.appendChild(ov);
+  }
   openOv('ov-menu-detail');
   _mdRender(); // 즉시 스켈레톤 표시
   // 댓글 + 사진 병렬 로드 후 재렌더
@@ -24718,7 +24723,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 360;
+window.__APP_BUILD__ = 361;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
