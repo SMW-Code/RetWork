@@ -1,9 +1,9 @@
 -- ════════════════════════════════════════════════════════════════════════════
--- 가게 사진 + 메뉴 카드 사진 관리 (build 349, idempotent v2)
+-- 가게 사진 + 메뉴 카드 사진 관리 (build 349, idempotent v3 — 기존 스키마 정합)
 --
---   기존에 store_photos / store_menu_photos 테이블이 다른 구조로 존재할 수 있어
---   ALTER TABLE ADD COLUMN IF NOT EXISTS 로 컬럼을 일일이 보강한 뒤
---   FK / INDEX / RLS 를 따로 적용한다.
+--   기존 store_photos 는 (store_name TEXT, photo_url TEXT, user_id UUID) 스키마.
+--   이전 v1/v2 가 잘못 추가한 (store_id, image_url, uploaded_by) 중복 컬럼을 DROP 하고
+--   기존 컬럼 위에 is_primary / sort_order 만 추가하여 일관 운영.
 --
 --   Supabase SQL Editor 에서 실행 (재실행 안전).
 -- ════════════════════════════════════════════════════════════════════════════
@@ -11,50 +11,57 @@
 BEGIN;
 
 -- ────────────────────────────────────────────────────────────────────────────
--- 1) store_photos
+-- 1) store_photos 정리 (기존: store_name / photo_url / user_id 사용)
 -- ────────────────────────────────────────────────────────────────────────────
 
--- 1-a) 테이블 스켈레톤 (없으면 생성)
+-- 1-a) 빈 테이블이면 스켈레톤 생성 (드물지만 안전망)
 CREATE TABLE IF NOT EXISTS store_photos (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
 
--- 1-b) 필수 컬럼 보강
-ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS store_id    UUID;
-ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS image_url   TEXT;
-ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS is_primary  BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS sort_order  INTEGER;
-ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS uploaded_by UUID;
-ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW();
+-- 1-b) 기존 컬럼 보강 (이미 있으면 noop)
+ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS store_name TEXT;
+ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS photo_url  TEXT;
+ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS user_id    UUID;
+ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
--- 1-c) FK (없으면 추가)
+-- 1-c) 신규 운영 컬럼 추가 (build 349 핵심)
+ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS is_primary BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE store_photos ADD COLUMN IF NOT EXISTS sort_order INTEGER;
+
+-- 1-d) 이전 SQL v1/v2 가 잘못 추가했던 중복 컬럼 정리
+--      (NULL 만 있는 빈 컬럼이라 안전하게 DROP)
+DROP INDEX IF EXISTS idx_store_photos_store_id;
+DROP INDEX IF EXISTS uq_store_photos_primary_one;  -- store_id 기반 unique → 잠시 제거 후 재생성
+
+ALTER TABLE store_photos DROP CONSTRAINT IF EXISTS store_photos_store_id_fkey;
+ALTER TABLE store_photos DROP CONSTRAINT IF EXISTS store_photos_uploaded_by_fkey;
+
+ALTER TABLE store_photos DROP COLUMN IF EXISTS store_id;
+ALTER TABLE store_photos DROP COLUMN IF EXISTS image_url;
+ALTER TABLE store_photos DROP COLUMN IF EXISTS uploaded_by;
+
+-- 1-e) FK (user_id → auth.users)
 DO $$
 BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'store_photos_store_id_fkey'
+    SELECT 1 FROM pg_constraint WHERE conname = 'store_photos_user_id_fkey'
   ) THEN
     ALTER TABLE store_photos
-      ADD CONSTRAINT store_photos_store_id_fkey
-      FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE;
-  END IF;
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint WHERE conname = 'store_photos_uploaded_by_fkey'
-  ) THEN
-    ALTER TABLE store_photos
-      ADD CONSTRAINT store_photos_uploaded_by_fkey
-      FOREIGN KEY (uploaded_by) REFERENCES auth.users(id) ON DELETE SET NULL;
+      ADD CONSTRAINT store_photos_user_id_fkey
+      FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE SET NULL;
   END IF;
 END $$;
 
--- 1-d) 인덱스
-CREATE INDEX IF NOT EXISTS idx_store_photos_store_id ON store_photos(store_id);
-CREATE INDEX IF NOT EXISTS idx_store_photos_primary  ON store_photos(store_id, is_primary) WHERE is_primary = TRUE;
-CREATE INDEX IF NOT EXISTS idx_store_photos_sort     ON store_photos(store_id, sort_order, created_at DESC);
+-- 1-f) 인덱스 (store_name 기준)
+CREATE INDEX IF NOT EXISTS idx_store_photos_store_name ON store_photos(store_name);
+CREATE INDEX IF NOT EXISTS idx_store_photos_primary    ON store_photos(store_name, is_primary) WHERE is_primary = TRUE;
+CREATE INDEX IF NOT EXISTS idx_store_photos_sort       ON store_photos(store_name, sort_order, created_at DESC);
 -- 가게당 대표 사진은 최대 1장
 CREATE UNIQUE INDEX IF NOT EXISTS uq_store_photos_primary_one
-  ON store_photos(store_id) WHERE is_primary = TRUE;
+  ON store_photos(store_name) WHERE is_primary = TRUE;
 
--- 1-e) RLS
+-- 1-g) RLS
 ALTER TABLE store_photos ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "store_photos_select_all"   ON store_photos;
@@ -79,7 +86,8 @@ CREATE POLICY "store_photos_admin_delete" ON store_photos
 
 
 -- ────────────────────────────────────────────────────────────────────────────
--- 2) store_menu_photos
+-- 2) store_menu_photos (메뉴 카드 추가 사진)
+--    이 테이블은 신규라 위 정리 불필요 — menu_card_id / image_url 기준 그대로.
 -- ────────────────────────────────────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS store_menu_photos (
@@ -151,22 +159,14 @@ COMMIT;
 
 
 -- ════════════════════════════════════════════════════════════════════════════
--- Storage Bucket (Supabase Dashboard → Storage 에서 수동 생성)
---   Name: store-photos
---   Public: ON
---   File size limit: 5 MB
---   Allowed MIME: image/jpeg, image/png, image/webp, image/gif
---   INSERT/UPDATE/DELETE Policy:
---     authenticated AND EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE)
--- ════════════════════════════════════════════════════════════════════════════
-
-
--- ════════════════════════════════════════════════════════════════════════════
--- 검증 쿼리
+-- 검증 쿼리 (실행 후 결과 확인)
+--
+--   기대: store_photos 컬럼 7개 — id / store_name / photo_url / user_id /
+--                                  created_at / is_primary / sort_order
 --   SELECT column_name, data_type FROM information_schema.columns
 --     WHERE table_name = 'store_photos' ORDER BY ordinal_position;
+--
+--   기대: store_menu_photos 컬럼 7개
 --   SELECT column_name, data_type FROM information_schema.columns
 --     WHERE table_name = 'store_menu_photos' ORDER BY ordinal_position;
---   SELECT * FROM store_photos LIMIT 1;
---   SELECT * FROM store_menu_photos LIMIT 1;
 -- ════════════════════════════════════════════════════════════════════════════
