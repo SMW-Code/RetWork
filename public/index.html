@@ -626,7 +626,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* ── 가게 상세 패널 ── */
 #ov-store-detail{z-index:980;}
-#store-detail-panel{background:var(--surface);border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:0 -8px 40px rgba(0,0,0,.2);width:100%;display:flex;flex-direction:column;}
+#store-detail-panel{background:var(--surface);border-radius:28px 28px 0 0;max-height:92vh;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:0 -10px 48px rgba(0,0,0,.28);width:100%;display:flex;flex-direction:column;}
 /* 섹션 순서: 공개 모드 기본 (사진 → 가게정보 → 광고 → 메뉴 → 댓글 → 비공개) */
 #store-detail-panel > .sheet-handle{order:1;}
 #store-detail-panel > #sd-header{order:2;}
@@ -16718,8 +16718,8 @@ function _sdRenderHeader(ratingAvg, ratingCount) {
 function sdToggleDotMenu() {
   var ex=document.getElementById('sd-dot-popup'); if(ex){ex.remove();return;}
   var m=document.createElement('div'); m.id='sd-dot-popup'; m.className='sd-dot-popup';
+  // build 367 — 공유는 사이드 액션 영역(웹사이트 아래)으로 이동. 점점점에는 수정 요청 + 닫기만.
   m.innerHTML='<div class="sd-dot-item" onclick="sdReqEdit()">'+t('sd.req_edit')+'</div>'
-    +'<div class="sd-dot-item" onclick="sdShareStore()">'+t('sd.share')+'</div>'
     +'<div class="sd-dot-item" onclick="closeStoreDetail()">'+t('sd.close')+'</div>';
   document.getElementById('sd-header').appendChild(m);
   setTimeout(function(){
@@ -16759,11 +16759,61 @@ async function submitStoreEditReq(){
   } catch(e){ console.warn('[edit req]', e); showToast('전송 실패'); }
   if(btn){ btn.disabled=false; btn.textContent='送信する'; }
 }
-function sdShareStore(){
+/* build 367 — 가게 공유 (Web Share API 우선, fallback 클립보드)
+   본문: 가게명 + 평점 + 주소 + RetWork 안내 + URL */
+async function sdShareStore(){
   var d=document.getElementById('sd-dot-popup');if(d)d.remove();
-  var u='https://retwork.jp';
-  if(navigator.share) navigator.share({title:_sdName,text:_sdName+' - RetWork',url:u});
-  else navigator.clipboard.writeText(u).then(function(){alert('링크 복사됐어요!');});
+  var s = _sdSData || {};
+  var name = _sdName || s.name || '';
+  // 평점 — 메뉴 카드 평점 평균
+  var ratedCards = (_sdCards||[]).filter(function(c){ return c.rating_count > 0; });
+  var ratingTxt = '';
+  if (ratedCards.length > 0) {
+    var avg = ratedCards.reduce(function(a,c){ return a + parseFloat(c.rating_avg||0); }, 0) / ratedCards.length;
+    var totalCount = ratedCards.reduce(function(a,c){ return a + (c.rating_count||0); }, 0);
+    ratingTxt = '★' + avg.toFixed(1) + ' (' + totalCount + '명 평가)';
+  }
+  // 주소 — DB.address (이미 헤더에서 사용 중)
+  var addr = '';
+  try {
+    var recs = (typeof DB !== 'undefined') ? DB.filter(function(r){ return r.store === name; }) : [];
+    for (var i = 0; i < recs.length; i++) {
+      if (recs[i].address) { addr = recs[i].address; break; }
+    }
+  } catch(_){}
+
+  var url = 'https://retwork.jp';
+  // 본문 조립
+  var lines = ['🏪 ' + name];
+  if (addr) lines.push('📍 ' + addr);
+  if (ratingTxt) lines.push(ratingTxt);
+  lines.push('');
+  lines.push('— RetWork (チリつも) 가성비 가게 정보 공유 앱');
+  lines.push(url);
+  var shareText = lines.join('\n');
+
+  // Web Share API (모바일/지원 브라우저) → fallback 클립보드
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: name, text: shareText, url: url });
+      return;
+    } catch(e) {
+      // 사용자 취소면 silent, 그 외는 fallback
+      if (e && e.name === 'AbortError') return;
+      console.warn('[share] navigator.share failed, falling back to clipboard:', e);
+    }
+  }
+  // Fallback: 클립보드 복사
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      if (typeof showToast === 'function') showToast('📋 가게 정보를 복사했어요!');
+      else alert('가게 정보를 클립보드에 복사했어요!');
+      return;
+    } catch(e) { console.warn('[share] clipboard failed:', e); }
+  }
+  // 최후 fallback — prompt
+  try { window.prompt('복사하세요:', shareText); } catch(_){}
 }
 
 /* ── 사진 (build 358 — store_photos + community_photos 통합 + 전체화면 뷰어) ── */
@@ -16929,6 +16979,11 @@ function _sdRenderSideActions() {
       + '<span style="font-size:9px;font-weight:600;line-height:1.1;text-align:center;">'+t('sd.no_website')+'</span>'
       + '</div>';
   }
+  // 4. 공유하기 (build 367 — 점점점 메뉴에서 이동)
+  h += '<div onclick="sdShareStore()" style="flex:1;border-radius:12px;background:var(--bg-2);border:.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--text-2);min-height:50px;">'
+    + '<span style="font-size:18px;">📤</span>'
+    + '<span style="font-size:10px;font-weight:700;">'+t('sd.share')+'</span>'
+    + '</div>';
   wrap.innerHTML = h;
 }
 /* Supabase Storage는 path에 ASCII만 허용 → 한글/일본어/특수문자 제거 + 빈 경우 hash 사용 */
@@ -24845,7 +24900,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 366;
+window.__APP_BUILD__ = 367;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
