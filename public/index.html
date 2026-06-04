@@ -11571,14 +11571,18 @@ async function submitChiriPublish() {
     });
     console.log('[chiri-publish] menu_cards: new=' + newRows.length + ', existing=' + existingCardsForRating.length);
 
-    // 3) 기존 카드들에 별점 댓글 추가 (별점 입력했을 때만)
+    // 3) 기존 카드들에 별점만 추가 (별점 입력했을 때만)
+    //    build 364 — 댓글 텍스트(content) 는 메뉴별로 복제하지 않음.
+    //      코멘트는 가게 단위(store_comments) 에만 저장 (위 라인 ~11522)
+    //      메뉴별 store_menu_comments 에는 별점만 저장 → 평균 평점 계산용
+    //      메뉴별 텍스트 댓글은 사용자가 직접 메뉴 카드 상세에서만 입력
     if (_savedStarRating > 0 && existingCardsForRating.length > 0) {
       var existingCommentRows = existingCardsForRating.map(function(card) {
         return {
           menu_card_id: card.id,
           user_id:      _currentUser.id,
           rating:       _savedStarRating,
-          content:      commentText || null
+          content:      null  // ★ content 제거 (가게 댓글에만 저장)
         };
       });
       _sb.from('store_menu_comments').insert(existingCommentRows).then(function(r2){
@@ -11596,14 +11600,14 @@ async function submitChiriPublish() {
         return;
       }
       // 별점이 있으면 각 메뉴 카드에 store_menu_comments도 동시 저장
-      // (그래야 메뉴 상세에서도 평점이 표시됨)
+      // build 364 — content 는 null (가게 댓글에만 저장)
       if (_savedStarRating > 0 && res.data && res.data.length > 0) {
         var menuCommentRows = res.data.map(function(card) {
           return {
             menu_card_id: card.id,
             user_id:      _currentUser.id,
             rating:       _savedStarRating,
-            content:      commentText || null
+            content:      null  // ★ content 제거
           };
         });
         _sb.from('store_menu_comments').insert(menuCommentRows).then(function(){});
@@ -24847,7 +24851,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 363;
+window.__APP_BUILD__ = 364;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
