@@ -23133,16 +23133,49 @@ async function _admLoadStoreMenus(storeName) {
   var wrap = document.getElementById('adm-store-menu-list');
   if (!wrap || !_sb || !storeName) return;
   wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:8px;text-align:center;">메뉴 로딩 중...</div>';
+
+  // build 353 — 정확 매칭 후 누락 의심 시 fuzzy 매칭 보강
+  //   원인: store_name 에 전각/반각 공백, NFKC 차이 등으로 정확 매칭에서 일부 누락
+  //         (例: 'きたかた食堂 神保町店' vs 'きたかた食堂　神保町店')
   var res = await _sb.from('store_menu_cards')
-    .select('id,menu_name,price,is_featured,rating_avg,rating_count')
+    .select('id,menu_name,price,is_featured,rating_avg,rating_count,store_name,created_at')
     .eq('store_name', storeName)
     .order('is_featured', { ascending:false })
-    .order('rating_count', { ascending:false });
+    .order('sort_order',  { ascending:true, nullsFirst:false })
+    .order('rating_count',{ ascending:false })
+    .order('created_at',  { ascending:false });
   if (res.error) {
     wrap.innerHTML = '<div style="font-size:11px;color:var(--red);padding:8px;">메뉴 로드 실패: '+res.error.message+'</div>';
     return;
   }
   var rows = res.data || [];
+  console.log('[admLoadStoreMenus] 정확 매칭 store_name="'+storeName+'" → '+rows.length+'개');
+
+  // Fuzzy fallback: NFKC + 공백 제거 후 비교
+  //   가게의 가격 핀에서 본 메뉴는 3개인데 정확 매칭으로 1개만 나오는 케이스
+  try {
+    var normalize = function(s){ return String(s||'').replace(/[\s　]+/g,'').normalize('NFKC'); };
+    var target = normalize(storeName);
+    // 첫 두 글자(예: 'きた') 로 ilike 광범위 fetch 후 클라이언트 normalize 비교
+    var prefix = storeName.replace(/[\s　]+/g,'').slice(0, 2);
+    if (prefix.length >= 1) {
+      var allRes = await _sb.from('store_menu_cards')
+        .select('id,menu_name,price,is_featured,rating_avg,rating_count,store_name,created_at')
+        .ilike('store_name', '%' + prefix + '%');
+      var allRows = allRes.data || [];
+      var fuzzyMatches = allRows.filter(function(r){ return normalize(r.store_name) === target; });
+      console.log('[admLoadStoreMenus] fuzzy(prefix="'+prefix+'") → 후보 '+allRows.length+'개, 일치 '+fuzzyMatches.length+'개');
+
+      // 정확 매칭에 없던 row 들 추가 (id 기준 중복 제거)
+      var seen = {};
+      rows.forEach(function(r){ seen[r.id] = true; });
+      fuzzyMatches.forEach(function(r){
+        if (!seen[r.id]) { rows.push(r); seen[r.id] = true; }
+      });
+      console.log('[admLoadStoreMenus] 최종 표시 '+rows.length+'개');
+    }
+  } catch(e) { console.warn('[admLoadStoreMenus] fuzzy fallback failed', e); }
+
   if (rows.length === 0) {
     wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:8px;text-align:center;">등록된 메뉴 카드가 없어요</div>';
     return;
@@ -24411,7 +24444,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 353;
+window.__APP_BUILD__ = 354;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
