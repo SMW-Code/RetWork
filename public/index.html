@@ -22392,7 +22392,16 @@ async function openAdminEditMenuCard(menuCardId) {
   await _admLoadMenuPhotos(menuCardId);
   await _admLoadMenuComments(menuCardId);
 
-  openOv('ov-admin-edit-menu-card');
+  // build 353 — PC 어드민 모드면 풀스크린 drilldown, 모바일은 일반 오버레이
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownTo('ov-admin-edit-menu-card', {
+      backMenuKey:'pins',
+      backLabel:'가게핀',
+      title:'메뉴 카드 수정'
+    });
+  } else {
+    openOv('ov-admin-edit-menu-card');
+  }
 }
 
 async function _admLoadMenuPhotos(menuCardId) {
@@ -22401,9 +22410,28 @@ async function _admLoadMenuPhotos(menuCardId) {
   if (!wrap || !_sb) return;
   wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:16px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
 
-  // store_menu_cards.image_url (기존 1장) + store_menu_photos (신규 N장) 통합 표시
-  var cardRes = await _sb.from('store_menu_cards').select('image_url').eq('id', menuCardId).maybeSingle();
-  var legacyUrl = (cardRes.data && cardRes.data.image_url) || null;
+  // build 353 — 사용자측 화면에는 보이는데 어드민에는 안 보이는 케이스 대응
+  //   같은 store_name + menu_name 의 다른 (중복) 카드들의 image_url 도 통합 표시
+  var cardRes = await _sb.from('store_menu_cards')
+    .select('store_name,menu_name,image_url').eq('id', menuCardId).maybeSingle();
+  var card = (cardRes && cardRes.data) || {};
+  var legacyUrl = card.image_url || null;
+
+  // 같은 가게 + 메뉴명의 다른 카드들의 image_url
+  var siblingUrls = [];
+  if (card.store_name && card.menu_name) {
+    var sib = await _sb.from('store_menu_cards')
+      .select('id,image_url')
+      .eq('store_name', card.store_name)
+      .eq('menu_name', card.menu_name)
+      .neq('id', menuCardId);
+    (sib.data || []).forEach(function(r){
+      if (r.image_url && r.image_url !== legacyUrl) {
+        siblingUrls.push({ id:r.id, image_url:r.image_url });
+      }
+    });
+  }
+  console.log('[admLoadMenuPhotos] legacy=', !!legacyUrl, '| siblings=', siblingUrls.length);
 
   var photoRes = await _sb.from('store_menu_photos')
     .select('id,image_url,is_primary,sort_order,created_at')
@@ -22413,15 +22441,28 @@ async function _admLoadMenuPhotos(menuCardId) {
     .order('created_at', { ascending:false });
   var photos = photoRes.data || [];
 
-  var totalCount = (legacyUrl ? 1 : 0) + photos.length;
+  var totalCount = (legacyUrl ? 1 : 0) + siblingUrls.length + photos.length;
   if (countEl) countEl.textContent = totalCount > 0 ? '총 ' + totalCount + '장' : '';
 
-  if (!legacyUrl && photos.length === 0) {
+  if (totalCount === 0) {
     wrap.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:20px;text-align:center;grid-column:1/-1;border:1px dashed var(--border-mid);border-radius:8px;">등록된 메뉴 사진이 없어요<br><span style="font-size:10px;">위의 업로드 버튼으로 추가하세요</span></div>';
     return;
   }
 
   var html = '';
+
+  // build 353 — sibling URL 글로벌 캐시 (onclick escape 단순화)
+  window._admSiblingImageMap = {};
+  siblingUrls.forEach(function(s){ window._admSiblingImageMap[s.id] = s.image_url; });
+
+  // 같은 메뉴명의 다른 카드(중복) image_url — 사용자측에는 보이지만 어드민 매칭에서 누락된 사진들
+  siblingUrls.forEach(function(s, i) {
+    html += '<div style="position:relative;border:2px solid #94A3B8;border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
+      + '<img src="'+_esc(s.image_url)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+      + '<div style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.94);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:800;color:#475569;">📎 동일 메뉴 다른 카드</div>'
+      + '<button onclick="_admMigrateSiblingImage(\''+s.id+'\')" style="position:absolute;bottom:4px;left:4px;right:4px;background:rgba(0,0,0,.78);color:#fff;border:none;border-radius:6px;padding:5px;font-size:11px;cursor:pointer;font-weight:700;">→ 이 카드로 가져오기</button>'
+      + '</div>';
+  });
   // legacy image_url 먼저 (있으면) — "기존 등록 사진" 표기 추가
   if (legacyUrl) {
     html += '<div style="position:relative;border:2px solid var(--gold);border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
@@ -22599,6 +22640,36 @@ async function _admClearMenuLegacyImage() {
   await _sb.from('store_menu_cards').update({ image_url:null }).eq('id', _admEditMenuCardId);
   showToast('🗑️ 썸네일 해제');
   _admLoadMenuPhotos(_admEditMenuCardId);
+}
+
+/* build 353 — 같은 메뉴명의 다른(중복) 카드 image_url 을 현재 카드로 마이그레이션
+   - 사용자가 다른 row 에 사진 올렸을 때 어드민이 한 카드로 통합하기 위함
+   - store_menu_photos 에 추가 (store_menu_cards.image_url 대신, 여러 장 보존)
+*/
+async function _admMigrateSiblingImage(siblingCardId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!_admEditMenuCardId) return;
+  var url = window._admSiblingImageMap && window._admSiblingImageMap[siblingCardId];
+  if (!url) { showToast('사진 URL 확인 실패'); return; }
+  if (!confirm('이 사진을 현재 메뉴 카드의 사진으로 가져올까요?\n(store_menu_photos 에 추가됨)')) return;
+  try {
+    var ins = await _sb.from('store_menu_photos').insert({
+      menu_card_id: _admEditMenuCardId,
+      image_url:    url,
+      uploaded_by:  _currentUser ? _currentUser.id : null,
+      is_primary:   false,
+      sort_order:   null
+    }).select();
+    if (ins.error) { alert('가져오기 실패: ' + ins.error.message); return; }
+    if (!ins.data || ins.data.length === 0) {
+      alert('가져오기 실패 — RLS 차단. store_menu_photos INSERT 정책 확인'); return;
+    }
+    showToast('✅ 사진 가져옴');
+    _admLoadMenuPhotos(_admEditMenuCardId);
+  } catch(e) {
+    console.error('[admMigrateSiblingImage] exception:', e);
+    showToast('실패: ' + (e.message||''));
+  }
 }
 
 async function _admDeleteMenuComment(commentId) {
@@ -24340,7 +24411,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 352;
+window.__APP_BUILD__ = 353;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
