@@ -2102,14 +2102,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="sp-head">
       <div class="sp-avatar" id="sp-avatar-btn" onclick="toggleAvatarPicker()">
         <div id="sp-avatar-display" style="position:absolute;inset:0;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:22px;">😊</div>
-        <div class="sp-avatar-edit">✏️</div>
+        <div class="sp-avatar-edit"><span class="lico" data-lico="pencil" data-size="11" data-color="#fff"></span></div>
       </div>
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:800;color:#fff;" id="sp-nickname-display">ユーザー</div>
         <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;" data-i18n="sp.free_plan">無料プラン</div>
-        <div style="font-size:13px;font-weight:900;color:#FFD54F;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.18);padding:2px 9px;border-radius:20px;">✨ <span id="sp-coin-balance">0</span> チリ</div>
+        <div style="font-size:13px;font-weight:900;color:#FFD54F;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.18);padding:2px 9px;border-radius:20px;"><span class="lico" data-lico="coin" data-size="13" data-color="#FFD54F"></span> <span id="sp-coin-balance">0</span> チリ</div>
       </div>
-      <div class="sp-close" onclick="closeOv('ov-settings')">✕</div>
+      <div class="sp-close" onclick="closeOv('ov-settings')"><span class="lico" data-lico="close" data-size="14" data-color="#fff"></span></div>
     </div>
 
     <!-- 프로필 편집 패널 (토글) -->
@@ -2148,17 +2148,17 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="sg">
         <div class="si" style="flex-direction:column;align-items:flex-start;gap:12px;">
           <div style="display:flex;align-items:center;gap:8px;">
-            <span style="font-size:15px;width:22px;text-align:center;">🔄</span>
+            <span class="lico" data-lico="refresh" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span>
             <span class="si-lbl" data-i18n="prof.mode_switch">モード切替</span>
           </div>
           <div style="display:flex;align-items:center;justify-content:center;gap:12px;width:100%;">
-            <span id="mode-lbl-receipt" data-i18n="mode.receipt" style="font-size:13px;font-weight:800;color:var(--green);transition:all .25s;white-space:nowrap;">🧾 ReceiptIQ</span>
+            <span id="mode-lbl-receipt" data-i18n="mode.receipt" style="font-size:13px;font-weight:800;color:var(--green);transition:all .25s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><span class="lico" data-lico="receipt" data-size="15" data-color="var(--green)"></span>ReceiptIQ</span>
             <div id="mode-toggle-sw" data-mode="receipt"
               onclick="switchMode(this.dataset.mode==='receipt'?'chiri':'receipt');closeOv('ov-settings')"
               style="width:52px;height:28px;border-radius:14px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:0 2px 8px var(--theme-a30);">
               <div id="mode-toggle-knob" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.18);"></div>
             </div>
-            <span id="mode-lbl-chiri" data-i18n="mode.chiri" style="font-size:13px;font-weight:700;color:var(--text-3);transition:all .25s;white-space:nowrap;">📍 チリつも</span>
+            <span id="mode-lbl-chiri" data-i18n="mode.chiri" style="font-size:13px;font-weight:700;color:var(--text-3);transition:all .25s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><span class="lico" data-lico="map_pin" data-size="15" data-color="var(--text-3)"></span>チリつも</span>
           </div>
         </div>
       </div>
@@ -2236,23 +2236,23 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
             <div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;">
               <div id="sp-ref-stat-friends" style="font-size:17px;font-weight:900;color:var(--green);line-height:1;">0</div>
-              <div data-i18n="inv.stat_friends" style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">👥 추천 친구</div>
+              <div style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:3px;"><span class="lico" data-lico="users" data-size="10" data-color="var(--text-3)"></span><span data-i18n="inv.stat_friends">추천 친구</span></div>
             </div>
             <div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;">
               <div style="display:flex;align-items:baseline;justify-content:center;gap:2px;line-height:1;">
                 <span style="font-size:11px;font-weight:800;color:var(--gold-dark);">+</span>
                 <span id="sp-ref-stat-earned" style="font-size:17px;font-weight:900;color:var(--gold-dark);">0</span>
               </div>
-              <div data-i18n="inv.stat_earned" style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">✨ 받은 치리</div>
+              <div style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:3px;"><span class="lico" data-lico="coin" data-size="10" data-color="var(--text-3)"></span><span data-i18n="inv.stat_earned">받은 치리</span></div>
             </div>
             <div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:9px 8px;text-align:center;">
               <div id="sp-ref-stat-pending" style="font-size:17px;font-weight:900;color:#06C755;line-height:1;">0</div>
-              <div data-i18n="inv.stat_pending" style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;">⏳ 대기 보상</div>
+              <div style="font-size:9px;color:var(--text-3);font-weight:700;margin-top:4px;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:3px;"><span class="lico" data-lico="clock" data-size="10" data-color="var(--text-3)"></span><span data-i18n="inv.stat_pending">대기 보상</span></div>
             </div>
           </div>
 
           <div data-i18n="inv.desc" style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요 (광고 시청 후 청구)</div>
-          <button data-i18n="inv.share" onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">🔗 초대 링크 공유</button>
+          <button onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;"><span class="lico" data-lico="external" data-size="15" data-color="#fff"></span><span data-i18n="inv.share">초대 링크 공유</span></button>
 
           <!-- 대기 추천 보상 (있을 때만 표시) → renderReferralRewardUI 가 본문/sub 텍스트 매번 i18n 으로 갱신 -->
           <div id="sp-ref-reward-banner" style="display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(6,199,85,.14),var(--surface));border:1px solid #06C755;border-radius:12px;padding:10px 14px;">
@@ -11674,9 +11674,9 @@ var I18N = {
     'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 200チリ',
     // 設定 → 友達招待カード (build 302)
     'inv.title':'友達招待','inv.my_code':'マイ紹介コード','inv.copy':'コピー',
-    'inv.stat_friends':'👥 紹介した友達','inv.stat_earned':'✨ 獲得チリ','inv.stat_pending':'⏳ 待機報酬',
+    'inv.stat_friends':'紹介した友達','inv.stat_earned':'獲得チリ','inv.stat_pending':'待機報酬',
     'inv.desc':'友達がこのコードで登録すると <strong style="color:var(--gold-dark);">+200チリ</strong> もらえます（広告視聴後請求）',
-    'inv.share':'🔗 招待リンクを共有','inv.reward_count':'🎁 受け取り可能な紹介報酬 {n}件',
+    'inv.share':'招待リンクを共有','inv.reward_count':'🎁 受け取り可能な紹介報酬 {n}件',
     'inv.reward_sub_can':'広告を見て200チリずつ受け取る（本日 {n}件可能）',
     'inv.reward_sub_capped':'本日の上限（{n}件）到達 · 明日また受け取る',
     'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
@@ -11911,9 +11911,9 @@ var I18N = {
     'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 200치리',
     // 설정 → 친구 초대 카드 (build 302)
     'inv.title':'친구 초대','inv.my_code':'내 추천 코드','inv.copy':'복사',
-    'inv.stat_friends':'👥 추천 친구','inv.stat_earned':'✨ 받은 치리','inv.stat_pending':'⏳ 대기 보상',
+    'inv.stat_friends':'추천 친구','inv.stat_earned':'받은 치리','inv.stat_pending':'대기 보상',
     'inv.desc':'친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200치리</strong> 받아요 (광고 시청 후 청구)',
-    'inv.share':'🔗 초대 링크 공유','inv.reward_count':'🎁 받을 수 있는 추천 보상 {n}건',
+    'inv.share':'초대 링크 공유','inv.reward_count':'🎁 받을 수 있는 추천 보상 {n}건',
     'inv.reward_sub_can':'광고 보고 200치리씩 받기 (오늘 {n}건 가능)',
     'inv.reward_sub_capped':'오늘 한도({n}건) 도달 · 내일 다시 받기',
     'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
@@ -12143,9 +12143,9 @@ var I18N = {
     'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'200 chiri when a friend signs up',
     // Settings → Invite friends card (build 302)
     'inv.title':'Invite Friends','inv.my_code':'My Referral Code','inv.copy':'Copy',
-    'inv.stat_friends':'👥 Referred','inv.stat_earned':'✨ Earned','inv.stat_pending':'⏳ Pending',
+    'inv.stat_friends':'Referred','inv.stat_earned':'Earned','inv.stat_pending':'Pending',
     'inv.desc':'Get <strong style="color:var(--gold-dark);">+200 chiri</strong> when a friend signs up with this code (claim after watching an ad)',
-    'inv.share':'🔗 Share Invite Link','inv.reward_count':'🎁 {n} referral reward(s) available',
+    'inv.share':'Share Invite Link','inv.reward_count':'🎁 {n} referral reward(s) available',
     'inv.reward_sub_can':'Watch an ad to claim 200 chiri each ({n} claimable today)',
     'inv.reward_sub_capped':'Daily cap ({n}) reached · try again tomorrow',
     'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
@@ -12375,9 +12375,9 @@ var I18N = {
     'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 200 积分',
     // 设置 → 邀请好友卡片 (build 302)
     'inv.title':'邀请好友','inv.my_code':'我的推荐码','inv.copy':'复制',
-    'inv.stat_friends':'👥 推荐好友','inv.stat_earned':'✨ 已获塵积','inv.stat_pending':'⏳ 待领奖励',
+    'inv.stat_friends':'推荐好友','inv.stat_earned':'已获塵积','inv.stat_pending':'待领奖励',
     'inv.desc':'好友用此码注册即可获得 <strong style="color:var(--gold-dark);">+200塵积</strong>（观看广告后领取）',
-    'inv.share':'🔗 分享邀请链接','inv.reward_count':'🎁 可领取的推荐奖励 {n}件',
+    'inv.share':'分享邀请链接','inv.reward_count':'🎁 可领取的推荐奖励 {n}件',
     'inv.reward_sub_can':'观看广告每次领200塵积（今日还可 {n} 次）',
     'inv.reward_sub_capped':'今日上限（{n}件）已达 · 明日再领',
     'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
@@ -23563,7 +23563,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 338;
+window.__APP_BUILD__ = 339;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
