@@ -21634,16 +21634,28 @@ async function _admRecOpenStoreLocation() {
   }
 
   if (rows.length === 0) {
-    showToast('이 가게명으로 등록된 가게가 stores 에 없어요');
-    return;
+    // build 330 — stores 미등록 시 즉시 가게 신규 등록 모달 (lat/lng 자동 검색)
+    if (confirm('⚠️ 이 가게가 stores 테이블에 없어요\n\n' + name + '\n\n[확인] 누르면 신규 가게로 등록 후 위치 수정 가능')) {
+      var newStore = { name: name, category: 'other', lat: null, lng: null };
+      var insRes = await _sb.from('stores').insert(newStore).select().maybeSingle();
+      if (insRes.error || !insRes.data) {
+        showToast('가게 등록 실패: ' + (insRes.error && insRes.error.message));
+        return;
+      }
+      rows = [insRes.data];
+      showToast('✅ 가게 신규 등록 완료 — 위치 수정 진입');
+    } else {
+      return;
+    }
+  } else {
+    // 위치 있는 가게 우선 정렬
+    rows.sort(function(a,b){
+      var av = (a.lat && a.lng) ? 1 : 0;
+      var bv = (b.lat && b.lng) ? 1 : 0;
+      return bv - av;
+    });
   }
 
-  // 위치 있는 가게 우선 정렬
-  rows.sort(function(a,b){
-    var av = (a.lat && a.lng) ? 1 : 0;
-    var bv = (b.lat && b.lng) ? 1 : 0;
-    return bv - av;
-  });
   var pick = rows[0];
   console.log('[admRecOpenStoreLocation] 가게 선택:', pick);
 
@@ -21662,6 +21674,7 @@ async function _admRecOpenStoreLocation() {
 
   // 잠시 대기 후 가게 수정 모달 열기
   setTimeout(function(){
+    console.log('[admRecOpenStoreLocation] openAdminStoreDetail 호출:', pick.id);
     openAdminStoreDetail(pick.id);
   }, 150);
 }
@@ -23206,7 +23219,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 329;
+window.__APP_BUILD__ = 330;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
