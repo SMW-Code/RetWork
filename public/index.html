@@ -3914,17 +3914,17 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
      monthreport / report_unlock 등 컨텍스트에서 사용 (영수증 저장은 기존 바텀시트 유지). -->
 <div class="overlay" id="ov-watch-ad-page" style="z-index:10004;background:var(--bg);">
   <div style="width:100%;height:100%;display:flex;flex-direction:column;">
-    <!-- 헤더 -->
+    <!-- 헤더 (build 336 — SVG 라인 아이콘) -->
     <div style="background:var(--bg);padding:14px 16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
-      <div onclick="closeWatchAdPage()" style="font-size:22px;cursor:pointer;color:var(--text-1);padding:4px 8px;">←</div>
+      <div onclick="closeWatchAdPage()" class="lico" data-lico="arrow_left" data-size="22" data-color="var(--text-1)" style="cursor:pointer;padding:4px 8px;display:flex;align-items:center;"></div>
       <div id="watch-ad-title" style="font-size:17px;font-weight:900;color:var(--text-1);">광고 시청</div>
     </div>
 
     <!-- 스크롤 영역 -->
     <div style="flex:1;overflow-y:auto;padding:14px 16px 20px;">
-      <!-- 카드 1: 설명문 -->
+      <!-- 카드 1: 설명문 (build 336 — SVG 아이콘) -->
       <div style="background:var(--surface);border-radius:14px;padding:18px 16px;margin-bottom:12px;box-shadow:var(--shadow-sm);border:.5px solid var(--border);">
-        <div id="watch-ad-desc-icon" style="font-size:32px;margin-bottom:8px;">📊</div>
+        <div id="watch-ad-desc-icon" style="margin-bottom:10px;display:flex;align-items:center;"></div>
         <div id="watch-ad-desc-title" style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:5px;">광고 보고 내용 확인하기</div>
         <div id="watch-ad-desc-sub" style="font-size:12px;color:var(--text-3);line-height:1.6;">광고 1회 시청하시면 내용을 보실 수 있어요.</div>
       </div>
@@ -3932,19 +3932,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 카드 2: 자동재생 광고 영역 -->
       <div style="background:var(--surface);border-radius:14px;overflow:hidden;margin-bottom:12px;border:.5px solid var(--border);box-shadow:var(--shadow-sm);">
         <div style="background:linear-gradient(135deg,#1a1a3a,#3a1a5e);padding:8px 12px;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:space-between;">
-          <span>📢 SPONSORED VIDEO AD</span>
-          <span style="color:#5B9BD5;">自動再生 ▶</span>
+          <span style="display:inline-flex;align-items:center;gap:6px;"><span class="lico" data-lico="video" data-size="14" data-color="#fff"></span> SPONSORED VIDEO AD</span>
+          <span style="color:#5B9BD5;display:inline-flex;align-items:center;gap:4px;">自動再生 <span class="lico" data-lico="play" data-size="12" data-color="#5B9BD5"></span></span>
         </div>
         <div id="watch-ad-slot" style="min-height:260px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3a5cdf,#9b3dd6);">
-          <!-- 광고 영역 — 베타 placeholder (정식 출시 시 AdSense 주입) -->
           <div style="text-align:center;color:#fff;padding:30px;">
-            <div style="font-size:48px;margin-bottom:14px;animation:ct-ad-pulse 1.2s ease-in-out infinite;">▶️</div>
+            <div style="margin-bottom:14px;animation:ct-ad-pulse 1.2s ease-in-out infinite;display:flex;align-items:center;justify-content:center;"><span class="lico" data-lico="play" data-size="56" data-color="#fff"></span></div>
             <div style="font-size:15px;font-weight:800;margin-bottom:6px;">広告 自動再生中</div>
-            <div style="font-size:11px;opacity:.85;">毎日見て チリ をもっと貯めよう ✨</div>
+            <div style="font-size:11px;opacity:.85;">毎日見て チリ をもっと貯めよう</div>
           </div>
         </div>
         <div style="padding:8px 12px;font-size:10px;color:var(--text-3);display:flex;justify-content:space-between;background:var(--surface);">
-          <span>📢 광고</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span class="lico" data-lico="ad" data-size="11" data-color="var(--text-3)"></span> 광고</span>
           <span>AdSense 승인 후 실광고 표시</span>
         </div>
       </div>
@@ -15532,16 +15531,17 @@ var _watchAdSecondaryCb = null;
 
 /* build 335 — 컨텍스트 별 설명 자동 매트릭스 */
 function _getWatchAdOptsByContext(ctx){
+  // build 336 — emoji → SVG 라인 아이콘. ico 는 라인 아이콘 이름.
   var map = {
-    save:          { title:'🧾 영수증 저장',      icon:'💰', descTitle:'광고 보고 가계부에 무료 저장', descSub:'광고 1회 시청하시면 영수증이 가계부에 저장돼요.' },
-    chiri:         { title:'✨ 치리에 공개',       icon:'✨', descTitle:'광고 보고 치리에 공개하기',     descSub:'치리에 공개하면 다른 사용자도 가게 정보를 확인할 수 있어요.' },
-    private:       { title:'🔒 프라이빗 모드',    icon:'🔒', descTitle:'광고 보고 프라이빗 모드 전환',  descSub:'프라이빗 모드에서 비공개 메모를 작성할 수 있어요.' },
-    menu_photo:    { title:'📸 메뉴 사진 등록',   icon:'📸', descTitle:'광고 보고 메뉴 사진 등록',      descSub:'메뉴 사진을 등록하시면 +10치리 보상도 받아요.' },
-    monthreport:   { title:'🧾 월별 리포트',      icon:'🧾', descTitle:'광고 보고 월별 리포트 확인',    descSub:'한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.' },
-    report_unlock: { title:'📊 리포트 상세',      icon:'📊', descTitle:'광고 보고 리포트 펼치기',      descSub:'카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.' },
-    comment_quota: { title:'📝 댓글 한도 추가',   icon:'📝', descTitle:'광고 보고 댓글 +4회',          descSub:'광고 1회 시청하시면 오늘 댓글을 4회 더 작성할 수 있어요.' },
+    save:          { title:'영수증 저장',      ico:'receipt',  descTitle:'광고 보고 가계부에 무료 저장', descSub:'광고 1회 시청하시면 영수증이 가계부에 저장돼요.' },
+    chiri:         { title:'치리에 공개',       ico:'send',     descTitle:'광고 보고 치리에 공개하기',     descSub:'치리에 공개하면 다른 사용자도 가게 정보를 확인할 수 있어요.' },
+    private:       { title:'프라이빗 모드',    ico:'lock',     descTitle:'광고 보고 프라이빗 모드 전환',  descSub:'프라이빗 모드에서 비공개 메모를 작성할 수 있어요.' },
+    menu_photo:    { title:'메뉴 사진 등록',   ico:'image',    descTitle:'광고 보고 메뉴 사진 등록',      descSub:'메뉴 사진을 등록하시면 +10치리 보상도 받아요.' },
+    monthreport:   { title:'월별 리포트',      ico:'receipt',  descTitle:'광고 보고 월별 리포트 확인',    descSub:'한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.' },
+    report_unlock: { title:'리포트 상세',      ico:'chart',    descTitle:'광고 보고 리포트 펼치기',      descSub:'카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.' },
+    comment_quota: { title:'댓글 한도 추가',   ico:'comment',  descTitle:'광고 보고 댓글 +4회',          descSub:'광고 1회 시청하시면 오늘 댓글을 4회 더 작성할 수 있어요.' },
   };
-  return map[ctx] || { title:'광고 시청', icon:'📺', descTitle:'광고 보고 내용 확인하기', descSub:'광고 1회 시청하시면 내용을 보실 수 있어요.' };
+  return map[ctx] || { title:'광고 시청', ico:'play', descTitle:'광고 보고 내용 확인하기', descSub:'광고 1회 시청하시면 내용을 보실 수 있어요.' };
 }
 
 function openWatchAdPage(context, callback, opts){
@@ -15552,12 +15552,17 @@ function openWatchAdPage(context, callback, opts){
   _watchAdRetCtx = context;
   _watchAdSecondaryCb = opts.secondaryCallback || null;
   document.getElementById('watch-ad-title').textContent = opts.title || base.title;
-  document.getElementById('watch-ad-desc-icon').textContent = opts.icon || base.icon;
+  // build 336 — SVG 라인 아이콘으로 렌더 (이전 emoji 텍스트 대신)
+  var icoName = opts.ico || base.ico || 'play';
+  var iconEl = document.getElementById('watch-ad-desc-icon');
+  if (iconEl) iconEl.innerHTML = icon(icoName, 36, 'var(--green)');
   document.getElementById('watch-ad-desc-title').textContent = opts.descTitle || base.descTitle;
   document.getElementById('watch-ad-desc-sub').textContent = opts.descSub || base.descSub;
-  // 메인 버튼 라벨
+  // 메인 버튼 라벨 (재생 아이콘 + 텍스트)
   var primary = document.getElementById('watch-ad-primary-btn');
-  if (primary) primary.innerHTML = opts.primaryLabel || '📺 광고 보고 내용 확인하기';
+  if (primary) {
+    primary.innerHTML = (opts.primaryLabel || '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center;">' + icon('play', 18, '#fff') + ' 광고 보고 내용 확인하기</span>');
+  }
   // 보조 버튼 (선택)
   var sec = document.getElementById('watch-ad-secondary-btn');
   if (sec) {
@@ -15631,7 +15636,7 @@ function showAdModal(callback, context) {
   if (ctx === 'save') {
     var cat = window._ocrResult && window._ocrResult.cat;
     if (typeof _shouldShowChiriPublish === 'function' && _shouldShowChiriPublish(cat)) {
-      opts.secondaryLabel = '<span style="font-size:14px;">📍 광고 보고 +치리 공개</span> <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;margin-left:6px;">+10チリ</span>';
+      opts.secondaryLabel = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center;">' + icon('send', 16, '#fff') + ' 광고 보고 +치리 공개 <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;margin-left:6px;">+10チリ</span></span>';
       opts.secondaryCallback = function(){
         // 치리 공개 + 저장 함께 — saveAndPublishChiri 가 모든 흐름 처리
         if (typeof saveAndPublishChiri === 'function') saveAndPublishChiri();
@@ -23460,9 +23465,89 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 <script>
 // PWA 서비스 워커 등록
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
+// ════════════════════════════════════════════════════════════════════════════
+// SVG 라인 아이콘 셋 (build 336) — Lucide 스타일 인라인 SVG
+//   사용: icon('receipt', 24, '#172C58') → SVG string 반환
+//   클래스: <span class="lico" data-lico="receipt"></span> + _renderLicos() 자동 변환
+// ════════════════════════════════════════════════════════════════════════════
+window.__LICO_SET__ = {
+  // 기본 아이콘 (stroke-only, 24x24 viewBox)
+  receipt:      '<path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2zM8 7h8M8 11h8M8 15h5"/>',
+  chart:        '<path d="M3 3v18h18M7 14v4M11 10v8M15 7v11M19 4v14"/>',
+  pie:          '<path d="M21 12a9 9 0 11-9-9v9z"/><path d="M12 3a9 9 0 019 9h-9z"/>',
+  lock:         '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
+  unlock:       '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0"/>',
+  camera:       '<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>',
+  image:        '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/>',
+  video:        '<polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>',
+  play:         '<polygon points="5 3 19 12 5 21 5 3"/>',
+  pencil:       '<path d="M12 20h9M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4z"/>',
+  edit:         '<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/>',
+  trash:        '<path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>',
+  close:        '<path d="M18 6L6 18M6 6l12 12"/>',
+  check:        '<path d="M20 6L9 17l-5-5"/>',
+  arrow_left:   '<path d="M19 12H5M12 19l-7-7 7-7"/>',
+  arrow_right:  '<path d="M5 12h14M12 5l7 7-7 7"/>',
+  bell:         '<path d="M6 8a6 6 0 0112 0c0 7 3 9 3 9H3s3-2 3-9M13.73 21a2 2 0 01-3.46 0"/>',
+  send:         '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>',
+  mail:         '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+  gift:         '<polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7zM12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/>',
+  coin:         '<circle cx="12" cy="12" r="10"/><path d="M9 9h6M9 15h6M12 7v10"/>',
+  user:         '<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  users:        '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>',
+  map_pin:      '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>',
+  map:          '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+  home:         '<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2h-4a2 2 0 01-2-2v-6h-2v6a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>',
+  calendar:     '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  settings:     '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+  heart:        '<path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>',
+  comment:      '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>',
+  star:         '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  store:        '<path d="M3 9l1-6h16l1 6M3 9v11h18V9M3 9h18"/><path d="M9 22V12h6v10"/>',
+  shopping:     '<circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>',
+  shield:       '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  info:         '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="8"/>',
+  alert:        '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12" y2="17"/>',
+  refresh:      '<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>',
+  search:       '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+  plus:         '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+  minus:        '<line x1="5" y1="12" x2="19" y2="12"/>',
+  external:     '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
+  ad:           '<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>',
+};
+function icon(name, size, color){
+  var svg = window.__LICO_SET__[name];
+  if (!svg) return '';
+  size = size || 20;
+  color = color || 'currentColor';
+  return '<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0;">'+svg+'</svg>';
+}
+function _renderLicos(scope){
+  (scope || document).querySelectorAll('.lico[data-lico]').forEach(function(el){
+    if (el.dataset.licoRendered === '1') return;
+    var name = el.dataset.lico;
+    var size = parseInt(el.dataset.size || '20', 10);
+    var color = el.dataset.color || 'currentColor';
+    el.innerHTML = icon(name, size, color);
+    el.dataset.licoRendered = '1';
+  });
+}
+// 페이지 로드 후 자동 변환
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function(){ _renderLicos(); });
+} else {
+  setTimeout(function(){ _renderLicos(); }, 100);
+}
+// MutationObserver — 동적 DOM 변경 시 자동 변환
+try {
+  if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(function(){ _renderLicos(); }).observe(document.body || document.documentElement, { childList:true, subtree:true });
+  }
+} catch(e){}
+
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 335;
+window.__APP_BUILD__ = 336;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
