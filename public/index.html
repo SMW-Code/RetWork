@@ -3252,8 +3252,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:6px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-3);">가게명</div>
-          <!-- build 328 — 가게 위치 수정 (stores 테이블 매칭 → 풀스크린 맵 드래그 모달) -->
-          <button onclick="_admRecOpenStoreLocation()" style="padding:4px 10px;border:none;border-radius:7px;background:rgba(91,155,213,.15);color:#5B9BD5;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">🗺 위치 수정</button>
+          <!-- build 328→329 — 가게 위치 수정 (stores 테이블 매칭 → 풀스크린 맵 드래그 모달) -->
+          <button type="button" onclick="event.stopPropagation();event.preventDefault();_admRecOpenStoreLocation();return false;" style="padding:4px 10px;border:none;border-radius:7px;background:rgba(91,155,213,.15);color:#5B9BD5;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">🗺 위치 수정</button>
         </div>
         <input id="adm-rec-store" type="text" maxlength="100" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:8px;">
 
@@ -21600,13 +21600,22 @@ async function openAdminReceiptDetail(receiptId) {
   }
 }
 
-/* build 328 — 영수증 수정 모달의 '가게 위치 수정' 버튼
-   현재 입력된 가게명으로 stores 테이블 매칭 → 첫 번째 결과의 ID 로
-   기존 어드민 가게 수정 모달 (ov-admin-edit-store) 열기 (풀스크린 맵 + 드래그) */
+/* build 328 → 329 — 영수증 수정 모달 '🗺 위치 수정' 버튼
+   1. 현재 입력된 가게명으로 stores 테이블 매칭
+   2. 영수증 수정 모달 먼저 닫고 (충돌 방지)
+   3. 어드민 가게 수정 모달 (풀스크린 맵 + 드래그 핀) 열기 */
 async function _admRecOpenStoreLocation() {
-  if (!_isAdmin || !_sb) return;
-  var name = (document.getElementById('adm-rec-store').value || '').trim();
+  console.log('[admRecOpenStoreLocation] 호출됨');
+  if (!_isAdmin || !_sb) {
+    showToast('⚠️ 권한 또는 DB 연결 문제');
+    return;
+  }
+  var nameEl = document.getElementById('adm-rec-store');
+  var name = (nameEl ? nameEl.value : '').trim();
   if (!name) { showToast('먼저 가게명을 입력해 주세요'); return; }
+
+  showToast('🔍 가게 조회 중: ' + name);
+
   // 1) 정확히 일치 우선
   var res = await _sb.from('stores')
     .select('id,name,lat,lng')
@@ -21614,7 +21623,8 @@ async function _admRecOpenStoreLocation() {
     .limit(5);
   if (res.error) { showToast('가게 조회 실패: ' + res.error.message); return; }
   var rows = res.data || [];
-  // 2) 정확 일치 없으면 부분 일치 시도 (ilike)
+
+  // 2) 정확 일치 없으면 부분 일치 시도
   if (rows.length === 0) {
     var res2 = await _sb.from('stores')
       .select('id,name,lat,lng')
@@ -21622,26 +21632,38 @@ async function _admRecOpenStoreLocation() {
       .limit(5);
     if (!res2.error) rows = res2.data || [];
   }
+
   if (rows.length === 0) {
-    showToast('이 가게명으로 등록된 가게가 없어요 (stores 테이블 미등록)');
+    showToast('이 가게명으로 등록된 가게가 stores 에 없어요');
     return;
   }
-  // 여러 후보가 있으면 lat/lng 있는 것 우선 정렬
+
+  // 위치 있는 가게 우선 정렬
   rows.sort(function(a,b){
     var av = (a.lat && a.lng) ? 1 : 0;
     var bv = (b.lat && b.lng) ? 1 : 0;
     return bv - av;
   });
   var pick = rows[0];
-  if (rows.length > 1) {
-    showToast('동명 가게 ' + rows.length + '곳 중 위치 있는 가게 선택');
+  console.log('[admRecOpenStoreLocation] 가게 선택:', pick);
+
+  if (typeof openAdminStoreDetail !== 'function') {
+    showToast('⚠️ openAdminStoreDetail 함수 없음');
+    return;
   }
-  // 어드민 가게 수정 모달 열기 (이미 풀스크린 맵 + 드래그 핀 기능 있음)
-  if (typeof openAdminStoreDetail === 'function') {
-    openAdminStoreDetail(pick.id);
+
+  // build 329 — 영수증 수정 모달 먼저 닫기 (z-index 충돌 / drilldown 충돌 방지)
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    // PC 어드민: 이미 mount된 영수증 시트 unmount
+    if (typeof _admPcUnmountAll === 'function') { try { _admPcUnmountAll(); } catch(e){} }
   } else {
-    showToast('가게 수정 모달 함수 없음');
+    closeOv('ov-admin-edit-receipt');
   }
+
+  // 잠시 대기 후 가게 수정 모달 열기
+  setTimeout(function(){
+    openAdminStoreDetail(pick.id);
+  }, 150);
 }
 
 function _admRenderItems() {
@@ -23184,7 +23206,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 328;
+window.__APP_BUILD__ = 329;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
