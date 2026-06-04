@@ -22303,12 +22303,80 @@ async function _admPcOpenPinStoreView(storeName) {
       html += '</div>';
     }
 
+    // build 355 — 메뉴 카드 영역 (가격 핀 아래)
+    html += '<div id="apc-pinstore-menus" style="margin-top:24px;">'
+          + '<div style="font-size:14px;font-weight:800;color:#172C58;margin-bottom:10px;">🍽️ 메뉴 카드 (로딩 중...)</div>'
+          + '<div id="apc-pinstore-menus-list" style="font-size:12px;color:#6B7280;">로딩...</div>'
+          + '</div>';
+
     html += '</div>'; // padding 컨테이너 끝
     ct.innerHTML = html;
+
+    // 메뉴 카드 비동기 로드
+    _admPcLoadStoreMenuCards(storeName);
   } catch(e) {
     console.warn('[admPcPinStore] load failed', e);
     ct.innerHTML = '<div style="padding:24px;color:#991B1B;font-size:12px;">로딩 실패: ' + (e.message || '') + '</div>';
   }
+}
+
+/* build 355 — 가게핀 페이지에 메뉴 카드 영역 표시 (어드민) */
+async function _admPcLoadStoreMenuCards(storeName) {
+  var hdr  = document.querySelector('#apc-pinstore-menus > div:first-child');
+  var wrap = document.getElementById('apc-pinstore-menus-list');
+  if (!wrap || !_sb || !storeName) return;
+
+  // 정확 매칭 + fuzzy (build 354 패턴)
+  var res = await _sb.from('store_menu_cards')
+    .select('id,menu_name,price,category,is_featured,image_url,rating_avg,rating_count,sort_order,created_at')
+    .eq('store_name', storeName)
+    .order('is_featured', { ascending:false })
+    .order('sort_order',  { ascending:true, nullsFirst:false })
+    .order('created_at',  { ascending:false });
+  var rows = (res.data || []).slice();
+  try {
+    var normalize = function(s){ return String(s||'').replace(/[\s　]+/g,'').normalize('NFKC'); };
+    var target = normalize(storeName);
+    var prefix = storeName.replace(/[\s　]+/g,'').slice(0,2);
+    if (prefix.length >= 1) {
+      var allRes = await _sb.from('store_menu_cards')
+        .select('id,menu_name,price,category,is_featured,image_url,rating_avg,rating_count,sort_order,created_at,store_name')
+        .ilike('store_name', '%' + prefix + '%');
+      var fuzzy = (allRes.data || []).filter(function(r){ return normalize(r.store_name) === target; });
+      var seen = {}; rows.forEach(function(r){ seen[r.id] = true; });
+      fuzzy.forEach(function(r){ if (!seen[r.id]) { rows.push(r); seen[r.id] = true; } });
+    }
+  } catch(e) { console.warn('[apcLoadMenuCards] fuzzy failed', e); }
+
+  console.log('[apcLoadMenuCards] '+storeName+' → '+rows.length+'개');
+  if (hdr) hdr.innerHTML = '🍽️ 메뉴 카드 (' + rows.length + '개)';
+
+  if (rows.length === 0) {
+    wrap.innerHTML = '<div style="background:#F4F5F8;border-radius:10px;padding:24px;text-align:center;color:#6B7280;font-size:12px;">등록된 메뉴 카드가 없어요.</div>';
+    return;
+  }
+
+  wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' + rows.map(function(m) {
+    var rating = m.rating_count > 0 ? '★' + parseFloat(m.rating_avg||0).toFixed(1) + ' (' + m.rating_count + ')' : '평점 없음';
+    var thumb = m.image_url
+      ? '<img src="'+_esc(m.image_url)+'" loading="lazy" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid #E3E6EB;">'
+      : '<div style="width:48px;height:48px;border-radius:8px;background:#F4F5F8;display:flex;align-items:center;justify-content:center;color:#9CA3AF;font-size:18px;flex-shrink:0;border:1px solid #E3E6EB;">🍽️</div>';
+    var featured = m.is_featured
+      ? '<span style="background:#FEF3C7;color:#92400E;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;flex-shrink:0;">⭐ 대표</span>'
+      : '';
+    return '<div onclick="openAdminEditMenuCard(\''+m.id+'\')" style="cursor:pointer;background:#fff;border:1px solid #E3E6EB;border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;transition:transform .12s;">'
+      + thumb
+      + '<div style="flex:1;min-width:0;">'
+      +   '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap;">'
+      +     '<span style="font-size:13px;font-weight:800;color:#172C58;">' + _esc(m.menu_name||'(이름 없음)') + '</span>'
+      +     featured
+      +   '</div>'
+      +   '<div style="font-size:10px;color:#6B7280;">' + (m.category ? _esc(m.category) + ' · ' : '') + rating + '</div>'
+      + '</div>'
+      + '<span style="font-size:14px;font-weight:900;color:#10B981;flex-shrink:0;">¥' + (m.price||0).toLocaleString() + '</span>'
+      + '<span style="font-size:14px;color:#9CA3AF;flex-shrink:0;">›</span>'
+      + '</div>';
+  }).join('') + '</div>';
 }
 
 /* 가게핀 화면에서 직접 핀 삭제 (build 351 — RLS 진단 강화)
@@ -24444,7 +24512,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 354;
+window.__APP_BUILD__ = 355;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
