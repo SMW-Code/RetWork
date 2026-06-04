@@ -10936,13 +10936,33 @@ function _formatYMD(y, mo, d){
 }
 function _checkAndFormatYMD(y, mo, d, raw){
   var now = new Date();
+  var rawStr = String(raw || '');
+  var hasGengo = /令和|平成|昭和/.test(rawStr);
   var dt = new Date(y, mo - 1, d);
   if (isNaN(dt.getTime()) || y < 1900 || y > 2100) {
     console.warn('[receipt date] invalid:', raw, '→', y, mo, d);
     return _todayYMD();
   }
   var diffYears = (now.getTime() - dt.getTime()) / (365 * 24 * 3600 * 1000);
-  if (diffYears > 5) {
+
+  // build 344 — 元号 표기가 없는데 5년 이상 과거이면 GPT 가 西暦 2자리(YY)를 平成 N年 으로
+  //             잘못 환산했을 가능성 → 자동 보정 시도
+  //   예: raw="26年6月4日" 또는 GPT 반환 "2014-06-04" (元号 없음)
+  //       y=2014 → yy=2014-1988=26 → 2000+26=2026 으로 재환산
+  if (diffYears > 5 && !hasGengo) {
+    var hy = y - 1988;  // 平成 N년 가정
+    if (hy >= 1 && hy <= 31) {
+      var corrected = 2000 + hy;
+      // 현재 연도보다 1년 이상 미래면 100년 빼서 1900년대로 (거의 안 일어남)
+      if (corrected > now.getFullYear() + 1) corrected -= 100;
+      console.warn('[receipt date] 平成 오역 자동보정:', raw, '→', y, '→', corrected);
+      y = corrected;
+      if (typeof showToast === 'function') {
+        setTimeout(function(){ showToast('📅 영수증 날짜 자동 보정: ' + y + '년 ' + mo + '월'); }, 600);
+      }
+      return _formatYMD(y, mo, d);
+    }
+    // 보정 실패 (보정 후 연도가 비현실적) → 경고만
     console.warn('[receipt date] 5+ years past — possible 平成 misread:', raw, '→', y);
     if (typeof showToast === 'function') {
       setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 (5년+ 과거). 확인해 주세요'); }, 600);
@@ -23571,7 +23591,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 343;
+window.__APP_BUILD__ = 344;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
