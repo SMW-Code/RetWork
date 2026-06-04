@@ -3250,6 +3250,71 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 어드민: 메뉴 카드 수정 모달 (build 351) ══ -->
+<div class="overlay" id="ov-admin-edit-menu-card" style="z-index:10002;" onclick="if(event.target===this)closeOv('ov-admin-edit-menu-card')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:520px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🍽️ 메뉴 카드 수정 (운영자)</div>
+          <div id="amc-meta" style="font-size:11px;color:var(--text-3);margin-top:2px;"></div>
+        </div>
+        <div onclick="closeOv('ov-admin-edit-menu-card')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+
+      <!-- 기본 정보 -->
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">메뉴 이름</div>
+        <input id="amc-menu-name" type="text" maxlength="80" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:8px;">
+
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">가격 ¥</div>
+            <input id="amc-price" type="number" min="0" step="1" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">카테고리</div>
+            <input id="amc-category" type="text" maxlength="40" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+          </div>
+        </div>
+
+        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);font-weight:700;cursor:pointer;">
+            <input id="amc-is-featured" type="checkbox" style="width:16px;height:16px;cursor:pointer;">
+            ⭐ 이 가게의 대표 메뉴로 지정 (지도 마커에 표시)
+          </label>
+        </div>
+      </div>
+
+      <!-- 메뉴 사진 -->
+      <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">📷 메뉴 사진</div>
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
+        <label style="display:block;background:var(--green);color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:8px;">
+          📤 메뉴 사진 업로드 (복수)
+          <input type="file" accept="image/*" multiple onchange="_admUploadMenuPhotos(this)" style="display:none;">
+        </label>
+        <div id="amc-photo-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
+          <div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>
+        </div>
+        <div style="font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4;">⭐ = 메뉴 대표 사진 (메뉴 카드 썸네일). ↑↓ 순서 / ✕ 삭제.</div>
+      </div>
+
+      <!-- 댓글 & 평점 (읽기 전용) -->
+      <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">💬 댓글 / 평점</div>
+      <div id="amc-comments" style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;max-height:180px;overflow-y:auto;">
+        <div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px;">로딩 중...</div>
+      </div>
+
+      <!-- 저장 / 삭제 -->
+      <div style="display:flex;gap:8px;">
+        <button onclick="admSaveMenuCard()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+        <button onclick="admDeleteMenuCard()" style="padding:12px 16px;border:1px solid #FEE2E2;border-radius:12px;background:#fff;color:#991B1B;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 삭제</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 어드민: 가격 핀 수정 모달 ══ -->
 <div class="overlay" id="ov-admin-edit-pin" style="z-index:10001;" onclick="if(event.target===this)closeOv('ov-admin-edit-pin')">
   <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
@@ -22229,20 +22294,28 @@ async function _admPcOpenPinStoreView(storeName) {
   }
 }
 
-/* 가게핀 화면에서 직접 핀 삭제 (build 347 — storeName 캐시에서 가져옴) */
+/* 가게핀 화면에서 직접 핀 삭제 (build 351 — RLS 진단 강화)
+   PostgREST .delete() 는 RLS 차단 시 error 없이 0 rows 반환.
+   .select() 로 삭제된 행을 받아 0 이면 RLS 문제로 안내. */
 async function _admPcDeletePinFromList(pinId) {
   if (!_sb) { console.warn('[admPcDeletePin] _sb 없음'); return; }
   if (!_isAdmin) { showToast('어드민 권한 필요'); return; }
   console.log('[admPcDeletePin] pinId=', pinId);
   if (!confirm('이 가격 핀을 삭제할까요?')) return;
   try {
-    var res = await _sb.from('price_pins').delete().eq('id', pinId);
+    var res = await _sb.from('price_pins').delete().eq('id', pinId).select();
     if (res.error) {
       console.error('[admPcDeletePin] delete error:', res.error);
-      showToast('삭제 실패: ' + res.error.message);
+      alert('삭제 실패: ' + res.error.message);
       return;
     }
-    showToast('🗑️ 삭제됨');
+    console.log('[admPcDeletePin] 삭제된 행 수:', (res.data||[]).length);
+    if (!res.data || res.data.length === 0) {
+      // RLS 가 막아 0 rows — 사용자에게 명확히 안내
+      alert('삭제 실패 — DB 의 RLS 정책이 막고 있습니다.\n\n해결: Supabase SQL Editor 에서 아래 정책을 추가해주세요:\n\nCREATE POLICY "price_pins_admin_delete" ON price_pins\n  FOR DELETE TO authenticated\n  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));');
+      return;
+    }
+    showToast('🗑️ 삭제됨 (' + res.data.length + '행)');
     var storeName = window._admPcCurrentStoreName;
     if (storeName) _admPcOpenPinStoreView(storeName);
   } catch(e) {
@@ -22251,9 +22324,309 @@ async function _admPcDeletePinFromList(pinId) {
   }
 }
 
-/* build 347 — 가격 핀의 메뉴 카드 편집
-   - 핀에 연결된 store_menu_cards 찾기 (없으면 자동 생성)
-   - prompt 로 메뉴명 + 가격 즉시 수정 */
+/* build 351 — 어드민 메뉴 카드 편집 모달 (사진 / 댓글 / 평점 / 대표 메뉴) */
+var _admEditMenuCardId   = null;
+var _admEditMenuStoreName = null;
+
+async function openAdminEditMenuCard(menuCardId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!menuCardId) { showToast('메뉴 카드 ID 없음'); return; }
+  _admEditMenuCardId = menuCardId;
+
+  // 카드 정보 로드
+  var res = await _sb.from('store_menu_cards')
+    .select('id,store_name,menu_name,price,category,image_url,is_featured,rating_avg,rating_count,created_at')
+    .eq('id', menuCardId).maybeSingle();
+  if (res.error || !res.data) { showToast('메뉴 카드 로드 실패'); return; }
+  var c = res.data;
+  _admEditMenuStoreName = c.store_name || '';
+
+  document.getElementById('amc-meta').textContent = c.store_name + ' · ' +
+    (c.rating_count > 0 ? '★' + parseFloat(c.rating_avg||0).toFixed(1) + ' (' + c.rating_count + ')' : '평점 없음');
+  document.getElementById('amc-menu-name').value  = c.menu_name || '';
+  document.getElementById('amc-price').value      = c.price || 0;
+  document.getElementById('amc-category').value   = c.category || '';
+  document.getElementById('amc-is-featured').checked = !!c.is_featured;
+
+  await _admLoadMenuPhotos(menuCardId);
+  await _admLoadMenuComments(menuCardId);
+
+  openOv('ov-admin-edit-menu-card');
+}
+
+async function _admLoadMenuPhotos(menuCardId) {
+  var wrap = document.getElementById('amc-photo-list');
+  if (!wrap || !_sb) return;
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
+
+  // store_menu_cards.image_url (기존 1장) + store_menu_photos (신규 N장) 통합 표시
+  var cardRes = await _sb.from('store_menu_cards').select('image_url').eq('id', menuCardId).maybeSingle();
+  var legacyUrl = (cardRes.data && cardRes.data.image_url) || null;
+
+  var photoRes = await _sb.from('store_menu_photos')
+    .select('id,image_url,is_primary,sort_order,created_at')
+    .eq('menu_card_id', menuCardId)
+    .order('is_primary', { ascending:false })
+    .order('sort_order', { ascending:true, nullsFirst:false })
+    .order('created_at', { ascending:false });
+  var photos = photoRes.data || [];
+
+  if (!legacyUrl && photos.length === 0) {
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">등록된 메뉴 사진이 없어요</div>';
+    return;
+  }
+
+  var html = '';
+  // legacy image_url 먼저 (있으면)
+  if (legacyUrl) {
+    html += '<div style="position:relative;border:2px solid var(--gold);border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
+      + '<img src="'+_esc(legacyUrl)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+      + '<div style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.92);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:var(--gold);">⭐ 카드 썸네일</div>'
+      + '<button onclick="_admClearMenuLegacyImage()" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:11px;cursor:pointer;padding:0;" title="썸네일 해제">✕</button>'
+      + '</div>';
+  }
+  // store_menu_photos 행들
+  photos.forEach(function(p, idx) {
+    var star = p.is_primary ? '⭐' : '☆';
+    var col  = p.is_primary ? 'var(--gold)' : '#bbb';
+    var bdr  = p.is_primary ? 'var(--gold)' : 'transparent';
+    html += '<div style="position:relative;border:2px solid '+bdr+';border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
+      + '<img src="'+_esc(p.image_url||'')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+      + '<button onclick="_admToggleMenuPrimaryPhoto(\''+p.id+'\')" style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.92);border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:'+col+';padding:0;line-height:1;">'+star+'</button>'
+      + '<button onclick="_admDeleteMenuPhoto(\''+p.id+'\')" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:11px;cursor:pointer;padding:0;">✕</button>'
+      + '<div style="position:absolute;bottom:4px;left:4px;right:4px;display:flex;gap:4px;">'
+      +   '<button onclick="_admMoveMenuPhoto(\''+p.id+'\',-1)" '+(idx===0?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:4px;font-size:11px;cursor:pointer;'+(idx===0?'opacity:.3;':'')+'">↑</button>'
+      +   '<button onclick="_admMoveMenuPhoto(\''+p.id+'\',1)" '+(idx===photos.length-1?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:4px;font-size:11px;cursor:pointer;'+(idx===photos.length-1?'opacity:.3;':'')+'">↓</button>'
+      + '</div>'
+      + '</div>';
+  });
+  wrap.innerHTML = html;
+}
+
+async function _admLoadMenuComments(menuCardId) {
+  var wrap = document.getElementById('amc-comments');
+  if (!wrap || !_sb) return;
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px;">로딩 중...</div>';
+  var res = await _sb.from('store_menu_comments')
+    .select('id,user_id,rating,content,created_at')
+    .eq('menu_card_id', menuCardId)
+    .order('created_at', { ascending:false })
+    .limit(50);
+  if (res.error) {
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:8px;">로드 실패: '+_esc(res.error.message)+'</div>';
+    return;
+  }
+  var rows = res.data || [];
+  if (rows.length === 0) {
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px;">등록된 댓글이 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(function(r) {
+    var date = (r.created_at||'').slice(0,10);
+    var uid  = (r.user_id||'').substring(0,8);
+    var star = r.rating > 0 ? '<span style="color:var(--gold);font-weight:700;">★'+r.rating+'</span> · ' : '';
+    var body = r.content ? '<div style="font-size:12px;color:var(--text-1);margin-top:3px;line-height:1.4;">'+_esc(r.content)+'</div>' : '<div style="font-size:11px;color:var(--text-3);margin-top:3px;font-style:italic;">(텍스트 없음)</div>';
+    return '<div style="padding:8px 0;border-bottom:1px solid var(--border);">'
+      + '<div style="font-size:10px;color:var(--text-3);">'+star+'UID: '+uid+'... · '+date
+      + ' <button onclick="_admDeleteMenuComment(\''+r.id+'\')" style="background:none;border:none;color:#991B1B;font-size:10px;cursor:pointer;font-family:var(--font);margin-left:6px;">✕ 삭제</button>'
+      + '</div>'
+      + body
+      + '</div>';
+  }).join('');
+}
+
+async function _admUploadMenuPhotos(input) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!_admEditMenuCardId) { showToast('메뉴 카드 로드 전'); return; }
+  var files = input.files;
+  if (!files || files.length === 0) return;
+
+  showToast('📤 업로드 중... (' + files.length + '장)');
+  var ok = 0;
+  for (var i = 0; i < files.length; i++) {
+    var f = files[i];
+    if (!f.type || f.type.indexOf('image/') !== 0) continue;
+    if (f.size > 5 * 1024 * 1024) { showToast('5MB 초과: '+f.name); continue; }
+    try {
+      var extMatch = f.name.match(/\.([a-zA-Z0-9]{1,5})$/);
+      var ext = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
+      var path = 'menus/' + _admEditMenuCardId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
+      var up = await _sb.storage.from('store-photos').upload(path, f, {
+        cacheControl: '3600', upsert:false, contentType:f.type
+      });
+      if (up.error) { console.warn('upload err:', up.error); showToast('업로드 실패: '+up.error.message); continue; }
+      var pub = _sb.storage.from('store-photos').getPublicUrl(path);
+      var url = pub.data && pub.data.publicUrl;
+      if (!url) continue;
+
+      var ins = await _sb.from('store_menu_photos').insert({
+        menu_card_id: _admEditMenuCardId,
+        image_url:    url,
+        uploaded_by:  _currentUser ? _currentUser.id : null,
+        is_primary:   false,
+        sort_order:   null
+      });
+      if (ins.error) { console.warn('insert err:', ins.error); showToast('등록 실패: '+ins.error.message); continue; }
+      ok++;
+    } catch(e) { console.error(e); }
+  }
+  input.value = '';
+  if (ok > 0) showToast('✅ ' + ok + '장 등록');
+  _admLoadMenuPhotos(_admEditMenuCardId);
+}
+
+async function _admToggleMenuPrimaryPhoto(photoId) {
+  if (!_sb || !_isAdmin) return;
+  if (!_admEditMenuCardId) return;
+  try {
+    var cur = await _sb.from('store_menu_photos').select('is_primary,image_url').eq('id', photoId).maybeSingle();
+    if (cur.error || !cur.data) return;
+    if (cur.data.is_primary) {
+      await _sb.from('store_menu_photos').update({ is_primary:false }).eq('id', photoId);
+      // store_menu_cards.image_url 도 해제 (옵션 — 안 함, legacy 와 별개로 보존)
+    } else {
+      await _sb.from('store_menu_photos').update({ is_primary:false }).eq('menu_card_id', _admEditMenuCardId);
+      await _sb.from('store_menu_photos').update({ is_primary:true }).eq('id', photoId);
+      // 메뉴 카드 썸네일(image_url) 도 같이 갱신 (대표 사진 = 메뉴 카드 썸네일)
+      if (cur.data.image_url) {
+        await _sb.from('store_menu_cards').update({ image_url: cur.data.image_url }).eq('id', _admEditMenuCardId);
+      }
+      showToast('⭐ 대표 메뉴 사진 지정');
+    }
+    _admLoadMenuPhotos(_admEditMenuCardId);
+  } catch(e) { console.error(e); }
+}
+
+async function _admMoveMenuPhoto(photoId, dir) {
+  if (!_sb || !_isAdmin) return;
+  if (!_admEditMenuCardId) return;
+  try {
+    var res = await _sb.from('store_menu_photos').select('id')
+      .eq('menu_card_id', _admEditMenuCardId)
+      .order('is_primary', { ascending:false })
+      .order('sort_order', { ascending:true, nullsFirst:false })
+      .order('created_at', { ascending:false });
+    if (res.error) return;
+    var arr = (res.data||[]).slice();
+    var idx = arr.findIndex(function(p){ return p.id === photoId; });
+    if (idx < 0) return;
+    var ti = idx + dir;
+    if (ti < 0 || ti >= arr.length) return;
+    var t = arr[idx]; arr[idx] = arr[ti]; arr[ti] = t;
+    await Promise.all(arr.map(function(p, i){
+      return _sb.from('store_menu_photos').update({ sort_order:i }).eq('id', p.id);
+    }));
+    _admLoadMenuPhotos(_admEditMenuCardId);
+  } catch(e) { console.error(e); }
+}
+
+async function _admDeleteMenuPhoto(photoId) {
+  if (!_sb || !_isAdmin) return;
+  if (!confirm('이 메뉴 사진을 삭제할까요?')) return;
+  try {
+    var cur = await _sb.from('store_menu_photos').select('image_url').eq('id', photoId).maybeSingle();
+    var del = await _sb.from('store_menu_photos').delete().eq('id', photoId).select();
+    if (del.error) { alert('삭제 실패: '+del.error.message); return; }
+    if (!del.data || del.data.length === 0) {
+      alert('삭제 실패 — RLS 차단. store_menu_photos DELETE 정책 확인'); return;
+    }
+    if (cur.data && cur.data.image_url) {
+      try {
+        var m = String(cur.data.image_url).match(/\/store-photos\/(.+)$/);
+        if (m && m[1]) await _sb.storage.from('store-photos').remove([m[1]]);
+      } catch(_){}
+    }
+    showToast('🗑️ 삭제됨');
+    _admLoadMenuPhotos(_admEditMenuCardId);
+  } catch(e) { console.error(e); }
+}
+
+async function _admClearMenuLegacyImage() {
+  if (!_sb || !_isAdmin) return;
+  if (!_admEditMenuCardId) return;
+  if (!confirm('메뉴 카드의 썸네일을 해제할까요?\n(store_menu_cards.image_url = NULL)')) return;
+  await _sb.from('store_menu_cards').update({ image_url:null }).eq('id', _admEditMenuCardId);
+  showToast('🗑️ 썸네일 해제');
+  _admLoadMenuPhotos(_admEditMenuCardId);
+}
+
+async function _admDeleteMenuComment(commentId) {
+  if (!_sb || !_isAdmin) return;
+  if (!confirm('이 댓글을 삭제할까요?')) return;
+  var del = await _sb.from('store_menu_comments').delete().eq('id', commentId).select();
+  if (del.error) { alert('삭제 실패: '+del.error.message); return; }
+  if (!del.data || del.data.length === 0) {
+    alert('삭제 실패 — RLS 차단. store_menu_comments DELETE 정책 확인'); return;
+  }
+  showToast('🗑️ 댓글 삭제');
+  _admLoadMenuComments(_admEditMenuCardId);
+}
+
+async function admSaveMenuCard() {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!_admEditMenuCardId) return;
+  var name = document.getElementById('amc-menu-name').value.trim();
+  var price = parseInt(document.getElementById('amc-price').value, 10) || 0;
+  var cat   = document.getElementById('amc-category').value.trim() || null;
+  var isFeatured = !!document.getElementById('amc-is-featured').checked;
+  if (!name) { showToast('메뉴 이름이 비었어요'); return; }
+  if (price <= 0) { showToast('가격을 입력하세요'); return; }
+
+  try {
+    // 1) 대표 메뉴 처리 (라디오)
+    if (isFeatured && _admEditMenuStoreName) {
+      await _sb.from('store_menu_cards').update({ is_featured:false }).eq('store_name', _admEditMenuStoreName);
+    }
+    // 2) 카드 본문 + is_featured 업데이트
+    var upd = await _sb.from('store_menu_cards').update({
+      menu_name:   name,
+      price:       price,
+      category:    cat,
+      is_featured: isFeatured
+    }).eq('id', _admEditMenuCardId).select();
+    if (upd.error) { alert('저장 실패: '+upd.error.message); return; }
+    if (!upd.data || upd.data.length === 0) {
+      alert('저장 실패 — RLS 차단. store_menu_cards UPDATE 정책 확인'); return;
+    }
+    // 3) 대표 메뉴면 stores 캐시 갱신
+    if (isFeatured && _admEditMenuStoreName) {
+      // stores 의 id 찾기
+      var sRes = await _sb.from('stores').select('id').eq('name', _admEditMenuStoreName).maybeSingle();
+      if (sRes.data && sRes.data.id) {
+        await _sb.from('stores').update({
+          featured_price: price,
+          featured_menu_name: name
+        }).eq('id', sRes.data.id);
+      }
+    }
+    showToast('✅ 메뉴 카드 저장됨');
+    closeOv('ov-admin-edit-menu-card');
+    // 가게핀 화면이 열려 있으면 새로고침
+    if (window._admPcCurrentStoreName) _admPcOpenPinStoreView(window._admPcCurrentStoreName);
+    // 가게 편집 모달이 열려 있으면 메뉴 리스트 갱신
+    if (_admEditMenuStoreName && typeof _admLoadStoreMenus === 'function') _admLoadStoreMenus(_admEditMenuStoreName);
+  } catch(e) { console.error(e); }
+}
+
+async function admDeleteMenuCard() {
+  if (!_sb || !_isAdmin) return;
+  if (!_admEditMenuCardId) return;
+  if (!confirm('이 메뉴 카드를 삭제할까요?\n(연결된 사진 / 댓글 / 평점 모두 함께 삭제)')) return;
+  try {
+    var del = await _sb.from('store_menu_cards').delete().eq('id', _admEditMenuCardId).select();
+    if (del.error) { alert('삭제 실패: '+del.error.message); return; }
+    if (!del.data || del.data.length === 0) {
+      alert('삭제 실패 — RLS 차단. store_menu_cards DELETE 정책 확인'); return;
+    }
+    showToast('🗑️ 메뉴 카드 삭제');
+    closeOv('ov-admin-edit-menu-card');
+    if (window._admPcCurrentStoreName) _admPcOpenPinStoreView(window._admPcCurrentStoreName);
+    if (_admEditMenuStoreName && typeof _admLoadStoreMenus === 'function') _admLoadStoreMenus(_admEditMenuStoreName);
+  } catch(e) { console.error(e); }
+}
+
+/* build 347/351 — 가격 핀의 메뉴 카드 편집
+   build 351: prompt 흐름 제거, 전용 모달 사용 */
 async function _admPcEditMenuCardFromPin(pinId) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   try {
@@ -22323,38 +22696,11 @@ async function _admPcEditMenuCardFromPin(pinId) {
       }).select().maybeSingle();
       if (ins.error) { showToast('생성 실패: ' + ins.error.message); return; }
       card = ins.data;
-      showToast('✨ 메뉴 카드 생성됨 — 이어서 수정');
+      showToast('✨ 메뉴 카드 생성됨 — 이어서 편집');
     }
 
-    // 3) prompt 로 메뉴명 + 가격 수정
-    var newName = window.prompt('메뉴 이름 (취소=중단)', card.menu_name || '');
-    if (newName === null) return;
-    newName = newName.trim();
-    if (!newName) { showToast('메뉴 이름이 비었어요'); return; }
-
-    var newPriceStr = window.prompt('가격 ¥ (숫자만)', String(card.price || 0));
-    if (newPriceStr === null) return;
-    var newPrice = parseInt(String(newPriceStr).replace(/[^0-9]/g, ''), 10);
-    if (!newPrice || newPrice <= 0) { showToast('가격을 정확히 입력해주세요'); return; }
-
-    // 4) 업데이트
-    var upd = await _sb.from('store_menu_cards').update({
-      menu_name: newName,
-      price:     newPrice
-    }).eq('id', card.id);
-    if (upd.error) { showToast('수정 실패: ' + upd.error.message); return; }
-
-    // 5) 가격 핀의 item_name/price 도 같이 갱신할지 묻기 (선택)
-    if ((card.menu_name !== newName || card.price !== newPrice) &&
-        confirm('가격 핀도 같이 갱신할까요?\n("' + (pin.item_name||'') + '" → "' + newName + '", ¥' + (pin.price||0).toLocaleString() + ' → ¥' + newPrice.toLocaleString() + ')')) {
-      await _sb.from('price_pins').update({
-        item_name: newName,
-        price:     newPrice
-      }).eq('id', pinId);
-    }
-
-    showToast('✅ 메뉴 카드 수정됨');
-    _admPcOpenPinStoreView(storeName);
+    // 3) build 351 — prompt 흐름 제거, 전용 모달 열기
+    openAdminEditMenuCard(card.id);
   } catch(e) {
     console.error('[admPcEditMenuCard] exception:', e);
     showToast('수정 실패: ' + (e.message || ''));
@@ -23943,7 +24289,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 350;
+window.__APP_BUILD__ = 351;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
