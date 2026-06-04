@@ -22131,7 +22131,7 @@ async function _admPcOpenPinStoreView(storeName) {
       +       '<div style="margin-top:8px;font-size:11px;color:#374151;">' + featured + '</div>'
       +       '<div style="margin-top:6px;">' + gmapLink + '</div>'
       +     '</div>'
-      +     (s ? '<button onclick="openAdminEditStore(\''+(s.id||'')+'\')" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">✏️ 가게 편집</button>' : '')
+      +     (s ? '<button onclick="openAdminStoreDetail(\''+(s.id||'')+'\')" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">✏️ 가게 편집</button>' : '')
       +   '</div>'
       + '</div>'
       // 핀 목록 헤더
@@ -22142,6 +22142,9 @@ async function _admPcOpenPinStoreView(storeName) {
       html += '<div style="background:#F4F5F8;border-radius:12px;padding:32px;text-align:center;color:#6B7280;font-size:12px;">등록된 가격 핀이 없어요.</div>';
     } else {
       html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      // build 347 — storeName 을 globals에 캐싱 후 핀 ID 만 onclick 으로 전달
+      //   (storeName 안의 따옴표/특수문자 escape 신경 안 써도 됨)
+      window._admPcCurrentStoreName = storeName;
       pins.forEach(function(p){
         var date = (p.created_at||'').slice(0,10);
         var comment = p.comment ? ('<div style="font-size:11px;color:#6B7280;margin-top:4px;line-height:1.4;">💬 ' + _esc(p.comment) + '</div>') : '';
@@ -22156,8 +22159,8 @@ async function _admPcOpenPinStoreView(storeName) {
               +     comment
               +   '</div>'
               +   '<div style="display:flex;gap:4px;flex-shrink:0;">'
-              +     '<button onclick="openAdminPinDetail(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">편집</button>'
-              +     '<button onclick="_admPcDeletePinFromList(\''+p.id+'\',\''+_esc(storeName).replace(/'/g,"\\'")+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">삭제</button>'
+              +     '<button onclick="_admPcEditMenuCardFromPin(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);" title="이 가격 핀의 메뉴 카드 수정">편집</button>'
+              +     '<button onclick="_admPcDeletePinFromList(\''+p.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">삭제</button>'
               +   '</div>'
               + '</div>'
               + '</div>';
@@ -22173,14 +22176,98 @@ async function _admPcOpenPinStoreView(storeName) {
   }
 }
 
-/* 가게핀 화면에서 직접 핀 삭제 */
-async function _admPcDeletePinFromList(pinId, storeName) {
-  if (!_sb) return;
+/* 가게핀 화면에서 직접 핀 삭제 (build 347 — storeName 캐시에서 가져옴) */
+async function _admPcDeletePinFromList(pinId) {
+  if (!_sb) { console.warn('[admPcDeletePin] _sb 없음'); return; }
+  if (!_isAdmin) { showToast('어드민 권한 필요'); return; }
+  console.log('[admPcDeletePin] pinId=', pinId);
   if (!confirm('이 가격 핀을 삭제할까요?')) return;
-  var res = await _sb.from('price_pins').delete().eq('id', pinId);
-  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
-  showToast('🗑️ 삭제됨');
-  _admPcOpenPinStoreView(storeName); // 화면 갱신
+  try {
+    var res = await _sb.from('price_pins').delete().eq('id', pinId);
+    if (res.error) {
+      console.error('[admPcDeletePin] delete error:', res.error);
+      showToast('삭제 실패: ' + res.error.message);
+      return;
+    }
+    showToast('🗑️ 삭제됨');
+    var storeName = window._admPcCurrentStoreName;
+    if (storeName) _admPcOpenPinStoreView(storeName);
+  } catch(e) {
+    console.error('[admPcDeletePin] exception:', e);
+    showToast('삭제 실패: ' + (e.message || ''));
+  }
+}
+
+/* build 347 — 가격 핀의 메뉴 카드 편집
+   - 핀에 연결된 store_menu_cards 찾기 (없으면 자동 생성)
+   - prompt 로 메뉴명 + 가격 즉시 수정 */
+async function _admPcEditMenuCardFromPin(pinId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  try {
+    // 1) 핀 정보 로드
+    var pRes = await _sb.from('price_pins')
+      .select('id,item_name,price,stores(name)')
+      .eq('id', pinId).maybeSingle();
+    if (pRes.error || !pRes.data) { showToast('핀 로드 실패'); return; }
+    var pin = pRes.data;
+    var storeName = (pin.stores && pin.stores.name) || window._admPcCurrentStoreName;
+    if (!storeName) { showToast('가게명 확인 실패'); return; }
+
+    // 2) 매칭 store_menu_cards 찾기 (store_name + menu_name 으로)
+    var cRes = await _sb.from('store_menu_cards')
+      .select('id,menu_name,price,is_featured')
+      .eq('store_name', storeName)
+      .eq('menu_name', pin.item_name || '')
+      .maybeSingle();
+    var card = cRes.data;
+    if (!card) {
+      if (!confirm('해당 메뉴 카드가 없어요.\n핀("' + (pin.item_name||'') + '" ¥' + (pin.price||0).toLocaleString() + ')으로 새 메뉴 카드를 생성할까요?')) return;
+      var ins = await _sb.from('store_menu_cards').insert({
+        store_name:   storeName,
+        menu_name:    pin.item_name || '(이름 없음)',
+        price:        pin.price || 0,
+        category:     'other',
+        rating_avg:   0,
+        rating_count: 0
+      }).select().maybeSingle();
+      if (ins.error) { showToast('생성 실패: ' + ins.error.message); return; }
+      card = ins.data;
+      showToast('✨ 메뉴 카드 생성됨 — 이어서 수정');
+    }
+
+    // 3) prompt 로 메뉴명 + 가격 수정
+    var newName = window.prompt('메뉴 이름 (취소=중단)', card.menu_name || '');
+    if (newName === null) return;
+    newName = newName.trim();
+    if (!newName) { showToast('메뉴 이름이 비었어요'); return; }
+
+    var newPriceStr = window.prompt('가격 ¥ (숫자만)', String(card.price || 0));
+    if (newPriceStr === null) return;
+    var newPrice = parseInt(String(newPriceStr).replace(/[^0-9]/g, ''), 10);
+    if (!newPrice || newPrice <= 0) { showToast('가격을 정확히 입력해주세요'); return; }
+
+    // 4) 업데이트
+    var upd = await _sb.from('store_menu_cards').update({
+      menu_name: newName,
+      price:     newPrice
+    }).eq('id', card.id);
+    if (upd.error) { showToast('수정 실패: ' + upd.error.message); return; }
+
+    // 5) 가격 핀의 item_name/price 도 같이 갱신할지 묻기 (선택)
+    if ((card.menu_name !== newName || card.price !== newPrice) &&
+        confirm('가격 핀도 같이 갱신할까요?\n("' + (pin.item_name||'') + '" → "' + newName + '", ¥' + (pin.price||0).toLocaleString() + ' → ¥' + newPrice.toLocaleString() + ')')) {
+      await _sb.from('price_pins').update({
+        item_name: newName,
+        price:     newPrice
+      }).eq('id', pinId);
+    }
+
+    showToast('✅ 메뉴 카드 수정됨');
+    _admPcOpenPinStoreView(storeName);
+  } catch(e) {
+    console.error('[admPcEditMenuCard] exception:', e);
+    showToast('수정 실패: ' + (e.message || ''));
+  }
 }
 
 /* ══════════════════════════════
@@ -23596,7 +23683,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 346;
+window.__APP_BUILD__ = 347;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
