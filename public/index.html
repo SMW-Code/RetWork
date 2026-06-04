@@ -3250,66 +3250,83 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
-<!-- ══ 어드민: 메뉴 카드 수정 모달 (build 351) ══ -->
-<div class="overlay" id="ov-admin-edit-menu-card" style="z-index:10002;" onclick="if(event.target===this)closeOv('ov-admin-edit-menu-card')">
-  <div class="sheet" onclick="event.stopPropagation()" style="max-width:520px;width:100%;max-height:92vh;overflow-y:auto;">
-    <div class="sheet-handle"></div>
-    <div style="padding:8px 20px 28px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-        <div>
-          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🍽️ 메뉴 카드 수정 (운영자)</div>
-          <div id="amc-meta" style="font-size:11px;color:var(--text-3);margin-top:2px;"></div>
-        </div>
-        <div onclick="closeOv('ov-admin-edit-menu-card')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+<!-- ══ 어드민: 메뉴 카드 수정 — 전체화면 페이지 (build 352) ══ -->
+<div class="overlay" id="ov-admin-edit-menu-card" style="z-index:10002;background:var(--bg);padding:0;">
+  <div style="width:100%;height:100%;max-width:none;display:flex;flex-direction:column;background:var(--bg);">
+
+    <!-- sticky 헤더 -->
+    <div style="position:sticky;top:0;background:var(--surface);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:5;flex-shrink:0;">
+      <button onclick="closeOv('ov-admin-edit-menu-card')" style="background:transparent;border:1px solid var(--border-mid);border-radius:8px;color:var(--text-1);font-size:16px;font-weight:700;cursor:pointer;padding:6px 12px;font-family:var(--font);display:flex;align-items:center;gap:4px;">← 뒤로</button>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:16px;font-weight:900;color:var(--text-1);">🍽️ 메뉴 카드 수정 (운영자)</div>
+        <div id="amc-meta" style="font-size:11px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
       </div>
+    </div>
 
-      <!-- 기본 정보 -->
-      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">메뉴 이름</div>
-        <input id="amc-menu-name" type="text" maxlength="80" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:8px;">
+    <!-- 본문 (스크롤) -->
+    <div style="flex:1;overflow-y:auto;padding:18px 20px 100px;">
+      <div style="max-width:720px;margin:0 auto;">
 
-        <div style="display:flex;gap:8px;">
-          <div style="flex:1;">
-            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">가격 ¥</div>
-            <input id="amc-price" type="number" min="0" step="1" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+        <!-- 기본 정보 -->
+        <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">📝 기본 정보</div>
+        <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">메뉴 이름</div>
+          <input id="amc-menu-name" type="text" maxlength="80" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:10px;">
+
+          <div style="display:flex;gap:8px;margin-bottom:10px;">
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">가격 ¥</div>
+              <input id="amc-price" type="number" min="0" step="1" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+            </div>
+            <div style="flex:1;">
+              <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">카테고리</div>
+              <select id="amc-category" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;cursor:pointer;">
+                <!-- JS 가 CT_PUB_CATS 로 채움 -->
+              </select>
+            </div>
           </div>
-          <div style="flex:1;">
-            <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:4px;">카테고리</div>
-            <input id="amc-category" type="text" maxlength="40" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
-          </div>
-        </div>
 
-        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);font-weight:700;cursor:pointer;">
-            <input id="amc-is-featured" type="checkbox" style="width:16px;height:16px;cursor:pointer;">
-            ⭐ 이 가게의 대표 메뉴로 지정 (지도 마커에 표시)
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);font-weight:700;cursor:pointer;padding:6px 0;">
+            <input id="amc-is-featured" type="checkbox" style="width:18px;height:18px;cursor:pointer;">
+            ⭐ 이 가게의 대표 메뉴로 지정 (지도 마커 가격에 표시)
           </label>
         </div>
-      </div>
 
-      <!-- 메뉴 사진 -->
-      <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">📷 메뉴 사진</div>
-      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
-        <label style="display:block;background:var(--green);color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:8px;">
-          📤 메뉴 사진 업로드 (복수)
-          <input type="file" accept="image/*" multiple onchange="_admUploadMenuPhotos(this)" style="display:none;">
-        </label>
-        <div id="amc-photo-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
-          <div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>
+        <!-- 메뉴 사진 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text-2);">📷 메뉴 사진</div>
+          <div id="amc-photo-count" style="font-size:10px;color:var(--text-3);font-weight:700;"></div>
         </div>
-        <div style="font-size:10px;color:var(--text-3);margin-top:8px;line-height:1.4;">⭐ = 메뉴 대표 사진 (메뉴 카드 썸네일). ↑↓ 순서 / ✕ 삭제.</div>
-      </div>
+        <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
+          <label style="display:block;background:var(--green);color:#fff;border-radius:8px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:10px;">
+            📤 사진 추가 업로드 (복수 선택 가능)
+            <input type="file" accept="image/*" multiple onchange="_admUploadMenuPhotos(this)" style="display:none;">
+          </label>
+          <div id="amc-photo-list" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;">
+            <div style="font-size:11px;color:var(--text-3);padding:16px;text-align:center;grid-column:1/-1;">로딩 중...</div>
+          </div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:10px;line-height:1.5;">
+            • ⭐ = 메뉴 카드 대표 사진 (썸네일로 표시)<br>
+            • ↑↓ 으로 순서 변경 / ✕ 으로 삭제<br>
+            • 영수증/치리 공개로 자동 등록된 기존 사진과 어드민이 추가한 사진 모두 표시
+          </div>
+        </div>
 
-      <!-- 댓글 & 평점 (읽기 전용) -->
-      <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">💬 댓글 / 평점</div>
-      <div id="amc-comments" style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;max-height:180px;overflow-y:auto;">
-        <div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px;">로딩 중...</div>
-      </div>
+        <!-- 댓글 & 평점 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text-2);">💬 댓글 / 평점</div>
+          <div id="amc-comment-count" style="font-size:10px;color:var(--text-3);font-weight:700;"></div>
+        </div>
+        <div id="amc-comments" style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;max-height:280px;overflow-y:auto;">
+          <div style="font-size:11px;color:var(--text-3);text-align:center;padding:12px;">로딩 중...</div>
+        </div>
 
-      <!-- 저장 / 삭제 -->
-      <div style="display:flex;gap:8px;">
-        <button onclick="admSaveMenuCard()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
-        <button onclick="admDeleteMenuCard()" style="padding:12px 16px;border:1px solid #FEE2E2;border-radius:12px;background:#fff;color:#991B1B;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 삭제</button>
+        <!-- 저장 / 삭제 -->
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <button onclick="admSaveMenuCard()" style="flex:1;padding:14px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+          <button onclick="admDeleteMenuCard()" style="padding:14px 18px;border:1px solid #FEE2E2;border-radius:12px;background:#fff;color:#991B1B;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 카드 삭제</button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -22328,6 +22345,30 @@ async function _admPcDeletePinFromList(pinId) {
 var _admEditMenuCardId   = null;
 var _admEditMenuStoreName = null;
 
+// build 352 — 카테고리 select 채우기 (CT_PUB_CATS)
+function _admFillMenuCatSelect(currentValue) {
+  var sel = document.getElementById('amc-category');
+  if (!sel) return;
+  var html = '<option value="">— 카테고리 선택 —</option>';
+  var found = false;
+  (typeof CT_PUB_CATS !== 'undefined' ? CT_PUB_CATS : []).forEach(function(c) {
+    var selected = c.key === currentValue ? ' selected' : '';
+    if (c.key === currentValue) found = true;
+    // CT_PUB_CATS.icon 은 SVG 문자열이라 option 안에서는 렌더 X → 이모지로 표시
+    var icoEmoji = {
+      teishoku:'🍱', ramen:'🍜', soba:'🍵', sushi:'🍣', tonkatsu:'🥩',
+      chinese:'🥡', korean:'🥘', curry:'🍛', thai:'🌶️', pizza:'🍕',
+      fast:'🍔', cafe:'☕', izakaya:'🍶', konbini:'🏪', other:'🍽️'
+    }[c.key] || '🍽️';
+    html += '<option value="' + c.key + '"' + selected + '>' + icoEmoji + ' ' + c.label + '</option>';
+  });
+  // DB 의 값이 CT_PUB_CATS 에 없으면 (예: 옛 카테고리) 그대로 보존 표시
+  if (currentValue && !found) {
+    html += '<option value="' + _esc(currentValue) + '" selected>(기존) ' + _esc(currentValue) + '</option>';
+  }
+  sel.innerHTML = html;
+}
+
 async function openAdminEditMenuCard(menuCardId) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   if (!menuCardId) { showToast('메뉴 카드 ID 없음'); return; }
@@ -22345,7 +22386,7 @@ async function openAdminEditMenuCard(menuCardId) {
     (c.rating_count > 0 ? '★' + parseFloat(c.rating_avg||0).toFixed(1) + ' (' + c.rating_count + ')' : '평점 없음');
   document.getElementById('amc-menu-name').value  = c.menu_name || '';
   document.getElementById('amc-price').value      = c.price || 0;
-  document.getElementById('amc-category').value   = c.category || '';
+  _admFillMenuCatSelect(c.category || '');
   document.getElementById('amc-is-featured').checked = !!c.is_featured;
 
   await _admLoadMenuPhotos(menuCardId);
@@ -22356,8 +22397,9 @@ async function openAdminEditMenuCard(menuCardId) {
 
 async function _admLoadMenuPhotos(menuCardId) {
   var wrap = document.getElementById('amc-photo-list');
+  var countEl = document.getElementById('amc-photo-count');
   if (!wrap || !_sb) return;
-  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:16px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
 
   // store_menu_cards.image_url (기존 1장) + store_menu_photos (신규 N장) 통합 표시
   var cardRes = await _sb.from('store_menu_cards').select('image_url').eq('id', menuCardId).maybeSingle();
@@ -22371,18 +22413,22 @@ async function _admLoadMenuPhotos(menuCardId) {
     .order('created_at', { ascending:false });
   var photos = photoRes.data || [];
 
+  var totalCount = (legacyUrl ? 1 : 0) + photos.length;
+  if (countEl) countEl.textContent = totalCount > 0 ? '총 ' + totalCount + '장' : '';
+
   if (!legacyUrl && photos.length === 0) {
-    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">등록된 메뉴 사진이 없어요</div>';
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:20px;text-align:center;grid-column:1/-1;border:1px dashed var(--border-mid);border-radius:8px;">등록된 메뉴 사진이 없어요<br><span style="font-size:10px;">위의 업로드 버튼으로 추가하세요</span></div>';
     return;
   }
 
   var html = '';
-  // legacy image_url 먼저 (있으면)
+  // legacy image_url 먼저 (있으면) — "기존 등록 사진" 표기 추가
   if (legacyUrl) {
     html += '<div style="position:relative;border:2px solid var(--gold);border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
       + '<img src="'+_esc(legacyUrl)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
-      + '<div style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.92);border-radius:6px;padding:2px 6px;font-size:10px;font-weight:700;color:var(--gold);">⭐ 카드 썸네일</div>'
-      + '<button onclick="_admClearMenuLegacyImage()" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:11px;cursor:pointer;padding:0;" title="썸네일 해제">✕</button>'
+      + '<div style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.94);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:800;color:var(--gold);">⭐ 카드 썸네일</div>'
+      + '<div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;padding:2px 6px;font-size:9px;font-weight:700;">기존 등록</div>'
+      + '<button onclick="_admClearMenuLegacyImage()" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0;line-height:1;" title="썸네일 해제 (사진은 보존)">✕</button>'
       + '</div>';
   }
   // store_menu_photos 행들
@@ -22390,13 +22436,15 @@ async function _admLoadMenuPhotos(menuCardId) {
     var star = p.is_primary ? '⭐' : '☆';
     var col  = p.is_primary ? 'var(--gold)' : '#bbb';
     var bdr  = p.is_primary ? 'var(--gold)' : 'transparent';
+    var primaryLabel = p.is_primary ? '<div style="position:absolute;top:4px;left:36px;background:rgba(255,255,255,.94);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:800;color:var(--gold);">⭐ 대표</div>' : '';
     html += '<div style="position:relative;border:2px solid '+bdr+';border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
       + '<img src="'+_esc(p.image_url||'')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
-      + '<button onclick="_admToggleMenuPrimaryPhoto(\''+p.id+'\')" style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.92);border:none;border-radius:50%;width:26px;height:26px;font-size:14px;cursor:pointer;color:'+col+';padding:0;line-height:1;">'+star+'</button>'
-      + '<button onclick="_admDeleteMenuPhoto(\''+p.id+'\')" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:11px;cursor:pointer;padding:0;">✕</button>'
+      + '<button onclick="_admToggleMenuPrimaryPhoto(\''+p.id+'\')" style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.94);border:none;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;color:'+col+';padding:0;line-height:1;" title="대표 사진 토글">'+star+'</button>'
+      + primaryLabel
+      + '<button onclick="_admDeleteMenuPhoto(\''+p.id+'\')" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0;line-height:1;" title="삭제">✕</button>'
       + '<div style="position:absolute;bottom:4px;left:4px;right:4px;display:flex;gap:4px;">'
-      +   '<button onclick="_admMoveMenuPhoto(\''+p.id+'\',-1)" '+(idx===0?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:4px;font-size:11px;cursor:pointer;'+(idx===0?'opacity:.3;':'')+'">↑</button>'
-      +   '<button onclick="_admMoveMenuPhoto(\''+p.id+'\',1)" '+(idx===photos.length-1?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:4px;font-size:11px;cursor:pointer;'+(idx===photos.length-1?'opacity:.3;':'')+'">↓</button>'
+      +   '<button onclick="_admMoveMenuPhoto(\''+p.id+'\',-1)" '+(idx===0?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:5px;font-size:11px;cursor:pointer;'+(idx===0?'opacity:.3;cursor:not-allowed;':'')+'">↑</button>'
+      +   '<button onclick="_admMoveMenuPhoto(\''+p.id+'\',1)" '+(idx===photos.length-1?'disabled':'')+' style="flex:1;background:rgba(0,0,0,.72);color:#fff;border:none;border-radius:6px;padding:5px;font-size:11px;cursor:pointer;'+(idx===photos.length-1?'opacity:.3;cursor:not-allowed;':'')+'">↓</button>'
       + '</div>'
       + '</div>';
   });
@@ -22405,20 +22453,23 @@ async function _admLoadMenuPhotos(menuCardId) {
 
 async function _admLoadMenuComments(menuCardId) {
   var wrap = document.getElementById('amc-comments');
+  var countEl = document.getElementById('amc-comment-count');
   if (!wrap || !_sb) return;
-  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px;">로딩 중...</div>';
+  wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:12px;">로딩 중...</div>';
   var res = await _sb.from('store_menu_comments')
     .select('id,user_id,rating,content,created_at')
     .eq('menu_card_id', menuCardId)
     .order('created_at', { ascending:false })
     .limit(50);
   if (res.error) {
-    wrap.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:8px;">로드 실패: '+_esc(res.error.message)+'</div>';
+    wrap.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:12px;">로드 실패: '+_esc(res.error.message)+'</div>';
+    if (countEl) countEl.textContent = '';
     return;
   }
   var rows = res.data || [];
+  if (countEl) countEl.textContent = rows.length > 0 ? '총 ' + rows.length + '건' : '';
   if (rows.length === 0) {
-    wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);text-align:center;padding:8px;">등록된 댓글이 없어요</div>';
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--text-3);text-align:center;padding:16px;">등록된 댓글이 없어요</div>';
     return;
   }
   wrap.innerHTML = rows.map(function(r) {
@@ -24289,7 +24340,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 351;
+window.__APP_BUILD__ = 352;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
