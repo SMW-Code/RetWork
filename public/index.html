@@ -24520,11 +24520,11 @@ async function sdSubmitComment(cardId,existingId){
 
         if (existing.length > 0) {
           // 기존 row 들 일괄 update (.select() 로 RLS 차단 검증)
+          //   build 375 — store_comments 에 updated_at 컬럼 없음 → content/rating 만 update
           var updIds = existing.map(function(r){ return r.id; });
           var upd2 = await _sb.from('store_comments').update({
             content: tx,
-            rating:  st,
-            updated_at: new Date().toISOString()
+            rating:  st
           }).in('id', updIds).select();
           if (upd2.error) {
             console.error('[sdSubmitComment] store_comments update error:', upd2.error);
@@ -24973,7 +24973,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 374;
+window.__APP_BUILD__ = 375;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
