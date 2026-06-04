@@ -1973,8 +1973,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 </div>
 
 <!-- ══ 광고 모달 (비구독 유저) ══ -->
-<div class="confirm-overlay" id="ov-saveconfirm">
-  <div class="confirm-sheet" style="padding:0;overflow:hidden;">
+<div class="confirm-overlay" id="ov-saveconfirm" onclick="if(event.target===this)closeAdModal()">
+  <div class="confirm-sheet" style="padding:0;overflow:hidden;position:relative;">
+    <!-- 닫기 X (build 333) — 광고 안 보고 나가기 -->
+    <div onclick="closeAdModal()" style="position:absolute;top:10px;right:10px;z-index:20;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;font-weight:700;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.3);">✕</div>
 
     <!-- 자동재생 광고 미리보기 -->
     <div id="ad-slot-modal" style="overflow:hidden;border-bottom:0.5px solid var(--border);">
@@ -15456,6 +15458,20 @@ var _rvAdMode    = 'save'; // 'save' | 'reward'
 /* 바텀시트 열기 (영수증 저장 시)
    context: 'save'  = 영수증 결과 화면에서 가계부 저장 흐름 (기본)
             'chiri' = 이미 치리 모달을 거친 흐름 (저장+공개 한 번에) */
+/* build 333 — 광고 모달 닫기 (콜백 실행 X, 광고 안 보고 나가기)
+   - monthreport / report_unlock 컨텍스트에서 명시 닫기 가능
+   - 영수증 저장 등에서도 닫으면 저장 안 됨 (사용자 의도 그대로) */
+function closeAdModal() {
+  var el = document.getElementById('ov-saveconfirm');
+  if (el) {
+    el.classList.remove('open');
+    el.style.cssText = '';
+  }
+  // 콜백 무효화 — 광고 보고 진입하지 않음
+  _adCallback = null;
+  _adContext = 'save';
+}
+
 function showAdModal(callback, context) {
   _adCallback = callback;
   _adContext = context || 'save';
@@ -23280,7 +23296,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 332;
+window.__APP_BUILD__ = 333;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
