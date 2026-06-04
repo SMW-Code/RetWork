@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 378 시점)
+# RetWork (チリつも) — HANDOFF (build 379 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 378** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 379** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 
 ---
 
@@ -18,11 +18,17 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 378;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b378';
+public/index.html → window.__APP_BUILD__ = 379;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b379';
 ```
 
 **캐시 정책**: HTML 은 네트워크 우선 (`no-store`), 나머지 정적 자원은 캐시 우선. 사용자에게는 항상 `Ctrl+Shift+R` 강제 새로고침 안내.
+
+### build 379 — 가게 상세 모달 전체창 전환
+- 바텀시트(92vh) → **전체창**. CSS `#store-detail-panel`: border-radius:0, height/max-height:100%, box-shadow:none.
+  `.sheet-handle` display:none. `#sd-header` 상단 sticky + safe-area-inset-top + 하단 보더.
+- `_sdRenderHeader()` 좌측 **‹ 뒤로가기 버튼**(closeStoreDetail→지도 복귀) 추가. 기존 ⋮·✕ 유지.
+- `bottom-sheet-overlay` 클래스는 유지(스와이프 제스처 핸들러 참조). 패널 height:100%라 align-items:flex-end 무관.
 
 ---
 

@@ -626,10 +626,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* ── 가게 상세 패널 ── */
 #ov-store-detail{z-index:980;}
-#store-detail-panel{background:var(--surface);border-radius:24px 24px 0 0;max-height:92vh;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:0 -8px 32px rgba(0,0,0,.28);width:100%;display:flex;flex-direction:column;position:relative;}
+#store-detail-panel{background:var(--surface);border-radius:0;height:100%;max-height:100%;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:none;width:100%;display:flex;flex-direction:column;position:relative;}
 /* 섹션 순서: 공개 모드 기본 (사진 → 가게정보 → 광고 → 메뉴 → 댓글 → 비공개) */
-#store-detail-panel > .sheet-handle{order:1;}
-#store-detail-panel > #sd-header{order:2;}
+#store-detail-panel > .sheet-handle{order:1;display:none;}
+#store-detail-panel > #sd-header{order:2;position:sticky;top:0;z-index:5;background:var(--surface);padding-top:env(safe-area-inset-top,0px);border-bottom:.5px solid var(--border);}
 #store-detail-panel > #sd-photos-wrap{order:3;}
 #store-detail-panel > #sd-places-info{order:4;}
 #store-detail-panel > #sd-ad-wrap{order:5;}
@@ -16703,7 +16703,8 @@ function _sdRenderHeader(ratingAvg, ratingCount) {
     ? '<span style="font-size:13px;font-weight:800;color:var(--star);">★'+ratingAvg.toFixed(1)+'</span>'
       +'<span style="font-size:10px;color:var(--text-3);margin-left:2px;">('+ratingCount+')</span>'
     : '<span style="font-size:11px;color:var(--text-3);">'+t('sd.no_rating')+'</span>';
-  var h = '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:8px;">'
+  var h = '<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px 10px;gap:6px;">'
+    +'<div onclick="closeStoreDetail()" title="地図に戻る" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:30px;line-height:1;color:var(--text-2);flex-shrink:0;margin:-4px 0 0 -8px;">‹</div>'
     +'<div style="flex:1;min-width:0;">'
     +'<div style="font-size:11px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+(addr||t('sd.no_address'))+'</div>'
     +'<div style="font-size:15px;font-weight:700;color:#444;margin-top:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;">'+s.name+'</div>'
@@ -24991,7 +24992,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 378;
+window.__APP_BUILD__ = 379;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
