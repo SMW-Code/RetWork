@@ -24500,35 +24500,60 @@ async function sdSubmitComment(cardId,existingId){
     var upd=await _sb.from('store_menu_comments').update({rating:st,content:tx,updated_at:new Date().toISOString()}).eq('id',existingId);
     if(upd.error){ alert('수정 실패: '+upd.error.message); return; }
 
-    // build 370 — 가게 단위 방문자 리뷰(store_comments) 도 동기화
+    // build 370/374 — 가게 단위 방문자 리뷰(store_comments) 도 동기화
     //   사용자 한 명당 한 가게에 댓글 하나라는 관점에서
     //   메뉴 댓글 수정 시 같은 user_id + 같은 store_name 의 store_comments 도 같이 update
     //   (없으면 신규 insert — 메뉴에 평점 + 텍스트가 있다는 건 가게 리뷰로도 의미 있음)
     try {
       if (_sdName && _currentUser) {
+        console.log('[sdSubmitComment] store_comments 동기화 시도 store=', _sdName, 'user=', _currentUser.id);
+        // 같은 가게+사용자의 모든 store_comments 가져오기 (혹시 여러 개 있어도 다 처리)
         var scRes = await _sb.from('store_comments')
-          .select('id')
+          .select('id,content,rating')
           .eq('store_name', _sdName)
-          .eq('user_id', _currentUser.id)
-          .maybeSingle();
-        if (scRes.data) {
-          await _sb.from('store_comments').update({
+          .eq('user_id', _currentUser.id);
+        if (scRes.error) {
+          console.error('[sdSubmitComment] store_comments select error:', scRes.error);
+        }
+        var existing = scRes.data || [];
+        console.log('[sdSubmitComment] 기존 store_comments rows:', existing.length);
+
+        if (existing.length > 0) {
+          // 기존 row 들 일괄 update (.select() 로 RLS 차단 검증)
+          var updIds = existing.map(function(r){ return r.id; });
+          var upd2 = await _sb.from('store_comments').update({
             content: tx,
             rating:  st,
             updated_at: new Date().toISOString()
-          }).eq('id', scRes.data.id);
+          }).in('id', updIds).select();
+          if (upd2.error) {
+            console.error('[sdSubmitComment] store_comments update error:', upd2.error);
+            showToast('가게 리뷰 동기화 실패: ' + upd2.error.message);
+          } else if (!upd2.data || upd2.data.length === 0) {
+            console.warn('[sdSubmitComment] store_comments update 0 rows — RLS 차단 의심');
+            showToast('가게 리뷰 동기화 실패 — RLS 정책 확인 필요');
+          } else {
+            console.log('[sdSubmitComment] store_comments updated:', upd2.data.length);
+          }
         } else if (tx) {
-          await _sb.from('store_comments').insert({
+          // 신규 insert
+          var ins2 = await _sb.from('store_comments').insert({
             store_name:  _sdName,
             user_id:     _currentUser.id,
             user_name:   _userNickname || '節約ユーザー',
             content:     tx,
             rating:      st,
             has_receipt: false
-          });
+          }).select();
+          if (ins2.error) {
+            console.error('[sdSubmitComment] store_comments insert error:', ins2.error);
+            showToast('가게 리뷰 신규 생성 실패: ' + ins2.error.message);
+          } else {
+            console.log('[sdSubmitComment] store_comments inserted:', ins2.data && ins2.data.length);
+          }
         }
       }
-    } catch(e) { console.warn('[sdSubmitComment] store_comments 동기화 실패:', e); }
+    } catch(e) { console.error('[sdSubmitComment] store_comments 동기화 예외:', e); }
   } else {
     // 새 작성 — 혹시 이미 작성한 게 있는지 한번 더 확인 (UNIQUE 제약 + 친절한 메시지)
     var existing=await _sb.from('store_menu_comments').select('id').eq('menu_card_id',cardId).eq('user_id',_currentUser.id).maybeSingle();
@@ -24948,7 +24973,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 373;
+window.__APP_BUILD__ = 374;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

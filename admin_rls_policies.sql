@@ -65,16 +65,36 @@ CREATE POLICY "store_menu_comments_admin_delete" ON store_menu_comments
 
 
 -- ────────────────────────────────────────────────────────────────────────────
--- store_comments (가게 단위 댓글) — 어드민 DELETE 허용
+-- store_comments (가게 단위 댓글) — 어드민 DELETE + 본인 UPDATE/INSERT 허용 (build 374)
 -- ────────────────────────────────────────────────────────────────────────────
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'store_comments') THEN
     EXECUTE 'ALTER TABLE store_comments ENABLE ROW LEVEL SECURITY';
+
+    -- 어드민 삭제
     EXECUTE 'DROP POLICY IF EXISTS "store_comments_admin_delete" ON store_comments';
     EXECUTE 'CREATE POLICY "store_comments_admin_delete" ON store_comments
       FOR DELETE TO authenticated
       USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE))';
+
+    -- 본인 INSERT (자신의 user_id 로만)
+    EXECUTE 'DROP POLICY IF EXISTS "store_comments_own_insert" ON store_comments';
+    EXECUTE 'CREATE POLICY "store_comments_own_insert" ON store_comments
+      FOR INSERT TO authenticated
+      WITH CHECK (user_id = auth.uid())';
+
+    -- 본인 UPDATE (자신의 row 만)
+    EXECUTE 'DROP POLICY IF EXISTS "store_comments_own_update" ON store_comments';
+    EXECUTE 'CREATE POLICY "store_comments_own_update" ON store_comments
+      FOR UPDATE TO authenticated
+      USING (user_id = auth.uid())';
+
+    -- 본인 DELETE (자신의 row 만)
+    EXECUTE 'DROP POLICY IF EXISTS "store_comments_own_delete" ON store_comments';
+    EXECUTE 'CREATE POLICY "store_comments_own_delete" ON store_comments
+      FOR DELETE TO authenticated
+      USING (user_id = auth.uid())';
   END IF;
 END $$;
 
