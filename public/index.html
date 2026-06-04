@@ -22358,8 +22358,11 @@ async function _admPcLoadStoreMenuCards(storeName) {
 
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' + rows.map(function(m) {
     var rating = m.rating_count > 0 ? '★' + parseFloat(m.rating_avg||0).toFixed(1) + ' (' + m.rating_count + ')' : '평점 없음';
+    // build 356 — 이미지 로드 실패 시 placeholder 로 graceful fallback (img onerror)
     var thumb = m.image_url
-      ? '<img src="'+_esc(m.image_url)+'" loading="lazy" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;border:1px solid #E3E6EB;">'
+      ? '<div style="width:48px;height:48px;border-radius:8px;flex-shrink:0;border:1px solid #E3E6EB;overflow:hidden;background:#F4F5F8;display:flex;align-items:center;justify-content:center;">'
+        + '<img src="'+_esc(m.image_url)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=&quot;color:#9CA3AF;font-size:18px;&quot;>🍽️</span>\';">'
+        + '</div>'
       : '<div style="width:48px;height:48px;border-radius:8px;background:#F4F5F8;display:flex;align-items:center;justify-content:center;color:#9CA3AF;font-size:18px;flex-shrink:0;border:1px solid #E3E6EB;">🍽️</div>';
     var featured = m.is_featured
       ? '<span style="background:#FEF3C7;color:#92400E;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;flex-shrink:0;">⭐ 대표</span>'
@@ -22555,8 +22558,8 @@ async function _admLoadMenuPhotos(menuCardId) {
   });
   // legacy image_url 먼저 (있으면) — "기존 등록 사진" 표기 추가
   if (legacyUrl) {
-    html += '<div style="position:relative;border:2px solid var(--gold);border-radius:8px;overflow:hidden;background:var(--bg);aspect-ratio:1/1;">'
-      + '<img src="'+_esc(legacyUrl)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;">'
+    html += '<div style="position:relative;border:2px solid var(--gold);border-radius:8px;overflow:hidden;background:var(--bg-2);aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;">'
+      + '<img src="'+_esc(legacyUrl)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block;" onerror="this.style.display=\'none\';this.parentElement.insertAdjacentHTML(\'afterbegin\',\'<div style=&quot;color:var(--red);font-size:11px;text-align:center;padding:8px;&quot;>⚠️ 이미지<br>로드 실패</div>\');">'
       + '<div style="position:absolute;top:4px;left:4px;background:rgba(255,255,255,.94);border-radius:6px;padding:3px 7px;font-size:10px;font-weight:800;color:var(--gold);">⭐ 카드 썸네일</div>'
       + '<div style="position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.65);color:#fff;border-radius:6px;padding:2px 6px;font-size:9px;font-weight:700;">기존 등록</div>'
       + '<button onclick="_admClearMenuLegacyImage()" style="position:absolute;top:4px;right:4px;background:rgba(220,38,38,.9);color:#fff;border:none;border-radius:50%;width:26px;height:26px;font-size:12px;cursor:pointer;padding:0;line-height:1;" title="썸네일 해제 (사진은 보존)">✕</button>'
@@ -24534,7 +24537,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 356;
+window.__APP_BUILD__ = 357;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
