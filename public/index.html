@@ -4928,14 +4928,29 @@ function ctOpenBonusAd(){
       return;
     }
   }
+  // build 327 — ov-attendance (풀스크린) 안에서 호출 시 stacking context 충돌
+  //   → ov-att-bonus-ad 를 body 로 이동 + 명시적 inline z-index 강제
+  var ov = document.getElementById('ov-att-bonus-ad');
+  if (ov) {
+    if (ov.parentElement !== document.body) document.body.appendChild(ov);
+    // .overlay 기본 z-index:500 보다 위에 — 출석 모달 위에 명확히 표시
+    ov.style.cssText = 'position:fixed !important;inset:0 !important;z-index:10005 !important;background:rgba(0,0,0,.55) !important;display:flex !important;align-items:flex-end !important;justify-content:center !important;backdrop-filter:blur(3px);';
+  }
   openOv('ov-att-bonus-ad');
 }
 function bonusAcCloseOutside(e){
   if (e.target === document.getElementById('ov-att-bonus-ad')) bonusAcSkip();
 }
-function bonusAcSkip(){ closeOv('ov-att-bonus-ad'); }
+function bonusAcSkip(){
+  closeOv('ov-att-bonus-ad');
+  // build 327 — 인라인 강제 스타일 리셋 (다음 호출 시 깨끗하게)
+  var ov = document.getElementById('ov-att-bonus-ad');
+  if (ov) ov.style.cssText = '';
+}
 function bonusAcWatch(){
   closeOv('ov-att-bonus-ad');
+  var ov = document.getElementById('ov-att-bonus-ad');
+  if (ov) ov.style.cssText = '';
   // 슬롯 카운트는 광고 시청 후 콜백에서 1 증가 (시청 안 했으면 차감 안 됨)
   ctOpenFullscreenAd('bonus', function(){
     ctAddCoin(15, '📺 추가 광고 보상', 'ad');
@@ -23121,7 +23136,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 326;
+window.__APP_BUILD__ = 327;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
