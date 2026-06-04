@@ -22272,11 +22272,26 @@ async function admSaveStore() {
   if (!isNaN(lat) && !isNaN(lng)) { payload.lat = lat; payload.lng = lng; }
   var res = await _sb.from('stores').update(payload).eq('id', _admEditStoreId);
   if (res.error) { showToast('저장 실패: '+res.error.message); return; }
-  showToast('✅ 가게 정보 수정 완료');
-  closeOv('ov-admin-edit-store');
-  // 리스트 새로고침
-  if (_admDetailType === 'stores') await _loadAdminDetailData('stores');
-  if (_admDetailType === 'pins')   await _loadAdminDetailData('pins'); // 핀 카드에 링크 배지 갱신
+  // build 331 — 명확한 피드백 + 가게 목록 자동 복귀
+  showToast('✅ 가게 정보 수정 완료 — 가게 목록으로 이동');
+  // PC 어드민 vs 일반 모달 분기
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    // PC 어드민: 가게 시트 unmount + 가게 목록으로 drilldown back
+    if (typeof _admPcBackToMenu === 'function') {
+      try { _admPcBackToMenu('stores'); } catch(e){ console.warn('[admSaveStore back]', e); }
+    } else if (typeof _admPcUnmountAll === 'function') {
+      try { _admPcUnmountAll(); } catch(e){}
+    }
+  } else {
+    closeOv('ov-admin-edit-store');
+  }
+  // 리스트 새로고침 (가게 카드 위치 변경 즉시 반영)
+  if (typeof _loadAdminDetailData === 'function') {
+    if (_admDetailType === 'stores') await _loadAdminDetailData('stores');
+    if (_admDetailType === 'pins')   await _loadAdminDetailData('pins'); // 핀 카드 링크 배지 갱신
+    // 영수증 화면에서 진입한 경우 영수증 목록도 갱신 (위도/경도 반영)
+    if (_admDetailType === 'receipts') await _loadAdminDetailData('receipts');
+  }
 }
 
 /* ══════════════════════════════
@@ -23219,7 +23234,7 @@ if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 330;
+window.__APP_BUILD__ = 331;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
