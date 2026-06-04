@@ -11433,11 +11433,16 @@ async function submitChiriPublish() {
 
   closeOv('ov-chiri-publish');
 
+  // build 343 — 가계부 저장 보장 (광고 콜백 의존 제거)
+  //   기존: 광고 콜백 안에서 _doSaveOcrResult() 호출 → 광고 차단/중단 시 가계부 미저장
+  //   변경: 광고 모달 표시 전에 가계부를 동기적으로 저장 → 광고 결과와 무관하게 저장 보장
+  console.log('[chiri-publish] 가계부 저장 시작 (광고 모달 전)');
+  _doSaveOcrResult();
+
   if (!_isPremium) {
-    // 'chiri' 컨텍스트 → 광고 모달은 "광고 보고 가계부저장+치리공개" 단일 버튼만 노출
-    showAdModal(function() { _doSaveOcrResult(); _afterChiriPublish(); }, 'chiri');
+    // 광고는 치리 공개 완료 알림 + 핀 렌더만 담당 (가계부는 이미 저장됨)
+    showAdModal(function() { _afterChiriPublish(); }, 'chiri');
   } else {
-    _doSaveOcrResult();
     _afterChiriPublish();
   }
 
@@ -23566,7 +23571,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 342;
+window.__APP_BUILD__ = 343;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
