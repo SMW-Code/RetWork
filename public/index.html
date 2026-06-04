@@ -16944,6 +16944,10 @@ document.addEventListener('keydown', function(e){
 function _sdRenderSideActions() {
   var wrap = document.getElementById('sd-side-actions');
   if (!wrap) return;
+  // build 368 — 사진 영역 높이에 4 버튼이 정확히 맞춰지도록 부모 wrap 도 H stretch
+  //   부모 div(.padding flex align-items:stretch) → wrap 자식이 자동 stretch
+  //   wrap 안의 4개 자식은 flex:1; min-height:0 → 균등 분배
+  wrap.style.height = '100%';
   var s = _sdSData || {};
   // 맵 URL: stores.google_maps_url 우선
   var gmUrl;
@@ -16956,31 +16960,34 @@ function _sdRenderSideActions() {
   }
   var website = s.website || '';
 
+  // 4 버튼 공통 스타일 — min-height 제거, flex:1 로 균등 분배
+  var btnBase = 'flex:1;min-height:0;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;';
+
   var h = '';
   // 1. 사진 추가
-  h += '<div onclick="sdPhotoSheet()" style="flex:1;border-radius:12px;background:var(--green-light);border:1px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--green);min-height:50px;">'
+  h += '<div onclick="sdPhotoSheet()" style="'+btnBase+'background:var(--green-light);border:1px solid var(--green);color:var(--green);">'
     + '<span style="font-size:18px;">📷</span>'
     + '<span style="font-size:10px;font-weight:700;">'+t('sd.add_photo')+'</span>'
     + '</div>';
   // 2. 맵
-  h += '<a href="'+gmUrl+'" target="_blank" rel="noopener" style="flex:1;border-radius:12px;background:var(--bg-2);border:.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none;color:var(--text-2);min-height:50px;">'
+  h += '<a href="'+gmUrl+'" target="_blank" rel="noopener" style="'+btnBase+'background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;color:var(--text-2);">'
     + '<span style="font-size:18px;">🗺️</span>'
     + '<span style="font-size:10px;font-weight:700;">'+t('sd.map')+'</span>'
     + '</a>';
   // 3. 웹사이트 (있을 때만 활성, 없으면 회색 비활성)
   if (website) {
-    h += '<a href="'+_esc(website)+'" target="_blank" rel="noopener" style="flex:1;border-radius:12px;background:var(--bg-2);border:.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;text-decoration:none;color:var(--text-2);min-height:50px;">'
+    h += '<a href="'+_esc(website)+'" target="_blank" rel="noopener" style="'+btnBase+'background:var(--bg-2);border:.5px solid var(--border);text-decoration:none;color:var(--text-2);">'
       + '<span style="font-size:18px;">🌐</span>'
       + '<span style="font-size:10px;font-weight:700;">'+t('sd.website')+'</span>'
       + '</a>';
   } else {
-    h += '<div style="flex:1;border-radius:12px;background:var(--bg-2);border:.5px dashed var(--border-mid);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--text-3);opacity:.5;min-height:50px;">'
+    h += '<div style="'+btnBase+'background:var(--bg-2);border:.5px dashed var(--border-mid);color:var(--text-3);opacity:.5;">'
       + '<span style="font-size:18px;">🌐</span>'
       + '<span style="font-size:9px;font-weight:600;line-height:1.1;text-align:center;">'+t('sd.no_website')+'</span>'
       + '</div>';
   }
-  // 4. 공유하기 (build 367 — 점점점 메뉴에서 이동)
-  h += '<div onclick="sdShareStore()" style="flex:1;border-radius:12px;background:var(--bg-2);border:.5px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;color:var(--text-2);min-height:50px;">'
+  // 4. 공유하기 (build 367)
+  h += '<div onclick="sdShareStore()" style="'+btnBase+'background:var(--bg-2);border:.5px solid var(--border);color:var(--text-2);">'
     + '<span style="font-size:18px;">📤</span>'
     + '<span style="font-size:10px;font-weight:700;">'+t('sd.share')+'</span>'
     + '</div>';
@@ -24900,7 +24907,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 367;
+window.__APP_BUILD__ = 368;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
