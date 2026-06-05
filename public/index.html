@@ -12912,7 +12912,103 @@ function switchPcTab(tab) {
   bM.style.color      = tab === 'mine'   ? '#fff'         : 'var(--text-2)';
   bN.style.background = tab === 'nearby' ? 'var(--green)' : 'var(--bg-2)';
   bN.style.color      = tab === 'nearby' ? '#fff'         : 'var(--text-2)';
-  if (tab === 'nearby') fetchAndRenderCommunity();
+  if (tab === 'nearby') {
+    fetchAndRenderCommunity().then(function(){
+      // build 380 — 가성비 맵에도 주변 미방문 가게 마커 표시
+      if (typeof _ctShowUnvisitedMarkers === 'function') _ctShowUnvisitedMarkers();
+    });
+  } else {
+    // 내 가게 탭으로 돌아가면 미방문 마커 제거
+    if (typeof _ctHideUnvisitedMarkers === 'function') _ctHideUnvisitedMarkers();
+  }
+}
+
+/* ══════════════════════════════
+   build 380 — 가성비 맵의 '주변 미방문' 마커 (가격 비교 nearby 탭 활성 시)
+   - _commCache 의 가게 중 내가 방문하지 않은 가게만
+   - stores 테이블에서 lat/lng 별도 fetch (RPC 가 좌표 안 줄 수도 있음 대비)
+   - 점선 보더 + 📡 아이콘 으로 시각적 구분
+══════════════════════════════ */
+window._ctUnvisitedMarkers = [];
+
+async function _ctShowUnvisitedMarkers() {
+  // 기존 미방문 마커 정리
+  _ctHideUnvisitedMarkers();
+  if (!_ctMap || !_sb) return;
+  if (!window._commCache || _commCache.length === 0) return;
+
+  // 내가 방문한 가게명 set
+  var myStoreNames = {};
+  (typeof DB !== 'undefined' ? DB : []).forEach(function(r){
+    if (r && r.store) myStoreNames[r.store] = true;
+  });
+
+  // 미방문 가게 추출
+  var unvisited = _commCache.filter(function(s){
+    return s && s.store_name && !myStoreNames[s.store_name];
+  });
+  if (unvisited.length === 0) return;
+
+  // _commCache 자체에 lat/lng 가 있을 수 있음 → 우선 사용, 없으면 stores 테이블 조회
+  var needFetch = [];
+  var posMap = {};
+  unvisited.forEach(function(u){
+    if (u.lat != null && u.lng != null) {
+      posMap[u.store_name] = { lat: parseFloat(u.lat), lng: parseFloat(u.lng), category: u.category || null };
+    } else {
+      needFetch.push(u.store_name);
+    }
+  });
+  if (needFetch.length > 0) {
+    try {
+      var sRes = await _sb.from('stores').select('name,lat,lng,category').in('name', needFetch);
+      (sRes.data || []).forEach(function(s){
+        if (s.lat != null && s.lng != null) {
+          posMap[s.name] = { lat: parseFloat(s.lat), lng: parseFloat(s.lng), category: s.category || null };
+        }
+      });
+    } catch(e) { console.warn('[ctShowUnvisited] stores fetch failed:', e); }
+  }
+
+  console.log('[ctShowUnvisited] 미방문 가게 수:', Object.keys(posMap).length);
+
+  // 마커 생성
+  Object.keys(posMap).forEach(function(name) {
+    var p = posMap[name];
+    if (!p) return;
+    var marker = new google.maps.Marker({
+      position: { lat: p.lat, lng: p.lng },
+      map: _ctMap,
+      icon: {
+        url: _ctMakeUnvisitedSVG(),
+        scaledSize: new google.maps.Size(40, 40),
+        anchor: new google.maps.Point(20, 20)
+      },
+      zIndex: 7,  // 가격 핀(5)보다 위, 클러스터(5)와 비공개(15) 사이
+      title: name + ' — 주변 미방문'
+    });
+    marker.addListener('click', function() {
+      // 가게 상세 진입
+      if (typeof openStoreDetail === 'function') {
+        openStoreDetail({ name: name, lat: p.lat, lng: p.lng, category: p.category });
+      }
+    });
+    window._ctUnvisitedMarkers.push(marker);
+  });
+}
+
+function _ctHideUnvisitedMarkers() {
+  (window._ctUnvisitedMarkers || []).forEach(function(m){ try { m.setMap(null); } catch(_){} });
+  window._ctUnvisitedMarkers = [];
+}
+
+/* 점선 보더 + 📡 — 미방문 가게 마커 SVG (data URL) */
+function _ctMakeUnvisitedSVG() {
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40">'
+    + '<circle cx="20" cy="20" r="16" fill="#fff" stroke="#5B9BD5" stroke-width="2.5" stroke-dasharray="4 3"/>'
+    + '<text x="20" y="26" font-size="18" text-anchor="middle">📡</text>'
+    + '</svg>';
+  return 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg);
 }
 
 /* ══════════════════════════════
@@ -24992,7 +25088,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 379;
+window.__APP_BUILD__ = 380;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
