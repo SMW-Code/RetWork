@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 389 시점)
+# RetWork (チリつも) — HANDOFF (build 390 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 389** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 390** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,13 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 389;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b389';
+public/index.html → window.__APP_BUILD__ = 390;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b390';
 ```
+
+### build 390 — 가게목록 펼침 영역 좌측 쏠림 수정
+- `.shop-card`가 `align-items:flex-start`라 펼침 detail이 내용폭만 차지 → 좌측 쏠림.
+- `#{sId}-detail` 에 `width:100%;box-sizing:border-box;` 추가 → 카드 전체폭 사용.
 
 ### build 389 — 위치수정 요청 (가게목록 직접편집 → 요청 모델) ★ SQL 실행 필요
 **`store_edit_requests_kind.sql` 실행 필요** (store_edit_requests 에 `kind` 컬럼 추가).

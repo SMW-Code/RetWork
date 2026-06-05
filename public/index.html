@@ -13856,7 +13856,7 @@ function renderMapPins() {
             +'</div>';
         }).join('')
       : '<div style="font-size:11px;color:var(--text-3);">'+t('rmap.no_items')+'</div>';
-    var detailHtml = '<div id="'+sId+'-detail" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">'
+    var detailHtml = '<div id="'+sId+'-detail" style="display:none;width:100%;box-sizing:border-box;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">'
       +'<div style="display:flex;gap:8px;margin-bottom:8px;">'
       +'<div style="background:var(--green-light);border-radius:8px;padding:7px 8px;flex:1;text-align:center;">'
       +'<div style="font-size:9px;color:var(--text-3);">'+t('rmap.avg_per')+'</div>'
@@ -25362,7 +25362,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 389;
+window.__APP_BUILD__ = 390;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
