@@ -626,6 +626,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* ── 가게 상세 패널 ── */
 #ov-store-detail{z-index:980;}
+/* 가게 상세에서 띄우는 메뉴 사진 출처 바텀시트는 그 위에 표시 (b385) */
+#ov-photo-source{z-index:1100;}
 #store-detail-panel{background:var(--surface);border-radius:0;height:100%;max-height:100%;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:none;width:100%;display:flex;flex-direction:column;position:relative;}
 /* 섹션 순서: 공개 모드 기본 (사진 → 가게정보 → 광고 → 메뉴 → 댓글 → 비공개) */
 #store-detail-panel > .sheet-handle{order:1;display:none;}
@@ -24248,7 +24250,9 @@ function sdStartCardPhoto(cardId) {
       showToast('📍 가게에서 약 '+Math.round(dist)+'m 떨어져 있어요. ' + SD_PHOTO_MAX_M + 'm 이내에서만 사진을 올릴 수 있어요');
       return;
     }
-    // 통과 → 사진 출처 바텀시트
+    // 통과 → 사진 출처 바텀시트 (b385: stacking context 갇히지 않게 body 끝으로 이동)
+    var ps = document.getElementById('ov-photo-source');
+    if (ps && ps.parentElement !== document.body) document.body.appendChild(ps);
     openOv('ov-photo-source');
   };
   if (_ctUserPos) {
@@ -25200,7 +25204,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 384;
+window.__APP_BUILD__ = 385;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
