@@ -2084,7 +2084,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="sheet-handle" style="margin:10px auto 6px;"></div>
     <div style="padding:8px 20px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <div style="font-size:16px;font-weight:900;color:var(--text-1);">✏️ 修正リクエスト</div>
+        <div id="ser-title" style="font-size:16px;font-weight:900;color:var(--text-1);">✏️ 修正リクエスト</div>
         <div onclick="closeOv('ov-store-edit-req')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
       <div id="ser-store-name" style="font-size:12px;color:var(--text-3);margin-bottom:12px;"></div>
@@ -2917,13 +2917,22 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div id="adm-reports-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
           <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
-        <div onclick="openAdminEditReqs()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;position:relative;">
+        <div onclick="openAdminEditReqs('general')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;position:relative;">
           <span style="font-size:26px;flex-shrink:0;">🛠</span>
           <div style="flex:1;min-width:0;">
             <div style="font-size:13px;font-weight:800;color:var(--text-1);">가게 수정요청</div>
             <div style="font-size:11px;color:var(--text-3);margin-top:1px;">유저 제보 확인·처리</div>
           </div>
           <div id="adm-editreq-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
+          <span style="font-size:14px;color:var(--text-3);">›</span>
+        </div>
+        <div onclick="openAdminEditReqs('location')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;position:relative;">
+          <span style="font-size:26px;flex-shrink:0;">📍</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:800;color:var(--text-1);">위치수정 요청</div>
+            <div style="font-size:11px;color:var(--text-3);margin-top:1px;">가게 위치 제보 확인·처리</div>
+          </div>
+          <div id="adm-locreq-badge" style="display:none;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;min-width:16px;text-align:center;"></div>
           <span style="font-size:14px;color:var(--text-3);">›</span>
         </div>
         <div onclick="openAdminPricing()" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;transition:transform .15s;">
@@ -3004,8 +3013,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="padding:8px 20px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
         <div>
-          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🛠 가게 수정요청</div>
-          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">유저가 제보한 가게 정보 수정 요청</div>
+          <div id="adm-editreq-title" style="font-size:17px;font-weight:900;color:var(--text-1);">🛠 가게 수정요청</div>
+          <div id="adm-editreq-subtitle" style="font-size:11px;color:var(--text-3);margin-top:2px;">유저가 제보한 가게 정보 수정 요청</div>
         </div>
         <div onclick="closeOv('ov-admin-edit-reqs')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
@@ -13821,9 +13830,7 @@ function renderMapPins() {
       _mapMarkers.push(marker);
     }
     var hasPin = s.lat && s.lng;
-    var pinBtn = hasPin
-      ? '<button onclick="event.stopPropagation();startManualPin(\'' + s.name.replace(/'/g,"\\'") + '\')" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);cursor:pointer;white-space:nowrap;">'+t('rmap.edit_loc')+'</button>'
-      : '<button onclick="event.stopPropagation();startManualPin(\'' + s.name.replace(/'/g,"\\'") + '\')" style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">'+t('rmap.set_loc')+'</button>';
+    // build: 직접 위치수정(startManualPin) 제거 → 펼침 영역의 "위치 수정 요청"으로 대체
     // 가게 상세 데이터 (펼침 영역용)
     var sId = 'sc-' + encodeURIComponent(s.name).replace(/%/g,'_');
     var sRecs = DB.filter(function(r){ return r.store === s.name; });
@@ -13870,18 +13877,18 @@ function renderMapPins() {
           +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10チリ</span>'
           +'</button>'
         : '')
+      +'<button onclick="event.stopPropagation();reqStoreLocationEdit(\''+s.name.replace(/'/g,"\\'")+'\','+(s.lat?s.lat:'null')+','+(s.lng?s.lng:'null')+')" style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">📍 位置修正をリクエスト</button>'
       +'</div>';
 
     var cardOnclick = hasPin
       ? 'onclick="flyToStoreAndExpand('+s.lat+','+s.lng+',\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')"'
-      : '';
-    storeCards.push('<div class="shop-card" ' + cardOnclick + ' style="flex-direction:column;' + (hasPin ? 'cursor:pointer;' : '') + '">'
+      : 'onclick="toggleStoreCard(\''+sId+'\')"';
+    storeCards.push('<div class="shop-card" ' + cardOnclick + ' style="flex-direction:column;cursor:pointer;">'
       + '<div style="display:flex;align-items:center;gap:12px;width:100%;">'
       + '<div class="shop-score" style="background:var(--green-light);color:var(--green);">' + t('rsd.times',{n:s.count}) + '</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.name + '</div>'
       + '<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('rmap.total')+' ¥' + s.total.toLocaleString() + (hasPin ? ' · '+t('rmap.tap_go') : ' · '+t('rmap.no_pin')) + '</div></div>'
-      + (hasPin ? '<span id="'+sId+'-chev" style="font-size:10px;color:var(--text-3);flex-shrink:0;">▼</span>' : '')
-      + pinBtn
+      + '<span id="'+sId+'-chev" style="font-size:10px;color:var(--text-3);flex-shrink:0;">▼</span>'
       + '</div>'
       + detailHtml
       + '</div>');  // storeCards.push 닫기
@@ -14026,6 +14033,32 @@ function flyToStoreAndExpand(lat, lng, name, cardId) {
   flyToStore(lat, lng, name);
 
   // 열기
+  detail.style.display = 'block';
+  if (chev) chev.textContent = '▲';
+  setTimeout(function() {
+    detail.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 100);
+}
+
+/* 위치 없는 가게 카드 펼침/접기 (지도 이동 없이 토글만) */
+function toggleStoreCard(cardId) {
+  var detail = document.getElementById(cardId + '-detail');
+  var chev   = document.getElementById(cardId + '-chev');
+  if (!detail) return;
+  var isOpen = detail.style.display !== 'none';
+  if (isOpen) {
+    detail.style.display = 'none';
+    if (chev) chev.textContent = '▼';
+    return;
+  }
+  // 다른 카드 모두 닫기
+  document.querySelectorAll('[id$="-detail"]').forEach(function(el) {
+    if (el.id.startsWith('sc-')) {
+      el.style.display = 'none';
+      var c = document.getElementById(el.id.replace('-detail', '-chev'));
+      if (c) c.textContent = '▼';
+    }
+  });
   detail.style.display = 'block';
   if (chev) chev.textContent = '▲';
   setTimeout(function() {
@@ -16862,10 +16895,9 @@ function sdToggleDotMenu() {
     document.addEventListener('click',function hdl(e){if(!m.contains(e.target)){m.remove();document.removeEventListener('click',hdl);}});
   },10);
 }
-function sdReqEdit(){
-  var d=document.getElementById('sd-dot-popup');if(d)d.remove();
-  if(!_currentUser){ showToast(t('toast.login_required')||'로그인 후 사용 가능해요'); return; }
-  var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(_sdName||'');
+// 수정요청 모달 공통: 컨텍스트(_serReq)에 kind/가게/좌표 담아 한 모달 재사용
+window._serReq = null;
+function _openEditReqModal(){
   var ta=document.getElementById('ser-content'); if(ta) ta.value='';
   var cc=document.getElementById('ser-charcount'); if(cc) cc.textContent='0';
   // ov-store-detail 의 stacking context 갇히지 않게 body 끝으로 이동
@@ -16873,25 +16905,57 @@ function sdReqEdit(){
   if (el && el.parentElement !== document.body) document.body.appendChild(el);
   openOv('ov-store-edit-req');
 }
+function sdReqEdit(){
+  var d=document.getElementById('sd-dot-popup');if(d)d.remove();
+  if(!_currentUser){ showToast(t('toast.login_required')||'로그인 후 사용 가능해요'); return; }
+  var sd=_sdSData||{};
+  window._serReq = { kind:'general', store_name:(_sdName||sd.name||''),
+    store_id:(sd.id!=null?String(sd.id):null),
+    lat:(typeof sd.lat==='number'?sd.lat:null), lng:(typeof sd.lng==='number'?sd.lng:null) };
+  var ti=document.getElementById('ser-title'); if(ti) ti.textContent='✏️ 修正リクエスト';
+  var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(_sdName||sd.name||'');
+  var ta=document.getElementById('ser-content'); if(ta) ta.placeholder='修正してほしい内容を具体的に入力してください\n（例: 店名が違う / 閉店した / 場所がずれている / カテゴリが違う など）';
+  _openEditReqModal();
+}
+// 가성비맵 가게목록 → 위치 수정 요청
+window.reqStoreLocationEdit = function reqStoreLocationEdit(name, lat, lng){
+  if(!_currentUser){ showToast(t('toast.login_required')||'로그인 후 사용 가능해요'); return; }
+  var la=(typeof lat==='number'&&!isNaN(lat))?lat:null;
+  var lo=(typeof lng==='number'&&!isNaN(lng))?lng:null;
+  window._serReq = { kind:'location', store_name:(name||''), store_id:null, lat:la, lng:lo };
+  var ti=document.getElementById('ser-title'); if(ti) ti.textContent='📍 位置修正リクエスト';
+  var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(name||'')+(la?'':' ・ 位置未登録');
+  var ta=document.getElementById('ser-content'); if(ta) ta.placeholder='位置がどう間違っているか教えてください\n（例: ピンが実際の場所とずれている / 別の場所だ / 未登録なので設定してほしい）';
+  _openEditReqModal();
+};
 async function submitStoreEditReq(){
+  var req = window._serReq || { kind:'general', store_name:'', store_id:null, lat:null, lng:null };
   var ta=document.getElementById('ser-content');
   var content=ta?ta.value.trim():'';
-  if(content.length<3){ showToast('내용을 조금 더 자세히 적어주세요'); return; }
+  if(req.kind==='location'){
+    if(!content) content='（位置の修正リクエスト・詳細なし）';
+  } else if(content.length<3){ showToast('내용을 조금 더 자세히 적어주세요'); return; }
   if(!_sb||!_currentUser){ showToast('로그인 후 사용 가능해요'); return; }
   var btn=document.getElementById('ser-submit-btn');
   if(btn){ btn.disabled=true; btn.textContent='送信中...'; }
   try {
-    var sd=_sdSData||{};
-    var res=await _sb.from('store_edit_requests').insert({
-      store_name: _sdName || sd.name || '',
-      store_id:   (sd.id!=null) ? String(sd.id) : null,
-      lat:        (typeof sd.lat==='number') ? sd.lat : null,
-      lng:        (typeof sd.lng==='number') ? sd.lng : null,
+    var payload={
+      store_name: req.store_name||'',
+      store_id:   req.store_id||null,
+      lat:        (typeof req.lat==='number') ? req.lat : null,
+      lng:        (typeof req.lng==='number') ? req.lng : null,
       user_id:    _currentUser.id,
-      content:    content
-    });
+      content:    content,
+      kind:       req.kind||'general'
+    };
+    var res=await _sb.from('store_edit_requests').insert(payload);
+    // kind 컬럼 미적용 환경 대비 — 컬럼 에러면 kind 제외하고 재시도
+    if(res.error && /kind/i.test(res.error.message||'')){
+      delete payload.kind;
+      res=await _sb.from('store_edit_requests').insert(payload);
+    }
     if(res.error){ console.warn('[edit req]', res.error); showToast('전송 실패. 잠시 후 다시 시도해주세요'); }
-    else { closeOv('ov-store-edit-req'); showToast(t('sd.req_edit_done')); }
+    else { closeOv('ov-store-edit-req'); showToast(req.kind==='location'?'📍 位置修正リクエストを受け付けました。確認後に反映されます。':t('sd.req_edit_done')); }
   } catch(e){ console.warn('[edit req]', e); showToast('전송 실패'); }
   if(btn){ btn.disabled=false; btn.textContent='送信する'; }
 }
@@ -18502,8 +18566,12 @@ var _admPcMenus = {
       mount:'ov-admin-detail', load:function(){ openAdminDetail('pins'); } },
     { key:'editreqs',      icon:'🛠️', label:'가게수정요청',
       mount:'ov-admin-edit-reqs',
-      load:function(){ if (typeof loadAdminEditReqs === 'function') loadAdminEditReqs('open'); },
+      load:function(){ if(typeof _setEditReqKind==='function')_setEditReqKind('general'); if (typeof loadAdminEditReqs === 'function') loadAdminEditReqs('open'); },
       badgeId:'apc-badge-editreqs' },
+    { key:'locreqs',       icon:'📍', label:'위치수정요청',
+      mount:'ov-admin-edit-reqs',
+      load:function(){ if(typeof _setEditReqKind==='function')_setEditReqKind('location'); if (typeof loadAdminEditReqs === 'function') loadAdminEditReqs('open'); },
+      badgeId:'apc-badge-locreqs' },
     { key:'announcements', icon:'📢', label:'공지사항',
       mount:'ov-admin-ann',
       load:function(){
@@ -20676,18 +20744,35 @@ document.addEventListener('keydown', function(e){
 ══════════════════════════════ */
 function _serEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
 
+function _serSetBadge(id,n){ var b=document.getElementById(id); if(!b)return; if(n>0){b.style.display='inline-block';b.textContent=n>99?'99+':n;}else b.style.display='none'; }
 async function _loadEditReqBadge(){
-  var badge=document.getElementById('adm-editreq-badge'); if(!badge||!_sb) return;
+  if(!_sb) return;
   try {
-    var res=await _sb.from('store_edit_requests').select('id',{count:'exact',head:true}).eq('status','open');
-    var n=res.count||0;
-    if(n>0){ badge.style.display='inline-block'; badge.textContent=n>99?'99+':n; }
-    else badge.style.display='none';
+    // status=open 행을 kind 포함 조회 → 클라에서 kind별 카운트 (kind 컬럼 없어도 'general' 취급)
+    var res=await _sb.from('store_edit_requests').select('id,kind').eq('status','open').limit(500);
+    var rows=res.data||[]; var gen=0, loc=0;
+    rows.forEach(function(r){ if((r.kind||'general')==='location') loc++; else gen++; });
+    _serSetBadge('adm-editreq-badge', gen); _serSetBadge('apc-badge-editreqs', gen);
+    _serSetBadge('adm-locreq-badge', loc);  _serSetBadge('apc-badge-locreqs', loc);
   } catch(e){ /* silent */ }
 }
 
-function openAdminEditReqs(){
+function _setEditReqKind(kind){
+  window._admSerKind = (kind==='location') ? 'location' : 'general';
+  var ti=document.getElementById('adm-editreq-title');
+  var sub=document.getElementById('adm-editreq-subtitle');
+  if(window._admSerKind==='location'){
+    if(ti) ti.textContent='📍 위치수정 요청';
+    if(sub) sub.textContent='유저가 제보한 가게 위치 수정 요청';
+  } else {
+    if(ti) ti.textContent='🛠 가게 수정요청';
+    if(sub) sub.textContent='유저가 제보한 가게 정보 수정 요청';
+  }
+}
+
+function openAdminEditReqs(kind){
   if(!_isAdmin){ showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  _setEditReqKind(kind);
   openOv('ov-admin-edit-reqs');
   loadAdminEditReqs('open');
 }
@@ -20704,11 +20789,13 @@ async function loadAdminEditReqs(filter){
   var list=document.getElementById('adm-editreq-list'); if(!list||!_sb) return;
   list.innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:12px;">불러오는 중...</div>';
   try {
-    var q=_sb.from('store_edit_requests').select('*').order('created_at',{ascending:false}).limit(200);
+    var q=_sb.from('store_edit_requests').select('*').order('created_at',{ascending:false}).limit(300);
     if(filter!=='all') q=q.eq('status',filter);
     var res=await q;
     if(res.error){ list.innerHTML='<div style="text-align:center;color:var(--red);padding:24px;font-size:12px;">로드 실패: '+_serEsc(res.error.message)+'</div>'; return; }
-    var rows=res.data||[];
+    // kind 필터는 클라에서 처리 (kind 컬럼 없어도 'general' 취급 → 안 깨짐)
+    var _kind=window._admSerKind||'general';
+    var rows=(res.data||[]).filter(function(r){ return (r.kind||'general')===_kind; });
     if(!rows.length){ list.innerHTML='<div style="text-align:center;color:var(--text-3);padding:24px;font-size:12px;">'+(filter==='done'?'처리완료된 요청이 없어요':'수정요청이 없어요')+'</div>'; return; }
     list.innerHTML=rows.map(renderEditReqCard).join('');
   } catch(e){ console.warn('[adm editreq]',e); list.innerHTML='<div style="text-align:center;color:var(--red);padding:24px;font-size:12px;">로드 실패</div>'; }
@@ -25275,7 +25362,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 388;
+window.__APP_BUILD__ = 389;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

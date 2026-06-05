@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 388 시점)
+# RetWork (チリつも) — HANDOFF (build 389 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 388** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 389** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,20 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 388;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b388';
+public/index.html → window.__APP_BUILD__ = 389;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b389';
 ```
+
+### build 389 — 위치수정 요청 (가게목록 직접편집 → 요청 모델) ★ SQL 실행 필요
+**`store_edit_requests_kind.sql` 실행 필요** (store_edit_requests 에 `kind` 컬럼 추가).
+- 가성비맵 가게목록: 직접 위치수정(`startManualPin`) 버튼 **삭제**. 카드 펼침 영역에 **📍 位置修正をリクエスト** 버튼 추가.
+  no-pin 가게도 펼쳐지게 `toggleStoreCard()` 추가(지도이동 없이 토글), chevron 항상 표시.
+- 요청 모달은 기존 `ov-store-edit-req` **재사용** — `window._serReq={kind,store_name,lat,lng}` 컨텍스트로
+  일반(`sdReqEdit`) / 위치(`reqStoreLocationEdit`) 분기. `submitStoreEditReq()`가 kind 포함 insert
+  (kind 컬럼 없으면 자동 재시도로 graceful).
+- 어드민: 기존 "가게 수정요청" 옆에 **"📍 위치수정 요청"** 카드 추가. 같은 모달 `ov-admin-edit-reqs`를
+  `_setEditReqKind(kind)`로 제목/필터 전환(kind는 **클라에서 필터** → 컬럼 없어도 안 깨짐).
+  배지 2개(`adm-editreq-badge`/`adm-locreq-badge`), PC드릴다운 `editreqs`/`locreqs` 항목.
 
 **캐시 정책**: HTML 은 네트워크 우선 (`no-store`), 나머지 정적 자원은 캐시 우선. 사용자에게는 항상 `Ctrl+Shift+R` 강제 새로고침 안내. PWA 설치된 경우 앱 종료 후 재시작.
 
