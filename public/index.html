@@ -22162,10 +22162,28 @@ async function _syncAttendancePushUI() {
   var row = document.getElementById('settings-att-push-row');
   var tg  = document.getElementById('settings-att-push-toggle');
   if (!row || !tg || !_currentUser) return;
+
+  // build 382 — DB fetch 전에 마지막 상태를 즉시 적용 (OFF→ON 깜빡임 방지)
+  //   토글 HTML 초기값이 항상 'off' 라서 비동기 fetch 끝나야 정상값 반영됨.
+  //   localStorage 캐시로 설정창 열리는 즉시 정확한 토글 상태 표시.
+  try {
+    var cachedRow = localStorage.getItem('att_push_row_visible');
+    if (cachedRow === '1') row.style.display = 'flex';
+    var cachedOpt = localStorage.getItem('att_push_optin');
+    if (cachedOpt === '1') tg.classList.remove('off');
+    else if (cachedOpt === '0') tg.classList.add('off');
+  } catch(_){}
+
   var st = await _pushStatus();
   // 푸시 자체가 활성화되어야 출석 토글 노출
-  if (st !== 'granted-subscribed') { row.style.display = 'none'; return; }
+  if (st !== 'granted-subscribed') {
+    row.style.display = 'none';
+    try { localStorage.setItem('att_push_row_visible', '0'); } catch(_){}
+    return;
+  }
   row.style.display = 'flex';
+  try { localStorage.setItem('att_push_row_visible', '1'); } catch(_){}
+
   // DB 에서 현재 attendance_optin 값 조회
   var res = await _sb.from('push_subscriptions')
     .select('attendance_optin')
@@ -22176,6 +22194,7 @@ async function _syncAttendancePushUI() {
   var on = res && res.data && res.data.attendance_optin !== false;
   if (on) tg.classList.remove('off');
   else    tg.classList.add('off');
+  try { localStorage.setItem('att_push_optin', on ? '1' : '0'); } catch(_){}
 }
 
 async function toggleAttendancePush() {
@@ -22193,6 +22212,8 @@ async function toggleAttendancePush() {
     showToast('변경 실패: ' + res.error.message);
     return;
   }
+  // build 382 — 캐시 즉시 갱신
+  try { localStorage.setItem('att_push_optin', newVal ? '1' : '0'); } catch(_){}
   showToast(newVal ? '⏰ 출석 알림 ON' : '⏰ 출석 알림 OFF');
 }
 
@@ -25115,7 +25136,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 381;
+window.__APP_BUILD__ = 382;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
