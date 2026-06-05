@@ -13169,10 +13169,17 @@ function _buildStoreCard(s, myItemMap, isVisited) {
   var cardId = 'stitem-' + encodeURIComponent(s.store_name).replace(/%/g,'_');
   html += '<div id="' + cardId + '" style="display:none;margin-bottom:8px;"></div>';
   html += '<div style="display:flex;gap:6px;">';
-  html += '<button onclick="_toggleStoreItems(this,\'' + s.store_name.replace(/'/g,"\\'") + '\',\'' + cardId + '\')" '
+  // b386 — onclick attribute 안전 escape (가게명에 따옴표 들어가면 SyntaxError 나는 버그 픽스)
+  var _attrArgs = function(){
+    return Array.prototype.slice.call(arguments)
+      .map(function(a){return JSON.stringify(a);})
+      .join(',')
+      .replace(/"/g,'&quot;');
+  };
+  html += '<button onclick="_toggleStoreItems(this,' + _attrArgs(s.store_name, cardId) + ')" '
     + 'style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;">📋 인기 품목</button>';
   if (s.lat && s.lng) {
-    html += '<button onclick="flyToStoreFromHistory(null,\'' + s.store_name.replace(/'/g,"\\'") + '\',\'' + s.lat + '\',\'' + s.lng + '\')" '
+    html += '<button onclick="flyToStoreFromHistory(null,' + _attrArgs(s.store_name, String(s.lat), String(s.lng)) + ')" '
       + 'style="font-size:10px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;">🗺 지도</button>';
   }
   html += '</div></div>';
@@ -25204,7 +25211,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 385;
+window.__APP_BUILD__ = 386;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
