@@ -23641,7 +23641,7 @@ async function openAdminStoreDetail(storeId) {
   document.getElementById('adm-store-lng').value = s.lng || '';
   document.getElementById('adm-store-gmap').value = s.google_maps_url || '';
   _admGmapLastExtractedKey = '';  // b387 — 새 가게 편집 시 좌표 추출 캐시 초기화
-  _admGmapShortHinted = '';
+  _admGmapShortResolvedFor = '';
   document.getElementById('adm-store-meta').textContent = '평균가: ¥'+(s.avg_price||0).toLocaleString()+' · 영수증: '+(s.receipt_count||0)+'장';
   _admLoadStoreMenus(s.name);
   _admLoadStorePhotos(s.name);  // build 350 — 가게 사진 로드
@@ -23718,17 +23718,9 @@ function _admExtractLatLngFromGmapUrl(url) {
   return null;
 }
 var _admGmapLastExtractedKey = '';
-var _admGmapShortHinted = '';
-function _admGmapUrlChanged(url) {
-  var p = _admExtractLatLngFromGmapUrl(url || '');
-  if (!p) {
-    // 단축 링크 감지 → 1회 안내 토스트
-    if (url && /goo\.gl|app\.goo\.gl/i.test(url) && _admGmapShortHinted !== url) {
-      _admGmapShortHinted = url;
-      showToast('ℹ️ 단축 링크는 좌표 자동 추출 불가 — 마커를 직접 드래그해주세요');
-    }
-    return;
-  }
+var _admGmapShortResolvedFor = '';   // 같은 단축 URL 중복 fetch 방지
+function _admApplyExtractedLatLng(p, hintLabel) {
+  if (!p) return;
   var key = p.lat.toFixed(5) + ',' + p.lng.toFixed(5);
   if (key === _admGmapLastExtractedKey) return;
   _admGmapLastExtractedKey = key;
@@ -23742,7 +23734,31 @@ function _admGmapUrlChanged(url) {
     _admStoreMap.panTo(pos);
     if (_admStoreMap.getZoom() < 16) _admStoreMap.setZoom(17);
   }
-  showToast('📍 링크에서 좌표 추출 → 마커 이동 (' + p.lat.toFixed(5) + ', ' + p.lng.toFixed(5) + ')');
+  showToast((hintLabel || '📍 좌표 추출') + ' → 마커 이동 (' + p.lat.toFixed(5) + ', ' + p.lng.toFixed(5) + ')');
+}
+function _admGmapUrlChanged(url) {
+  url = (url || '').trim();
+  // 1) 정식 링크 패턴 — 즉시 추출
+  var p = _admExtractLatLngFromGmapUrl(url);
+  if (p) { _admApplyExtractedLatLng(p, '📍 링크에서 좌표 추출'); return; }
+  // 2) 단축 링크 — 서버 API 로 redirect 추적 (CORS 회피)
+  if (url && /(?:maps\.app\.goo\.gl|goo\.gl)/i.test(url)) {
+    if (_admGmapShortResolvedFor === url) return;  // 같은 URL 재호출 차단
+    _admGmapShortResolvedFor = url;
+    fetch('/api/resolve-gmap?url=' + encodeURIComponent(url))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        if (j && j.ok && typeof j.lat === 'number' && typeof j.lng === 'number') {
+          _admApplyExtractedLatLng({ lat: j.lat, lng: j.lng }, '📍 단축 링크 해석 → 좌표');
+        } else {
+          showToast('⚠️ 단축 링크에서 좌표를 못 찾았어요. 마커를 직접 드래그하세요');
+        }
+      })
+      .catch(function(e){
+        console.warn('[resolve-gmap]', e);
+        showToast('⚠️ 단축 링크 해석 실패 — 마커를 직접 드래그하세요');
+      });
+  }
 }
 
 // 가게 상세 모달(사용자 화면)에서 어드민이 메뉴 카드 정렬 변경
@@ -25259,7 +25275,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 387;
+window.__APP_BUILD__ = 388;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
