@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Script from 'next/script';
-import '../styles/globals.css';
+import './globals.css';
 
 const SITE = {
   title: 'RetWork Blog — コスパで選ぶ日本のグルメ&家計簿術',
