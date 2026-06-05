@@ -7368,7 +7368,7 @@ function renderHistory(cat) {
       if (r.address) {
         html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;">'
           +'<span style="font-size:11px;color:var(--text-3);">📍 '+_esc(r.address)+'</span>'
-          +'<button onclick="event.stopPropagation();flyToStoreFromHistory('+JSON.stringify(r.address)+','+JSON.stringify(r.store)+','+JSON.stringify(String(r.lat))+','+JSON.stringify(String(r.lng))+')" style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">'+t('rcpt.map_btn')+'</button>'
+          +'<button onclick="event.stopPropagation();flyToStoreFromHistory('+[r.address,r.store,String(r.lat),String(r.lng)].map(function(a){return JSON.stringify(a);}).join(',').replace(/"/g,'&quot;')+')" style="font-size:10px;font-weight:700;padding:4px 10px;border-radius:8px;border:1px solid var(--green);background:var(--green-light);color:var(--green);cursor:pointer;white-space:nowrap;">'+t('rcpt.map_btn')+'</button>'
           +'</div>';
       }
       r.items.forEach(function(item){
@@ -25200,7 +25200,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 383;
+window.__APP_BUILD__ = 384;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
