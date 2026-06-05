@@ -17122,6 +17122,51 @@ function _sdRenderSideActions() {
   wrap.innerHTML = h;
 }
 /* Supabase Storage는 path에 ASCII만 허용 → 한글/일본어/특수문자 제거 + 빈 경우 hash 사용 */
+/* ══════════════════════════════
+   build 383 — 업로드 전 이미지 압축 (canvas 리사이즈)
+     큰 사진(10MB+) 을 1600px 이내 + JPEG 0.82 로 줄임 → 보통 200-600KB
+     모달 진입 시 로딩 시간 단축. JPG/PNG/WEBP 만 처리 (SVG/GIF 는 원본 보존)
+══════════════════════════════ */
+async function _compressImage(file, maxDim, quality) {
+  maxDim  = maxDim  || 1600;
+  quality = quality || 0.82;
+  if (!file || !file.type || file.type.indexOf('image/') !== 0) return file;
+  if (/(svg|gif)$/i.test(file.type)) return file; // 애니메이션/벡터 보존
+  return new Promise(function(resolve){
+    try {
+      var reader = new FileReader();
+      reader.onload = function(e){
+        var img = new Image();
+        img.onload = function(){
+          var w = img.width, h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else       { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          var canvas = document.createElement('canvas');
+          canvas.width  = w;
+          canvas.height = h;
+          var ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          var outType = (file.type === 'image/png') ? 'image/jpeg' : file.type;
+          canvas.toBlob(function(blob){
+            if (!blob) { resolve(file); return; }
+            if (blob.size > file.size * 0.95) { resolve(file); return; } // 이미 작으면 원본
+            var newName = (file.name || 'upload').replace(/\.[^.]+$/, '') + '.jpg';
+            var compressed = new File([blob], newName, { type: outType });
+            console.log('[compressImage] '+file.name+' '+Math.round(file.size/1024)+'KB → '+Math.round(blob.size/1024)+'KB ('+w+'×'+h+')');
+            resolve(compressed);
+          }, outType, quality);
+        };
+        img.onerror = function(){ resolve(file); };
+        img.src = e.target.result;
+      };
+      reader.onerror = function(){ resolve(file); };
+      reader.readAsDataURL(file);
+    } catch(e) { console.warn('[compressImage] failed:', e); resolve(file); }
+  });
+}
+
 function _sdAsciiName(s){
   if(!s) return 'store';
   var t = String(s).replace(/[^a-zA-Z0-9_-]/g,'');
@@ -17151,6 +17196,7 @@ function sdHandlePhotoInput(input){
 }
 async function _sdDoPhotoUpload(file){
   try {
+    file = await _compressImage(file, 1600, 0.82);  // build 383 — 업로드 전 압축
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
     var path = 'community/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
     var up = await _sb.storage.from('store-photos').upload(path, file, { upsert:false, contentType:file.type||'image/jpeg' });
@@ -17224,6 +17270,20 @@ async function _sdLoadMenuCards(){
 
   _sdCards = cards;
   _sdRenderMenus(_sdCards,true);
+  // build 383 — 백그라운드 prefetch: 메뉴 카드 image_url 미리 로드 (브라우저 캐시에 적재)
+  //   사용자가 카드 클릭 → 모달 진입 시 바로 표시됨
+  try {
+    setTimeout(function(){
+      _sdCards.forEach(function(c){
+        if (c.image_url && typeof Image !== 'undefined') {
+          var pf = new Image();
+          pf.decoding = 'async';
+          pf.referrerPolicy = 'no-referrer';
+          pf.src = c.image_url;
+        }
+      });
+    }, 100); // 메뉴 그리드 렌더 직후, 작은 지연으로 UI 차단 방지
+  } catch(_){}
   // 모달이 열려있는 카드가 있으면 갱신
   if(_mdCardId) await _sdLoadCardDetail(_mdCardId);
   // 헤더 평점 갱신
@@ -23083,6 +23143,7 @@ async function _admUploadMenuPhotos(input) {
     if (!f.type || f.type.indexOf('image/') !== 0) continue;
     if (f.size > 5 * 1024 * 1024) { showToast('5MB 초과: '+f.name); continue; }
     try {
+      f = await _compressImage(f, 1600, 0.82);  // build 383 — 업로드 전 압축
       var extMatch = f.name.match(/\.([a-zA-Z0-9]{1,5})$/);
       var ext = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
       var path = 'menus/' + _admEditMenuCardId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
@@ -23796,6 +23857,7 @@ async function _admUploadStorePhotos(input) {
     if (!f.type || f.type.indexOf('image/') !== 0) { console.warn('not image, skip:', f.name); continue; }
     if (f.size > 5 * 1024 * 1024) { showToast('5MB 초과: ' + f.name); continue; }
     try {
+      f = await _compressImage(f, 1600, 0.82);  // build 383 — 업로드 전 압축
       var extMatch = f.name.match(/\.([a-zA-Z0-9]{1,5})$/);
       var ext = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
       var path = 'stores/' + _admEditStoreId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
@@ -24237,6 +24299,7 @@ async function _sdDoCardPhotoUpload(file) {
   var cardId = _sdPhotoCardId;
   _sdPhotoCardId = null; // 즉시 클리어 (중복 방지)
   try {
+    file = await _compressImage(file, 1600, 0.82);  // build 383 — 업로드 전 압축
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
     var path = 'menu-card/' + cardId + '/' + Date.now() + '.' + ext;
     var up = await _sb.storage.from('store-photos').upload(path, file, {
@@ -24880,6 +24943,7 @@ async function _sdDoSubmitNewCard(p){
   var imgUrl=null;
   if(p.imgFile){
     try {
+      p.imgFile = await _compressImage(p.imgFile, 1600, 0.82);  // build 383 — 업로드 전 압축
       var ext=(p.imgFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
       var path='menu-cards/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
       var up=await _sb.storage.from('store-photos').upload(path,p.imgFile,{upsert:false,contentType:p.imgFile.type||'image/jpeg'});
@@ -25136,7 +25200,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 382;
+window.__APP_BUILD__ = 383;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
