@@ -15,7 +15,9 @@
     "gray-matter": "^4.0.3",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "@tailwindcss/postcss": "^4.0.0",
+    "tailwindcss": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
