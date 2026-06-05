@@ -12970,31 +12970,58 @@ async function _ctShowUnvisitedMarkers() {
     } catch(e) { console.warn('[ctShowUnvisited] stores fetch failed:', e); }
   }
 
-  console.log('[ctShowUnvisited] 미방문 가게 수:', Object.keys(posMap).length);
+  var names = Object.keys(posMap);
+  console.log('[ctShowUnvisited] 미방문 가게 수:', names.length);
+  if (names.length === 0) return;
 
-  // 마커 생성
-  Object.keys(posMap).forEach(function(name) {
+  // build 381 — 모든 미방문 마커가 한 번에 보이도록 fitBounds 사용
+  var bounds = new google.maps.LatLngBounds();
+
+  // 마커 일괄 생성 (한 번에 표시)
+  names.forEach(function(name) {
     var p = posMap[name];
     if (!p) return;
+    var pos = { lat: p.lat, lng: p.lng };
     var marker = new google.maps.Marker({
-      position: { lat: p.lat, lng: p.lng },
+      position: pos,
       map: _ctMap,
       icon: {
         url: _ctMakeUnvisitedSVG(),
         scaledSize: new google.maps.Size(40, 40),
         anchor: new google.maps.Point(20, 20)
       },
-      zIndex: 7,  // 가격 핀(5)보다 위, 클러스터(5)와 비공개(15) 사이
-      title: name + ' — 주변 미방문'
+      zIndex: 7,
+      title: name + ' — 주변 미방문',
+      optimized: true,         // 한 번에 빠르게 렌더
+      clickable: true
     });
     marker.addListener('click', function() {
-      // 가게 상세 진입
       if (typeof openStoreDetail === 'function') {
         openStoreDetail({ name: name, lat: p.lat, lng: p.lng, category: p.category });
       }
     });
     window._ctUnvisitedMarkers.push(marker);
+    bounds.extend(pos);
   });
+
+  // 사용자 현재 위치(_ctUserPos) 도 bounds 에 포함 (있을 경우)
+  try {
+    if (typeof _ctUserPos !== 'undefined' && _ctUserPos && _ctUserPos.lat && _ctUserPos.lng) {
+      bounds.extend({ lat: parseFloat(_ctUserPos.lat), lng: parseFloat(_ctUserPos.lng) });
+    }
+  } catch(_){}
+
+  // 모든 미방문 마커가 한 화면에 보이도록 자동 fit (최대 padding)
+  try {
+    if (!bounds.isEmpty()) {
+      _ctMap.fitBounds(bounds, { top:60, right:40, bottom:120, left:40 });
+      // 너무 줌인 되는 것 방지 (최대 줌 17)
+      var l = google.maps.event.addListener(_ctMap, 'idle', function(){
+        if (_ctMap.getZoom() > 17) _ctMap.setZoom(17);
+        google.maps.event.removeListener(l);
+      });
+    }
+  } catch(e) { console.warn('[ctShowUnvisited] fitBounds failed:', e); }
 }
 
 function _ctHideUnvisitedMarkers() {
@@ -25088,7 +25115,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 380;
+window.__APP_BUILD__ = 381;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
