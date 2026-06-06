@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 403 시점)
+# RetWork (チリつも) — HANDOFF (build 404 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 403** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 404** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,15 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 403;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b403';
+public/index.html → window.__APP_BUILD__ = 404;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b404';
 ```
+
+### build 404 — 어드민 모바일도 PC 타입(반응형)으로 통일
+- `openAdminDashboard`: 너비 768px 분기 제거 → **모바일·PC 모두 `openAdminPc()`**. 모바일 시트(ov-admin)는 미사용.
+- 반응형 CSS(≤767px): 톱바 탭 `#apc-tabbar` 가로스크롤, 본문 `#apc-body` 세로스택, 사이드바 `#apc-sidebar`를
+  240px 세로 → **상단 가로 스크롤 띠**(칩 형태 `.apc-menu-item`), 섹션헤더 숨김, 이메일 숨김, 패딩 축소.
+- 마크업 id 추가: apc-topbar/apc-logo/apc-tabbar/apc-body. `_isAdminPcActive`는 ov-admin-pc 표시여부만 봐서 자동 호환.
 
 ### build 403 — 광고 시청 게이트 버튼 문구 컨텍스트별로
 - `watch-ad-primary-btn` 라벨이 항상 "광고 보고 내용 확인하기"였던 것 → 컨텍스트 `base.descTitle` 사용(16003).
