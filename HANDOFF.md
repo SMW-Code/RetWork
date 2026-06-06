@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 392 시점)
+# RetWork (チリつも) — HANDOFF (build 393 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 392** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 393** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,14 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 392;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b392';
+public/index.html → window.__APP_BUILD__ = 393;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b393';
 ```
+
+### build 393 — 수동입력 모달 카테고리 칩 이모지→SVG 라인 아이콘 통일
+- 지출 카테고리 시스템 UI를 전부 단색 SVG로 통일(`CAT_ICON`). 수동입력 모달만 이모지였던 것 수정.
+- 남은 이모지(미변경): 치리톡 음식 카테고리 칩(ct.cat, 별도 시스템), 어드민 select(`<option>` SVG 불가),
+  지도 마커 핀(CAT_EMOJI/CT_CAT_EMOJI, data-URI). 필요 시 후속 작업.
 
 ### build 392 — OCR 결과에 지출방법 파싱·선택 + 카테고리 군것질 추가/외식→식사
 - **지출방법**: GPT 프롬프트에 `pay`(credit/debit/ic/qr/cash) 판정 규칙+출력필드 추가. `parseWithGPTMulti` 등

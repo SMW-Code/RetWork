@@ -7509,18 +7509,18 @@ function openManualEntry() {
   _manualItems = [];
   _manualCat   = 'other';
 
-  // 카테고리 칩
+  // 카테고리 칩 (수정 모달과 동일하게 단색 SVG 라인 아이콘)
   var allCats = [
-    {k:'food',l:'🛒 식료품'},{k:'eat',l:'🍜 식사'},{k:'snack',l:'🍪 군것질·과자'},{k:'cafe',l:'☕ 카페'},
-    {k:'life',l:'🏠 생활'},{k:'med',l:'💊 의약품'},{k:'shop',l:'👜 쇼핑'},
-    {k:'ent',l:'🎮 오락'},{k:'tra',l:'🚗 교통'},{k:'travel',l:'✈️ 여행'},
-    {k:'fixed',l:'💳 고정비'},{k:'hobby',l:'🎨 취미'},{k:'beauty',l:'💇 미용'},
-    {k:'drink',l:'🍺 술·유흥'},{k:'edu',l:'📚 교육'},
-    {k:'fuel',l:'⛽ 주유'},{k:'park',l:'🅿️ 주차'},{k:'other',l:'📦 기타'}
+    {k:'food',l:'식료품'},{k:'eat',l:'식사'},{k:'snack',l:'군것질·과자'},{k:'cafe',l:'카페'},
+    {k:'life',l:'생활'},{k:'med',l:'의약품'},{k:'shop',l:'쇼핑'},
+    {k:'ent',l:'오락'},{k:'tra',l:'교통'},{k:'travel',l:'여행'},
+    {k:'fixed',l:'고정비'},{k:'hobby',l:'취미'},{k:'beauty',l:'미용'},
+    {k:'drink',l:'술·유흥'},{k:'edu',l:'교육'},
+    {k:'fuel',l:'주유'},{k:'park',l:'주차'},{k:'other',l:'기타'}
   ];
   var html = '';
   allCats.forEach(function(c){
-    html += '<div class="cat-chip-sel'+(c.k==='other'?' sel':'')+'" onclick="selectManualCat(this,\''+c.k+'\')">'+c.l+'</div>';
+    html += '<div class="cat-chip-sel'+(c.k==='other'?' sel':'')+'" onclick="selectManualCat(this,\''+c.k+'\')" style="display:inline-flex;align-items:center;gap:4px;">'+CAT_ICON[c.k]+'<span>'+c.l+'</span></div>';
   });
   document.getElementById('manual-cat-select').innerHTML = html;
 
@@ -25392,7 +25392,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 392;
+window.__APP_BUILD__ = 393;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
