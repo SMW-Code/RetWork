@@ -4527,7 +4527,9 @@ var _CAT_ICON_PATHS = {
   // fuel
   fuel:'<line x1="3" x2="15" y1="22" y2="22"/><line x1="4" x2="14" y1="9" y2="9"/><path d="M14 22V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v18"/><path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2V9.83a2 2 0 0 0-.59-1.42L18 5"/>',
   // square-parking
-  park:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>'
+  park:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17V7h4a3 3 0 0 1 0 6H9"/>',
+  // cookie (군것질/과자)
+  snack:'<path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"/><path d="M8.5 8.5v.01"/><path d="M16 15.5v.01"/><path d="M12 12v.01"/><path d="M11 17v.01"/><path d="M7 14v.01"/>'
 };
 // 흑/백 단색 (모드별): currentColor=var(--text-1) → 라이트=검정 / 다크=흰색, CSS 변수라 모드 전환 시 즉시 반영
 function _catSvgStr(cat){
@@ -4537,7 +4539,7 @@ function _catSvgStr(cat){
 // 지도 마커/InfoWindow 핀(data-URI SVG <text>)용 — SVG 문자열은 못 쓰므로 이모지 유지
 var CAT_EMOJI = {
   food:'🛒', eat:'🍜', life:'🏠', med:'💊', cafe:'☕', shop:'👜', ent:'🎮', tra:'🚗',
-  travel:'✈️', fixed:'💳', hobby:'🎨', other:'📦', beauty:'💇', drink:'🍺', edu:'📚', fuel:'⛽', park:'🅿️'
+  travel:'✈️', fixed:'💳', hobby:'🎨', other:'📦', beauty:'💇', drink:'🍺', edu:'📚', fuel:'⛽', park:'🅿️', snack:'🍪'
 };
 var CAT_ICON = (typeof Proxy === 'function')
   ? new Proxy({}, { get: function(target, prop){ return (typeof prop === 'string') ? _catSvgStr(prop) : undefined; } })
@@ -4549,7 +4551,7 @@ var _CAT_LABEL_KEYS = {
   cafe:'cat.cafe', shop:'cat.shop', ent:'cat.ent', tra:'cat.tra',
   travel:'cat.travel', fixed:'cat.fixed', hobby:'cat.hobby', other:'cat.other',
   beauty:'cat.beauty', drink:'cat.drink', edu:'cat.edu',
-  fuel:'cat.other', park:'cat.tra'
+  fuel:'cat.other', park:'cat.tra', snack:'cat.snack'
 };
 var CAT_LABEL = (typeof Proxy === 'function')
   ? new Proxy(_CAT_LABEL_KEYS, {
@@ -4559,7 +4561,7 @@ var CAT_LABEL = (typeof Proxy === 'function')
       }
     })
   // Proxy 미지원 (legacy 브라우저) — 일본어 기본값 fallback
-  : { food:'食料品', eat:'外食', life:'生活雑貨', med:'医療・健康', cafe:'カフェ', shop:'ショッピング', ent:'娯楽', tra:'交通', travel:'旅行', fixed:'固定費', hobby:'趣味', other:'その他', beauty:'美容', drink:'飲み会', edu:'教育', fuel:'その他', park:'交通' };
+  : { food:'食料品', eat:'食事', life:'生活雑貨', med:'医療・健康', cafe:'カフェ', shop:'ショッピング', ent:'娯楽', tra:'交通', travel:'旅行', fixed:'固定費', hobby:'趣味', other:'その他', beauty:'美容', drink:'飲み会', edu:'教育', fuel:'その他', park:'交通', snack:'お菓子' };
 function _catLabel(c){ return CAT_LABEL[c] || ''; }
 
 // 지불 방법
@@ -4591,6 +4593,8 @@ var PAY_LABEL = (typeof Proxy === 'function')
   : { cash:'現金', credit:'クレジットカード', ic:'交通系IC', qr:'QR決済', debit:'デビットカード' };
 var PAY_COLOR = { cash:'#8BA49A', credit:'#3B82F6', ic:'#16A87A', qr:'#F07340', debit:'#8B5CF6' };
 var PAY_BG    = { cash:'#F5F5F5', credit:'#EBF3FF', ic:'#E0F5EE', qr:'#FEF0E8', debit:'#F0EDFF' };
+// GPT가 파싱한 지출방법 문자열을 5종(cash/credit/debit/ic/qr) 중 하나로 정규화, 그 외 null
+function _normPay(p){ p=(p||'').toString().toLowerCase().trim(); return ['cash','credit','debit','ic','qr'].indexOf(p)>=0 ? p : null; }
 
 // 영수증 DB (로그인 후 Supabase에서 불러옴)
 var DB = [];
@@ -7507,7 +7511,7 @@ function openManualEntry() {
 
   // 카테고리 칩
   var allCats = [
-    {k:'food',l:'🛒 식료품'},{k:'eat',l:'🍜 식사'},{k:'cafe',l:'☕ 카페'},
+    {k:'food',l:'🛒 식료품'},{k:'eat',l:'🍜 식사'},{k:'snack',l:'🍪 군것질·과자'},{k:'cafe',l:'☕ 카페'},
     {k:'life',l:'🏠 생활'},{k:'med',l:'💊 의약품'},{k:'shop',l:'👜 쇼핑'},
     {k:'ent',l:'🎮 오락'},{k:'tra',l:'🚗 교통'},{k:'travel',l:'✈️ 여행'},
     {k:'fixed',l:'💳 고정비'},{k:'hobby',l:'🎨 취미'},{k:'beauty',l:'💇 미용'},
@@ -7645,7 +7649,7 @@ function openEditReceipt(id) {
 
   // 카테고리 선택
   var cats = [
-    {k:'food',l:'식료품'},{k:'eat',l:'식사'},{k:'cafe',l:'카페'},
+    {k:'food',l:'식료품'},{k:'eat',l:'식사'},{k:'snack',l:'군것질·과자'},{k:'cafe',l:'카페'},
     {k:'life',l:'생활'},{k:'med',l:'의약품'},{k:'shop',l:'쇼핑'},
     {k:'ent',l:'오락'},{k:'tra',l:'교통'},{k:'travel',l:'여행'},
     {k:'fixed',l:'고정비'},{k:'hobby',l:'취미'},{k:'beauty',l:'미용'},
@@ -9194,6 +9198,7 @@ function parseWithGPTMulti(combinedText, pageCount) {
       total:      total,
       totalItems: items.length,
       cat:        autoClassify(result.store || '', items),
+      pay:        _normPay(result.pay),
       date:       result.date || null,
       address:    result.address || null,
       gptParsed:  true,
@@ -10154,7 +10159,16 @@ function parseWithGPTHybrid(rawText, base64Image) {
 説明・前置き・マークダウン・コードブロックは一切不要です。
 
 ## 出力フォーマット
-{"store":"店名","date":"YYYY-MM-DD","address":"店舗住所 or null","total":0,"items":[{"name":"商品名","qty":1,"price":0,"discount":0}]}
+{"store":"店名","date":"YYYY-MM-DD","address":"店舗住所 or null","total":0,"pay":"credit|debit|ic|qr|cash or null","items":[{"name":"商品名","qty":1,"price":0,"discount":0}]}
+
+## ★支払い方法の判定（pay フィールド）★
+レシートの文字から支払い方法を判定し "pay" に入れる。判定材料が無ければ null。
+- "クレジット"/"クレジットカード"/"VISA"/"Master"/"JCB"/"AMEX"/"一括"/"分割"/"カードお支払" → "credit"
+- "デビット"/"デビットカード"/"J-Debit" → "debit"
+- "交通系"/"Suica"/"PASMO"/"ICOCA"/"manaca"/"iD"/"QUICPay"/"電子マネー"/"WAON"/"nanaco"/"Edy" → "ic"
+- "PayPay"/"楽天ペイ"/"d払い"/"au PAY"/"メルペイ"/"LINE Pay"/"QR"/"コード決済"/"バーコード決済" → "qr"
+- "現金"/"現計"/"お預り"/"お預かり"/"釣"/"おつり"/"CASH" → "cash"
+- 上記が無い、または判別不能 → null
 
 ## ★領収証（手書き）専用ルール★
 以下のいずれかに該当する場合このルールを適用する（OCR誤読も含む）:
@@ -10424,6 +10438,7 @@ JSONのみ出力。説明不要。`;
         total:      total,
         totalItems: items.length,
         cat:        autoClassify(result.store || '', items),
+        pay:        _normPay(result.pay),
         date:       result.date || null,
         address:    result.address || null,
         gptParsed:  true,
@@ -10578,6 +10593,7 @@ function parseWithGPT(rawText) {
       total:      total,
       totalItems: items.length,
       cat:        autoClassify(result.store || '', items),
+      pay:        _normPay(result.pay),
       date:       result.date || null,
       address:    result.address || null,
       gptParsed:  true
@@ -10927,10 +10943,15 @@ function showOcrResult(previewSrc, result) {
   window._buildItemsHtml = buildItemsHtml;
 
   // ── 카테고리 전체 15개 ──
-  var allCats = ['food','eat','cafe','life','med','shop','ent','tra','travel','fixed','hobby','beauty','drink','edu','other'];
+  var allCats = ['food','eat','snack','cafe','life','med','shop','ent','tra','travel','fixed','hobby','beauty','drink','edu','other'];
   var itemsHtml = buildItemsHtml(window._ocrItems);
   var catHtml = allCats.map(function(c){
     return '<div class="cat-chip-sel'+(result.cat===c?' sel':'')+'" onclick="selectOcrCat(this,\''+c+'\')" data-cat="'+c+'" style="font-size:11px;padding:5px 10px;">'+CAT_ICON[c]+' '+CAT_LABEL[c]+'</div>';
+  }).join('');
+  // ── 지출방법 선택기 (GPT 파싱값 pre-select, 없으면 미선택 → 사용자가 직접) ──
+  var payList = ['cash','credit','debit','ic','qr'];
+  var payHtml = payList.map(function(p){
+    return '<div class="cat-chip-sel'+(result.pay===p?' sel':'')+'" onclick="selectOcrPay(this,\''+p+'\')" data-pay="'+p+'" style="font-size:11px;padding:5px 10px;">'+PAY_ICON[p]+' '+PAY_LABEL[p]+'</div>';
   }).join('');
   var noApiNote = '';
 
@@ -10957,6 +10978,9 @@ function showOcrResult(previewSrc, result) {
     +'<div style="background:var(--surface);border-radius:12px;border:0.5px solid var(--border);padding:0 14px;margin-bottom:12px;" id="ocr-items-list">'+itemsHtml+'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.select_category')+'</div>'
     +'<div class="cat-select" id="ocr-cat-select">'+catHtml+'</div>'
+    // 지출방법 선택기 (카테고리 아래)
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin:14px 0 8px;letter-spacing:.3px;text-transform:uppercase;">'+t('edit.pay_method')+'</div>'
+    +'<div class="cat-select" id="ocr-pay-select">'+payHtml+'</div>'
     // 소계/세금/합계 섹션
   +(result.subtotal > 0 ?
     '<div style="background:var(--bg);border-radius:12px;padding:10px 14px;margin-bottom:10px;border:0.5px solid var(--border);">'
@@ -10997,6 +11021,11 @@ function selectOcrCat(el, cat) {
   // 카테고리 변경 시 치리 공개 버튼 노출/숨김 토글
   var pubBtn = document.getElementById('btn-publish-chiri');
   if (pubBtn) pubBtn.style.display = _shouldShowChiriPublish(cat) ? 'flex' : 'none';
+}
+function selectOcrPay(el, pay) {
+  document.querySelectorAll('#ocr-pay-select .cat-chip-sel').forEach(function(c){c.classList.remove('sel');});
+  el.classList.add('sel');
+  if (window._ocrResult) window._ocrResult.pay = pay;
 }
 // DOM에서 현재 품목 입력값을 읽어 window._ocrItems에 동기화
 function syncOcrItems() {
@@ -11202,6 +11231,7 @@ function _doSaveOcrResult() {
     store: store,
     address: r.address || null,
     cat: r.cat,
+    pay: r.pay || null,
     items: finalItems,
     total: finalTotal
   };
@@ -11215,7 +11245,7 @@ function _doSaveOcrResult() {
     store_name: store,
     receipt_date: dateStr,
     total_amount: finalTotal,
-    payment_method: null,
+    payment_method: r.pay || null,
     user_id: _uid
   }).select().then(function(res) {
     if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); return; }
@@ -11829,7 +11859,7 @@ var I18N = {
     'rmap.iw_visit':'訪問','rmap.iw_avg':'平均','rmap.view_detail':'📋 詳細を見る →','rmap.per_unit':'/個','rmap.no_items':'品目データなし','rmap.avg_per':'1回平均',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
     // 카테고리 라벨 (영수증 기록)
-    'cat.all':'すべて','cat.food':'食料品','cat.eat':'外食','cat.cafe':'カフェ','cat.life':'生活雑貨',
+    'cat.all':'すべて','cat.food':'食料品','cat.eat':'食事','cat.snack':'お菓子','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定費','cat.hobby':'趣味','cat.beauty':'美容',
     'cat.drink':'飲み会','cat.edu':'教育','cat.other':'その他',
@@ -12076,7 +12106,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.iw_visit':'방문','rmap.iw_avg':'평균','rmap.view_detail':'📋 내역 보기 →','rmap.per_unit':'/1개','rmap.no_items':'품목 데이터 없음','rmap.avg_per':'방문 평균',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
-    'cat.all':'전체','cat.food':'식료품','cat.eat':'외식','cat.cafe':'카페','cat.life':'생활용품',
+    'cat.all':'전체','cat.food':'식료품','cat.eat':'식사','cat.snack':'군것질·과자','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
     'cat.drink':'술/회식','cat.edu':'교육','cat.other':'기타',
@@ -12308,7 +12338,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.iw_visit':'Visits','rmap.iw_avg':'Average','rmap.view_detail':'📋 View detail →','rmap.per_unit':'/ea','rmap.no_items':'No item data','rmap.avg_per':'Avg/visit',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
-    'cat.all':'All','cat.food':'Groceries','cat.eat':'Eating Out','cat.cafe':'Cafe','cat.life':'Daily',
+    'cat.all':'All','cat.food':'Groceries','cat.eat':'Meal','cat.snack':'Snacks','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
     'cat.drink':'Drinks','cat.edu':'Education','cat.other':'Other',
@@ -12540,7 +12570,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.iw_visit':'到访','rmap.iw_avg':'平均','rmap.view_detail':'📋 查看明细 →','rmap.per_unit':'/个','rmap.no_items':'无商品数据','rmap.avg_per':'每次平均',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
-    'cat.all':'全部','cat.food':'食品','cat.eat':'外食','cat.cafe':'咖啡','cat.life':'生活用品',
+    'cat.all':'全部','cat.food':'食品','cat.eat':'用餐','cat.snack':'零食','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
     'cat.drink':'聚会','cat.edu':'教育','cat.other':'其他',
@@ -25362,7 +25392,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 391;
+window.__APP_BUILD__ = 392;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

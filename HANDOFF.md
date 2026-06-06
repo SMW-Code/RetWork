@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 391 시점)
+# RetWork (チリつも) — HANDOFF (build 392 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 391** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 392** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,17 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 391;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b391';
+public/index.html → window.__APP_BUILD__ = 392;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b392';
 ```
+
+### build 392 — OCR 결과에 지출방법 파싱·선택 + 카테고리 군것질 추가/외식→식사
+- **지출방법**: GPT 프롬프트에 `pay`(credit/debit/ic/qr/cash) 판정 규칙+출력필드 추가. `parseWithGPTMulti` 등
+  result 빌더 3곳에 `pay:_normPay(result.pay)`. OCR 결과화면(`showOcrResult`)에 지출방법 선택기(`ocr-pay-select`,
+  `selectOcrPay`) 추가 — GPT값 pre-select, 사용자 수정 가능. 저장 시 `payment_method:r.pay`(기존 null 하드코딩 수정).
+- **카테고리 snack(군것질·과자)** 신규: `_CAT_ICON_PATHS`(cookie)/`CAT_EMOJI`(🍪)/`_CAT_LABEL_KEYS`/i18n 4언어
+  (`cat.snack`) + OCR allCats + 수정/수동 모달 cats 배열에 추가.
+- **외식→식사**: `cat.eat` 값 변경 (ja 食事/ko 식사/en Meal/zh 用餐). 키는 'eat' 그대로(집계 로직 안 깨짐).
 
 > ⚠️ 어드민 가격핀→어드민 편집 회귀수정(구 build 391)은 `backup-b391-395` 브랜치에 보관됨. 추후 재적용 예정.
 
