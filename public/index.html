@@ -16514,8 +16514,9 @@ function showApp() {
   document.getElementById('screen-auth').style.display = 'none';
   // 1) display:flex 전에 마지막 탭의 active 클래스만 즉시 적용 → 홈 깜빡임 방지
   var _savedNav = (typeof window._loadSavedNav === 'function') ? window._loadSavedNav() : null;
-  // ── 임시 진단 (build 411) — riq_nav_debug='1' 일 때만 표시 ──
-  if (localStorage.getItem('riq_nav_debug') === '1') { try { _navDebugShow(_savedNav); } catch(e){} }
+  // ── 임시 진단 (build 412) — 항상 표시 (원인 파악 후 제거 예정) ──
+  // PWA 안에서 자동으로 뜨도록 플래그 조건 제거. riq_nav_debug='0' 이면 끔.
+  if (localStorage.getItem('riq_nav_debug') !== '0') { try { _navDebugShow(_savedNav); } catch(e){} }
   if (_savedNav && typeof window._applyNavClasses === 'function') window._applyNavClasses(_savedNav);
   // 2) 메인 표시
   document.getElementById('screen-main').style.display = 'flex';
@@ -25713,7 +25714,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 411;
+window.__APP_BUILD__ = 412;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -25779,6 +25780,29 @@ if ('serviceWorker' in navigator) {
       try { history.replaceState({}, '', u.pathname + (u.search||'') + (u.hash||'')); } catch(e){}
     }
   } catch(e){}
+})();
+// (0-b) 백업 진단 — showApp 이 4초 내 패널을 안 띄우면(=로그인 화면 등) 최소 정보 표시 (build 412)
+(function _navDebugFallback(){
+  if (localStorage.getItem('riq_nav_debug') === '0') return;
+  setTimeout(function(){
+    try {
+      if (document.getElementById('_nav-debug')) return; // 이미 showApp 이 띄웠으면 패스
+      var raw = '(null)';
+      try { raw = localStorage.getItem('riq_last_nav') || '(null)'; } catch(e){ raw = 'LS 접근실패:'+e.message; }
+      var authEl = document.getElementById('screen-auth');
+      var mainEl = document.getElementById('screen-main');
+      var d = document.createElement('div');
+      d.id = '_nav-debug';
+      d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(40,10,10,.95);color:#FF9B9B;font:11px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;word-break:break-all;box-shadow:0 2px 10px rgba(0,0,0,.5);';
+      d.onclick = function(){ d.style.display='none'; };
+      d.textContent = '[NAV DEBUG · build '+window.__APP_BUILD__+'] showApp 미실행 (탭하면 닫힘)\n'
+        + 'localStorage.riq_last_nav = '+raw+'\n'
+        + 'screen-auth display = '+(authEl?authEl.style.display||'(기본)':'없음')+'\n'
+        + 'screen-main display = '+(mainEl?mainEl.style.display||'(기본)':'없음')+'\n'
+        + '→ 로그인 화면이면: 이 기기는 로그인 안 됨. PWA(로그인된 곳)에서 새로고침 필요';
+      document.body.appendChild(d);
+    } catch(e){}
+  }, 4000);
 })();
 // (1) 페이지 진입 즉시 URL 의 ref 캐치
 (function _capturePendingRef(){
