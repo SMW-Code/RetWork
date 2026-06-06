@@ -1919,6 +1919,49 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ── 치리토크 게시글 상세 풀스크린 ── -->
+<div id="ov-ct-post-detail" style="display:none;position:absolute;inset:0;z-index:370;flex-direction:column;background:var(--bg);">
+  <!-- 탑바 -->
+  <div style="background:var(--surface);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;border-bottom:.5px solid var(--border);">
+    <button onclick="closeCtPostDetail()" style="background:var(--bg-2);border:none;border-radius:10px;width:34px;height:34px;font-size:18px;color:var(--text-2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <div id="cpd-title" style="flex:1;font-size:15px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+  </div>
+  <!-- 스크롤 본문 -->
+  <div class="scroll" id="cpd-scroll" style="flex:1;padding-bottom:80px;">
+    <!-- 히어로 이미지 (첫 번째) -->
+    <div id="cpd-hero" style="display:none;width:100%;background:var(--surface-2);"></div>
+    <!-- 메타 + 본문 -->
+    <div style="padding:16px 16px 0;">
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;flex-wrap:wrap;">
+        <span id="cpd-cat-badge" style="font-size:11px;font-weight:700;border-radius:6px;padding:3px 9px;flex-shrink:0;"></span>
+        <span id="cpd-user" style="font-size:13px;color:var(--text-2);font-weight:600;"></span>
+        <span id="cpd-date" style="font-size:12px;color:var(--text-3);margin-left:auto;"></span>
+      </div>
+      <div id="cpd-content" style="font-size:14px;color:var(--text-1);line-height:1.85;padding-bottom:18px;border-bottom:.5px solid var(--border);word-break:break-word;"></div>
+      <!-- 추가 이미지 갤러리 (2번째~) -->
+      <div id="cpd-extra-imgs" style="display:none;padding:14px 0;border-bottom:.5px solid var(--border);"></div>
+      <!-- 좋아요 / 댓글 버튼 -->
+      <div style="display:flex;gap:8px;padding:14px 0;border-bottom:.5px solid var(--border);">
+        <button id="cpd-like-btn" onclick="ctLikePostDetail()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);transition:all .15s;">❤️ <span id="cpd-likes">0</span></button>
+        <button onclick="ctFocusCommentDetail()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);">💬 コメント</button>
+      </div>
+      <!-- 댓글 목록 -->
+      <div id="cpd-comments" style="padding-top:4px;min-height:60px;"></div>
+    </div>
+  </div>
+  <!-- 댓글 입력 고정 바 -->
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:.5px solid var(--border);padding:10px 14px;display:flex;gap:8px;align-items:center;">
+    <input id="cpd-comment-input" type="text" placeholder="コメントを書く..."
+      onkeydown="if(event.key==='Enter')ctAddCommentDetail()"
+      style="flex:1;padding:10px 15px;border-radius:24px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">
+    <button onclick="ctAddCommentDetail()" style="width:38px;height:38px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </button>
+  </div>
+</div>
+
 <!-- チリつも 설정 화면 -->
 
 <!-- チリつも 글쓰기 오버레이 -->
@@ -6114,24 +6157,16 @@ function ctRenderPosts() {
     };
     var postCards = page.map(function(p) {
       var cat = ctGetPostCat(p.cat);
-      // 썸네일
+      // 썸네일 (카드 우측 소형 프리뷰)
       var thumb = '';
       if (p.img) {
-        thumb = '<div style="width:54px;height:54px;border-radius:10px;overflow:hidden;flex-shrink:0;border:0.5px solid var(--border);cursor:pointer;" onclick="event.stopPropagation();openImgViewer(\'' + encodeURIComponent(p.img) + '\')"><img src="' + p.img + '" style="width:100%;height:100%;object-fit:cover;"></div>';
-      }
-      var contentLines = (p.content || '').replace(/\n/g, '<br>');
-      // 첨부 이미지 갤러리 (allImgs)
-      var imgGallery = '';
-      if (p.allImgs && p.allImgs.length) {
-        imgGallery = '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">' +
-          p.allImgs.map(function(src) {
-            return '<img src="' + src + '" onclick="openImgViewer(\'' + encodeURIComponent(src) + '\')" style="width:76px;height:76px;border-radius:10px;object-fit:cover;border:0.5px solid var(--border);cursor:pointer;">';
-          }).join('') +
-        '</div>';
+        thumb = '<div style="width:64px;height:64px;border-radius:10px;overflow:hidden;flex-shrink:0;border:0.5px solid var(--border);">' +
+                  '<img src="' + p.img + '" style="width:100%;height:100%;object-fit:cover;"></div>';
       }
       return (
-        '<div style="background:var(--surface);border-radius:14px;margin-bottom:8px;border:0.5px solid var(--border);overflow:hidden;">' +
-          '<div onclick="ctTogglePost(\'' + p.id + '\')" style="padding:7px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;">' +
+        /* ─ 카드: 터치 → 전체화면 상세 오픈 ─ */
+        '<div onclick="ctOpenPostDetail(\'' + p.id + '\')" style="background:var(--surface);border-radius:14px;margin-bottom:8px;border:0.5px solid var(--border);overflow:hidden;cursor:pointer;active:opacity:.8;-webkit-tap-highlight-color:transparent;">' +
+          '<div style="padding:10px 14px;display:flex;align-items:center;gap:10px;">' +
             '<div style="flex:1;min-width:0;">' +
               '<div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;overflow:hidden;">' +
                 '<span style="font-size:10px;font-weight:700;color:' + cat.color + ';background:' + cat.bg + ';border-radius:5px;padding:2px 7px;flex-shrink:0;">' + cat.label + '</span>' +
@@ -6145,27 +6180,16 @@ function ctRenderPosts() {
               '</div>' +
             '</div>' +
             thumb +
-            '<svg id="ct-arrow-' + p.id + '" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;transition:transform .3s;margin-left:4px;"><polyline points="6 9 12 15 18 9"/></svg>' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-left:2px;"><polyline points="9 18 15 12 9 6"/></svg>' +
           '</div>' +
-          '<div class="ct-post-body" id="ct-post-body-' + p.id + '">' +
-            '<div style="padding:0 14px 8px;border-top:0.5px solid var(--border);" onclick="event.stopPropagation()">' +
-              '<div style="font-size:13px;color:var(--text-2);line-height:1.75;padding:12px 0 14px;">' + contentLines + '</div>' +
-              imgGallery +
-              '<div style="display:flex;gap:8px;margin-bottom:12px;">' +
-                '<button id="ct-like-btn-' + p.id + '" onclick="ctLikePost(\'' + p.id + '\')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);transition:all .15s;">❤️ ' + p.likes + '</button>' +
-                '<button onclick="ctFocusComment(\'' + p.id + '\')" style="flex:1;padding:10px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);">💬 コメント</button>' +
+          /* 더미 노드: 기존 JS 참조 유지용 (hidden) */
+          '<div id="ct-post-body-' + p.id + '" style="display:none;"></div>' +
+          /* 더미 노드: ctRenderPostComments 참조 유지용 */
+          '<div id="ct-comments-' + p.id + '" style="display:none;"></div>' +
+          '<button id="ct-like-btn-' + p.id + '" style="display:none;" onclick=""></button>' +
               '</div>' +
               '<div id="ct-comments-' + p.id + '" style="margin-bottom:10px;"></div>' +
-              '<div style="display:flex;gap:8px;align-items:center;">' +
-                '<input id="ct-comment-input-' + p.id + '" type="text" placeholder="コメントを書く..." ' +
-                  'onkeydown="if(event.key===\'Enter\')ctAddComment(\'' + p.id + '\')" ' +
-                  'style="flex:1;padding:9px 13px;border-radius:20px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">' +
-                '<button onclick="ctAddComment(\'' + p.id + '\')" style="width:36px;height:36px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
-                  '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>' +
-                '</button>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
+          '<input id="ct-comment-input-' + p.id + '" style="display:none;">' +
         '</div>'
       );
     });
@@ -6197,28 +6221,203 @@ function ctRenderPosts() {
 }
 
 function ctTogglePost(id) {
-  var body  = document.getElementById('ct-post-body-' + id);
-  var arrow = document.getElementById('ct-arrow-' + id);
-  if (!body) return;
+  // 전체화면 상세로 리다이렉트
+  ctOpenPostDetail(id);
+}
 
-  // 이전에 열린 카드 닫기
-  if (_ctExpandedPost !== null && _ctExpandedPost !== id) {
-    var prevBody  = document.getElementById('ct-post-body-' + _ctExpandedPost);
-    var prevArrow = document.getElementById('ct-arrow-'    + _ctExpandedPost);
-    if (prevBody)  prevBody.classList.remove('open');
-    if (prevArrow) prevArrow.style.transform = 'rotate(0deg)';
+/* ══════════════════════════════════════
+   치리토크 게시글 전체화면 상세
+══════════════════════════════════════ */
+var _ctDetailPostId = null;
+
+function ctOpenPostDetail(id) {
+  var p = _ctDummyPosts.find(function(x){ return x.id === id; });
+  if (!p) return;
+  _ctDetailPostId = id;
+  var cat = ctGetPostCat(p.cat);
+
+  // 탑바 타이틀
+  var titleEl = document.getElementById('cpd-title');
+  if (titleEl) titleEl.textContent = p.title;
+
+  // 카테고리 배지
+  var badge = document.getElementById('cpd-cat-badge');
+  if (badge) { badge.textContent = cat.label; badge.style.background = cat.bg; badge.style.color = cat.color; }
+
+  // 유저 / 날짜
+  var userEl = document.getElementById('cpd-user');
+  if (userEl) userEl.textContent = (p.user_avatar || '😊') + '  ' + p.user;
+  var dateEl = document.getElementById('cpd-date');
+  if (dateEl) dateEl.textContent = p.date;
+
+  // 본문
+  var contentEl = document.getElementById('cpd-content');
+  if (contentEl) contentEl.innerHTML = (p.content || '').replace(/\n/g, '<br>');
+
+  // 좋아요 버튼
+  var likesEl = document.getElementById('cpd-likes');
+  if (likesEl) likesEl.textContent = p.likes;
+  var likeBtn = document.getElementById('cpd-like-btn');
+  if (likeBtn) { likeBtn.disabled = false; likeBtn.style.color = 'var(--text-2)'; likeBtn.style.background = 'var(--bg)'; likeBtn.style.borderColor = 'var(--border-mid)'; }
+
+  // 히어로 이미지 (첫 번째 이미지 → 상단 전폭)
+  var heroEl = document.getElementById('cpd-hero');
+  if (heroEl) {
+    if (p.allImgs && p.allImgs.length > 0) {
+      heroEl.style.display = 'block';
+      heroEl.innerHTML = '<img src="' + p.allImgs[0] + '" onclick="openImgViewer(\'' + encodeURIComponent(p.allImgs[0]) + '\')" style="width:100%;height:260px;object-fit:cover;display:block;cursor:pointer;">';
+    } else {
+      heroEl.style.display = 'none';
+      heroEl.innerHTML = '';
+    }
   }
 
-  var isOpen = body.classList.contains('open');
-  if (isOpen) {
-    body.classList.remove('open');
-    if (arrow) arrow.style.transform = 'rotate(0deg)';
-    _ctExpandedPost = null;
-  } else {
-    body.classList.add('open');
-    if (arrow) arrow.style.transform = 'rotate(180deg)';
-    _ctExpandedPost = id;
-    ctLoadPostComments(id);
+  // 추가 이미지 (2번째~)
+  var extraEl = document.getElementById('cpd-extra-imgs');
+  if (extraEl) {
+    if (p.allImgs && p.allImgs.length > 1) {
+      extraEl.style.display = 'block';
+      extraEl.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 16px;">' +
+        p.allImgs.slice(1).map(function(src) {
+          return '<img src="' + src + '" onclick="openImgViewer(\'' + encodeURIComponent(src) + '\')" style="width:100px;height:100px;border-radius:12px;object-fit:cover;border:.5px solid var(--border);cursor:pointer;">';
+        }).join('') +
+      '</div>';
+    } else {
+      extraEl.style.display = 'none';
+      extraEl.innerHTML = '';
+    }
+  }
+
+  // 댓글 초기화 + 입력창 비우기
+  var cmtEl = document.getElementById('cpd-comments');
+  if (cmtEl) cmtEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">読み込み中...</div>';
+  var inp = document.getElementById('cpd-comment-input');
+  if (inp) inp.value = '';
+
+  // 스크롤 맨 위로
+  var scroll = document.getElementById('cpd-scroll');
+  if (scroll) scroll.scrollTop = 0;
+
+  // 오버레이 표시
+  var ov = document.getElementById('ov-ct-post-detail');
+  if (ov) ov.style.display = 'flex';
+
+  // 댓글 로드
+  ctLoadPostDetailComments(id);
+}
+
+function closeCtPostDetail() {
+  var ov = document.getElementById('ov-ct-post-detail');
+  if (ov) ov.style.display = 'none';
+  _ctDetailPostId = null;
+}
+
+async function ctLoadPostDetailComments(id) {
+  if (!_sb) return;
+  var res = await _sb.from('ct_comments')
+    .select('*').eq('post_id', id).order('created_at', { ascending: true });
+  if (res.error || !res.data) return;
+  _ctPostComments[id] = res.data.map(function(c) {
+    return { user: c.user_name, avatar: c.user_avatar || '😊', text: c.content, time: _timeAgo(c.created_at) };
+  });
+  // 피드 카드 댓글 수 배지 갱신
+  var p = _ctDummyPosts.find(function(x){ return x.id === id; });
+  if (p) {
+    p.comments = res.data.length;
+    var countEl = document.getElementById('ct-comment-count-' + id);
+    if (countEl) countEl.textContent = '💬 ' + p.comments;
+  }
+  ctRenderPostDetailComments(id);
+}
+
+function ctRenderPostDetailComments(id) {
+  var el = document.getElementById('cpd-comments');
+  if (!el) return;
+  var list = _ctPostComments[id] || [];
+  if (!list.length) {
+    el.innerHTML = '<div style="padding:20px 0;font-size:13px;color:var(--text-3);text-align:center;">まだコメントがありません</div>';
+    return;
+  }
+  el.innerHTML = list.map(function(c) {
+    var isEmoji = /^\p{Emoji}/u.test(c.avatar || '');
+    var av = isEmoji
+      ? '<div style="width:32px;height:32px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">' + c.avatar + '</div>'
+      : '<img src="' + c.avatar + '" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0;">';
+    return '<div style="display:flex;gap:10px;padding:12px 0;border-bottom:.5px solid var(--border);">' +
+      av +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:11px;font-weight:700;color:var(--text-2);">' + c.user + ' <span style="font-weight:400;color:var(--text-3);">· ' + c.time + '</span></div>' +
+        '<div style="font-size:13px;color:var(--text-1);line-height:1.6;margin-top:4px;">' + c.text + '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function ctLikePostDetail() {
+  if (!_ctDetailPostId) return;
+  if (!_currentUser) { showToast(t('toast.login_required')); return; }
+  var id = _ctDetailPostId;
+  var p = _ctDummyPosts.find(function(x){ return x.id === id; });
+  if (!p) return;
+  p.likes++;
+  var likesEl = document.getElementById('cpd-likes');
+  if (likesEl) likesEl.textContent = p.likes;
+  var likeBtn = document.getElementById('cpd-like-btn');
+  if (likeBtn) { likeBtn.style.color = 'var(--red)'; likeBtn.style.background = 'var(--red-bg)'; likeBtn.style.borderColor = 'var(--red)'; likeBtn.disabled = true; }
+  await _sb.from('ct_posts').update({ likes: p.likes }).eq('id', id);
+  if (p.user_id && p.user_id !== _currentUser.id) {
+    var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
+    var myAvatar = localStorage.getItem('riq_avatar') || '😊';
+    await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'like', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: null });
+    _sendSocialPush(p.user_id, '❤️ 좋아요를 받았어요', myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요', { url: '/', tag: 'like-' + id, priority: 'low' });
+  }
+}
+
+function ctFocusCommentDetail() {
+  var inp = document.getElementById('cpd-comment-input');
+  if (inp) inp.focus();
+}
+
+async function ctAddCommentDetail() {
+  if (!_ctDetailPostId) return;
+  var id = _ctDetailPostId;
+  if (!_currentUser) { showToast(t('toast.login_required')); return; }
+  var inp = document.getElementById('cpd-comment-input');
+  var text = inp ? inp.value.trim() : '';
+  if (!text) return;
+  // 패널티 체크
+  if (_sb) {
+    try {
+      var penRes = await _sb.rpc('get_active_comment_penalty');
+      if (penRes.data && penRes.data.blocked) {
+        var endsTxt = penRes.data.ends_at ? ' (' + new Date(penRes.data.ends_at).toLocaleString() + ' 까지)' : ' (영구)';
+        showToast('🚫 댓글 작성 제한 중' + endsTxt + (penRes.data.reason ? ' · ' + penRes.data.reason : '')); return;
+      }
+    } catch(e) {}
+  }
+  // 한도 체크
+  var quota = await _checkCommentQuota();
+  if (!quota.allowed) { openCommentQuotaAdModal(function(){ ctAddCommentDetail(); }); return; }
+
+  var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
+  var myAvatar = localStorage.getItem('riq_avatar') || '😊';
+  var p = _ctDummyPosts.find(function(x){ return x.id === id; });
+  if (!p) return;
+  if (inp) inp.value = '';
+  var cRes = await _sb.from('ct_comments').insert({ post_id: id, user_id: _currentUser.id, user_name: myName, user_avatar: myAvatar, content: text });
+  if (cRes.error) { showToast('コメントの送信に失敗しました'); return; }
+  p.comments++;
+  await _sb.from('ct_posts').update({ comments: p.comments }).eq('id', id);
+  var countEl = document.getElementById('ct-comment-count-' + id);
+  if (countEl) countEl.textContent = '💬 ' + p.comments;
+  await ctLoadPostDetailComments(id);
+  // 스크롤 하단 이동
+  var scroll = document.getElementById('cpd-scroll');
+  if (scroll) setTimeout(function(){ scroll.scrollTop = scroll.scrollHeight; }, 100);
+  // 작성자 알림
+  if (p.user_id && p.user_id !== _currentUser.id) {
+    await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'comment', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: text });
+    _sendSocialPush(p.user_id, '💬 コメントが届きました', myName + '：' + text, { url: '/', tag: 'comment-' + id, priority: 'normal' });
   }
 }
 
@@ -25500,7 +25699,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 405;
+window.__APP_BUILD__ = 406;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
