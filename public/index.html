@@ -6102,6 +6102,7 @@ function ctInitCommunity() {
   }
   ctLoadPosts();
   ctStartBanner();
+  _ctLoadBannerNotices();   // DB 공지 로드 → 배너 재렌더
   ctLoadNotifications();
   // 알림 30초마다 자동 갱신 (탭 이동 시 초기화)
   if (_ctNotifTimer) clearInterval(_ctNotifTimer);
@@ -6653,10 +6654,41 @@ async function ctMarkAllRead() {
 /* ── 알림 배너 (수동 스와이프, 최대 5개) ── */
 var _ctBannerIdx = 0;
 
-var _ctBannerNotices = [
-  { tag:'お知らせ', tagBg:'rgba(232,160,32,.22)', tagColor:'var(--gold)', bg:'var(--navy)', color:'rgba(255,255,255,.9)', text:'v1.2.0 アップデート — 「チリつも公開」機能が追加されました 🎉' },
-  { tag:'キャンペーン', tagBg:'var(--gold)', tagColor:'#fff', bg:'var(--gold-light)', color:'var(--gold-dark)', text:'今週限定！レシート公開で +20チリ ボーナス実施中 ✨' },
-];
+// 치리토크 배너 공지 — ct_notices(DB)에서 로드 (어드민 관리). 로드 전엔 빈 배열.
+var _ctBannerNotices = [];
+
+// 활성·기간 내 공지 로드 → 배너 재렌더
+async function _ctLoadBannerNotices() {
+  if (!_sb) return;
+  try {
+    var nowIso = new Date().toISOString();
+    var res = await _sb.from('ct_notices')
+      .select('*')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+    if (res.error) { return; }
+    var rows = (res.data || []).filter(function(n){
+      // 기간 필터 (starts_at <= now <= ends_at; ends_at NULL = 무기한)
+      if (n.starts_at && new Date(n.starts_at) > new Date(nowIso)) return false;
+      if (n.ends_at   && new Date(n.ends_at)   < new Date(nowIso)) return false;
+      return true;
+    });
+    _ctBannerNotices = rows.map(function(n){
+      return {
+        tag:      n.tag || 'お知らせ',
+        text:     n.text || '',
+        bg:       n.bg_color   || '#172C58',
+        color:    n.text_color || '#FFFFFF',
+        tagBg:    n.tag_bg     || 'rgba(232,160,32,.22)',
+        tagColor: n.tag_color  || '#E8A020',
+        fontSize: n.font_size  || 13,
+        image:    n.image_url  || null
+      };
+    });
+    if (typeof ctRenderBannerCard === 'function') ctRenderBannerCard();
+  } catch(e) { /* 테이블 미생성 시 무시 — 배너 빈 채로 */ }
+}
 
 function ctGetBannerItems() {
   var notices = _ctBannerNotices.map(function(n) { return { type:'notice', data:n }; });
@@ -6668,9 +6700,17 @@ function ctGetBannerItems() {
 function _ctBannerItemHtml(item){
   if (item.type === 'notice') {
     var d = item.data;
-    return '<div style="background:' + d.bg + ';padding:13px 14px;border-radius:14px;cursor:pointer;height:88px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;" onclick="ctToggleNotif()">'
+    var fs = d.fontSize || 13;
+    var hasImg = d.image && d.image.indexOf('data:') !== 0;
+    var textCol = '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">'
       + '<span style="background:' + d.tagBg + ';color:' + d.tagColor + ';font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.3px;align-self:flex-start;margin-bottom:7px;">' + d.tag + '</span>'
-      + '<div style="font-size:13px;font-weight:600;color:' + d.color + ';line-height:1.45;">' + d.text + '</div>'
+      + '<div style="font-size:' + fs + 'px;font-weight:600;color:' + d.color + ';line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + d.text + '</div>'
+      + '</div>';
+    var imgCol = hasImg
+      ? '<div style="width:60px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;"><img src="' + d.image + '" style="width:100%;height:100%;object-fit:cover;"></div>'
+      : '';
+    return '<div style="background:' + d.bg + ';padding:13px 14px;border-radius:14px;cursor:pointer;height:88px;box-sizing:border-box;display:flex;align-items:center;gap:12px;" onclick="ctToggleNotif()">'
+      + textCol + imgCol
       + '</div>';
   }
   var p = item.data;
@@ -18775,6 +18815,8 @@ var _admPcMenus = {
   ],
   comments: [
     /* ★ Phase 4 — 게시글 관리 톱바 */
+    { key:'ct-notices', icon:'📢', label:'치리톡 공지',
+      customRender:function(){ if (typeof _admPcRenderNotices === 'function') _admPcRenderNotices(); } },
     { key:'post-list', icon:'📝', label:'게시글 리스트',
       customRender:function(){ if (typeof _admPcRenderPostList === 'function') _admPcRenderPostList(); } },
     { key:'comment-list', icon:'💬', label:'댓글 리스트',
@@ -19530,6 +19572,278 @@ window._admPcQuoteLang = 'ja';
 function _admPcQuoteSetLang(lang) {
   window._admPcQuoteLang = lang;
   _admPcRenderQuotes();
+}
+
+/* ══════════════════════════════════════════════════
+   어드민 — 치리토크 공지 카드 (ct_notices)
+══════════════════════════════════════════════════ */
+window._admNoticeImgFile = null;   // 새로 선택한 이미지 파일
+window._admNoticeImgUrl  = '';     // 현재 이미지 URL (기존 or 업로드 후)
+
+// ISO → datetime-local 값(YYYY-MM-DDTHH:mm), 로컬 타임존 보정
+function _admDTToLocal(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  var off = d.getTimezoneOffset() * 60000;
+  return new Date(d.getTime() - off).toISOString().slice(0, 16);
+}
+// datetime-local 값 → ISO (빈 값이면 null)
+function _admLocalToISO(v) {
+  if (!v) return null;
+  var d = new Date(v);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+async function _admPcRenderNotices() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+  ct.innerHTML =
+    '<div style="padding:24px;max-width:780px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">📢 치리톡 공지 카드</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">치리토크 상단 배너 노출 · 색상/폰트/이미지/노출기간 지정 · on·off</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcNoticeOpenForm(null)" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">+ 새 공지</button>'
+    + '</div>'
+    + '<div id="apc-notice-form" style="display:none;margin-bottom:18px;"></div>'
+    + '<div id="apc-notice-list"><div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div></div>'
+    + '</div>';
+  _admPcLoadNoticeList();
+}
+
+async function _admPcLoadNoticeList() {
+  var list = document.getElementById('apc-notice-list');
+  if (!list || !_sb) return;
+  try {
+    var res = await _sb.from('ct_notices').select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: false });
+    if (res.error) {
+      list.innerHTML = '<div style="padding:30px;text-align:center;color:#991B1B;font-size:12px;background:#FEF2F2;border-radius:12px;">로딩 실패: ' + _esc(res.error.message) + '<br><span style="color:#6B7280;">ct_notices.sql 을 먼저 실행했는지 확인하세요.</span></div>';
+      return;
+    }
+    var rows = res.data || [];
+    window._admNoticeCache = {};
+    rows.forEach(function(n){ window._admNoticeCache[n.id] = n; });
+    if (!rows.length) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;background:#F4F5F8;border-radius:12px;">등록된 공지가 없어요. "+ 새 공지"로 추가하세요.</div>';
+      return;
+    }
+    var now = new Date();
+    list.innerHTML = '<div style="display:flex;flex-direction:column;gap:12px;">' + rows.map(function(n){
+      // 상태 계산
+      var active = n.is_active;
+      var inPeriod = (!n.starts_at || new Date(n.starts_at) <= now) && (!n.ends_at || new Date(n.ends_at) >= now);
+      var live = active && inPeriod;
+      var statusTxt = !active ? '꺼짐' : (!inPeriod ? '기간 외' : '노출 중');
+      var statusBg  = live ? '#DCFCE7' : '#F4F5F8';
+      var statusCol = live ? '#166534' : '#6B7280';
+      var fs = n.font_size || 13;
+      var hasImg = n.image_url && n.image_url.indexOf('data:') !== 0;
+      // 카드 미리보기 (실제 배너와 동일 스타일)
+      var preview = '<div style="background:' + (n.bg_color||'#172C58') + ';padding:11px 13px;border-radius:12px;height:74px;box-sizing:border-box;display:flex;align-items:center;gap:10px;">'
+        + '<div style="flex:1;min-width:0;">'
+        + '<span style="background:' + (n.tag_bg||'rgba(232,160,32,.22)') + ';color:' + (n.tag_color||'#E8A020') + ';font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;">' + _esc(n.tag||'') + '</span>'
+        + '<div style="font-size:' + fs + 'px;font-weight:600;color:' + (n.text_color||'#fff') + ';line-height:1.4;margin-top:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + _esc(n.text||'') + '</div>'
+        + '</div>'
+        + (hasImg ? '<div style="width:50px;height:50px;border-radius:9px;overflow:hidden;flex-shrink:0;"><img src="' + _esc(n.image_url) + '" style="width:100%;height:100%;object-fit:cover;"></div>' : '')
+        + '</div>';
+      var period = (n.starts_at ? (n.starts_at||'').slice(0,10) : '~') + ' → ' + (n.ends_at ? (n.ends_at||'').slice(0,10) : '무기한');
+      return '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
+        + preview
+        + '<div style="display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap;">'
+        +   '<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:6px;background:' + statusBg + ';color:' + statusCol + ';">' + statusTxt + '</span>'
+        +   '<span style="font-size:11px;color:#6B7280;">📅 ' + period + '</span>'
+        +   '<span style="font-size:11px;color:#9CA3AF;">정렬 ' + (n.sort_order||0) + '</span>'
+        +   '<span style="flex:1;"></span>'
+        +   '<button onclick="_admPcNoticeToggle(\'' + n.id + '\',' + (active?'true':'false') + ')" style="background:' + (active?'#FEF3C7':'#DCFCE7') + ';color:' + (active?'#92400E':'#166534') + ';border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">' + (active?'⏸ 끄기':'▶ 켜기') + '</button>'
+        +   '<button onclick="_admPcNoticeOpenForm(window._admNoticeCache[\'' + n.id + '\'])" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">✏ 수정</button>'
+        +   '<button onclick="_admPcNoticeDelete(\'' + n.id + '\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">🗑 삭제</button>'
+        + '</div>'
+        + '</div>';
+    }).join('') + '</div>';
+  } catch(e) {
+    list.innerHTML = '<div style="padding:30px;text-align:center;color:#991B1B;font-size:12px;">로딩 실패: ' + _esc(e.message||'') + '</div>';
+  }
+}
+
+// 색상 입력 행 (color 피커 + 텍스트 동기화). rgbaOk=true 면 텍스트만(rgba 허용)
+function _admNoticeColorField(id, label, val, rgbaOk) {
+  var hex = (/^#[0-9a-fA-F]{6}$/.test(val||'')) ? val : '#172C58';
+  if (rgbaOk) {
+    return '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">' + label + '</div>'
+      + '<input id="' + id + '" type="text" value="' + _esc(val||'') + '" oninput="_admPcNoticePreview()" placeholder="#RRGGBB 또는 rgba(...)" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>';
+  }
+  return '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">' + label + '</div>'
+    + '<div style="display:flex;gap:6px;align-items:center;">'
+    +   '<input id="' + id + '-pick" type="color" value="' + hex + '" oninput="document.getElementById(\'' + id + '\').value=this.value;_admPcNoticePreview();" style="width:38px;height:34px;border:1px solid #E3E6EB;border-radius:8px;padding:2px;cursor:pointer;background:#fff;">'
+    +   '<input id="' + id + '" type="text" value="' + _esc(val||'') + '" oninput="_admPcNoticePreview()" style="flex:1;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);">'
+    + '</div></div>';
+}
+
+function _admPcNoticeOpenForm(n) {
+  var box = document.getElementById('apc-notice-form');
+  if (!box) return;
+  n = n || {};
+  window._admNoticeImgFile = null;
+  window._admNoticeImgUrl  = n.image_url || '';
+  var isEdit = !!n.id;
+  var startVal = n.starts_at ? _admDTToLocal(n.starts_at) : _admDTToLocal(new Date().toISOString());
+  var endVal   = n.ends_at ? _admDTToLocal(n.ends_at) : '';
+  box.style.display = 'block';
+  box.innerHTML =
+    '<div style="background:#fff;border:1px solid #172C58;border-radius:12px;padding:18px;">'
+    + '<div style="font-size:14px;font-weight:800;color:#172C58;margin-bottom:14px;">' + (isEdit ? '✏ 공지 수정' : '+ 새 공지') + '</div>'
+    + '<input type="hidden" id="apc-notice-id" value="' + (n.id||'') + '">'
+    // 미리보기
+    + '<div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:5px;">미리보기</div>'
+    + '<div id="apc-notice-preview" style="margin-bottom:16px;"></div>'
+    // 태그 + 폰트크기
+    + '<div style="display:grid;grid-template-columns:1fr 120px;gap:10px;margin-bottom:12px;">'
+    +   '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">태그</div>'
+    +     '<input id="apc-notice-tag" type="text" value="' + _esc(n.tag||'お知らせ') + '" oninput="_admPcNoticePreview()" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>'
+    +   '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">폰트 크기(px)</div>'
+    +     '<input id="apc-notice-fontsize" type="number" min="10" max="22" value="' + (n.font_size||13) + '" oninput="_admPcNoticePreview()" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>'
+    + '</div>'
+    // 본문
+    + '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">본문</div>'
+    +   '<textarea id="apc-notice-text" rows="2" oninput="_admPcNoticePreview()" style="width:100%;padding:9px 11px;border:1px solid #E3E6EB;border-radius:8px;font-size:13px;font-family:var(--font);box-sizing:border-box;resize:vertical;">' + _esc(n.text||'') + '</textarea></div>'
+    // 색상 4종
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">'
+    +   _admNoticeColorField('apc-notice-bg',       '카드 배경색',   n.bg_color   || '#172C58', false)
+    +   _admNoticeColorField('apc-notice-textcolor', '본문 폰트색',   n.text_color || '#FFFFFF', false)
+    +   _admNoticeColorField('apc-notice-tagcolor',  '태그 폰트색',   n.tag_color  || '#E8A020', false)
+    +   _admNoticeColorField('apc-notice-tagbg',     '태그 배경색',   n.tag_bg     || 'rgba(232,160,32,.22)', true)
+    + '</div>'
+    // 이미지
+    + '<div style="margin-bottom:12px;"><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">이미지 (선택)</div>'
+    +   '<div style="display:flex;gap:8px;align-items:center;">'
+    +     '<input id="apc-notice-imgfile" type="file" accept="image/*" onchange="_admPcNoticePickImage(this)" style="font-size:11px;">'
+    +     '<button onclick="_admPcNoticeRemoveImage()" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">이미지 제거</button>'
+    +   '</div></div>'
+    // 노출 기간
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">'
+    +   '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">노출 시작</div>'
+    +     '<input id="apc-notice-start" type="datetime-local" value="' + startVal + '" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>'
+    +   '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">노출 종료 (비우면 무기한)</div>'
+    +     '<input id="apc-notice-end" type="datetime-local" value="' + endVal + '" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>'
+    + '</div>'
+    // 정렬 + 활성
+    + '<div style="display:grid;grid-template-columns:120px 1fr;gap:10px;margin-bottom:14px;">'
+    +   '<div><div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">정렬(작을수록 앞)</div>'
+    +     '<input id="apc-notice-sort" type="number" value="' + (n.sort_order||0) + '" style="width:100%;padding:8px 10px;border:1px solid #E3E6EB;border-radius:8px;font-size:12px;font-family:var(--font);box-sizing:border-box;"></div>'
+    +   '<label style="display:flex;align-items:flex-end;gap:6px;padding-bottom:9px;font-size:12px;font-weight:700;color:#374151;cursor:pointer;"><input id="apc-notice-active" type="checkbox" ' + (n.is_active===false?'':'checked') + '> 활성 (노출)</label>'
+    + '</div>'
+    + '<div style="display:flex;gap:8px;">'
+    +   '<button onclick="_admPcNoticeSave()" style="flex:1;background:#172C58;color:#fff;border:none;border-radius:8px;padding:11px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>'
+    +   '<button onclick="_admPcNoticeCloseForm()" style="background:#fff;color:#6B7280;border:1px solid #E3E6EB;border-radius:8px;padding:11px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">취소</button>'
+    + '</div>'
+    + '</div>';
+  _admPcNoticePreview();
+  box.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function _admPcNoticeCloseForm() {
+  var box = document.getElementById('apc-notice-form');
+  if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+  window._admNoticeImgFile = null;
+  window._admNoticeImgUrl = '';
+}
+
+function _admPcNoticePreview() {
+  var prev = document.getElementById('apc-notice-preview');
+  if (!prev) return;
+  var g = function(id){ var el=document.getElementById(id); return el ? el.value : ''; };
+  var bg = g('apc-notice-bg') || '#172C58';
+  var tc = g('apc-notice-textcolor') || '#fff';
+  var tagc = g('apc-notice-tagcolor') || '#E8A020';
+  var tagbg = g('apc-notice-tagbg') || 'rgba(232,160,32,.22)';
+  var fs = g('apc-notice-fontsize') || 13;
+  var tag = g('apc-notice-tag') || '';
+  var text = g('apc-notice-text') || '';
+  var img = window._admNoticeImgUrl;
+  var hasImg = img && img.indexOf('data:') === 0 ? true : (img && img.indexOf('http') === 0);
+  prev.innerHTML = '<div style="background:' + bg + ';padding:13px 14px;border-radius:14px;height:88px;box-sizing:border-box;display:flex;align-items:center;gap:12px;">'
+    + '<div style="flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;">'
+    + '<span style="background:' + tagbg + ';color:' + tagc + ';font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px;align-self:flex-start;margin-bottom:7px;">' + _esc(tag) + '</span>'
+    + '<div style="font-size:' + fs + 'px;font-weight:600;color:' + tc + ';line-height:1.45;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">' + _esc(text) + '</div>'
+    + '</div>'
+    + (hasImg ? '<div style="width:60px;height:60px;border-radius:10px;overflow:hidden;flex-shrink:0;"><img src="' + img + '" style="width:100%;height:100%;object-fit:cover;"></div>' : '')
+    + '</div>';
+}
+
+function _admPcNoticePickImage(input) {
+  var f = input && input.files && input.files[0];
+  if (!f) return;
+  window._admNoticeImgFile = f;
+  var reader = new FileReader();
+  reader.onload = function(e){ window._admNoticeImgUrl = e.target.result; _admPcNoticePreview(); };
+  reader.readAsDataURL(f);
+}
+
+function _admPcNoticeRemoveImage() {
+  window._admNoticeImgFile = null;
+  window._admNoticeImgUrl = '';
+  var fi = document.getElementById('apc-notice-imgfile'); if (fi) fi.value = '';
+  _admPcNoticePreview();
+}
+
+async function _admPcNoticeSave() {
+  if (!_sb) return;
+  var g = function(id){ var el=document.getElementById(id); return el ? el.value.trim() : ''; };
+  var text = g('apc-notice-text');
+  if (!text) { showToast('본문을 입력하세요'); return; }
+  // 이미지 업로드 (새 파일 선택된 경우) — _cpUploadPhoto 는 실패 시 null 반환
+  var imgUrl = window._admNoticeImgUrl || null;
+  if (window._admNoticeImgFile) {
+    showToast('이미지 업로드 중...');
+    var up = await _cpUploadPhoto(window._admNoticeImgFile, 'notices');
+    if (!up) { showToast('이미지 업로드 실패'); return; }
+    imgUrl = up;
+  }
+  if (imgUrl && imgUrl.indexOf('data:') === 0) imgUrl = null; // 미업로드 dataURL 은 저장 안 함
+  var payload = {
+    tag:        g('apc-notice-tag') || 'お知らせ',
+    text:       text,
+    bg_color:   g('apc-notice-bg') || '#172C58',
+    text_color: g('apc-notice-textcolor') || '#FFFFFF',
+    tag_color:  g('apc-notice-tagcolor') || '#E8A020',
+    tag_bg:     g('apc-notice-tagbg') || 'rgba(232,160,32,.22)',
+    font_size:  parseInt(g('apc-notice-fontsize'),10) || 13,
+    image_url:  imgUrl,
+    starts_at:  _admLocalToISO(g('apc-notice-start')),
+    ends_at:    _admLocalToISO(g('apc-notice-end')),
+    sort_order: parseInt(g('apc-notice-sort'),10) || 0,
+    is_active:  document.getElementById('apc-notice-active') ? document.getElementById('apc-notice-active').checked : true
+  };
+  var id = g('apc-notice-id');
+  var res;
+  if (id) res = await _sb.from('ct_notices').update(payload).eq('id', id);
+  else    res = await _sb.from('ct_notices').insert(payload);
+  if (res.error) { showToast('저장 실패: ' + res.error.message); return; }
+  showToast('✅ 저장됐어요');
+  _admPcNoticeCloseForm();
+  _admPcLoadNoticeList();
+}
+
+async function _admPcNoticeToggle(id, active) {
+  if (!_sb) return;
+  var res = await _sb.from('ct_notices').update({ is_active: !active }).eq('id', id);
+  if (res.error) { showToast('변경 실패: ' + res.error.message); return; }
+  _admPcLoadNoticeList();
+}
+
+async function _admPcNoticeDelete(id) {
+  if (!_sb) return;
+  if (!confirm('이 공지를 삭제할까요?')) return;
+  var res = await _sb.from('ct_notices').delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  showToast('🗑 삭제됐어요');
+  _admPcLoadNoticeList();
 }
 
 async function _admPcRenderQuotes() {
@@ -25598,7 +25912,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 417;
+window.__APP_BUILD__ = 418;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
