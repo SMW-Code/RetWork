@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 395 시점)
+# RetWork (チリつも) — HANDOFF (build 396 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 395** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 396** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,15 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 395;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b395';
+public/index.html → window.__APP_BUILD__ = 396;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b396';
 ```
+
+### build 396 — 설정창 글자 크기(앱 UI 스케일) 기능
+- 설정창에 文字サイズ(小/標準/大/特大) 컨트롤(`#font-scale-opts`). `applyFontScale(scale)` → `#app`에 `zoom` 적용.
+- 핵심: 인라인 px 폰트라 rem 불가 → **zoom 방식**. `.phone` 높이/폭은 `_syncPhoneVH`에서 **÷scale 보정**(window._fontScale)
+  → 전체높이 안 깨짐. localStorage `riq_font_scale`, 시작 시 복원. 기본 1(標準)에선 변화 없음(zero-risk).
+- i18n `settings.fontsize` 4언어. ⚠️ 지도(Google Maps)는 zoom 영향권 — 큰 스케일에서 마커 클릭 오프셋 가능(실기기 확인).
 
 ### build 395 — 메뉴카드 추가 폼 이모지→SVG
 - 가게상세 메뉴카드 추가(`sdOpenAddCard`/`_sdRenderCatPicker`): 대분류 칩(🍣일식…), 🏷️/🍽️/📷 이모지를 SVG 라인 아이콘으로.

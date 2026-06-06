@@ -2167,6 +2167,19 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="prem-banner"><div><div style="font-size:13px;font-weight:800;" data-i18n="premium.title">프리미엄 업그레이드</div><div style="font-size:11px;opacity:.8;margin-top:3px;" data-i18n="premium.sub">무제한 스캔 · 광고 제거</div></div><div style="text-align:right;"><div style="font-size:22px;font-weight:900;">¥320</div><div style="font-size:10px;opacity:.75;" data-i18n="premium.unit">/월</div></div></div>
       <div class="sg">
         <div class="si"><span class="lico" data-lico="moon" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.dark">다크모드</span><div class="toggle off" id="dark-toggle" onclick="toggleDarkMode()"></div></div>
+        <!-- 글자 크기 (앱 UI 스케일) -->
+        <div class="si" style="flex-direction:column;align-items:stretch;gap:8px;padding-bottom:10px;">
+          <div style="display:flex;align-items:center;width:100%;">
+            <span style="width:22px;display:flex;justify-content:center;color:var(--text-2);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M4 7V4h16v3"/><path d="M9 20h6"/><path d="M12 4v16"/></svg></span>
+            <span class="si-lbl" data-i18n="settings.fontsize">文字サイズ</span>
+          </div>
+          <div id="font-scale-opts" style="display:flex;gap:6px;padding-left:22px;">
+            <button class="fs-opt" data-fs="0.9" onclick="applyFontScale('0.9')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">小</button>
+            <button class="fs-opt" data-fs="1" onclick="applyFontScale('1')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">標準</button>
+            <button class="fs-opt" data-fs="1.1" onclick="applyFontScale('1.1')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">大</button>
+            <button class="fs-opt" data-fs="1.2" onclick="applyFontScale('1.2')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">特大</button>
+          </div>
+        </div>
         <!-- 푸시 알림 토글 (build 306) — 운영팀 쪽지 + 공지 알림 -->
         <div class="si" style="flex-direction:column;align-items:stretch;gap:4px;padding-bottom:6px;">
           <div style="display:flex;align-items:center;width:100%;">
@@ -11721,7 +11734,7 @@ var I18N = {
     'premium.title':'プレミアム アップグレード','premium.sub':'スキャン無制限 · 広告非表示','premium.unit':'/月',
     'plan.free':'無料プラン','plan.premium':'プレミアム',
     // 설정
-    'settings.dark':'ダークモード','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
+    'settings.dark':'ダークモード','settings.fontsize':'文字サイズ','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
     'settings.lang':'言語','settings.currency':'通貨','settings.theme':'テーマカラー',
     'settings.week_start':'週の開始曜日','week.sun':'日曜日','week.mon':'月曜日',
     'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.logout':'ログアウト',
@@ -12002,7 +12015,7 @@ var I18N = {
     'greeting.morning':'좋은 아침이에요','greeting.afternoon':'좋은 오후예요','greeting.evening':'좋은 저녁이에요',
     'premium.title':'프리미엄 업그레이드','premium.sub':'무제한 스캔 · 광고 제거','premium.unit':'/월',
     'plan.free':'무료 플랜','plan.premium':'프리미엄',
-    'settings.dark':'다크모드','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
+    'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
     'settings.lang':'언어','settings.currency':'통화','settings.theme':'테마 색상',
     'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일',
     'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.logout':'로그아웃',
@@ -12234,7 +12247,7 @@ var I18N = {
     'greeting.morning':'Good morning','greeting.afternoon':'Good afternoon','greeting.evening':'Good evening',
     'premium.title':'Premium Upgrade','premium.sub':'Unlimited scans · Ad-free','premium.unit':'/mo',
     'plan.free':'Free plan','plan.premium':'Premium',
-    'settings.dark':'Dark Mode','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
+    'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
     'settings.lang':'Language','settings.currency':'Currency','settings.theme':'Theme Color',
     'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday',
     'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.logout':'Logout',
@@ -12466,7 +12479,7 @@ var I18N = {
     'greeting.morning':'早上好','greeting.afternoon':'下午好','greeting.evening':'晚上好',
     'premium.title':'升级高级版','premium.sub':'无限扫描 · 无广告','premium.unit':'/月',
     'plan.free':'免费版','plan.premium':'高级版',
-    'settings.dark':'深色模式','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
+    'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
     'settings.lang':'语言','settings.currency':'货币','settings.theme':'主题颜色',
     'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一',
     'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.logout':'登出',
@@ -25402,7 +25415,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 395;
+window.__APP_BUILD__ = 396;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -25707,10 +25720,15 @@ window._restoreNav = function _restoreNav(){
     var p = document.querySelector('.phone');
     if (!p) return;
     var h = (window.visualViewport && window.visualViewport.height) || window.innerHeight || 0;
+    // 글자크기(zoom) 보정: #app 을 zoom=sc 로 키우므로 높이/폭은 ÷sc 해야 화면에 딱 맞음 (sc=1이면 변화 없음)
+    var sc = window._fontScale || 1;
     // CSS 에 height:100dvh !important 가 있어 일반 inline style 은 무시됨
     // → setProperty 의 3번째 인자로 'important' 를 줘야 JS 값이 이김
-    if (h > 0) p.style.setProperty('height', h + 'px', 'important');
+    if (h > 0) p.style.setProperty('height', (h / sc) + 'px', 'important');
+    if (sc !== 1) p.style.setProperty('width', (100 / sc) + 'vw', 'important');
+    else p.style.removeProperty('width');
   }
+  window._syncPhoneVH = _syncPhoneVH;
   // 초기 + 짧은 딜레이로 두 번 (PWA 첫 페인트 직후 viewport 변동 캐치)
   _syncPhoneVH();
   setTimeout(_syncPhoneVH, 50);
@@ -25723,6 +25741,33 @@ window._restoreNav = function _restoreNav(){
     window.visualViewport.addEventListener('scroll', _syncPhoneVH);
   }
 })();
+
+/* ══════════════════════════════════════════════════════════════
+   글자 크기(앱 UI 스케일) — 설정창에서 변경
+   - #app(.phone) 에 zoom 적용 → 전체 UI 비율 확대/축소
+   - 높이/폭은 _syncPhoneVH 에서 ÷scale 보정 → 화면에 딱 맞음
+   - 기본값 1(보통)에선 아무 변화 없음
+══════════════════════════════════════════════════════════════ */
+window._fontScale = 1;
+function applyFontScale(scale, silent){
+  var sc = parseFloat(scale); if (!sc || isNaN(sc)) sc = 1;
+  if (sc < 0.8) sc = 0.8; if (sc > 1.4) sc = 1.4;
+  window._fontScale = sc;
+  var app = document.getElementById('app');
+  if (app) app.style.zoom = (sc === 1) ? '' : sc;
+  if (typeof window._syncPhoneVH === 'function') window._syncPhoneVH();
+  try { localStorage.setItem('riq_font_scale', String(sc)); } catch(e){}
+  // 설정창 버튼 활성화 표시
+  document.querySelectorAll('#font-scale-opts .fs-opt').forEach(function(b){
+    var on = Math.abs((parseFloat(b.getAttribute('data-fs'))||1) - sc) < 0.001;
+    b.style.background  = on ? 'var(--green)' : 'var(--surface)';
+    b.style.color       = on ? '#fff' : 'var(--text-2)';
+    b.style.borderColor = on ? 'var(--green)' : 'var(--border-mid)';
+  });
+  if (!silent && typeof showToast === 'function') showToast('🔤 글자 크기를 변경했어요');
+}
+// 저장된 글자크기 복원 (앱 시작 시)
+(function(){ try { applyFontScale(localStorage.getItem('riq_font_scale') || '1', true); } catch(e){} })();
 
 /* ══════════════════════════════════════════════════════════════
    쓸어내리기 새로고침 (Pull-To-Refresh) — 원형 프로그레스 + 로딩 스피너
