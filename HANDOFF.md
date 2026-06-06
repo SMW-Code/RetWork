@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 401 시점)
+# RetWork (チリつも) — HANDOFF (build 402 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 401** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 402** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,13 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 401;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b401';
+public/index.html → window.__APP_BUILD__ = 402;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b402';
 ```
+
+### build 402 — 어드민 가격핀 코멘트 전용 삭제
+- 가격핀 카드에 **"💬 삭제"**(코멘트만, 핀/마커 유지 = `_admPcClearPinComment` UPDATE comment='') 추가. 기존 "삭제"→"핀 삭제"로 명확화.
+- 미해결(분석 중): 새로고침 시 마지막 화면 복원 안 됨(_restoreNav/_loadSavedNav sessionStorage 로직), 전체화면 모달에서 PTR 비활성(25918 `.bottom-sheet-overlay` disarm).
 
 ### build 401 — 어드민 가격핀 닉네임 + 댓글삭제 RLS 무효 감지
 - 어드민 가게핀 상세(`_admPcOpenPinStoreView`): 가격핀 카드의 `UID:xxx` → **작성자 닉네임**(profiles 조회 `_pinNick`). 메뉴이름/가격은 유지.

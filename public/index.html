@@ -22994,9 +22994,10 @@ async function _admPcOpenPinStoreView(storeName) {
               +     '<div style="font-size:10px;color:#6B7280;">👤 ' + _esc(_pinNick[p.user_id] || ('UID '+(p.user_id||'').substring(0,8)+'…')) + ' · ' + date + '</div>'
               +     comment
               +   '</div>'
-              +   '<div style="display:flex;gap:4px;flex-shrink:0;">'
-              +     '<button onclick="_admPcEditMenuCardFromPin(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);" title="이 가격 핀의 메뉴 카드 수정">편집</button>'
-              +     '<button onclick="_admPcDeletePinFromList(\''+p.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">삭제</button>'
+              +   '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">'
+              +     '<button onclick="_admPcEditMenuCardFromPin(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="이 가격 핀의 메뉴 카드 수정">편집</button>'
+              +     (p.comment ? '<button onclick="_admPcClearPinComment(\''+p.id+'\')" style="background:#fff;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="코멘트만 삭제(핀 유지)">💬 삭제</button>' : '')
+              +     '<button onclick="_admPcDeletePinFromList(\''+p.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="가격 핀 전체 삭제">핀 삭제</button>'
               +   '</div>'
               + '</div>'
               + '</div>';
@@ -23111,6 +23112,22 @@ async function _admPcDeletePinFromList(pinId) {
     console.error('[admPcDeletePin] exception:', e);
     showToast('삭제 실패: ' + (e.message || ''));
   }
+}
+
+/* 가격 핀의 코멘트만 삭제 (핀/마커/가게는 유지) */
+async function _admPcClearPinComment(pinId) {
+  if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
+  if (!confirm('이 가격 핀의 코멘트만 삭제할까요? (핀·마커는 유지)')) return;
+  try {
+    var res = await _sb.from('price_pins').update({ comment: '' }).eq('id', pinId).select();
+    if (res.error) { showToast('실패: ' + res.error.message); return; }
+    if (!res.data || res.data.length === 0) {
+      showToast('⚠️ 코멘트 삭제 안 됨 — RLS 권한 문제 (admin_rls_policies.sql 적용 필요)');
+      return;
+    }
+    showToast('💬 코멘트 삭제됨');
+    if (window._admPcCurrentStoreName) _admPcOpenPinStoreView(window._admPcCurrentStoreName);
+  } catch(e) { showToast('실패: ' + (e.message||'')); }
 }
 
 /* build 351 — 어드민 메뉴 카드 편집 모달 (사진 / 댓글 / 평점 / 대표 메뉴) */
@@ -25460,7 +25477,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 401;
+window.__APP_BUILD__ = 402;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
