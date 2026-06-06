@@ -1944,7 +1944,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div id="cpd-extra-imgs" style="display:none;padding:14px 0;border-bottom:.5px solid var(--border);"></div>
       <!-- 좋아요 / 댓글 버튼 -->
       <div style="display:flex;gap:8px;padding:14px 0;border-bottom:.5px solid var(--border);">
-        <button id="cpd-like-btn" onclick="ctLikePostDetail()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);transition:all .15s;">❤️ <span id="cpd-likes">0</span></button>
+        <button id="cpd-like-btn" onclick="ctTogglePostLikeDetail()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);transition:all .15s;">❤️ <span id="cpd-likes">0</span></button>
         <button onclick="ctFocusCommentDetail()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);">💬 コメント</button>
       </div>
       <!-- 댓글 목록 -->
@@ -6008,6 +6008,7 @@ var CT_POST_CATS = [
 ];
 
 var _ctDummyPosts = [];
+var _ctLikedPosts = new Set();   // 내가 좋아요 누른 게시글 id 집합 (멱등성 — toggle_post_like)
 
 var _ctNotifMessages = [];
 var _ctNotifications = [];
@@ -6080,6 +6081,13 @@ async function ctLoadPosts() {
       user_id: p.user_id,
     };
   });
+  // 내가 좋아요 누른 게시글 로드 (멱등성 — 버튼 상태 표시용)
+  if (_currentUser && _sb) {
+    try {
+      var likeRes = await _sb.from('ct_post_likes').select('post_id').eq('user_id', _currentUser.id);
+      _ctLikedPosts = new Set((likeRes.data || []).map(function(r){ return r.post_id; }));
+    } catch(e) { /* 테이블 미생성 시 무시 — 빈 집합 유지 */ }
+  }
   ctRenderPosts();
 }
 
@@ -6175,7 +6183,7 @@ function ctRenderPosts() {
               '<div style="display:flex;align-items:center;gap:8px;">' +
                 '<span style="font-size:11px;color:var(--text-3);font-weight:500;flex-shrink:0;">' + p.user + '</span>' +
                 '<span id="ct-comment-count-' + p.id + '" style="font-size:11px;color:var(--text-3);">💬 ' + p.comments + '</span>' +
-                '<span style="font-size:11px;color:var(--text-3);">❤️ ' + p.likes + '</span>' +
+                '<span id="ct-like-count-' + p.id + '" style="font-size:11px;color:var(--text-3);">❤️ ' + p.likes + '</span>' +
                 '<span style="font-size:11px;color:var(--text-3);margin-left:auto;">' + p.date + '</span>' +
               '</div>' +
             '</div>' +
@@ -6241,11 +6249,8 @@ function ctOpenPostDetail(id) {
   var contentEl = document.getElementById('cpd-content');
   if (contentEl) contentEl.innerHTML = (p.content || '').replace(/\n/g, '<br>');
 
-  // 좋아요 버튼
-  var likesEl = document.getElementById('cpd-likes');
-  if (likesEl) likesEl.textContent = p.likes;
-  var likeBtn = document.getElementById('cpd-like-btn');
-  if (likeBtn) { likeBtn.disabled = false; likeBtn.style.color = 'var(--text-2)'; likeBtn.style.background = 'var(--bg)'; likeBtn.style.borderColor = 'var(--border-mid)'; }
+  // 좋아요 버튼 (멱등성 — 내가 눌렀으면 채워진 상태로 표시)
+  _cpdSetLikeUI(_ctLikedPosts.has(id), p.likes);
 
   // 히어로 이미지 (첫 번째 이미지 → 상단 전폭)
   var heroEl = document.getElementById('cpd-hero');
@@ -6340,23 +6345,55 @@ function ctRenderPostDetailComments(id) {
   }).join('');
 }
 
-async function ctLikePostDetail() {
+// 상세 좋아요 버튼 UI 갱신 (liked=내가 누른 상태, count=현재 수)
+function _cpdSetLikeUI(liked, count) {
+  var likesEl = document.getElementById('cpd-likes');
+  if (likesEl) likesEl.textContent = count;
+  var likeBtn = document.getElementById('cpd-like-btn');
+  if (!likeBtn) return;
+  if (liked) {
+    likeBtn.style.color = 'var(--red)';
+    likeBtn.style.background = 'var(--red-bg)';
+    likeBtn.style.borderColor = 'var(--red)';
+  } else {
+    likeBtn.style.color = 'var(--text-2)';
+    likeBtn.style.background = 'var(--bg)';
+    likeBtn.style.borderColor = 'var(--border-mid)';
+  }
+}
+
+// 좋아요 토글 (멱등성) — 서버 RPC 가 추가/취소를 원자적으로 처리, 항상 실제 수 반환
+var _cpdLikeBusy = false;
+async function ctTogglePostLikeDetail() {
   if (!_ctDetailPostId) return;
   if (!_currentUser) { showToast(t('toast.login_required')); return; }
+  if (_cpdLikeBusy) return;            // 연타 방지 (RPC 응답 전 중복 호출 차단)
+  _cpdLikeBusy = true;
   var id = _ctDetailPostId;
   var p = _ctDummyPosts.find(function(x){ return x.id === id; });
-  if (!p) return;
-  p.likes++;
-  var likesEl = document.getElementById('cpd-likes');
-  if (likesEl) likesEl.textContent = p.likes;
-  var likeBtn = document.getElementById('cpd-like-btn');
-  if (likeBtn) { likeBtn.style.color = 'var(--red)'; likeBtn.style.background = 'var(--red-bg)'; likeBtn.style.borderColor = 'var(--red)'; likeBtn.disabled = true; }
-  await _sb.from('ct_posts').update({ likes: p.likes }).eq('id', id);
-  if (p.user_id && p.user_id !== _currentUser.id) {
-    var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
-    var myAvatar = localStorage.getItem('riq_avatar') || '😊';
-    await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'like', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: null });
-    _sendSocialPush(p.user_id, '❤️ 좋아요를 받았어요', myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요', { url: '/', tag: 'like-' + id, priority: 'low' });
+  try {
+    var res = await _sb.rpc('toggle_post_like', { p_post_id: id });
+    if (!res.data || !res.data.ok) { showToast('처리에 실패했어요'); return; }
+    var liked = res.data.liked;
+    var count = res.data.count;
+    // 상태 반영
+    if (liked) _ctLikedPosts.add(id); else _ctLikedPosts.delete(id);
+    if (p) p.likes = count;
+    _cpdSetLikeUI(liked, count);
+    // 피드 카드의 좋아요 수도 갱신
+    var feedCount = document.getElementById('ct-like-count-' + id);
+    if (feedCount) feedCount.textContent = '❤️ ' + count;
+    // 새로 누른 경우에만 작성자에게 알림/푸시 (취소 시엔 안 보냄)
+    if (liked && p && p.user_id && p.user_id !== _currentUser.id) {
+      var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
+      var myAvatar = localStorage.getItem('riq_avatar') || '😊';
+      await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'like', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: null });
+      _sendSocialPush(p.user_id, '❤️ 좋아요를 받았어요', myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요', { url: '/', tag: 'like-' + id, priority: 'low' });
+    }
+  } catch(e) {
+    showToast('처리에 실패했어요');
+  } finally {
+    _cpdLikeBusy = false;
   }
 }
 
@@ -25561,7 +25598,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 416;
+window.__APP_BUILD__ = 417;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
