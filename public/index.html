@@ -6390,7 +6390,8 @@ async function ctTogglePostLikeDetail() {
     if (liked && p && p.user_id && p.user_id !== _currentUser.id) {
       var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
       var myAvatar = localStorage.getItem('riq_avatar') || '😊';
-      await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'like', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: null });
+      // 알림은 서버 RPC 로만 생성 (보낸사람 서버 검증 → 사칭/스팸 차단)
+      await _sb.rpc('notify_post_author', { p_post_id: id, p_type: 'like', p_content: null, p_avatar: myAvatar });
       _sendSocialPush(p.user_id, '❤️ 좋아요를 받았어요', myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요', { url: '/', tag: 'like-' + id, priority: 'low' });
     }
   } catch(e) {
@@ -6449,9 +6450,9 @@ async function ctAddCommentDetail() {
   // 스크롤 하단 이동
   var scroll = document.getElementById('cpd-scroll');
   if (scroll) setTimeout(function(){ scroll.scrollTop = scroll.scrollHeight; }, 100);
-  // 작성자 알림
+  // 작성자 알림 — 서버 RPC 로만 생성 (보낸사람 서버 검증 → 사칭/스팸 차단)
   if (p.user_id && p.user_id !== _currentUser.id) {
-    await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'comment', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: text });
+    await _sb.rpc('notify_post_author', { p_post_id: id, p_type: 'comment', p_content: text, p_avatar: myAvatar });
     _sendSocialPush(p.user_id, '💬 コメントが届きました', myName + '：' + text, { url: '/', tag: 'comment-' + id, priority: 'normal' });
   }
 }
@@ -25973,7 +25974,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 420;
+window.__APP_BUILD__ = 421;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
