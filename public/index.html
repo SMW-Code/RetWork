@@ -4313,9 +4313,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div id="cp-cat-accordion" style="display:none;flex-wrap:wrap;gap:5px;padding:8px 2px 2px;"></div>
       </div>
     </div>
-    <!-- 코멘트 (가게 단위·선택). 메뉴별 평점/사진은 위 "公開する品目" 프리뷰에서 입력 -->
+    <!-- 가게 단위 코멘트 (선택). 메뉴별 평점/사진/코멘트는 위 "公開する品目" 프리뷰에서 입력 -->
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;">
-      <textarea id="cp-comment" placeholder="一言コメント（任意）例: ランチタイムのみ、テイクアウト価格" style="width:100%;border:none;padding:12px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:72px;box-sizing:border-box;outline:none;display:block;"></textarea>
+      <div style="font-size:11px;font-weight:700;color:var(--text-2);padding:11px 14px 0;">💬 お店についてのコメント（任意）</div>
+      <textarea id="cp-comment" placeholder="お店全体についてコメントを書いてください 例: 接客が丁寧、雰囲気が良い、混雑など" style="width:100%;border:none;padding:8px 14px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:66px;box-sizing:border-box;outline:none;display:block;"></textarea>
     </div>
     <!-- 공개 버튼 -->
     <button id="cp-submit-btn" onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
@@ -11450,7 +11451,7 @@ function updateCpPreview() {
       +   '<div style="display:flex;gap:1px;flex:1;">'+stars+'</div>'
       +   photoBtn
       + '</div>'
-      + '<input type="text" value="'+_esc(it.cpComment||'')+'" oninput="cpSetItemComment('+idx+',this.value)" maxlength="200" placeholder="この料理へのひとこと（任意）" style="width:100%;margin-top:7px;border:1px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--surface);outline:none;box-sizing:border-box;">'
+      + '<input type="text" value="'+_esc(it.cpComment||'')+'" oninput="cpSetItemComment('+idx+',this.value)" maxlength="200" placeholder="このメニューについてコメントを書いてください（任意）" style="width:100%;margin-top:7px;border:1px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--surface);outline:none;box-sizing:border-box;">'
       + '</div>';
   }).join('');
   if (catSec) catSec.style.display = 'block';
@@ -25444,7 +25445,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 398;
+window.__APP_BUILD__ = 399;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

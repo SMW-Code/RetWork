@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 398 시점)
+# RetWork (チリつも) — HANDOFF (build 399 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 398** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 399** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,12 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 398;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b398';
+public/index.html → window.__APP_BUILD__ = 399;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b399';
 ```
+
+### build 399 — 치리 공개 코멘트 문구 명확화
+- 메뉴 코멘트 placeholder: "このメニューについてコメントを書いてください". 가게 코멘트: 라벨 "💬 お店についてのコメント" 추가 + placeholder "お店全体について…". (어느 대상 코멘트인지 직관적으로)
 
 ### build 398 — 치리 공개: 메뉴별 코멘트 추가
 - 품목 프리뷰 각 행에 코멘트 input(`cpSetItemComment`→`it.cpComment`, 재렌더 안 함). `submitChiriPublish`에서
