@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 396 시점)
+# RetWork (チリつも) — HANDOFF (build 397 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 396** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 397** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,16 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 396;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b396';
+public/index.html → window.__APP_BUILD__ = 397;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b397';
 ```
+
+### build 397 — 치리 공개 모달 개편: 가게사진 + 메뉴별 평점/사진
+- `ov-chiri-publish`: 가게명 아래 **가게 사진 첨부**(`cp-store-photo`/`cpPickStorePhoto`→`store_community_photos`).
+- 전역 별점 1개 제거 → **품목 프리뷰(`updateCpPreview`)에서 메뉴별 별점**(`cpSetItemRating`, `it.cpRating`) + **메뉴별 사진**(`cpPickItemPhoto`, `it.cpPhotoFile`).
+- 사진 첨부 공통: 숨은 input `cp-photo-input`+`cpOnPhotoPicked`, 업로드 헬퍼 `_cpUploadPhoto(file,subdir)`(압축→store-photos 버킷→publicUrl).
+- `submitChiriPublish`(async): 가게사진 업로드 → store_comments(평점=메뉴별 평균) → 품목별 루프(사진 업로드+신규/기존 카드 분기, 기존카드 image_url 비면 채우고 아니면 store_menu_photos에 추가, 평점은 store_menu_comments). 중복제출 가드 `_cpSubmitting`+버튼 비활성화.
+- DB 변경 없음(store_community_photos/store_menu_photos 기존 테이블 사용). dead code: cpSelectStar/_cpStarRating(미사용).
 
 ### build 396 — 설정창 글자 크기(앱 UI 스케일) 기능
 - 설정창에 文字サイズ(小/標準/大/特大) 컨트롤(`#font-scale-opts`). `applyFontScale(scale)` → `#app`에 `zoom` 적용.

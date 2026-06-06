@@ -4283,10 +4283,15 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="font-size:11px;color:var(--text-3);margin-top:2px;">節約情報をチズに公開してコミュニティに貢献</div>
       </div>
     </div>
-    <!-- 가게명 -->
+    <!-- 공유 사진 첨부용 숨은 파일 입력 (가게/메뉴 공통) -->
+    <input type="file" id="cp-photo-input" accept="image/*" style="display:none" onchange="cpOnPhotoPicked(this)">
+    <!-- 가게명 + 가게 사진 -->
     <div style="background:var(--bg);border-radius:12px;padding:10px 14px;margin-bottom:14px;border:0.5px solid var(--border);">
       <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.5px;margin-bottom:3px;">お店</div>
       <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="cp-store-name">-</div>
+      <div id="cp-store-photo" onclick="cpPickStorePhoto()" style="margin-top:10px;height:88px;border-radius:10px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;">
+        <div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">お店の写真を追加（任意）</div></div>
+      </div>
     </div>
     <!-- 품목 선택 (카테고리 아코디언 인라인 포함) -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -4308,22 +4313,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div id="cp-cat-accordion" style="display:none;flex-wrap:wrap;gap:5px;padding:8px 2px 2px;"></div>
       </div>
     </div>
-    <!-- 별점 + 코멘트 -->
+    <!-- 코멘트 (가게 단위·선택). 메뉴별 평점/사진은 위 "公開する品目" 프리뷰에서 입력 -->
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;">
-      <div style="padding:10px 14px 8px;border-bottom:0.5px solid var(--border);">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">このメニューを評価（任意）</div>
-        <div id="cp-star-row" style="display:flex;gap:4px;">
-          <span onclick="cpSelectStar(1)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
-          <span onclick="cpSelectStar(2)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
-          <span onclick="cpSelectStar(3)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
-          <span onclick="cpSelectStar(4)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
-          <span onclick="cpSelectStar(5)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
-        </div>
-      </div>
-      <textarea id="cp-comment" placeholder="一言コメント（任意）例: ランチタイムのみ、テイクアウト価格" style="width:100%;border:none;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:72px;box-sizing:border-box;outline:none;display:block;"></textarea>
+      <textarea id="cp-comment" placeholder="一言コメント（任意）例: ランチタイムのみ、テイクアウト価格" style="width:100%;border:none;padding:12px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:72px;box-sizing:border-box;outline:none;display:block;"></textarea>
     </div>
     <!-- 공개 버튼 -->
-    <button onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
+    <button id="cp-submit-btn" onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span data-i18n="chiri.publish_btn">📍 チズに公開する</span>
       <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
     </button>
@@ -11386,6 +11381,10 @@ function openChiriPublish() {
   window._cpStore = store;
   window._cpReceiptData = r;
   _cpSelectedItems = [];
+  // 가게 사진 초기화
+  window._cpStorePhotoFile = null; window._cpStorePhotoUrl = null;
+  var spBox = document.getElementById('cp-store-photo');
+  if (spBox) spBox.innerHTML = '<div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">お店の写真を追加（任意）</div></div>';
 
   var chipsEl = document.getElementById('cp-item-chips');
   if (chipsEl) {
@@ -11433,12 +11432,64 @@ function updateCpPreview() {
     return;
   }
   listEl.innerHTML = _cpSelectedItems.map(function(it) {
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;">'
-      + '<span style="font-size:12px;font-weight:700;color:var(--text-1);flex:1;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(it.name) + '</span>'
-      + '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
+    var idx = _cpItems.indexOf(it);
+    var rating = it.cpRating || 0;
+    var stars = '';
+    for (var s=1; s<=5; s++) {
+      stars += '<span onclick="cpSetItemRating('+idx+','+s+')" style="font-size:19px;cursor:pointer;line-height:1;color:'+(s<=rating?'#F5B301':'#ddd')+';">'+(s<=rating?'★':'☆')+'</span>';
+    }
+    var photoBtn = it.cpPhotoUrl
+      ? '<div onclick="cpPickItemPhoto('+idx+')" style="width:38px;height:38px;border-radius:8px;overflow:hidden;flex-shrink:0;cursor:pointer;border:1px solid var(--border-mid);"><img src="'+it.cpPhotoUrl+'" style="width:100%;height:100%;object-fit:cover;display:block;"></div>'
+      : '<div onclick="cpPickItemPhoto('+idx+')" style="width:38px;height:38px;border-radius:8px;flex-shrink:0;cursor:pointer;border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></div>';
+    return '<div style="padding:8px 0;border-bottom:0.5px solid rgba(29,158,117,.15);">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
+      +   '<span style="font-size:12px;font-weight:700;color:var(--text-1);flex:1;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(it.name) + '</span>'
+      +   '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;">'
+      +   '<div style="display:flex;gap:1px;flex:1;">'+stars+'</div>'
+      +   photoBtn
+      + '</div>'
       + '</div>';
   }).join('');
   if (catSec) catSec.style.display = 'block';
+}
+
+/* ── 메뉴별 평점/사진 + 가게 사진 (치리 공개) ── */
+function cpSetItemRating(idx, n){
+  var it = _cpItems[idx]; if(!it) return;
+  it.cpRating = (it.cpRating === n) ? 0 : n; // 같은 별 다시 누르면 해제
+  updateCpPreview();
+}
+var _cpPhotoTarget = null; // 'store' 또는 _cpItems 인덱스
+function cpPickStorePhoto(){ _cpPhotoTarget='store'; var i=document.getElementById('cp-photo-input'); if(i){ i.value=''; i.click(); } }
+function cpPickItemPhoto(idx){ _cpPhotoTarget=idx; var i=document.getElementById('cp-photo-input'); if(i){ i.value=''; i.click(); } }
+function cpOnPhotoPicked(input){
+  var f = input.files && input.files[0]; if(!f) return;
+  var url = URL.createObjectURL(f);
+  if (_cpPhotoTarget === 'store'){
+    window._cpStorePhotoFile = f; window._cpStorePhotoUrl = url;
+    var box = document.getElementById('cp-store-photo');
+    if (box) box.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block;">';
+  } else {
+    var it = _cpItems[_cpPhotoTarget];
+    if (it){ it.cpPhotoFile = f; it.cpPhotoUrl = url; }
+    updateCpPreview();
+  }
+  _cpPhotoTarget = null;
+}
+// store-photos 버킷 업로드 → public URL 반환
+async function _cpUploadPhoto(file, subdir){
+  try {
+    if (typeof _compressImage === 'function') file = await _compressImage(file, 1600, 0.82);
+    var ext = ((file.name && file.name.split('.').pop()) || 'jpg').toLowerCase() || 'jpg';
+    var base = (typeof _sdAsciiName==='function') ? _sdAsciiName(window._cpStore||'store') : 'store';
+    var path = subdir + '/' + base + '/' + Date.now() + '_' + Math.floor(Math.random()*99999) + '.' + ext;
+    var up = await _sb.storage.from('store-photos').upload(path, file, { upsert:false, contentType:file.type||'image/jpeg' });
+    if (up.error){ console.warn('[cp upload]', up.error.message); return null; }
+    var pub = _sb.storage.from('store-photos').getPublicUrl(path);
+    return (pub.data && pub.data.publicUrl) || null;
+  } catch(e){ console.warn('[cp upload]', e); return null; }
 }
 
 /* ── 치리츠모 공개 칩 빌더 (선택만, 카테고리 없음) ── */
@@ -11529,6 +11580,11 @@ async function submitChiriPublish() {
   if (_cpSelectedItems.length === 0) { showToast(t('toast.pick_item')); return; }
   var r = window._cpReceiptData || window._ocrResult;
   if (!r) return;
+  if (window._cpSubmitting) return;   // 중복 제출 방지 (사진 업로드 중)
+  window._cpSubmitting = true;
+  var _cpBtn = document.getElementById('cp-submit-btn');
+  function _cpUnlock(){ window._cpSubmitting = false; if(_cpBtn){ _cpBtn.style.opacity=''; _cpBtn.style.pointerEvents=''; } }
+  if (_cpBtn){ _cpBtn.style.opacity='.6'; _cpBtn.style.pointerEvents='none'; }
 
   var store = window._cpStore || '不明';
   var storeAddress = r.address || null;
@@ -11541,9 +11597,11 @@ async function submitChiriPublish() {
     var banned = await _checkContentForBannedWord(commentText);
     if (banned) {
       showToast(t('toast.banned_word', {word: banned}));
+      _cpUnlock();
       return;
     }
   }
+  if (window._cpStorePhotoFile || _cpSelectedItems.some(function(it){return it.cpPhotoFile;})) showToast('🔄 写真をアップロード中…');
 
   // 선택된 품목마다 핀 생성
   var newPins = _cpSelectedItems.map(function(item) {
@@ -11568,16 +11626,17 @@ async function submitChiriPublish() {
   // 포인트 지급 (+10 고정, 품목 수 무관)
   ctAddCoin(10, '🧾 チリつも共有', 'publish');
 
-  // 별점 저장 (선택한 경우, 영수증 공유이므로 has_receipt: true)
-  var _savedStarRating = _cpStarRating; // 리셋 전에 저장
-  if (_cpStarRating > 0 && _currentUser) {
-    ctSubmitRating(_cpStarRating, true, store, true);
-  }
-  _cpStarRating = 0;
-  var cpRow = document.getElementById('cp-star-row');
-  if (cpRow) cpRow.querySelectorAll('span').forEach(function(s) { s.textContent = '☆'; s.style.color = '#ddd'; });
+  // 메뉴별 평점 평균 → 가게 단위 store_comments 평점용
+  var _ratedItems = _cpSelectedItems.filter(function(it){ return (it.cpRating||0) > 0; });
+  var _avgRating = _ratedItems.length ? Math.round(_ratedItems.reduce(function(a,it){return a+(it.cpRating||0);},0)/_ratedItems.length) : 0;
 
-  // 코멘트가 있으면 store_comments 테이블에도 저장 (가게 상세 페이지에 표시됨)
+  // ★ 가게 사진 업로드 → store_community_photos
+  if (window._cpStorePhotoFile && _currentUser && _sb) {
+    var _spUrl = await _cpUploadPhoto(window._cpStorePhotoFile, 'community');
+    if (_spUrl) { try { await _sb.from('store_community_photos').insert({ store_name: store, photo_url: _spUrl, uploaded_by: _currentUser.id }); } catch(e){ console.warn('[cp store photo]', e); } }
+  }
+
+  // 코멘트 → store_comments (가게 단위), 평점은 메뉴별 평균
   if (commentText && _currentUser && _sb) {
     _sb.from('store_comments').insert({
       store_name:  store,
@@ -11585,90 +11644,46 @@ async function submitChiriPublish() {
       user_name:   _userNickname || '節約ユーザー',
       content:     commentText,
       menu_name:   null,
-      rating:      _savedStarRating > 0 ? _savedStarRating : null,
+      rating:      _avgRating > 0 ? _avgRating : null,
       has_receipt: true
     }).then(function(){});
   }
 
-  // ★ 선택된 메뉴 품목들을 store_menu_cards에도 insert
-  //   → 가게 상세 모달의 메뉴 카드 영역에 표시됨
-  //   build 348 — 중복 방지: 동일 (store_name, menu_name) 카드 있으면 insert 스킵
-  //               → 새 카드 안 만들고 기존 카드에 댓글/평점만 추가
+  // ★ 메뉴 카드: 품목별 사진 업로드 + 평점. 기존 카드는 평점/사진 추가, 신규는 생성
   if (_currentUser && _sb && _cpSelectedItems.length > 0) {
-    // 1) 기존 카드 fetch (정규화 비교용)
     var _normMenu = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
-    var existRes = await _sb.from('store_menu_cards')
-      .select('id,menu_name')
-      .eq('store_name', store);
-    var existCards = existRes.data || [];
+    var existRes = await _sb.from('store_menu_cards').select('id,menu_name,image_url').eq('store_name', store);
     var existMap = {};
-    existCards.forEach(function(c){ existMap[_normMenu(c.menu_name)] = c; });
+    (existRes.data||[]).forEach(function(c){ existMap[_normMenu(c.menu_name)] = c; });
 
-    // 2) 신규 카드 / 기존 카드 분류
-    var newRows = [];
-    var existingCardsForRating = [];
-    _cpSelectedItems.forEach(function(item) {
-      var key = _normMenu(item.name);
-      if (existMap[key]) {
-        existingCardsForRating.push(existMap[key]); // 평점만 추가
+    for (var qi=0; qi<_cpSelectedItems.length; qi++){
+      var _it = _cpSelectedItems[qi];
+      var _mkey = _normMenu(_it.name);
+      var _mR = _it.cpRating || 0;
+      var _mPhoto = _it.cpPhotoFile ? await _cpUploadPhoto(_it.cpPhotoFile, 'menu-cards') : null;
+      var _card = existMap[_mkey];
+      if (_card && _card.id) {
+        // 기존 카드: 평점 추가 + 사진(비어있으면 대표로, 아니면 추가사진 테이블)
+        if (_mR > 0) { try { await _sb.from('store_menu_comments').insert({ menu_card_id:_card.id, user_id:_currentUser.id, rating:_mR, content:null }); } catch(e){} }
+        if (_mPhoto) {
+          if (!_card.image_url) { try { await _sb.from('store_menu_cards').update({ image_url:_mPhoto }).eq('id', _card.id); _card.image_url=_mPhoto; } catch(e){} }
+          else { try { await _sb.from('store_menu_photos').insert({ menu_card_id:_card.id, image_url:_mPhoto, uploaded_by:_currentUser.id }); } catch(e){} }
+        }
       } else {
-        newRows.push({
-          store_name:   store,
-          menu_name:    item.name,
-          category:     _cpCategory || r.cat || 'other',
-          price:        item.price,
-          image_url:    null,
-          rating_avg:   _savedStarRating > 0 ? _savedStarRating : 0,
-          rating_count: _savedStarRating > 0 ? 1 : 0,
-          created_by:   _currentUser.id
-        });
+        // 신규 카드 생성 (대표 사진 + 평점)
+        var _ins = await _sb.from('store_menu_cards').insert({
+          store_name:store, menu_name:_it.name, category:_cpCategory||r.cat||'other',
+          price:_it.price, image_url:_mPhoto,
+          rating_avg:_mR>0?_mR:0, rating_count:_mR>0?1:0, created_by:_currentUser.id
+        }).select().maybeSingle();
+        if (_ins.data) {
+          existMap[_mkey] = _ins.data; // 같은 세션 중복 방지
+          if (_mR > 0) { try { await _sb.from('store_menu_comments').insert({ menu_card_id:_ins.data.id, user_id:_currentUser.id, rating:_mR, content:null }); } catch(e){} }
+        }
       }
-    });
-    console.log('[chiri-publish] menu_cards: new=' + newRows.length + ', existing=' + existingCardsForRating.length);
-
-    // 3) 기존 카드들에 별점만 추가 (별점 입력했을 때만)
-    //    build 364 — 댓글 텍스트(content) 는 메뉴별로 복제하지 않음.
-    //      코멘트는 가게 단위(store_comments) 에만 저장 (위 라인 ~11522)
-    //      메뉴별 store_menu_comments 에는 별점만 저장 → 평균 평점 계산용
-    //      메뉴별 텍스트 댓글은 사용자가 직접 메뉴 카드 상세에서만 입력
-    if (_savedStarRating > 0 && existingCardsForRating.length > 0) {
-      var existingCommentRows = existingCardsForRating.map(function(card) {
-        return {
-          menu_card_id: card.id,
-          user_id:      _currentUser.id,
-          rating:       _savedStarRating,
-          content:      null  // ★ content 제거 (가게 댓글에만 저장)
-        };
-      });
-      _sb.from('store_menu_comments').insert(existingCommentRows).then(function(r2){
-        if (r2 && r2.error) console.warn('[chiri-publish] existing menu_comments insert error:', r2.error.message);
-      });
     }
-
-    // 4) 신규 카드만 insert
-    if (newRows.length === 0) {
-      console.log('[chiri-publish] 모든 메뉴 카드 이미 존재 — insert 스킵');
-    } else
-    _sb.from('store_menu_cards').insert(newRows).select().then(function(res) {
-      if (res.error) {
-        console.warn('[chiri-publish] store_menu_cards insert error:', res.error.message);
-        return;
-      }
-      // 별점이 있으면 각 메뉴 카드에 store_menu_comments도 동시 저장
-      // build 364 — content 는 null (가게 댓글에만 저장)
-      if (_savedStarRating > 0 && res.data && res.data.length > 0) {
-        var menuCommentRows = res.data.map(function(card) {
-          return {
-            menu_card_id: card.id,
-            user_id:      _currentUser.id,
-            rating:       _savedStarRating,
-            content:      null  // ★ content 제거
-          };
-        });
-        _sb.from('store_menu_comments').insert(menuCommentRows).then(function(){});
-      }
-    });
   }
+  window._cpSubmitting = false;
 
   closeOv('ov-chiri-publish');
 
@@ -25415,7 +25430,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 396;
+window.__APP_BUILD__ = 397;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
