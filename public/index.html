@@ -11450,6 +11450,7 @@ function updateCpPreview() {
       +   '<div style="display:flex;gap:1px;flex:1;">'+stars+'</div>'
       +   photoBtn
       + '</div>'
+      + '<input type="text" value="'+_esc(it.cpComment||'')+'" oninput="cpSetItemComment('+idx+',this.value)" maxlength="200" placeholder="この料理へのひとこと（任意）" style="width:100%;margin-top:7px;border:1px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--surface);outline:none;box-sizing:border-box;">'
       + '</div>';
   }).join('');
   if (catSec) catSec.style.display = 'block';
@@ -11460,6 +11461,10 @@ function cpSetItemRating(idx, n){
   var it = _cpItems[idx]; if(!it) return;
   it.cpRating = (it.cpRating === n) ? 0 : n; // 같은 별 다시 누르면 해제
   updateCpPreview();
+}
+function cpSetItemComment(idx, val){
+  var it = _cpItems[idx]; if(!it) return;
+  it.cpComment = val; // 재렌더 안 함 (입력 중 포커스 유지)
 }
 var _cpPhotoTarget = null; // 'store' 또는 _cpItems 인덱스
 function cpPickStorePhoto(){ _cpPhotoTarget='store'; var i=document.getElementById('cp-photo-input'); if(i){ i.value=''; i.click(); } }
@@ -11601,6 +11606,14 @@ async function submitChiriPublish() {
       return;
     }
   }
+  // 메뉴별 코멘트 차단어 검사
+  for (var _ci=0; _ci<_cpSelectedItems.length; _ci++){
+    var _cc = (_cpSelectedItems[_ci].cpComment||'').trim();
+    if (_cc) {
+      var _cb = await _checkContentForBannedWord(_cc);
+      if (_cb) { showToast(t('toast.banned_word', {word:_cb})); _cpUnlock(); return; }
+    }
+  }
   if (window._cpStorePhotoFile || _cpSelectedItems.some(function(it){return it.cpPhotoFile;})) showToast('🔄 写真をアップロード中…');
 
   // 선택된 품목마다 핀 생성
@@ -11660,11 +11673,12 @@ async function submitChiriPublish() {
       var _it = _cpSelectedItems[qi];
       var _mkey = _normMenu(_it.name);
       var _mR = _it.cpRating || 0;
+      var _mC = (_it.cpComment||'').trim();
       var _mPhoto = _it.cpPhotoFile ? await _cpUploadPhoto(_it.cpPhotoFile, 'menu-cards') : null;
       var _card = existMap[_mkey];
       if (_card && _card.id) {
-        // 기존 카드: 평점 추가 + 사진(비어있으면 대표로, 아니면 추가사진 테이블)
-        if (_mR > 0) { try { await _sb.from('store_menu_comments').insert({ menu_card_id:_card.id, user_id:_currentUser.id, rating:_mR, content:null }); } catch(e){} }
+        // 기존 카드: 평점/코멘트 추가 + 사진(비어있으면 대표로, 아니면 추가사진 테이블)
+        if (_mR > 0 || _mC) { try { await _sb.from('store_menu_comments').insert({ menu_card_id:_card.id, user_id:_currentUser.id, rating:_mR>0?_mR:null, content:_mC||null }); } catch(e){} }
         if (_mPhoto) {
           if (!_card.image_url) { try { await _sb.from('store_menu_cards').update({ image_url:_mPhoto }).eq('id', _card.id); _card.image_url=_mPhoto; } catch(e){} }
           else { try { await _sb.from('store_menu_photos').insert({ menu_card_id:_card.id, image_url:_mPhoto, uploaded_by:_currentUser.id }); } catch(e){} }
@@ -11678,7 +11692,7 @@ async function submitChiriPublish() {
         }).select().maybeSingle();
         if (_ins.data) {
           existMap[_mkey] = _ins.data; // 같은 세션 중복 방지
-          if (_mR > 0) { try { await _sb.from('store_menu_comments').insert({ menu_card_id:_ins.data.id, user_id:_currentUser.id, rating:_mR, content:null }); } catch(e){} }
+          if (_mR > 0 || _mC) { try { await _sb.from('store_menu_comments').insert({ menu_card_id:_ins.data.id, user_id:_currentUser.id, rating:_mR>0?_mR:null, content:_mC||null }); } catch(e){} }
         }
       }
     }
@@ -25430,7 +25444,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 397;
+window.__APP_BUILD__ = 398;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

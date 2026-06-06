@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 397 시점)
+# RetWork (チリつも) — HANDOFF (build 398 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 397** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 398** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,14 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 397;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b397';
+public/index.html → window.__APP_BUILD__ = 398;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b398';
 ```
+
+### build 398 — 치리 공개: 메뉴별 코멘트 추가
+- 품목 프리뷰 각 행에 코멘트 input(`cpSetItemComment`→`it.cpComment`, 재렌더 안 함). `submitChiriPublish`에서
+  `store_menu_comments.content=_mC`(평점 없어도 코멘트만 있으면 insert, rating은 null 허용). 메뉴별 코멘트도 차단어 검사.
+- 하단 cp-comment(가게 단위 코멘트)는 그대로 store_comments에 저장(별개). ⚠️ store_menu_comments.rating NOT NULL이면 코멘트-only insert 실패 가능(catch됨) → 필요시 컬럼 nullable로.
 
 ### build 397 — 치리 공개 모달 개편: 가게사진 + 메뉴별 평점/사진
 - `ov-chiri-publish`: 가게명 아래 **가게 사진 첨부**(`cp-store-photo`/`cpPickStorePhoto`→`store_community_photos`).
