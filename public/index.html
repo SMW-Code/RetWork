@@ -2835,7 +2835,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <button onclick="_admPcSwitchTab('ads')" id="apc-tab-ads" class="apc-tab">광고관리</button>
       <button onclick="_admPcSwitchTab('theme')" id="apc-tab-theme" class="apc-tab">테마관리</button>
     </div>
-    <div style="display:flex;align-items:center;gap:14px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span id="apc-version-badge" style="font-size:11px;color:rgba(255,255,255,.7);font-weight:700;white-space:nowrap;background:rgba(255,255,255,.12);padding:3px 10px;border-radius:10px;letter-spacing:.2px;"><span class="app-version-text"></span>&thinsp;·&thinsp;b<span class="app-build-text"></span></span>
       <span id="apc-user-email" style="font-size:11px;color:rgba(255,255,255,.5);font-weight:600;"></span>
       <div onclick="closeAdminPc()" style="cursor:pointer;color:rgba(255,255,255,.7);font-size:16px;padding:8px 12px;border-radius:8px;transition:background .15s;" onmouseover="this.style.background='rgba(255,255,255,.1)'" onmouseout="this.style.background='transparent'" title="닫기">✕</div>
     </div>
@@ -20804,21 +20805,31 @@ function _admPcRenderContent(key) {
   var ct = document.getElementById('apc-content');
   if (!ct) return;
   if (!key) {
-    ct.innerHTML = '<div style="max-width:600px;margin:80px auto;text-align:center;color:#6B7280;">'
-                 + '<div style="font-size:64px;margin-bottom:20px;opacity:.5;">←</div>'
-                 + '<div style="font-size:18px;font-weight:700;color:#172C58;margin-bottom:8px;">RetWork Admin (PC) — Phase 1</div>'
-                 + '<div style="font-size:13px;line-height:1.7;">왼쪽 메뉴에서 항목을 선택하세요.<br>'
-                 + '현재는 기존 모달이 위에 표시됩니다 (Phase 2 에서 우측 영역 통합).</div>'
-                 + '<div style="margin-top:32px;padding:16px;background:#F4F5F8;border-radius:12px;text-align:left;font-size:11px;color:#374151;line-height:1.8;">'
-                 + '<strong>현재 사용 가능:</strong><br>'
-                 + '・ 톱바: RetWork(전체) · 언어시트 · 치리관리 · 광고관리<br>'
-                 + '・ 사이드바 메뉴 클릭 → 기존 어드민 모달 표시<br>'
-                 + '・ PC ≥ 1024px 에서만 표시 (모바일은 기존 시트)<br>'
-                 + '<br><strong>Phase 2 예정:</strong><br>'
-                 + '・ 우측 영역에 콘텐츠 직접 마운트 (모달 X)<br>'
-                 + '・ 언어시트 페이지별 분류<br>'
-                 + '・ 광고 페이지/위치 신규 화면'
-                 + '</div></div>';
+    var _v = (window.__APP_VERSION__||'—');
+    var _b = (window.__APP_BUILD__||'—');
+    var _swv = 'receiptiq-v0.9.0-b405';
+    ct.innerHTML = '<div style="max-width:600px;margin:48px auto;">'
+                 /* ── 앱 버전 카드 ── */
+                 + '<div style="background:#172C58;border-radius:16px;padding:24px 28px;margin-bottom:20px;color:#fff;">'
+                 +   '<div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px;">현재 버전 정보</div>'
+                 +   '<div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">'
+                 +     '<div style="background:rgba(255,255,255,.12);border-radius:10px;padding:10px 20px;text-align:center;">'
+                 +       '<div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:4px;">VERSION</div>'
+                 +       '<div style="font-size:22px;font-weight:900;letter-spacing:.5px;" class="app-version-text">' + _v + '</div>'
+                 +     '</div>'
+                 +     '<div style="background:rgba(255,255,255,.12);border-radius:10px;padding:10px 20px;text-align:center;">'
+                 +       '<div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:4px;">BUILD</div>'
+                 +       '<div style="font-size:22px;font-weight:900;letter-spacing:.5px;" class="app-build-text">' + _b + '</div>'
+                 +     '</div>'
+                 +     '<div style="background:rgba(255,255,255,.12);border-radius:10px;padding:10px 20px;text-align:center;min-width:120px;">'
+                 +       '<div style="font-size:10px;color:rgba(255,255,255,.5);margin-bottom:4px;">SW CACHE</div>'
+                 +       '<div style="font-size:11px;font-weight:700;letter-spacing:.3px;word-break:break-all;">' + _swv + '</div>'
+                 +     '</div>'
+                 +   '</div>'
+                 + '</div>'
+                 /* ── 안내 ── */
+                 + '<div style="text-align:center;color:#9CA3AF;font-size:13px;margin-bottom:24px;">왼쪽 메뉴에서 항목을 선택하세요.</div>'
+                 + '</div>';
     return;
   }
   ct.innerHTML = '<div style="max-width:600px;margin:80px auto;text-align:center;color:#6B7280;">'
@@ -25489,7 +25500,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 404;
+window.__APP_BUILD__ = 405;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
