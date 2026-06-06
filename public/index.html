@@ -16514,6 +16514,8 @@ function showApp() {
   document.getElementById('screen-auth').style.display = 'none';
   // 1) display:flex 전에 마지막 탭의 active 클래스만 즉시 적용 → 홈 깜빡임 방지
   var _savedNav = (typeof window._loadSavedNav === 'function') ? window._loadSavedNav() : null;
+  // ── 임시 진단 (build 411) — riq_nav_debug='1' 일 때만 표시 ──
+  if (localStorage.getItem('riq_nav_debug') === '1') { try { _navDebugShow(_savedNav); } catch(e){} }
   if (_savedNav && typeof window._applyNavClasses === 'function') window._applyNavClasses(_savedNav);
   // 2) 메인 표시
   document.getElementById('screen-main').style.display = 'flex';
@@ -25711,7 +25713,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 410;
+window.__APP_BUILD__ = 411;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -25765,6 +25767,19 @@ if ('serviceWorker' in navigator) {
    - 로그인 후 redeem_referral RPC 호출 → 추천인에게 +200 치리
    - ctInviteShare() : 내 코드로 초대 링크 공유
 ══════════════════════════════════════════════════════════════ */
+// (0) URL ?navdebug=1 → nav 진단 패널 ON / ?navdebug=0 → OFF (build 411 임시)
+(function _captureNavDebug(){
+  try {
+    var u = new URL(window.location.href);
+    if (u.searchParams.has('navdebug')) {
+      var v = u.searchParams.get('navdebug');
+      if (v === '0') localStorage.removeItem('riq_nav_debug');
+      else localStorage.setItem('riq_nav_debug', '1');
+      u.searchParams.delete('navdebug');
+      try { history.replaceState({}, '', u.pathname + (u.search||'') + (u.hash||'')); } catch(e){}
+    }
+  } catch(e){}
+})();
 // (1) 페이지 진입 즉시 URL 의 ref 캐치
 (function _capturePendingRef(){
   try {
@@ -25956,16 +25971,51 @@ window._saveNav = function _saveNav(){
     localStorage.setItem('riq_last_nav', JSON.stringify({mode:mode, tab:tab, t:Date.now()}));
   } catch(e){}
 };
+// ── 임시 진단 패널 (build 411) ──
+// localStorage.riq_nav_debug='1' 로 켜고 새로고침하면 화면 상단에 nav 상태 표시
+// 사용자가 스크린샷 찍어 보고 → 실기기 동작 파악용. 끄려면 riq_nav_debug 제거.
+window._navDebugShow = function _navDebugShow(savedNav){
+  var raw = '';
+  try { raw = localStorage.getItem('riq_last_nav') || '(null)'; } catch(e){ raw = '(localStorage 접근 실패: '+e.message+')'; }
+  var d = document.getElementById('_nav-debug');
+  if (!d) {
+    d = document.createElement('div');
+    d.id = '_nav-debug';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;background:rgba(10,12,18,.94);color:#7CFFB2;font:11px/1.5 monospace;padding:8px 12px;white-space:pre-wrap;word-break:break-all;max-height:42vh;overflow:auto;box-shadow:0 2px 10px rgba(0,0,0,.5);';
+    d.onclick = function(){ d.style.display='none'; };
+    document.body.appendChild(d);
+  }
+  d.style.display = 'block';
+  function snap(label){
+    var sw = document.getElementById('mode-toggle-sw');
+    var swMode = (sw && sw.dataset && sw.dataset.mode) || '?';
+    var ct = (document.querySelector('.ct-screen.active')||{}).id || '-';
+    var rc = (document.querySelector('.screen.active')||{}).id || '-';
+    return label+': mode='+swMode+' ct='+ct+' rc='+rc;
+  }
+  var lines = [];
+  lines.push('[NAV DEBUG · build '+window.__APP_BUILD__+'] (탭하면 닫힘)');
+  lines.push('localStorage.riq_last_nav = '+raw);
+  lines.push('_loadSavedNav() → '+JSON.stringify(savedNav));
+  lines.push(snap('t=0 (showApp 직후)'));
+  d.textContent = lines.join('\n');
+  [100,500,1500,3000].forEach(function(ms){
+    setTimeout(function(){
+      lines.push(snap('t='+ms+'ms'));
+      d.textContent = lines.join('\n');
+    }, ms);
+  });
+};
 // 저장된 nav 읽기 (sessionStorage 없이 localStorage TTL만으로 판단)
-// - 2시간 이내: 새로고침·PWA 재진입 모두 복원
-// - 2시간 초과: 홈으로 (오랜만에 열었을 땐 홈이 자연스러움)
+// - 7일 이내: 새로고침·PWA 재진입 모두 복원 (사용자가 마지막 탭 유지를 원함)
+// - 7일 초과: 홈으로 (아주 오랜만에 열었을 땐 홈이 자연스러움)
 window._loadSavedNav = function _loadSavedNav(){
   try {
     var raw = localStorage.getItem('riq_last_nav');
     if (!raw) return null;
     var n = JSON.parse(raw);
     if (!n || !n.tab) return null;
-    if (n.t && (Date.now() - n.t) > 2*3600*1000) return null; // 2시간 초과 → 홈
+    if (n.t && (Date.now() - n.t) > 7*24*3600*1000) return null; // 7일 초과 → 홈
     return n;
   } catch(e){ return null; }
 };
