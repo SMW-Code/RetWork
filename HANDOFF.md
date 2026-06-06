@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 390 시점)
+# RetWork (チリつも) — HANDOFF (build 391 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 390** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 391** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,16 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 390;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b390';
+public/index.html → window.__APP_BUILD__ = 391;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b391';
 ```
+
+> ⚠️ 어드민 가격핀→어드민 편집 회귀수정(구 build 391)은 `backup-b391-395` 브랜치에 보관됨. 추후 재적용 예정.
+
+### build 391 — 영수증 수정 품목 행 레이아웃 수정
+- 영수증모드 > 내역 > 지출카드 > 수정 시 품목 행이 가로 넘쳐 X(삭제)버튼이 잘리던 문제.
+- `renderEditItems()` (index.html ~7682): 가격칸 `flex:1`→**고정 76px**(우측정렬), 이름칸 `flex:1+min-width:0`,
+  수량칸 40px, 전 입력칸 `box-sizing:border-box` → 한 화면에 다 들어오고 X 항상 표시.
 
 ### build 390 — 가게목록 펼침 영역 좌측 쏠림 수정
 - `.shop-card`가 `align-items:flex-start`라 펼침 detail이 내용폭만 차지 → 좌측 쏠림.
