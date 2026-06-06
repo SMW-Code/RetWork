@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 393 시점)
+# RetWork (チリつも) — HANDOFF (build 394 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 393** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 394** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,13 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 393;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b393';
+public/index.html → window.__APP_BUILD__ = 394;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b394';
 ```
+
+### build 394 — 어드민 영수증 카테고리 select 이모지 제거(+군것질 추가)
+- `adm-rec-cat` select 옵션의 선두 이모지 제거(텍스트만 — `<option>`은 SVG 불가). snack 옵션 추가.
+- 참고: 치리톡 음식 카테고리 칩은 이미 `_paintCtCatChips()`(applyLang에서 호출)가 런타임에 SVG로 변환 중이라 변경 불필요. 지도 마커는 의도적으로 이모지 유지.
 
 ### build 393 — 수동입력 모달 카테고리 칩 이모지→SVG 라인 아이콘 통일
 - 지출 카테고리 시스템 UI를 전부 단색 SVG로 통일(`CAT_ICON`). 수동입력 모달만 이모지였던 것 수정.
