@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 394 시점)
+# RetWork (チリつも) — HANDOFF (build 395 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 394** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 395** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,14 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 394;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b394';
+public/index.html → window.__APP_BUILD__ = 395;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b395';
 ```
+
+### build 395 — 메뉴카드 추가 폼 이모지→SVG
+- 가게상세 메뉴카드 추가(`sdOpenAddCard`/`_sdRenderCatPicker`): 대분류 칩(🍣일식…), 🏷️/🍽️/📷 이모지를 SVG 라인 아이콘으로.
+- 대분류는 `_SD_CAT1_ICON`(키→ct아이콘키) 매핑 + `_ctCatSvgStr` 사용. **저장값(SD_CATS 키, 이모지 포함)은 그대로** 유지(기존 카드 안 깨짐), 표시만 SVG+라벨(선두 이모지 strip).
+- 참고: 저장된 메뉴 카드의 카테고리 문자열엔 여전히 이모지 포함(표시 위치별로 추후 strip 가능).
 
 ### build 394 — 어드민 영수증 카테고리 select 이모지 제거(+군것질 추가)
 - `adm-rec-cat` select 옵션의 선두 이모지 제거(텍스트만 — `<option>`은 SVG 불가). snack 옵션 추가.

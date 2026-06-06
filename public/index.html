@@ -16590,6 +16590,12 @@ var SD_CATS = {
   '🍺 술집':           ['이자카야','바','호프','와인바','기타'],
   '🍱 기타':           ['도시락','패스트푸드','뷔페','푸드코트','기타']
 };
+// 대분류 키 → 치리톡 음식 아이콘 키 (표시는 SVG, 저장값은 키 그대로 유지)
+var _SD_CAT1_ICON = {
+  '🍣 일식':'sushi', '🌶️ 한식':'korean', '🥟 중식':'chinese',
+  '🍝 이탈리안':'pizza', '🥐 프랑스':'other', '🍔 양식':'fast',
+  '☕ 카페/베이커리':'cafe', '🍺 술집':'izakaya', '🍱 기타':'other'
+};
 
 /* ── 열기 ── */
 async function openStoreDetail(sData) {
@@ -25046,11 +25052,11 @@ function sdOpenAddCard(){
   _sdNewImgFile=null; _sdCStar['__new']=0; _sdNewCat1=''; _sdNewCat2='';
   wrap.innerHTML='<div style="padding:0 16px 16px;">'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">'
-    +'<div style="font-size:13px;font-weight:700;color:var(--text-1);">🍽️ メニューカード 추가</div>'
+    +'<div style="font-size:13px;font-weight:700;color:var(--text-1);display:flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.05em;height:1.05em;display:inline-block;"><path d="M3 2v7c0 1.1.9 2 2 2h2a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg><span>メニューカード 추가</span></div>'
     +'<div onclick="sdCloseAddCard()" style="font-size:18px;color:var(--text-3);cursor:pointer;">✕</div>'
     +'</div>'
     +'<div id="sd-nmi-preview" onclick="sdPickMenuImg()" style="width:100%;height:130px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;margin-bottom:12px;cursor:pointer;">'
-    +'<div style="text-align:center;color:var(--text-3);"><div style="font-size:26px;margin-bottom:4px;">📷</div><div style="font-size:11px;font-weight:600;">사진 추가 (선택)</div></div></div>'
+    +'<div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;display:inline-block;margin-bottom:4px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">사진 추가 (선택)</div></div></div>'
     +'<input id="sd-nm-name" type="text" placeholder="메뉴 이름 *" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;margin-bottom:10px;">'
     +'<div id="sd-cat-holder">'+_sdRenderCatPicker()+'</div>'
     +'<input id="sd-nm-price" type="number" placeholder="가격 (¥)" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);outline:none;box-sizing:border-box;margin-bottom:10px;">'
@@ -25070,14 +25076,17 @@ function sdCloseAddCard(){_sdNewImgFile=null;_sdNewCat1='';_sdNewCat2='';_sdLoad
 
 /* ── 카테고리 picker (대분류 → 소분류, 둘 다 flex-wrap으로 한 눈에 보임) ── */
 function _sdRenderCatPicker(){
+  var _tagSvg='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1em;height:1em;vertical-align:-0.15em;display:inline-block;"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></svg>';
   var h='<div style="margin-bottom:10px;">'
-    +'<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;">🏷️ 카테고리</div>'
+    +'<div style="font-size:11px;font-weight:700;color:var(--text-2);margin-bottom:6px;">'+_tagSvg+' 카테고리</div>'
     +'<div style="display:flex;flex-wrap:wrap;gap:5px;">';
   Object.keys(SD_CATS).forEach(function(k){
     var sel=_sdNewCat1===k;
+    var ico=(typeof _ctCatSvgStr==='function')?_ctCatSvgStr(_SD_CAT1_ICON[k]||'other'):'';
+    var lbl=k.replace(/^\S+\s+/,'')||k; // 키의 선두 이모지 제거 (저장값 k는 그대로)
     h+='<div onclick="sdPickCat1(\''+k.replace(/'/g,"\\'")+'\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid '
       +(sel?'var(--green)':'var(--border-mid)')+';background:'+(sel?'var(--green)':'var(--surface)')
-      +';color:'+(sel?'#fff':'var(--text-2)')+';white-space:nowrap;">'+k+'</div>';
+      +';color:'+(sel?'#fff':'var(--text-2)')+';white-space:nowrap;display:inline-flex;align-items:center;gap:4px;">'+ico+'<span>'+lbl+'</span></div>';
   });
   h+='</div>';
   if(_sdNewCat1){
@@ -25393,7 +25402,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 394;
+window.__APP_BUILD__ = 395;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
