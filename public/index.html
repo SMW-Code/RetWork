@@ -25704,7 +25704,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 408;
+window.__APP_BUILD__ = 409;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -25715,8 +25715,38 @@ document.querySelectorAll('.app-version-text').forEach(function(el){ el.textCont
 // 어드민 모달의 빌드 번호 표시 자동 갱신
 document.querySelectorAll('.app-build-text').forEach(function(el){ el.textContent = window.__APP_BUILD__; });
 if ('serviceWorker' in navigator) {
+  // 페이지 로드 시점에 이미 컨트롤러가 있었는지 기록 (첫 설치 vs 업데이트 구분)
+  var _hadSwController = !!navigator.serviceWorker.controller;
+  var _swReloaded = false;
+  // 새 서비스워커가 활성화(컨트롤 인수)되면 → 최신 HTML/JS 로 1회 자동 리로드
+  // (skipWaiting+claim 으로 새 SW 가 즉시 인수 → 옛 코드가 계속 도는 문제 해결)
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (_swReloaded) return;
+    _swReloaded = true;
+    // 첫 설치(이전 컨트롤러 없음)는 리로드 불필요 — 업데이트일 때만 새로고침
+    if (_hadSwController) {
+      console.log('[SW] 새 버전 활성화 → 자동 리로드');
+      window.location.reload();
+    }
+  });
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('/sw.js').catch(function(err) {
+    navigator.serviceWorker.register('/sw.js').then(function(reg) {
+      // 즉시 + 주기적 업데이트 체크 (앱을 오래 켜둬도 새 빌드 감지)
+      try { reg.update(); } catch(e){}
+      setInterval(function(){ try { reg.update(); } catch(e){} }, 30 * 60 * 1000); // 30분마다
+      // 새 SW 가 설치 대기 중이면 즉시 활성화 유도
+      if (reg.waiting) { try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(e){} }
+      reg.addEventListener('updatefound', function() {
+        var nw = reg.installing;
+        if (!nw) return;
+        nw.addEventListener('statechange', function() {
+          if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+            // 새 버전 설치 완료 + 기존 컨트롤러 존재 = 업데이트 → 활성화 후 controllerchange 가 리로드
+            try { nw.postMessage({ type: 'SKIP_WAITING' }); } catch(e){}
+          }
+        });
+      });
+    }).catch(function(err) {
       console.warn('SW 등록 실패:', err);
     });
   });

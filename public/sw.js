@@ -1,4 +1,4 @@
-const CACHE_NAME = 'receiptiq-v0.9.0-b408';
+const CACHE_NAME = 'receiptiq-v0.9.0-b409';
 // manifest.json은 인라인 Blob URL로 처리됨 (Vercel 방화벽 차단 회피)
 const STATIC_CACHE = ['/icons/icon.png', '/icons/icon.svg'];
 
@@ -8,6 +8,13 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_CACHE))
   );
+});
+
+// 페이지에서 SKIP_WAITING 메시지 수신 시 즉시 활성화 (대기 중인 새 SW 강제 적용)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // 활성화: 구버전 캐시 전부 삭제
