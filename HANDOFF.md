@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 402 시점)
+# RetWork (チリつも) — HANDOFF (build 403 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 402** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 403** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,13 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 402;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b402';
+public/index.html → window.__APP_BUILD__ = 403;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b403';
 ```
+
+### build 403 — 광고 시청 게이트 버튼 문구 컨텍스트별로
+- `watch-ad-primary-btn` 라벨이 항상 "광고 보고 내용 확인하기"였던 것 → 컨텍스트 `base.descTitle` 사용(16003).
+  치리 공개=「광고 보고 치리에 공개하기」, 저장=「…가계부에 무료 저장」 등 자동.
 
 ### build 402 — 어드민 가격핀 코멘트 전용 삭제
 - 가격핀 카드에 **"💬 삭제"**(코멘트만, 핀/마커 유지 = `_admPcClearPinComment` UPDATE comment='') 추가. 기존 "삭제"→"핀 삭제"로 명확화.
