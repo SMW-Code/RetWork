@@ -6182,14 +6182,6 @@ function ctRenderPosts() {
             thumb +
             '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-left:2px;"><polyline points="9 18 15 12 9 6"/></svg>' +
           '</div>' +
-          /* 더미 노드: 기존 JS 참조 유지용 (hidden) */
-          '<div id="ct-post-body-' + p.id + '" style="display:none;"></div>' +
-          /* 더미 노드: ctRenderPostComments 참조 유지용 */
-          '<div id="ct-comments-' + p.id + '" style="display:none;"></div>' +
-          '<button id="ct-like-btn-' + p.id + '" style="display:none;" onclick=""></button>' +
-              '</div>' +
-              '<div id="ct-comments-' + p.id + '" style="margin-bottom:10px;"></div>' +
-          '<input id="ct-comment-input-' + p.id + '" style="display:none;">' +
         '</div>'
       );
     });
@@ -6218,11 +6210,6 @@ function ctRenderPosts() {
   }
   html += '<button style="' + btnN + '" onclick="ctGoPage(' + Math.min(totalPages, _ctPostPage + 1) + ')">›</button>';
   pag.innerHTML = html;
-}
-
-function ctTogglePost(id) {
-  // 전체화면 상세로 리다이렉트
-  ctOpenPostDetail(id);
 }
 
 /* ══════════════════════════════════════
@@ -6399,13 +6386,21 @@ async function ctAddCommentDetail() {
   var quota = await _checkCommentQuota();
   if (!quota.allowed) { openCommentQuotaAdModal(function(){ ctAddCommentDetail(); }); return; }
 
+  // 금칙어 사전 검사 (구 ctAddComment 와 동일 정책)
+  var banned = await _checkContentForBannedWord(text);
+  if (banned) { showToast(t('toast.banned_word', {word: banned})); return; }
+
   var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
   var myAvatar = localStorage.getItem('riq_avatar') || '😊';
   var p = _ctDummyPosts.find(function(x){ return x.id === id; });
   if (!p) return;
   if (inp) inp.value = '';
   var cRes = await _sb.from('ct_comments').insert({ post_id: id, user_id: _currentUser.id, user_name: myName, user_avatar: myAvatar, content: text });
-  if (cRes.error) { showToast('コメントの送信に失敗しました'); return; }
+  if (cRes.error) {
+    if (typeof _handleCommentInsertError === 'function' && _handleCommentInsertError(cRes.error)) return;
+    showToast(t('toast.comment_fail'));
+    return;
+  }
   p.comments++;
   await _sb.from('ct_posts').update({ comments: p.comments }).eq('id', id);
   var countEl = document.getElementById('ct-comment-count-' + id);
@@ -6418,40 +6413,6 @@ async function ctAddCommentDetail() {
   if (p.user_id && p.user_id !== _currentUser.id) {
     await _sb.from('ct_notifications').insert({ recipient_id: p.user_id, type: 'comment', post_id: id, post_title: p.title, from_user_name: myName, from_user_avatar: myAvatar, content: text });
     _sendSocialPush(p.user_id, '💬 コメントが届きました', myName + '：' + text, { url: '/', tag: 'comment-' + id, priority: 'normal' });
-  }
-}
-
-async function ctLikePost(id) {
-  if (!_currentUser) return;
-  var p = _ctDummyPosts.find(function(x) { return x.id === id; });
-  if (!p) return;
-  p.likes++;
-  var btn = document.getElementById('ct-like-btn-' + id);
-  if (btn) {
-    btn.textContent = '❤️ ' + p.likes;
-    btn.style.color = 'var(--red)';
-    btn.style.background = 'var(--red-bg)';
-    btn.style.borderColor = 'var(--red)';
-    btn.disabled = true;
-  }
-  await _sb.from('ct_posts').update({ likes: p.likes }).eq('id', id);
-  // 게시글 작성자에게 좋아요 알림 (본인 글 제외)
-  if (p.user_id && p.user_id !== _currentUser.id) {
-    var myName = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
-    var myAvatar = localStorage.getItem('riq_avatar') || '😊';
-    var nRes = await _sb.from('ct_notifications').insert({
-      recipient_id: p.user_id, type: 'like',
-      post_id: id, post_title: p.title,
-      from_user_name: myName, from_user_avatar: myAvatar, content: null
-    });
-    if (nRes.error) console.warn('like notif error:', nRes.error.message);
-    // build 314 — 글 작성자에게 시스템 푸시 (priority low — 좋아요는 자주 옴)
-    _sendSocialPush(
-      p.user_id,
-      '❤️ 좋아요를 받았어요',
-      myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요',
-      { url: '/', tag: 'like-' + id, priority: 'low' }
-    );
   }
 }
 
@@ -6542,134 +6503,6 @@ function cqWatchExtra() {
       }
     }
   });
-}
-
-function ctFocusComment(id) {
-  var input = document.getElementById('ct-comment-input-' + id);
-  if (input) input.focus();
-}
-
-async function ctAddComment(id) {
-  if (!_currentUser) { showToast(t('toast.login_required')); return; }
-  var input = document.getElementById('ct-comment-input-' + id);
-  var text = input ? input.value.trim() : '';
-  if (!text) return;
-
-  // 댓글 패널티 체크 (어드민이 부여한 N시간 댓글 작성 금지)
-  if (_sb) {
-    try {
-      var penRes = await _sb.rpc('get_active_comment_penalty');
-      if (penRes.data && penRes.data.blocked) {
-        var endsTxt = penRes.data.ends_at
-          ? ' (' + new Date(penRes.data.ends_at).toLocaleString() + ' 까지)'
-          : ' (영구)';
-        showToast('🚫 댓글 작성 제한 중' + endsTxt + (penRes.data.reason ? ' · ' + penRes.data.reason : ''));
-        return;
-      }
-    } catch(e) { console.warn('[penalty] check err', e); }
-  }
-
-  // 1일 댓글 한도 체크 (어뷰져 대책)
-  var quota = await _checkCommentQuota();
-  if (!quota.allowed) {
-    // 광고 모달 열기 → 모달이 +1회 부여 후 닫히면 이 함수 재호출
-    openCommentQuotaAdModal(function(){ ctAddComment(id); });
-    return;
-  }
-
-  // 벤워드 사전 검사
-  var banned = await _checkContentForBannedWord(text);
-  if (banned) {
-    showToast(t('toast.banned_word', {word: banned}));
-    return;
-  }
-
-  var myName   = document.getElementById('sp-nickname-display').textContent || 'ゲスト';
-  var myAvatar = localStorage.getItem('riq_avatar') || '😊';
-
-  input.disabled = true;
-
-  // Supabase에 댓글 저장
-  var res = await _sb.from('ct_comments').insert({
-    post_id: id, user_id: _currentUser.id,
-    user_name: myName, user_avatar: myAvatar, content: text
-  });
-  input.disabled = false;
-  if (res.error) {
-    if (_handleCommentInsertError(res.error)) return;
-    showToast(t('toast.comment_fail'));
-    return;
-  }
-  input.value = '';
-
-  // ct_posts.comments 카운트 증가
-  var p = _ctDummyPosts.find(function(x) { return x.id === id; });
-  if (p) {
-    p.comments++;
-    await _sb.from('ct_posts').update({ comments: p.comments }).eq('id', id);
-    var countEl = document.getElementById('ct-comment-count-' + id);
-    if (countEl) countEl.textContent = '💬 ' + p.comments;
-    // 게시글 작성자에게 댓글 알림 (본인 글 제외)
-    if (p.user_id && p.user_id !== _currentUser.id) {
-      var preview = text.length > 30 ? text.slice(0, 30) + '…' : text;
-      var nRes = await _sb.from('ct_notifications').insert({
-        recipient_id: p.user_id, type: 'comment',
-        post_id: id, post_title: p.title,
-        from_user_name: myName, from_user_avatar: myAvatar, content: preview
-      });
-      if (nRes.error) console.warn('notif insert error:', nRes.error.message);
-      // build 314 — 글 작성자에게 시스템 푸시 (priority normal — 댓글은 적당히 중요)
-      _sendSocialPush(
-        p.user_id,
-        '💬 새 댓글이 달렸어요',
-        myName + ': ' + preview,
-        { url: '/', tag: 'comment-' + id, priority: 'normal' }
-      );
-    }
-  }
-
-  // 로컬 캐시에도 추가 후 즉시 표시
-  if (!_ctPostComments[id]) _ctPostComments[id] = [];
-  _ctPostComments[id].push({ user: myName, avatar: myAvatar, text: text, time: 'たった今' });
-  ctRenderPostComments(id);
-}
-
-async function ctLoadPostComments(id) {
-  if (!_sb) return;
-  var res = await _sb.from('ct_comments')
-    .select('*').eq('post_id', id).order('created_at', { ascending: true });
-  if (res.error || !res.data) return;
-  _ctPostComments[id] = res.data.map(function(c) {
-    return { user: c.user_name, avatar: c.user_avatar || '😊', text: c.content, time: _timeAgo(c.created_at) };
-  });
-  ctRenderPostComments(id);
-  // 실제 댓글 수로 배지 갱신
-  var p = _ctDummyPosts.find(function(x) { return x.id === id; });
-  if (p) {
-    p.comments = res.data.length;
-    var countEl = document.getElementById('ct-comment-count-' + id);
-    if (countEl) countEl.textContent = '💬 ' + p.comments;
-  }
-}
-
-function ctRenderPostComments(id) {
-  var el = document.getElementById('ct-comments-' + id);
-  if (!el) return;
-  var list = _ctPostComments[id] || [];
-  if (!list.length) { el.innerHTML = '<div style="padding:12px 0;font-size:13px;color:var(--text-3);text-align:center;">まだコメントがありません</div>'; return; }
-  el.innerHTML = list.map(function(c) {
-    var isEmoji = /^\p{Emoji}/u.test(c.avatar || '');
-    var avatarHtml = isEmoji
-      ? '<div style="width:28px;height:28px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;">' + c.avatar + '</div>'
-      : '<img src="' + c.avatar + '" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">';
-    return '<div style="display:flex;gap:10px;padding:10px 0;border-top:0.5px solid var(--border);">' +
-      avatarHtml +
-      '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:11px;font-weight:700;color:var(--text-2);">' + c.user + ' <span style="font-weight:400;color:var(--text-3);">· ' + c.time + '</span></div>' +
-        '<div style="font-size:13px;color:var(--text-1);line-height:1.5;margin-top:3px;">' + c.text + '</div>' +
-      '</div>' +
-    '</div>';
-  }).join('');
 }
 
 function ctGoPage(n) {
@@ -16522,6 +16355,11 @@ function showApp() {
     setTimeout(showApp, 0);
     return;
   }
+  // 중복 실행 방지: 여러 진입점(auth IIFE / onAuthStateChange / visibilitychange)이
+  // gate defer 창(main 이 아직 flex 아님) 동안 각각 showApp 을 큐에 넣을 수 있음
+  // → 한 번만 본문 실행 (loadFromSupabase·렌더·광고 중복 방지). 로그아웃 시 리셋.
+  if (window._appShownOnce) return;
+  window._appShownOnce = true;
   document.getElementById('screen-auth').style.display = 'none';
   // 1) display:flex 전에 마지막 탭의 active 클래스만 즉시 적용 → 홈 깜빡임 방지
   var _savedNav = (typeof window._loadSavedNav === 'function') ? window._loadSavedNav() : null;
@@ -16839,6 +16677,7 @@ async function authLine() {
 async function authLogout() {
   await _sb.auth.signOut();
   _currentUser = null;
+  window._appShownOnce = false; // 재로그인 시 showApp 본문 다시 실행되도록 가드 리셋
   // 이전 OAuth 토큰 hash 제거 (재로그인 오염 방지)
   history.replaceState(null, '', window.location.pathname);
   document.getElementById('screen-main').style.display = 'none';
@@ -25722,7 +25561,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 415;
+window.__APP_BUILD__ = 416;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -25950,7 +25789,7 @@ window.ctInviteShare = async function ctInviteShare(){
    - switchTab/switchMode/ctSwitchTab 후크해서 localStorage 에 저장
    - showApp() 직후 _restoreNav() 가 마지막 위치로 복귀
    - sessionStorage 의존성 제거 → iOS PWA 재실행 시 sessionStorage 초기화 버그 수정
-   - 복원 정책: 2시간 이내 기록 = 복원 / 그 이상 경과 = 홈
+   - 복원 정책: 7일 이내 기록 = 복원 / 그 이상 경과 = 홈
 ══════════════════════════════════════════════════════════════ */
 window._saveNav = function _saveNav(){
   try {
