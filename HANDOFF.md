@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 399 시점)
+# RetWork (チリつも) — HANDOFF (build 400 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 399** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 400** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,13 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 399;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b399';
+public/index.html → window.__APP_BUILD__ = 400;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b400';
 ```
+
+### build 400 — 가격핀 코멘트를 가게코멘트→메뉴별 코멘트로
+- `submitChiriPublish` newPins의 `comment`를 공통 `commentText`(가게 코멘트) → **그 메뉴의 코멘트 `item.cpComment`** 로 변경.
+  어드민 가격핀에 모든 핀이 같은 가게코멘트로 복제되던 문제 해결(메뉴 이름↔코멘트 일치). 가게 코멘트는 store_comments에만.
 
 ### build 399 — 치리 공개 코멘트 문구 명확화
 - 메뉴 코멘트 placeholder: "このメニューについてコメントを書いてください". 가게 코멘트: 라벨 "💬 お店についてのコメント" 추가 + placeholder "お店全体について…". (어느 대상 코멘트인지 직관적으로)
