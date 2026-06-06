@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 400 시점)
+# RetWork (チリつも) — HANDOFF (build 401 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 400** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 401** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 Next.js 프로젝트)
 
 ---
@@ -31,9 +31,15 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 400;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b400';
+public/index.html → window.__APP_BUILD__ = 401;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b401';
 ```
+
+### build 401 — 어드민 가격핀 닉네임 + 댓글삭제 RLS 무효 감지
+- 어드민 가게핀 상세(`_admPcOpenPinStoreView`): 가격핀 카드의 `UID:xxx` → **작성자 닉네임**(profiles 조회 `_pinNick`). 메뉴이름/가격은 유지.
+- `_admPcDeleteComment`: `.delete().select()`로 실제 삭제행 확인 → **0건이면 RLS 막힘 경고**(조용한 no-op 방지).
+- ★ 가게코멘트 삭제가 유저페이지에 반영 안 되던 원인 = `store_comments_admin_delete` RLS 미적용 추정 →
+  **Supabase에 `admin_rls_policies.sql` 실행 필요**. (또는 price_pins.comment 복사본은 build 400 이전 데이터에 잔존)
 
 ### build 400 — 가격핀 코멘트를 가게코멘트→메뉴별 코멘트로
 - `submitChiriPublish` newPins의 `comment`를 공통 `commentText`(가게 코멘트) → **그 메뉴의 코멘트 `item.cpComment`** 로 변경.

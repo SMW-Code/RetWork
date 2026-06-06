@@ -20287,8 +20287,13 @@ async function _admPcDeleteComment(source, id) {
   if (!_sb || !id) return;
   if (!confirm('이 댓글을 삭제할까요? (복구 불가)')) return;
   var table = (source === 'store') ? 'store_comments' : 'ct_comments';
-  var res = await _sb.from(table).delete().eq('id', id);
+  // .select()로 실제 삭제된 행 확인 → RLS가 조용히 막으면(0건) 잡아냄
+  var res = await _sb.from(table).delete().eq('id', id).select();
   if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) {
+    showToast('⚠️ 삭제 안 됨 — 권한(RLS) 문제예요. Supabase에 admin_rls_policies.sql 적용 필요');
+    return;
+  }
   showToast('🗑️ 삭제됨');
   // 카드만 제거 (전체 reload 보다 빠름)
   var card = document.getElementById('apc-cmt-card-' + source + '-' + id);
@@ -22922,6 +22927,16 @@ async function _admPcOpenPinStoreView(storeName) {
     ]);
     var s = sRes.data;
     var pins = (pRes.data || []).filter(function(p){ return p.stores && p.stores.name === storeName; });
+    // 핀 작성자 닉네임 조회 (UID 대신 표시)
+    var _pinNick = {};
+    try {
+      var _pu = {}; pins.forEach(function(p){ if(p.user_id) _pu[p.user_id]=1; });
+      var _puArr = Object.keys(_pu);
+      if (_puArr.length){
+        var _prof = await _sb.from('profiles').select('id,nickname').in('id', _puArr);
+        (_prof.data||[]).forEach(function(pr){ _pinNick[pr.id] = pr.nickname; });
+      }
+    } catch(e){}
 
     // breadcrumb + 가게 정보 + 핀 목록 렌더
     var gmapLink = s && s.google_maps_url
@@ -22976,7 +22991,7 @@ async function _admPcOpenPinStoreView(storeName) {
               +       '<span style="font-size:14px;font-weight:800;color:#172C58;">' + _esc(p.item_name||'(이름 없음)') + '</span>'
               +       '<span style="font-size:14px;font-weight:900;color:#10B981;">¥' + (p.price||0).toLocaleString() + '</span>'
               +     '</div>'
-              +     '<div style="font-size:10px;color:#6B7280;">UID: ' + (p.user_id||'').substring(0,8) + '... · ' + date + '</div>'
+              +     '<div style="font-size:10px;color:#6B7280;">👤 ' + _esc(_pinNick[p.user_id] || ('UID '+(p.user_id||'').substring(0,8)+'…')) + ' · ' + date + '</div>'
               +     comment
               +   '</div>'
               +   '<div style="display:flex;gap:4px;flex-shrink:0;">'
@@ -25445,7 +25460,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 400;
+window.__APP_BUILD__ = 401;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
