@@ -4542,12 +4542,20 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 <script>
 /* ══════════════════════════════
-   Supabase 초기화
+   Supabase 초기화 — 환경 분기 (prod / dev)
+   ─ 운영 도메인(retwork.jp, ret-work.vercel.app)  → prod DB
+   ─ 그 외(dev 미리보기, localhost 등)             → dev DB
+   ※ 호스트명 기반이라 main/dev 양쪽 브랜치에 있어도 안전.
+     모르는 호스트는 prod 데이터 보호를 위해 dev 로 폴백.
 ══════════════════════════════ */
-const _sb = supabase.createClient(
-  'https://fkvfbxfgidrvymoftkdd.supabase.co',
-  'sb_publishable_WF9smavSsYDwV-HUBlxrEw_jYSJ80Kn'
-);
+const _PROD_HOSTS = ['retwork.jp', 'www.retwork.jp', 'ret-work.vercel.app'];
+const _IS_PROD_ENV = _PROD_HOSTS.indexOf(location.hostname) !== -1;
+const _SB_ENV = _IS_PROD_ENV
+  ? { name: 'prod', url: 'https://fkvfbxfgidrvymoftkdd.supabase.co', key: 'sb_publishable_WF9smavSsYDwV-HUBlxrEw_jYSJ80Kn' }
+  : { name: 'dev',  url: 'https://ljxkqxjhrahzvnodqlqt.supabase.co', key: 'sb_publishable_1yzNnk8avc2sNthQxK6ucg_tXwhCqOZ' };
+window.__SB_ENV__ = _SB_ENV.name;
+console.log('%c[ReceiptIQ] DB env:', 'color:#E8894A;font-weight:bold', _SB_ENV.name, '(' + location.hostname + ')');
+const _sb = supabase.createClient(_SB_ENV.url, _SB_ENV.key);
 
 /* ══════════════════════════════
    데이터 저장소 (LocalStorage 대신 메모리)
@@ -26203,7 +26211,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 428;
+window.__APP_BUILD__ = 429;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
