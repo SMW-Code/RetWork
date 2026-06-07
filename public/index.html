@@ -19654,7 +19654,10 @@ async function _admPcRenderReceiptReview() {
     +     '<div style="font-size:20px;font-weight:900;color:#172C58;">🔍 영수증 OCR 검수</div>'
     +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">원본 영수증 ↔ AI 파싱 결과 비교 (프롬프트 개선용) · 이미지 보관된 영수증만 · 최근 40건</div>'
     +   '</div>'
-    +   '<button onclick="_admPcRenderReceiptReview()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    +   '<div style="display:flex;gap:8px;">'
+    +     '<button id="apc-receipt-dl-btn" onclick="_admPcDownloadReceiptDataset()" style="background:#10B981;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">📦 ZIP 다운로드</button>'
+    +     '<button onclick="_admPcRenderReceiptReview()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    +   '</div>'
     + '</div>'
     + '<div id="apc-receipt-review-list"><div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div></div>'
     + '</div>';
@@ -19724,6 +19727,86 @@ async function _admPcLoadReceiptReview() {
     list.innerHTML = html;
   } catch(e) {
     list.innerHTML = '<div style="padding:30px;text-align:center;color:#991B1B;font-size:12px;">로딩 실패: ' + _esc(e.message || '') + '</div>';
+  }
+}
+
+// JSZip 지연 로드 (다운로드 누를 때만)
+function _loadJSZip() {
+  return new Promise(function(resolve, reject){
+    if (window.JSZip) { resolve(window.JSZip); return; }
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js';
+    s.onload = function(){ window.JSZip ? resolve(window.JSZip) : reject(new Error('JSZip 미정의')); };
+    s.onerror = function(){ reject(new Error('JSZip 로드 실패')); };
+    document.head.appendChild(s);
+  });
+}
+function _downloadBlob(blob, filename) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ try { document.body.removeChild(a); } catch(e){} URL.revokeObjectURL(url); }, 1500);
+}
+function _csvQ(s){ s = String(s == null ? '' : s); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
+
+// 영수증 원본 이미지 + 파싱 데이터를 ZIP 으로 묶어 다운로드 (OCR 프롬프트 개선용 데이터셋)
+//   images/<가게>_<날짜>_<id>.jpg + data.json + data.csv
+async function _admPcDownloadReceiptDataset() {
+  if (!_sb) return;
+  var btn = document.getElementById('apc-receipt-dl-btn');
+  var setBtn = function(t, dis){ if (btn) { btn.textContent = t; btn.disabled = !!dis; } };
+  setBtn('준비 중...', true);
+  try {
+    var res = await _sb.from('receipts')
+      .select('id,store_name,receipt_date,total_amount,payment_method,image_url,user_id,created_at,items(name,quantity,price,category)')
+      .not('image_url', 'is', null)
+      .order('receipt_date', { ascending: false })
+      .limit(40);
+    if (res.error) { showToast('조회 실패: ' + res.error.message); setBtn('📦 ZIP 다운로드', false); return; }
+    var rows = res.data || [];
+    if (!rows.length) { showToast('내보낼 영수증이 없어요'); setBtn('📦 ZIP 다운로드', false); return; }
+
+    var JSZip = await _loadJSZip();
+    var zip = new JSZip();
+    var imgFolder = zip.folder('images');
+    var dataset = [];
+    var csv = ['id,store_name,receipt_date,total_amount,payment_method,item_name,item_qty,item_price,item_category'];
+
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      setBtn('이미지 ' + (i + 1) + '/' + rows.length, true);
+      var safe = String(r.store_name || 'store').replace(/[\\/:*?"<>|.\s]+/g, '_').slice(0, 24);
+      var fname = safe + '_' + (r.receipt_date || 'nodate') + '_' + String(r.id).slice(0, 8) + '.jpg';
+      try {
+        var su = await _sb.storage.from('receipt-images').createSignedUrl(r.image_url, 600);
+        if (su.data && su.data.signedUrl) {
+          var blob = await (await fetch(su.data.signedUrl)).blob();
+          imgFolder.file(fname, blob);
+        }
+      } catch (e) { console.warn('[dl img]', e); }
+
+      dataset.push({
+        id: r.id, store_name: r.store_name, receipt_date: r.receipt_date,
+        total_amount: r.total_amount, payment_method: r.payment_method,
+        image_file: 'images/' + fname,
+        items: (r.items || []).map(function(it){ return { name: it.name, quantity: it.quantity, price: it.price, category: it.category }; })
+      });
+      (r.items || []).forEach(function(it){
+        csv.push([r.id, _csvQ(r.store_name), r.receipt_date, r.total_amount, r.payment_method, _csvQ(it.name), it.quantity, it.price, it.category].join(','));
+      });
+    }
+
+    zip.file('data.json', JSON.stringify(dataset, null, 2));
+    zip.file('data.csv', '﻿' + csv.join('\n'));  // BOM → 엑셀 한글/일본어 정상
+    setBtn('ZIP 생성 중...', true);
+    var content = await zip.generateAsync({ type: 'blob' });
+    _downloadBlob(content, 'receipt-ocr-dataset-' + rows.length + 'ea.zip');
+    showToast('✅ 다운로드 시작 (' + rows.length + '건)');
+  } catch (e) {
+    showToast('다운로드 실패: ' + (e.message || ''));
+  } finally {
+    setBtn('📦 ZIP 다운로드', false);
   }
 }
 
@@ -26120,7 +26203,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 426;
+window.__APP_BUILD__ = 427;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
