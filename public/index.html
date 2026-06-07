@@ -6029,7 +6029,7 @@ async function ctLoadNotifications() {
     var text = n.type === 'comment'
       ? '<b>' + (n.from_user_name||'?') + '</b>さんが「' + (n.post_title||'') + '」にコメント: ' + (n.content||'')
       : '<b>' + (n.from_user_name||'?') + '</b>さんが「' + (n.post_title||'') + '」にいいねしました';
-    return { id: n.id, icon: n.from_user_avatar || icon, text: text, time: _timeAgo(n.created_at), read: n.is_read };
+    return { id: n.id, type: n.type, icon: n.from_user_avatar || icon, text: text, time: _timeAgo(n.created_at), read: n.is_read };
   });
   var unread = _ctNotifications.filter(function(n){ return !n.read; }).length;
   var dot = document.getElementById('ct-notif-dot');
@@ -26010,7 +26010,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 422;
+window.__APP_BUILD__ = 423;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
