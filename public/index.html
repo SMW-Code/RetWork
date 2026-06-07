@@ -11370,6 +11370,21 @@ function saveOcrResult() {
   }
 }
 
+// 영수증 원본 이미지를 비공개 버킷에 압축 업로드 → receipts.image_url 에 경로 저장
+// (베타: 운영자가 원본↔파싱 비교로 OCR 프롬프트 개선용. 본인+어드민만 조회 가능)
+async function _uploadReceiptImage(receiptId, dataUrl) {
+  if (!_sb || !_currentUser || !receiptId || !dataUrl || dataUrl.indexOf('data:') !== 0) return;
+  try {
+    var blob = await (await fetch(dataUrl)).blob();
+    var file = new File([blob], 'receipt.jpg', { type: blob.type || 'image/jpeg' });
+    if (typeof _compressImage === 'function') file = await _compressImage(file, 1600, 0.7);
+    var path = _currentUser.id + '/' + receiptId + '.jpg';
+    var up = await _sb.storage.from('receipt-images').upload(path, file, { upsert: true, contentType: file.type || 'image/jpeg' });
+    if (up.error) { console.warn('[receipt img] upload:', up.error.message); return; }
+    await _sb.from('receipts').update({ image_url: path }).eq('id', receiptId);
+  } catch (e) { console.warn('[receipt img]', e); }
+}
+
 function _doSaveOcrResult() {
   syncOcrItems(); // 저장 전 입력값 최종 동기화
   var r = window._ocrResult;
@@ -11435,6 +11450,8 @@ function _doSaveOcrResult() {
     if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); return; }
     var receiptId = res.data && res.data[0] && res.data[0].id;
     if (receiptId) newEntry.id = receiptId; // 정수 임시 ID → Supabase UUID로 교체
+    // 원본 영수증 이미지 보관 (비동기, 저장 흐름 막지 않음)
+    if (receiptId && window._previewSrc) _uploadReceiptImage(receiptId, window._previewSrc);
 
     // 품목 저장 (+ Phase 1: 상품 정규화 → product_id 매칭)
     if (receiptId && finalItems.length > 0) {
@@ -18837,6 +18854,8 @@ var _admPcMenus = {
       mount:'ov-admin-detail', load:function(){ openAdminDetail('users'); } },
     { key:'receipts',      icon:'🧾', label:'영수증',
       mount:'ov-admin-detail', load:function(){ openAdminDetail('receipts'); } },
+    { key:'receipt-review', icon:'🔍', label:'영수증 OCR 검수',
+      customRender:function(){ if (typeof _admPcRenderReceiptReview === 'function') _admPcRenderReceiptReview(); } },
     { key:'stores',        icon:'🏪', label:'가게',
       mount:'ov-admin-detail', load:function(){ openAdminDetail('stores'); } },
     { key:'pins',          icon:'📍', label:'가게핀',
@@ -19618,6 +19637,94 @@ window._admPcQuoteLang = 'ja';
 function _admPcQuoteSetLang(lang) {
   window._admPcQuoteLang = lang;
   _admPcRenderQuotes();
+}
+
+/* ══════════════════════════════════════════════════
+   어드민 — 영수증 OCR 검수 (원본 ↔ 파싱 비교, 프롬프트 개선용)
+══════════════════════════════════════════════════ */
+async function _admPcRenderReceiptReview() {
+  var ct = document.getElementById('apc-content');
+  if (!ct) return;
+  _admPcUnmountAll();
+  _admPcCloseAllAdminModals();
+  ct.innerHTML =
+    '<div style="padding:24px;max-width:1100px;">'
+    + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">'
+    +   '<div>'
+    +     '<div style="font-size:20px;font-weight:900;color:#172C58;">🔍 영수증 OCR 검수</div>'
+    +     '<div style="font-size:12px;color:#6B7280;margin-top:4px;">원본 영수증 ↔ AI 파싱 결과 비교 (프롬프트 개선용) · 이미지 보관된 영수증만 · 최근 40건</div>'
+    +   '</div>'
+    +   '<button onclick="_admPcRenderReceiptReview()" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>'
+    + '</div>'
+    + '<div id="apc-receipt-review-list"><div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;">로딩 중...</div></div>'
+    + '</div>';
+  _admPcLoadReceiptReview();
+}
+
+async function _admPcLoadReceiptReview() {
+  var list = document.getElementById('apc-receipt-review-list');
+  if (!list || !_sb) return;
+  try {
+    var res = await _sb.from('receipts')
+      .select('id,store_name,receipt_date,total_amount,payment_method,image_url,user_id,items(name,quantity,price,category)')
+      .not('image_url', 'is', null)
+      .order('receipt_date', { ascending: false })
+      .limit(40);
+    if (res.error) {
+      list.innerHTML = '<div style="padding:30px;text-align:center;color:#991B1B;font-size:12px;background:#FEF2F2;border-radius:12px;">로딩 실패: ' + _esc(res.error.message) + '<br><span style="color:#6B7280;">receipt_images.sql 을 실행했는지 확인하세요.</span></div>';
+      return;
+    }
+    var rows = res.data || [];
+    if (!rows.length) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:#6B7280;font-size:12px;background:#F4F5F8;border-radius:12px;">이미지 보관된 영수증이 아직 없어요.<br>이 기능 배포 후 <strong>새로 저장한 영수증부터</strong> 원본 이미지가 쌓입니다.</div>';
+      return;
+    }
+    // 작성자 닉네임
+    var uids = Array.from(new Set(rows.map(function(r){ return r.user_id; }).filter(Boolean)));
+    var profMap = {};
+    if (uids.length) {
+      var pr = await _sb.from('profiles').select('id,nickname').in('id', uids);
+      (pr.data || []).forEach(function(p){ profMap[p.id] = p.nickname; });
+    }
+    // 비공개 버킷 → 서명 URL (1시간) 병렬 생성
+    var signed = await Promise.all(rows.map(function(r){
+      return _sb.storage.from('receipt-images').createSignedUrl(r.image_url, 3600)
+        .then(function(s){ return (s.data && s.data.signedUrl) || null; })
+        .catch(function(){ return null; });
+    }));
+    var html = '<div style="display:flex;flex-direction:column;gap:14px;">';
+    rows.forEach(function(r, i){
+      var imgUrl = signed[i];
+      var name = profMap[r.user_id] || '匿名';
+      var items = (r.items || []);
+      var itemsHtml = items.map(function(it){
+        return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0;border-bottom:1px dashed #EEF0F4;">'
+          + '<span>' + _esc(it.name || '') + (it.quantity > 1 ? ' ×' + it.quantity : '') + ' <span style="color:#9CA3AF;font-size:10px;">' + _esc(it.category || '') + '</span></span>'
+          + '<span style="font-weight:700;color:#172C58;">¥' + (it.price || 0).toLocaleString() + '</span>'
+          + '</div>';
+      }).join('');
+      html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">'
+        + '<div style="flex:0 0 240px;">'
+        +   (imgUrl
+            ? '<img src="' + imgUrl + '" onclick="_admPcPreviewImage(\'' + imgUrl.replace(/'/g, "\\'") + '\')" style="width:240px;max-height:360px;object-fit:contain;border:1px solid #E3E6EB;border-radius:8px;cursor:zoom-in;background:#F9FAFB;">'
+            : '<div style="width:240px;height:200px;display:flex;align-items:center;justify-content:center;background:#F4F5F8;border-radius:8px;color:#9CA3AF;font-size:12px;">이미지 로드 실패</div>')
+        + '</div>'
+        + '<div style="flex:1;min-width:240px;">'
+        +   '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">'
+        +     '<span style="font-size:16px;font-weight:900;color:#172C58;">' + _esc(r.store_name || '(가게명 없음)') + '</span>'
+        +     '<span style="font-size:11px;color:#6B7280;">' + (r.receipt_date || '') + '</span>'
+        +   '</div>'
+        +   '<div style="font-size:12px;color:#374151;margin-bottom:8px;">👤 ' + _esc(name) + ' · 💴 합계 <strong>¥' + (r.total_amount || 0).toLocaleString() + '</strong> · 💳 ' + (r.payment_method ? _esc(r.payment_method) : '-') + '</div>'
+        +   '<div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">파싱 품목 (' + items.length + ')</div>'
+        +   '<div style="background:#F9FAFB;border-radius:8px;padding:8px 12px;">' + (itemsHtml || '<span style="font-size:12px;color:#9CA3AF;">품목 없음</span>') + '</div>'
+        + '</div>'
+        + '</div>';
+    });
+    html += '</div>';
+    list.innerHTML = html;
+  } catch(e) {
+    list.innerHTML = '<div style="padding:30px;text-align:center;color:#991B1B;font-size:12px;">로딩 실패: ' + _esc(e.message || '') + '</div>';
+  }
 }
 
 /* ══════════════════════════════════════════════════
@@ -26013,7 +26120,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 425;
+window.__APP_BUILD__ = 426;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
