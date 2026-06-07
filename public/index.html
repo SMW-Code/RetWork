@@ -6442,8 +6442,9 @@ async function ctAddCommentDetail() {
     showToast(t('toast.comment_fail'));
     return;
   }
+  // ct_posts.comments 는 DB 트리거(ct_comments_count_trg)가 자동 동기화.
+  // (기존엔 클라가 직접 update 했으나 남의 글엔 RLS로 막혀 카운트가 안 올랐음)
   p.comments++;
-  await _sb.from('ct_posts').update({ comments: p.comments }).eq('id', id);
   var countEl = document.getElementById('ct-comment-count-' + id);
   if (countEl) countEl.textContent = '💬 ' + p.comments;
   await ctLoadPostDetailComments(id);
@@ -23443,6 +23444,9 @@ async function _admPcOpenPinStoreView(storeName) {
       ? '⭐ 대표: ' + (s.featured_menu_name || '') + ' ¥' + s.featured_price.toLocaleString()
       : '대표 메뉴 미지정';
 
+    // 가게 삭제용 캐시 (따옴표/특수문자 escape 회피 — 버튼은 인자 없이 호출)
+    window._admPcDelStore = s ? { id: s.id, name: storeName } : null;
+
     var html =
       '<div id="apc-breadcrumb" style="padding:14px 24px;background:#F4F5F8;border-bottom:1px solid #E3E6EB;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;">'
       + '<button onclick="_admPcBackToMenu(\'pins\')" style="background:#fff;border:1px solid #E3E6EB;color:#172C58;font-size:12px;font-weight:700;cursor:pointer;padding:7px 12px;border-radius:8px;display:flex;align-items:center;gap:4px;font-family:var(--font);">← 가게핀 목록</button>'
@@ -23464,7 +23468,10 @@ async function _admPcOpenPinStoreView(storeName) {
       +       '<div style="margin-top:8px;font-size:11px;color:#374151;">' + featured + '</div>'
       +       '<div style="margin-top:6px;">' + gmapLink + '</div>'
       +     '</div>'
-      +     (s ? '<button onclick="openAdminStoreDetail(\''+(s.id||'')+'\')" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;flex-shrink:0;">✏️ 가게 편집</button>' : '')
+      +     (s ? '<div style="display:flex;flex-direction:column;gap:6px;flex-shrink:0;">'
+      +            '<button onclick="openAdminStoreDetail(\''+(s.id||'')+'\')" style="background:#172C58;color:#fff;border:none;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;">✏️ 가게 편집</button>'
+      +            '<button onclick="_admPcDeleteStore()" style="background:#fff;color:#991B1B;border:1px solid #FECACA;border-radius:8px;padding:9px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="가게 + 핀 + 메뉴/사진/댓글 전체 삭제 (맵에서 제거)">🗑️ 가게 삭제</button>'
+      +          '</div>' : '')
       +   '</div>'
       + '</div>'
       // 핀 목록 헤더
@@ -23579,6 +23586,35 @@ async function _admPcLoadStoreMenuCards(storeName) {
       + '<span style="font-size:14px;color:#9CA3AF;flex-shrink:0;">›</span>'
       + '</div>';
   }).join('') + '</div>';
+}
+
+/* 가게 전체 삭제 (어드민) — 가게 + 가격핀 + 메뉴카드 + 사진 + 댓글 일괄 제거.
+   치리맵에서 수동 등록된 가게(스팸/중복/테스트)를 맵에서 완전히 제거. */
+async function _admPcDeleteStore() {
+  if (!_sb) return;
+  if (!_isAdmin) { showToast('어드민 권한 필요'); return; }
+  var t = window._admPcDelStore;
+  if (!t || !t.id) { showToast('가게 정보가 없어요'); return; }
+  if (!confirm('「' + t.name + '」 가게를 삭제할까요?\n\n가게 + 가격핀 + 메뉴카드 + 사진 + 가게댓글이 모두 삭제되고 맵에서 사라집니다. (복구 불가)')) return;
+  try {
+    // 자식부터 삭제 (FK/고아 방지). 핀은 store_id, 나머지는 store_name 으로 연결.
+    await _sb.from('price_pins').delete().eq('store_id', t.id);
+    await _sb.from('store_menu_cards').delete().eq('store_name', t.name);
+    await _sb.from('store_photos').delete().eq('store_name', t.name);
+    await _sb.from('store_comments').delete().eq('store_name', t.name);
+    // 마지막으로 가게 행 삭제 (RLS 확인 위해 .select())
+    var res = await _sb.from('stores').delete().eq('id', t.id).select();
+    if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+    if (!res.data || res.data.length === 0) {
+      alert('가게 삭제가 막혔어요 — stores 의 어드민 DELETE 정책(stores_admin_delete)이 적용됐는지 확인하세요.');
+      return;
+    }
+    showToast('🗑️ 「' + t.name + '」 삭제 완료');
+    window._admPcDelStore = null;
+    if (typeof _admPcBackToMenu === 'function') _admPcBackToMenu('pins'); // 가게핀 목록으로
+  } catch(e) {
+    showToast('삭제 중 오류: ' + (e.message || ''));
+  }
 }
 
 /* 가게핀 화면에서 직접 핀 삭제 (build 351 — RLS 진단 강화)
@@ -25974,7 +26010,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 421;
+window.__APP_BUILD__ = 422;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
