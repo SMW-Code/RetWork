@@ -33,7 +33,7 @@
 
   <!-- 節約ブログ -->
   <url>
-    <loc>https://retwork.jp/blog/</loc>
+    <loc>https://retwork.jp/blog</loc>
     <lastmod>2026-06-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
