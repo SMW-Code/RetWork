@@ -1,6 +1,14 @@
 User-agent: *
 Allow: /
 
+# 디자인 모킹/프리뷰 페이지 — 실제 서비스 페이지 아님, 색인 차단
+Disallow: /prototype.html
+Disallow: /home-mockup.html
+Disallow: /design-compare.html
+Disallow: /design-preview.html
+Disallow: /color-preview.html
+Disallow: /report-mock.html
+
 # AdSense / AdsBot - allow crawl for ad serving
 User-agent: Mediapartners-Google
 Allow: /
