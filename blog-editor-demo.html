@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RetWork 블로그 작성 페이지 — 데모</title>
+<style>
+  :root{
+    --accent:#7A3FE8; --accent2:#E8894A; --ok:#1D9E75; --warn:#E8A33A; --bad:#E24B4A;
+    --bg:#F5F4FA; --card:#fff; --line:#E5E2F0; --text:#2A2438; --muted:#8A8398;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{font-family:'Hiragino Kaku Gothic ProN','Malgun Gothic',system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.6;}
+  .topbar{background:var(--card); border-bottom:1px solid var(--line); padding:14px 20px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:10;}
+  .topbar h1{font-size:16px; font-weight:800;}
+  .topbar .badge{background:#F0EBFC; color:var(--accent); font-size:11px; font-weight:700; padding:3px 8px; border-radius:20px;}
+  .topbar .hint{margin-left:auto; font-size:12px; color:var(--muted);}
+  .wrap{display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:1400px; margin:0 auto; padding:16px;}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr;}}
+  .panel{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:16px;}
+  .panel h2{font-size:13px; font-weight:800; color:var(--accent); margin-bottom:4px; letter-spacing:.02em;}
+  .panel .desc{font-size:12px; color:var(--muted); margin-bottom:14px;}
+  label{display:block; font-size:12px; font-weight:700; margin:12px 0 5px;}
+  label .tip{font-weight:400; color:var(--muted); font-size:11px;}
+  input[type=text], textarea{width:100%; border:1.5px solid var(--line); border-radius:9px; padding:10px 12px; font-size:14px; font-family:inherit; color:var(--text); background:#fff;}
+  input[type=text]:focus, textarea:focus{outline:none; border-color:var(--accent);}
+  textarea{resize:vertical; min-height:64px;}
+  .counter{font-size:11px; margin-top:4px; text-align:right;}
+  .blocks-tool{display:flex; flex-wrap:wrap; gap:7px; margin:6px 0 14px;}
+  .btn{border:1.5px solid var(--line); background:#fff; border-radius:8px; padding:7px 11px; font-size:12px; font-weight:700; cursor:pointer; color:var(--text); transition:.15s;}
+  .btn:hover{border-color:var(--accent); color:var(--accent);}
+  .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .btn.mini{padding:3px 7px; font-size:11px;}
+  .block{border:1.5px dashed var(--line); border-radius:10px; padding:10px; margin-bottom:10px; position:relative;}
+  .block .blk-head{display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .block .blk-type{font-size:11px; font-weight:800; padding:2px 8px; border-radius:6px;}
+  .t-heading{background:#EFE9FC; color:var(--accent);}
+  .t-text{background:#EEF6F2; color:var(--ok);}
+  .t-card{background:#FDF0E6; color:var(--accent2);}
+  .t-quote{background:#F0F0F4; color:var(--muted);}
+  .t-image{background:#E6F0FB; color:#3B7DD8;}
+  .block .blk-actions{margin-left:auto; display:flex; gap:5px;}
+  /* preview */
+  .pv-card{border:1px solid var(--line); border-radius:14px; overflow:hidden;}
+  .pv-hero{height:160px; background:linear-gradient(135deg,#7A3FE8,#E8894A); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; background-size:cover; background-position:center;}
+  .pv-body{padding:20px;}
+  .pv-tag{display:inline-block; background:#F0EBFC; color:var(--accent); font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; margin:0 5px 8px 0;}
+  .pv-title{font-size:22px; font-weight:800; line-height:1.35; margin:6px 0 4px;}
+  .pv-date{font-size:12px; color:var(--muted); margin-bottom:16px;}
+  .pv h3{font-size:17px; font-weight:800; margin:18px 0 7px; padding-left:10px; border-left:4px solid var(--accent);}
+  .pv p{font-size:14.5px; margin:9px 0; color:#3a3448;}
+  .pv .pv-callout{background:#FDF6EF; border:1px solid #F3D9C2; border-radius:12px; padding:14px 16px; margin:14px 0; font-size:14px;}
+  .pv .pv-callout b{color:var(--accent2);}
+  .pv blockquote{border-left:3px solid var(--line); padding:4px 0 4px 14px; color:var(--muted); font-style:italic; margin:14px 0;}
+  .pv .pv-img{width:100%; border-radius:10px; margin:12px 0; display:block; background:#EEE; min-height:120px; object-fit:cover;}
+  .pv mark{background:#FFF1A8; padding:0 2px; border-radius:3px;}
+  /* seo */
+  .seo-item{display:flex; align-items:center; gap:9px; font-size:13px; padding:7px 0; border-bottom:1px solid #F2F0F8;}
+  .seo-dot{width:18px; height:18px; border-radius:50%; flex:0 0 18px; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; font-weight:800;}
+  .seo-msg{font-size:11px; color:var(--muted); margin-left:auto; text-align:right;}
+  .score{font-size:30px; font-weight:900; text-align:center; margin:6px 0;}
+  .out{background:#1E1B2E; color:#D7CFF0; border-radius:10px; padding:14px; font-size:12px; font-family:ui-monospace,Menlo,Consolas,monospace; white-space:pre-wrap; word-break:break-all; line-height:1.5; max-height:340px; overflow:auto;}
+  .out .fm{color:#E8A33A;}
+  .out .key{color:#9BC9FF;}
+  details{margin-top:12px;} summary{cursor:pointer; font-size:12px; font-weight:700; color:var(--accent);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>✍️ RetWork 블로그 작성 페이지</h1>
+  <span class="badge">데모 — 그루메 블로그</span>
+  <span class="hint">왼쪽에서 쓰면 → 오른쪽에 미리보기 + SEO 자동 적용</span>
+</div>
+
+<div class="wrap">
+  <!-- ======== 왼쪽: 에디터 ======== -->
+  <div>
+    <div class="panel">
+      <h2>① 기본 정보 (SEO 자동 처리됨)</h2>
+      <p class="desc">SEO 몰라도 OK — 칸만 채우면 검색·SNS 노출용 태그가 자동 생성돼요.</p>
+
+      <label>제목 <span class="tip">— 검색 결과 제목이 돼요. 25~40자 추천</span></label>
+      <input type="text" id="f-title" placeholder="예: 神保町・チョゴリの韓国ランチを正直レビュー" oninput="render()">
+      <div class="counter" id="c-title"></div>
+
+      <label>검색 설명 <span class="tip">— 검색 결과에 뜨는 2줄 소개. 80~120자</span></label>
+      <textarea id="f-desc" placeholder="예: 東京・神保町の韓国料理店「チョゴリ」でランチ3名分を実食。豆乳冷麺とチキン定食を忖度なしでレビュー。" oninput="render()"></textarea>
+      <div class="counter" id="c-desc"></div>
+
+      <label>태그 <span class="tip">— 쉼표(,)로 구분. 키워드로 자동 등록</span></label>
+      <input type="text" id="f-tags" placeholder="神保町, 韓国料理, ランチ, 冷麺" oninput="render()">
+
+      <label>대표 이미지 <span class="tip">— SNS 공유 미리보기 이미지</span></label>
+      <input type="file" id="f-img" accept="image/*" onchange="pickImg(event)">
+    </div>
+
+    <div class="panel">
+      <h2>② 본문 — 블록을 쌓아서 작성</h2>
+      <p class="desc">버튼으로 블록 추가 → 카드/강조/이미지가 일관된 디자인으로 들어가요.</p>
+      <div class="blocks-tool">
+        <button class="btn" onclick="addBlock('heading')">＋ 소제목</button>
+        <button class="btn" onclick="addBlock('text')">＋ 본문</button>
+        <button class="btn" onclick="addBlock('card')">＋ 강조 카드</button>
+        <button class="btn" onclick="addBlock('quote')">＋ 인용</button>
+        <button class="btn" onclick="addBlock('image')">＋ 이미지</button>
+      </div>
+      <div id="blocks"></div>
+    </div>
+  </div>
+
+  <!-- ======== 오른쪽: 미리보기 + SEO + 결과 ======== -->
+  <div>
+    <div class="panel">
+      <h2>👀 미리보기 (실제 블로그 모양)</h2>
+      <p class="desc">독자가 보게 될 화면이에요.</p>
+      <div class="pv-card">
+        <div class="pv-hero" id="pv-hero">대표 이미지 자리</div>
+        <div class="pv-body pv">
+          <div id="pv-tags"></div>
+          <div class="pv-title" id="pv-title">제목을 입력하세요</div>
+          <div class="pv-date" id="pv-date"></div>
+          <div id="pv-content"><p style="color:#aaa">왼쪽에서 본문 블록을 추가해보세요.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>✅ SEO 자동 점검</h2>
+      <p class="desc">민우 씨가 SEO를 몰라도, 시스템이 대신 체크해줘요.</p>
+      <div class="score" id="seo-score">–</div>
+      <div id="seo-list"></div>
+    </div>
+
+    <div class="panel">
+      <h2>📄 실제로 저장될 파일 (자동 생성)</h2>
+      <p class="desc">이게 그루메 블로그에 올라가는 내용. SEO 부분(파란색)이 자동으로 채워진 걸 보세요.</p>
+      <div class="out" id="out"></div>
+      <details>
+        <summary>이게 어떻게 SEO가 되나요?</summary>
+        <p style="font-size:12.5px; color:var(--muted); margin-top:8px;">
+        맨 위 <b>--- 사이 영역(frontmatter)</b>이 검색엔진·SNS용 정보예요.
+        제목 → 검색 제목, 검색 설명 → 검색 결과 2줄 소개, 태그 → 키워드, 대표 이미지 → SNS 미리보기.
+        그리고 canonical 주소·사이트맵 등록·구조화 데이터는 <b>화면에 안 보이게 100% 자동</b>으로 처리돼요.
+        </p>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+let blocks = [];
+let heroImg = '';
+
+function addBlock(type){
+  const ph = {
+    heading:'소제목 (예: 実食レビュー)',
+    text:'본문을 입력하세요...',
+    card:'강조하고 싶은 내용 (별점, 핵심 결론 등)',
+    quote:'인용/한 줄 코멘트',
+    image:'이미지 설명(alt) — 검색에 도움됨'
+  };
+  blocks.push({type, text:'', img:''});
+  renderBlocks();
+  render();
+}
+function rmBlock(i){ blocks.splice(i,1); renderBlocks(); render(); }
+function moveBlock(i,d){ const j=i+d; if(j<0||j>=blocks.length)return; [blocks[i],blocks[j]]=[blocks[j],blocks[i]]; renderBlocks(); render(); }
+function setText(i,v){ blocks[i].text=v; render(); }
+function blkImg(i,ev){ const f=ev.target.files[0]; if(!f)return; blocks[i].img=URL.createObjectURL(f); render(); }
+
+const typeName={heading:'소제목',text:'본문',card:'강조 카드',quote:'인용',image:'이미지'};
+function renderBlocks(){
+  const el=document.getElementById('blocks');
+  el.innerHTML = blocks.map((b,i)=>`
+    <div class="block">
+      <div class="blk-head">
+        <span class="blk-type t-${b.type}">${typeName[b.type]}</span>
+        <div class="blk-actions">
+          <button class="btn mini" onclick="moveBlock(${i},-1)">↑</button>
+          <button class="btn mini" onclick="moveBlock(${i},1)">↓</button>
+          <button class="btn mini" onclick="rmBlock(${i})">✕</button>
+        </div>
+      </div>
+      ${ b.type==='image'
+        ? `<input type="file" accept="image/*" onchange="blkImg(${i},event)">
+           <input type="text" placeholder="이미지 설명(alt)" oninput="setText(${i},this.value)" value="${b.text.replace(/"/g,'&quot;')}" style="margin-top:7px">`
+        : `<textarea oninput="setText(${i},this.value)" placeholder="${typeName[b.type]} 내용...">${b.text}</textarea>`
+      }
+    </div>`).join('');
+}
+
+function pickImg(ev){ const f=ev.target.files[0]; if(!f)return; heroImg=URL.createObjectURL(f); render(); }
+
+function jChars(s){ return [...(s||'')].length; }
+function counter(id,val,min,max){
+  const n=jChars(val); const el=document.getElementById(id);
+  let col=n===0?'var(--muted)':(n<min?'var(--warn)':(n>max?'var(--warn)':'var(--ok)'));
+  let msg=n===0?'':(n<min?'조금 짧아요':(n>max?'조금 길어요':'적당해요 👍'));
+  el.style.color=col; el.textContent=`${n}자 ${msg}`;
+}
+
+function render(){
+  const title=document.getElementById('f-title').value;
+  const desc=document.getElementById('f-desc').value;
+  const tags=document.getElementById('f-tags').value.split(',').map(s=>s.trim()).filter(Boolean);
+
+  counter('c-title',title,12,40);
+  counter('c-desc',desc,60,120);
+
+  // preview
+  document.getElementById('pv-title').textContent = title||'제목을 입력하세요';
+  document.getElementById('pv-title').style.color = title?'var(--text)':'#bbb';
+  document.getElementById('pv-tags').innerHTML = tags.map(t=>`<span class="pv-tag">${t}</span>`).join('');
+  document.getElementById('pv-date').textContent = '2026年6月9日 · RetWork編集部';
+  const hero=document.getElementById('pv-hero');
+  if(heroImg){ hero.style.backgroundImage=`url(${heroImg})`; hero.textContent=''; }
+  else { hero.style.backgroundImage='linear-gradient(135deg,#7A3FE8,#E8894A)'; hero.textContent='대표 이미지 자리'; }
+
+  document.getElementById('pv-content').innerHTML = blocks.length? blocks.map(b=>{
+    const t=(b.text||'').replace(/</g,'&lt;');
+    if(b.type==='heading') return `<h3>${t||'소제목'}</h3>`;
+    if(b.type==='text')    return `<p>${t||'본문...'}</p>`;
+    if(b.type==='card')    return `<div class="pv-callout"><b>★ </b>${t||'강조 내용'}</div>`;
+    if(b.type==='quote')   return `<blockquote>${t||'인용'}</blockquote>`;
+    if(b.type==='image')   return `${b.img?`<img class="pv-img" src="${b.img}" alt="${t}">`:`<div class="pv-img" style="display:flex;align-items:center;justify-content:center;color:#aaa">이미지 자리</div>`}`;
+    return '';
+  }).join('') : '<p style="color:#aaa">왼쪽에서 본문 블록을 추가해보세요.</p>';
+
+  renderSEO(title,desc,tags);
+  renderOut(title,desc,tags);
+}
+
+function renderSEO(title,desc,tags){
+  const bodyLen = blocks.filter(b=>b.type==='text'||b.type==='card').reduce((a,b)=>a+jChars(b.text),0);
+  const checks=[
+    {ok:jChars(title)>=12&&jChars(title)<=40, label:'제목 길이', g:'검색에 딱 좋아요', b:'12~40자로 맞춰요'},
+    {ok:jChars(desc)>=60&&jChars(desc)<=120, label:'검색 설명', g:'잘 작성됐어요', b:'60~120자로 채워요'},
+    {ok:tags.length>=2, label:'태그(키워드)', g:`${tags.length}개 등록`, b:'2개 이상 넣어요'},
+    {ok:!!heroImg, label:'대표 이미지', g:'SNS 공유 OK', b:'대표 이미지를 넣어요'},
+    {ok:bodyLen>=150, label:'본문 분량', g:'충분해요', b:'본문을 더 써요'},
+  ];
+  const pass=checks.filter(c=>c.ok).length;
+  const score=Math.round(pass/checks.length*100);
+  const sc=document.getElementById('seo-score');
+  sc.textContent=score+'점';
+  sc.style.color = score>=80?'var(--ok)':(score>=50?'var(--warn)':'var(--bad)');
+  document.getElementById('seo-list').innerHTML = checks.map(c=>`
+    <div class="seo-item">
+      <span class="seo-dot" style="background:${c.ok?'var(--ok)':'#D9D4E4'}">${c.ok?'✓':'!'}</span>
+      <span>${c.label}</span>
+      <span class="seo-msg">${c.ok?c.g:c.b}</span>
+    </div>`).join('');
+}
+
+function renderOut(title,desc,tags){
+  const slug = '(자동: 제목에서 생성)';
+  const body = blocks.map(b=>{
+    if(b.type==='heading') return `## ${b.text||''}`;
+    if(b.type==='text')    return b.text||'';
+    if(b.type==='card')    return `> [!강조]\n> ${b.text||''}`;
+    if(b.type==='quote')   return `> ${b.text||''}`;
+    if(b.type==='image')   return `![${b.text||''}](/images/.../${'사진.jpg'})`;
+    return '';
+  }).join('\n\n');
+  const out=
+`<span class="fm">---</span>
+<span class="key">title:</span> "${title||''}"
+<span class="key">date:</span> "2026-06-09"
+<span class="key">description:</span> "${desc||''}"
+<span class="key">image:</span> "/images/${'(자동)'}/main.jpg"
+<span class="key">tags:</span> [${tags.map(t=>`"${t}"`).join(', ')}]
+<span class="key">author:</span> "RetWork編集部"
+<span class="fm">---</span>
+
+${body.replace(/</g,'&lt;')}
+
+<span style="color:#6b6485">※ canonical 주소 · 사이트맵 등록 · 구조화데이터(ld+json)는
+   화면에 안 보이게 자동 처리됩니다.</span>`;
+  document.getElementById('out').innerHTML = out;
+}
+
+// seed
+addBlock('heading'); blocks[0].text='正直レビュー';
+addBlock('text');    blocks[1].text='神保町の韓国料理店「チョゴリ」で3名分（¥3,300）を実食しました。';
+addBlock('card');    blocks[2].text='総合評価 ★★★☆☆ — コスパは良いが、味は期待値の調整が必要。';
+renderBlocks();
+document.getElementById('f-title').value='神保町・チョゴリの韓国ランチを正直レビュー';
+document.getElementById('f-desc').value='東京・神保町の韓国料理店「チョゴリ」でランチ3名分を実食。豆乳冷麺とチキン定食を忖度なしの星評価でレビューします。';
+document.getElementById('f-tags').value='神保町, 韓国料理, ランチ, 冷麺, 千代田区';
+render();
+</script>
+</body>
+</html>
