@@ -1,9 +1,61 @@
-# RetWork (チリつも) — HANDOFF (build 428 + 인프라/메일 시점)
+# RetWork (チリつも) — HANDOFF (build 430 + SNS 자동화 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 428** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 430** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`)
-> 마지막 콘텐츠/인프라 정리: **2026-06-09** (운영자 익명화 + Cloudflare DNS + Email Routing)
+> 마지막 작업: **2026-06-10** (블로그 X+Threads 자동 게시 / 이미지 편집 / 어드민 가게사진 통합)
+
+---
+
+## 0-B. 2026-06-10 세션 변경 요약 — SNS 자동화 + 어드민 가게사진
+
+### 메인 앱 (receiptiq)
+
+| build | 내용 |
+|---|---|
+| **429** | 어드민 가게수정 화면의 가게사진이 안 보이는 버그 안전망 (`onerror` fallback / 사진 클릭 시 새 탭 원본 / console 진단 로그) + 정렬을 「대표 → 최신 등록순」 으로 단순화 + 수동 ↑↓ 정렬 폐지 |
+| **430** | 어드민 가게사진을 **`store_photos`(어드민 등록) + `store_community_photos`(유저 등록) 통합 조회**. 각 사진에 「관리자/유저」 출처 라벨. 유저 사진을 대표로 지정하면 `store_photos` 에 자동 복사 후 `is_primary=true` (원본은 양쪽에 그대로). 삭제는 각 출처 테이블 + Storage 파일 모두 |
+
+`_admLoadStorePhotos / _admTogglePrimaryPhoto / _admDeleteStorePhoto` 가 `source` 인자(`'admin'` | `'community'`) 받음.
+
+### 블로그 (retwork-blog) — **`SMW-Code/retwork-blog` 별도 레포**
+
+1. **X (트위터) 자동 게시** — `/api/sns/x/route.ts` 신설, `twitter-api-v2` 패키지
+   - 발급 후 Vercel 환경변수 4개 등록: `X_API_KEY` / `X_API_SECRET` / `X_ACCESS_TOKEN` / `X_ACCESS_TOKEN_SECRET`
+   - 280자 자동 메시지 + 「메시지 직접 작성하기」 옵션
+   - **트위터 자체 무료 plan 폐지**됨 → pay-per-use 크레딧 필요 (월 1500건은 충분)
+   - App permissions 「Read and write」 필수 (Read-only 면 403)
+   - 수정 모드에선 기본 OFF (같은 트윗 중복 시 403 Duplicate)
+2. **Threads 자동 게시** — `/api/sns/threads/route.ts` 신설
+   - `THREADS_USER_ID` / `THREADS_ACCESS_TOKEN` 2개 환경변수
+   - Meta Developer 앱 → 「Threads API 액세스」 use case → Threads 테스터 추가 → Long-lived token 발급
+   - 2단계 게시 (컨테이너 생성 → publish), 500자, URL 단축 없음
+3. **공통 모듈** `lib/sns.ts` — `formatTweet` / `formatThread` / `postToX` / `postToThreads` + 결과 타입. 기존 `/api/sns/x`, `/api/sns/threads` 도 이걸 사용하도록 리팩토링
+4. **기존 글 재공유 endpoint** `/api/sns/share-by-slug/route.ts`
+   - 입력: `{ password, slug, platforms?: ['x','threads'], customX?, customThreads? }`
+   - 인증: `ADMIN_PASSWORD` **또는** `BLOG_PUBLISH_KEY` (별도 게시키, 옵션)
+   - 글 목록 UI 에 `[X] [Threads] [X + Threads]` 3 버튼 추가 (이모지에서 텍스트로 교체)
+   - curl 한 줄로 외부 자동화 가능
+5. **이미지 회전·자르기** — Canvas 기반 모달
+   - 대표 이미지 / 이미지 블록 둘 다에 「✂️ 회전·자르기」 버튼
+   - 회전: 좌 90° / 우 90° / 180° / 초기화
+   - 비율: 원본 / 1:1 / 4:3 / 16:9 / 3:2 / 3:4 / 9:16 (중앙 자동 자르기)
+   - 적용 시 Canvas.toBlob → JPEG q0.9 → 새 File
+6. **이미지 자동 압축** (가장 중요한 픽스) — `compressImage(file, 1600, 0.85)`
+   - 「Request Entity Too Large (413)」 → 클라가 받은 HTML 을 `.json()` 으로 파싱하다 `"Unexpected token 'R', \"Request En\"..."` 에러 발생
+   - 원인: base64 인코딩 시 1.33배 → Vercel API Route 4.5MB 한계 초과
+   - 픽스: 파일 선택 직후 1600px / JPEG 85% 로 자동 변환 → 5MB → 200~500KB
+   - `pickHero` / `setBlockFile` async 화
+7. **6편째 블로그 글**: `nagi-niboshi-jimbocho.md` (神保町 すごい煮干ラーメン凪 정직 후기 ★★★☆☆+)
+
+관련 commit (retwork-blog):
+- `45e1206` 이미지 회전/자르기
+- `d2dd3fe` 이미지 자동 압축
+- `15dcdac` SNS 버튼 이모지→텍스트
+- `5d7a6ac` nagi 블로그 글
+- `7a6862b` X 자동 게시 신설
+- `862609e` Threads 자동 게시
+- `ad16d39` share-by-slug + 글목록 SNS 버튼 + BLOG_PUBLISH_KEY 인증
 
 ## 0-A. 이번 세션(2026-06-09) 변경 요약 — 인프라/콘텐츠
 
@@ -568,6 +620,67 @@ Cloudflare 대시보드 → 이메일 → Email Routing → 라우팅 규칙 →
 - 내용: `google.com, pub-6495876616577319, DIRECT, f08c47fec0942fa0`
 - AdSense 대시보드의 「찾을 수 없음」 표시는 **AdSense 크롤러 인식 대기** (24~48시간) — 추가 작업 불필요
 - 블로그 별도 레포(`SMW-Code/retwork-blog`)에도 동일 ads.txt 필요할 수 있음 (AdSense 에 블로그 따로 등록 시)
+
+---
+
+## 16-B. 블로그 SNS 자동 게시 인프라 (2026-06-10 신설)
+
+### Vercel 환경변수 — `retwork-blog` 프로젝트
+
+| Key | 용도 | 발급처 |
+|---|---|---|
+| `ADMIN_PASSWORD` | `/admin` 비번 | 본인 정함 |
+| `GITHUB_TOKEN` | `/api/publish` 의 GitHub 커밋 | github.com/settings/tokens (Contents:write) |
+| `X_API_KEY` | X (트위터) Consumer Key | developer.x.com 의 App |
+| `X_API_SECRET` | X Consumer Secret | 동상 |
+| `X_ACCESS_TOKEN` | X user-context Access Token | 동상 (App permissions: Read and write 필수) |
+| `X_ACCESS_TOKEN_SECRET` | X Access Token Secret | 동상 |
+| `THREADS_USER_ID` | Threads 본인 user ID (숫자) | `GET https://graph.threads.net/v1.0/me?access_token=...` 응답의 `id` |
+| `THREADS_ACCESS_TOKEN` | Long-lived Access Token (60일) | developers.facebook.com → Threads API 「사용자 토큰 생성기」 |
+| `BLOG_PUBLISH_KEY` *(옵션)* | 외부 자동화용 별도 키 | 본인이 32+ 자 랜덤 |
+
+### 함정 / 가르침 받은 점
+
+- **X 무료 plan 폐지** (2024 말~2025) — 이제 무조건 크레딧 구매. 다행히 게시당 비용은 작음 (월 30편이면 매우 저렴)
+- **App permissions「Read and write」 필수** — 만약 「Read」 only 면 403. 권한 변경 후 **Access Token 재발급** 필요 (옛 토큰은 옛 권한 그대로)
+- **Threads: 콜백 URL 저장 에러는 무시 OK** — 우리는 OAuth flow 안 쓰고 직접 발급된 token 만 사용. 「사용자 토큰 생성기」 → 「Threads 테스터 추가」 → 본인 계정 초대 수락 → 「생성」 으로 Long-lived token 직접 발급
+- **Threads 계정 공개(Public) 필수** — 비공개 계정은 token 발급 불가
+- **수정 모드에서 X 자동 게시 기본 OFF** — 같은 글의 트윗을 다시 보내면 X 가 403 Duplicate 로 거부. UI 가 자동으로 체크박스 해제
+- **이미지 base64 4.5MB 한계** — `compressImage(1600, 0.85)` 가 입력 단계에서 처리. 만약 한계 초과하면 fetch `.json()` 이 HTML(413) 을 파싱 시도하다 `"Unexpected token 'R', \"Request En\"..."` 로 뜸
+
+### SNS 게시 API
+
+```bash
+# 단일 SNS 게시 (어드민 발행 시 자동 호출)
+POST /api/sns/x
+POST /api/sns/threads
+{ "password": "...", "title": "...", "description": "...", "url": "...", "tags": [...], "customText"?: "..." }
+
+# 기존 글 재공유 (slug 만으로 자동 메시지 생성)
+POST /api/sns/share-by-slug
+{ "password": "ADMIN_PASSWORD or BLOG_PUBLISH_KEY",
+  "slug": "...",
+  "platforms": ["x", "threads"],
+  "customX"?: "...", "customThreads"?: "..." }
+```
+
+### 운영 흐름
+
+| 상황 | 방법 |
+|---|---|
+| **새 글 발행** | `/admin` 새 글 → 자동으로 SNS 체크박스 ON → 🚀 발행 |
+| **옛 글 재공유** | `/admin` 글 목록 → 글 옆 [X] [Threads] [X + Threads] 버튼 클릭 |
+| **외부 자동화** (curl/봇) | `/api/sns/share-by-slug` 호출 (BLOG_PUBLISH_KEY 사용 권장) |
+
+### 글 작성 — admin 에디터 신규 기능 정리 (2026-06-09~10)
+
+- ✂️ 이미지 회전·자르기 모달 (대표 / 블록 둘 다)
+- 🎨 글 테마 색상 / 강조 카드 색상 (10테마 + 커스텀 hex)
+- ➕ 라인 블록 (구분선)
+- 🎨 폰트 스타일 (서체 / 사이즈 / 굵기 / 색상) — heading / text / card 별
+- 📄 마크다운 출력 코드뷰 (펼치기/접기)
+- 🤖 자동 이미지 압축 (모든 업로드 1600px / JPEG 85)
+- 📤 글 목록 SNS 재공유 버튼
 
 ---
 
