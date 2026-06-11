@@ -5567,13 +5567,16 @@ async function renderCtDraws() {
   var spacer = '<div style="flex:0 0 15%;min-width:15%;"></div>';
   track.innerHTML = spacer + list.map(function(d) { return _ctDrawCardHtml(d); }).join('') + spacer;
 
+  // 초기 기준 카드 = 가운데 (3개면 2번째 = idx 1)
+  var midIdx = Math.floor(list.length / 2);
+
   // 닷 인디케이터
   var dots = document.getElementById('ct-draw-dots');
   if (dots) {
     if (list.length <= 1) { dots.innerHTML = ''; }
     else {
       dots.innerHTML = list.map(function(_, i) {
-        return '<span class="ct-draw-dot" data-idx="'+i+'" style="width:6px;height:6px;border-radius:50%;background:'+(i===0?'var(--gold)':'var(--border-mid)')+';transition:background .2s;"></span>';
+        return '<span class="ct-draw-dot" data-idx="'+i+'" style="width:6px;height:6px;border-radius:50%;background:'+(i===midIdx?'var(--gold)':'var(--border-mid)')+';transition:background .2s;"></span>';
       }).join('');
       // 스크롤 시 활성 닷 갱신 (카드 폭 70% + gap 12)
       track.onscroll = function() {
@@ -5586,6 +5589,15 @@ async function renderCtDraws() {
         ds.forEach(function(el, i){ el.style.background = (i===idx) ? 'var(--gold)' : 'var(--border-mid)'; });
       };
     }
+  }
+
+  // 초기 스크롤을 가운데 카드로 (렌더 완료 후)
+  if (midIdx > 0) {
+    requestAnimationFrame(function() {
+      var w = track.clientWidth;
+      var step = w * 0.70 + 12;
+      track.scrollLeft = midIdx * step;
+    });
   }
 }
 
@@ -26689,7 +26701,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 434;
+window.__APP_BUILD__ = 435;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
