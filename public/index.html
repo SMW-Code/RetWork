@@ -17741,7 +17741,6 @@ async function sdShareStore(){
   // b444 — 레퍼럴 코드 미리 조회 (클릭 전: 공유 user-gesture 유지)
   var refCode = await _getMyRefCode();
   var refLink = _getMyRefLink_fromCode(refCode);
-  var desc = addr || 'チリマップのお店情報';
   // 이미지 카드 공유 텍스트 (레퍼럴 기본 링크 포함)
   var imgLines = ['🏪 ' + name];
   if (addr) imgLines.push('📍 ' + addr);
@@ -17756,7 +17755,7 @@ async function sdShareStore(){
       if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
       var canvas = null;
       try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
-      await _shareAsLink(canvas, 's' + _shareKeyHash(name), name, lead, desc, refCode);
+      await _shareAsLink(canvas, 's' + _shareKeyHash(name), name, lead, refCode);
     },
     async function(){
       if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
@@ -17795,27 +17794,22 @@ async function _uploadShareCard(canvas, key){
   if (!_sb || !canvas) return null;
   var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/jpeg', 0.85); });
   if (!blob) return null;
-  var path = 'share/' + key + '.jpg';
   try {
-    var up = await _sb.storage.from('store-photos').upload(path, blob, { upsert:true, contentType:'image/jpeg' });
+    var up = await _sb.storage.from('store-photos').upload('share/' + key + '.jpg', blob, { upsert:true, contentType:'image/jpeg' });
     if (up.error){ console.warn('[share upload]', up.error); return null; }
-    return path; // store-photos 버킷 내 경로 (/s?i= 에 그대로 전달)
+    return key; // /s?i= 에 키만 전달 (URL 단축)
   } catch(e){ console.warn('[share upload]', e); return null; }
 }
-/* /s 공유 링크 빌드 — 풀 카드 OG 이미지 + 레퍼럴 보존 */
-function _sShareUrl(imgPath, t, d, refCode){
-  var u = 'https://retwork.jp/s?i=' + encodeURIComponent(imgPath || '');
-  if (t) u += '&t=' + encodeURIComponent(t);
-  if (d) u += '&d=' + encodeURIComponent(d);
+/* /s 공유 링크 빌드 — 짧게: i(키) + r(레퍼럴)만. 풀 카드 OG + 레퍼럴 보존 */
+function _sShareUrl(key, refCode){
+  var u = 'https://retwork.jp/s?i=' + encodeURIComponent(key || '');
   if (refCode) u += '&r=' + encodeURIComponent(refCode);
   return u;
 }
-/* 링크 공유 실행: 카드 업로드 → /s 링크 / 실패 시 레퍼럴 기본 링크 */
-async function _shareAsLink(canvas, key, title, lead, desc, refCode){
-  var path = await _uploadShareCard(canvas, key);
-  var shareUrl = path
-    ? _sShareUrl(path, title, desc, refCode)
-    : _getMyRefLink_fromCode(refCode);
+/* 링크 공유 실행: 카드 업로드 → /s 단축 링크 / 실패 시 레퍼럴 기본 링크 */
+async function _shareAsLink(canvas, key, title, lead, refCode){
+  var k = await _uploadShareCard(canvas, key);
+  var shareUrl = k ? _sShareUrl(k, refCode) : _getMyRefLink_fromCode(refCode);
   var text = lead + '\n\n— RetWork (チリつも)\n' + shareUrl;
   await _shareLinkOnly(title, text);
 }
@@ -18005,7 +17999,6 @@ async function mdShareMenu(){
   var refLink = _getMyRefLink_fromCode(refCode);
   var mTitle = card.menu_name || 'RetWork';
   var mLeadName = '🍽 '+(card.menu_name||'')+(card.price?' — ¥'+Number(card.price).toLocaleString():'');
-  var mDesc = (_sdName ? '🏪 '+_sdName : '') + (card.price ? ' · ¥'+Number(card.price).toLocaleString() : '');
   // 이미지 카드 공유 텍스트
   var imgLines = [mLeadName];
   if (_sdName) imgLines.push('🏪 '+_sdName);
@@ -18020,7 +18013,7 @@ async function mdShareMenu(){
       if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
       var canvas = null;
       try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
-      await _shareAsLink(canvas, 'm' + _mdCardId, mTitle, lead, mDesc || 'チリマップのメニュー情報', refCode);
+      await _shareAsLink(canvas, 'm' + _shareKeyHash(_mdCardId), mTitle, lead, refCode);
     },
     async function(){
       if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
@@ -27164,7 +27157,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 444;
+window.__APP_BUILD__ = 445;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

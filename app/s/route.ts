@@ -34,16 +34,20 @@ export async function GET(req: NextRequest) {
   const title = (sp.get('t') || 'RetWork（チリつも）').slice(0, 80);
   const desc = (sp.get('d') || 'レシートでお得を共有 — RetWork（チリつも）').slice(0, 160);
 
-  // 이미지 — 경로면 Supabase URL 조립, 전체 URL이면 호스트 검증
+  // 이미지 — i 는 share/ 내 키(영숫자)만. URL 단축 목적.
+  //   예: ?i=smauxtf → share/smauxtf.jpg
+  //   하위호환: 전체 https URL 도 허용(호스트 검증)
   let img = sp.get('i') || '';
-  if (img && !/^https?:\/\//.test(img)) {
-    img = SUPABASE_PUBLIC + img.replace(/^\/+/, '');
-  }
-  try {
-    const u = new URL(img);
-    if (u.protocol !== 'https:' || !ALLOWED_IMG_HOSTS.includes(u.hostname)) img = '';
-  } catch {
-    img = '';
+  if (img && /^https?:\/\//.test(img)) {
+    try {
+      const u = new URL(img);
+      if (u.protocol !== 'https:' || !ALLOWED_IMG_HOSTS.includes(u.hostname)) img = '';
+    } catch {
+      img = '';
+    }
+  } else if (img) {
+    const key = img.replace(/[^a-z0-9]/gi, '');
+    img = key ? SUPABASE_PUBLIC + 'share/' + key + '.jpg' : '';
   }
   if (!img) img = FALLBACK_IMG;
 
