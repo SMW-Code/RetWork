@@ -49,7 +49,12 @@
      SEO canonical 은 위의 <link rel="canonical"> 로 별도 제공됨 -->
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="RetWork">
+<!-- b443 — og:image 추가: 링크 공유 시 프리뷰 카드에 이미지 표시 -->
+<meta property="og:image" content="https://retwork.jp/icons/icon-512.png?v=443">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://retwork.jp/icons/icon-512.png?v=443">
 <!-- PWA manifest — 정적 link (PWA Builder/TWA 빌드 도구 인식용) + 동적 blob (Vercel 방화벽 fallback) -->
 <link rel="manifest" href="/manifest.json">
 
@@ -17733,10 +17738,9 @@ async function sdShareStore(){
     var recs = (typeof DB !== 'undefined') ? DB.filter(function(r){ return r.store === name; }) : [];
     for (var i = 0; i < recs.length; i++) { if (recs[i].address) { addr = recs[i].address; break; } }
   } catch(_){}
-  // b441 — 가게별 동적 OG 링크 (받는 쪽에 터치 가능한 프리뷰 카드)
-  var heroUrl = (window._sdPhotoList && window._sdPhotoList[0]) || '';
-  var url = _shareLinkUrl(name, addr || 'チリマップのお店情報', heroUrl);
-  // 텍스트 (이미지 못 보내는 환경에서도 정보 전달)
+  // b443 — 내 레퍼럴 코드가 붙은 기본 링크 (클릭 전에 미리 조회: 공유 시 user-gesture 유지)
+  var url = await _getMyRefLink();
+  // 텍스트 (URL 은 이 안에만 1회 포함)
   var lines = ['🏪 ' + name];
   if (addr) lines.push('📍 ' + addr);
   lines.push('');
@@ -17746,24 +17750,31 @@ async function sdShareStore(){
 
   // b442 — 링크 카드 / 이미지 카드 선택
   _shareChooser(
-    function(){ _shareLinkOnly(name, shareText, url); },
+    function(){ _shareLinkOnly(name, shareText); },
     async function(){
       if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
       var canvas = null;
       try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
-      await _shareCardFlow(canvas, name, shareText, url, 'retwork-store-' + Date.now() + '.jpg');
+      await _shareCardFlow(canvas, name, shareText, 'retwork-store-' + Date.now() + '.jpg');
     }
   );
 }
 
-/* b441 — 동적 OG 공유 링크 빌더
-   /s 라우트가 가게·메뉴별 og:title/description/image 를 서빙
-   → 카카오톡/LINE 에서 터치하면 이동하는 링크 프리뷰 카드 생성 */
-function _shareLinkUrl(t, d, i){
-  var u = 'https://retwork.jp/s?t=' + encodeURIComponent(t || '');
-  if (d) u += '&d=' + encodeURIComponent(d);
-  if (i) u += '&i=' + encodeURIComponent(i);
-  return u;
+/* b443 — 내 레퍼럴 코드가 붙은 기본 공유 링크 (ctInviteShare 와 동일 규칙)
+   비로그인/실패 시 ref 없는 기본 링크 */
+async function _getMyRefLink(){
+  try {
+    if (_sb && _currentUser) {
+      var res = await _sb.from('profiles').select('referral_code').eq('id', _currentUser.id).maybeSingle();
+      var code = (res.data && res.data.referral_code) || null;
+      if (!code) {
+        code = Math.random().toString(36).slice(2,10).toUpperCase();
+        try { await _sb.from('profiles').update({ referral_code: code }).eq('id', _currentUser.id); } catch(e){}
+      }
+      if (code) return 'https://retwork.jp?ref=' + code;
+    }
+  } catch(e){}
+  return 'https://retwork.jp';
 }
 
 /* b442 — 공유 방식 선택 시트
@@ -17786,10 +17797,11 @@ function _shareChooser(onLink, onImage){
   document.getElementById('shc-img').onclick    = function(){ ov.remove(); onImage(); };
   document.getElementById('shc-cancel').onclick = function(){ ov.remove(); };
 }
-/* 링크만 공유 — 메신저가 OG 프리뷰 카드(터치 가능)를 생성 */
-async function _shareLinkOnly(title, shareText, url){
+/* 링크만 공유 — 메신저가 OG 프리뷰 카드(터치 가능)를 생성
+   b443 — URL 은 text 안에만 1회 포함 (url 필드 동시 전달 시 카톡에서 중복 노출) */
+async function _shareLinkOnly(title, shareText){
   if (navigator.share) {
-    try { await navigator.share({ title: title, text: shareText, url: url }); return; }
+    try { await navigator.share({ title: title, text: shareText }); return; }
     catch(e) { if (e && e.name === 'AbortError') return; }
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -17802,15 +17814,16 @@ async function _shareLinkOnly(title, shareText, url){
   try { window.prompt('복사하세요:', shareText); } catch(_){}
 }
 
-/* 공유 카드 공통 플로우 — 이미지+텍스트+링크 → 폴백: 다운로드/텍스트/클립보드 */
-async function _shareCardFlow(canvas, title, shareText, url, fname){
+/* 공유 카드 공통 플로우 — 이미지+텍스트(링크 포함) → 폴백: 다운로드/텍스트/클립보드
+   b443 — url 필드 제거 (URL 은 shareText 안에만 1회, 카톡 중복 노출 방지) */
+async function _shareCardFlow(canvas, title, shareText, fname){
   if (canvas) {
     var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/jpeg', 0.9); });
     if (blob) {
       var file = (typeof File==='function') ? new File([blob], fname, {type:'image/jpeg'}) : null;
       if (file && navigator.canShare && navigator.canShare({files:[file]}) && navigator.share) {
         try {
-          await navigator.share({ title: title, text: shareText, url: url, files: [file] });
+          await navigator.share({ title: title, text: shareText, files: [file] });
           return;
         } catch(e) {
           if (e && e.name === 'AbortError') return;
@@ -17828,7 +17841,7 @@ async function _shareCardFlow(canvas, title, shareText, url, fname){
   }
   // 폴백: 텍스트만 공유
   if (navigator.share) {
-    try { await navigator.share({ title: title, text: shareText, url: url }); return; }
+    try { await navigator.share({ title: title, text: shareText }); return; }
     catch(e) { if (e && e.name === 'AbortError') return; }
   }
   if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -17944,12 +17957,8 @@ async function _mdBuildShareCanvas(card){
 async function mdShareMenu(){
   var card = (_sdCards||[]).find(function(cd){ return cd.id===_mdCardId; });
   if(!card){ if(typeof showToast==='function') showToast('메뉴 정보를 찾을 수 없어요'); return; }
-  // b441 — 메뉴별 동적 OG 링크 (메뉴 사진 + 메뉴명 프리뷰 카드)
-  var ph = _mdPhotos || [], prim = null;
-  for (var pi=0; pi<ph.length; pi++){ if (ph[pi].is_primary){ prim = ph[pi]; break; } }
-  var photoUrl = (prim && prim.photo_url) || (ph[0] && ph[0].photo_url) || card.image_url || '';
-  var mdesc = (_sdName ? '🏪 ' + _sdName : '') + (card.price ? ' · ¥' + Number(card.price).toLocaleString() : '');
-  var url = _shareLinkUrl(card.menu_name || 'RetWork', mdesc || 'チリマップのメニュー情報', photoUrl);
+  // b443 — 내 레퍼럴 코드가 붙은 기본 링크
+  var url = await _getMyRefLink();
   var lines = ['🍽 '+(card.menu_name||'')+(card.price?' — ¥'+Number(card.price).toLocaleString():'')];
   if (_sdName) lines.push('🏪 '+_sdName);
   lines.push('');
@@ -17958,12 +17967,12 @@ async function mdShareMenu(){
   var shareText = lines.join('\n');
   // b442 — 링크 카드 / 이미지 카드 선택
   _shareChooser(
-    function(){ _shareLinkOnly(card.menu_name||'RetWork', shareText, url); },
+    function(){ _shareLinkOnly(card.menu_name||'RetWork', shareText); },
     async function(){
       if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
       var canvas = null;
       try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
-      await _shareCardFlow(canvas, card.menu_name||'RetWork', shareText, url, 'retwork-menu-' + Date.now() + '.jpg');
+      await _shareCardFlow(canvas, card.menu_name||'RetWork', shareText, 'retwork-menu-' + Date.now() + '.jpg');
     }
   );
 }
@@ -27101,7 +27110,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 442;
+window.__APP_BUILD__ = 443;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
