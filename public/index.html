@@ -17738,31 +17738,37 @@ async function sdShareStore(){
     var recs = (typeof DB !== 'undefined') ? DB.filter(function(r){ return r.store === name; }) : [];
     for (var i = 0; i < recs.length; i++) { if (recs[i].address) { addr = recs[i].address; break; } }
   } catch(_){}
-  // b443 — 내 레퍼럴 코드가 붙은 기본 링크 (클릭 전에 미리 조회: 공유 시 user-gesture 유지)
-  var url = await _getMyRefLink();
-  // 텍스트 (URL 은 이 안에만 1회 포함)
-  var lines = ['🏪 ' + name];
-  if (addr) lines.push('📍 ' + addr);
-  lines.push('');
-  lines.push('— RetWork (チリつも)');
-  lines.push(url);
-  var shareText = lines.join('\n');
+  // b444 — 레퍼럴 코드 미리 조회 (클릭 전: 공유 user-gesture 유지)
+  var refCode = await _getMyRefCode();
+  var refLink = _getMyRefLink_fromCode(refCode);
+  var desc = addr || 'チリマップのお店情報';
+  // 이미지 카드 공유 텍스트 (레퍼럴 기본 링크 포함)
+  var imgLines = ['🏪 ' + name];
+  if (addr) imgLines.push('📍 ' + addr);
+  imgLines.push(''); imgLines.push('— RetWork (チリつも)'); imgLines.push(refLink);
+  var imgShareText = imgLines.join('\n');
+  // 링크 공유용 lead (URL 은 _shareAsLink 가 /s 링크로 붙임)
+  var lead = '🏪 ' + name + (addr ? '\n📍 ' + addr : '');
 
-  // b442 — 링크 카드 / 이미지 카드 선택
+  // b442 — 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
   _shareChooser(
-    function(){ _shareLinkOnly(name, shareText); },
     async function(){
       if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
       var canvas = null;
       try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
-      await _shareCardFlow(canvas, name, shareText, 'retwork-store-' + Date.now() + '.jpg');
+      await _shareAsLink(canvas, 's' + _shareKeyHash(name), name, lead, desc, refCode);
+    },
+    async function(){
+      if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
+      var canvas = null;
+      try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
+      await _shareCardFlow(canvas, name, imgShareText, 'retwork-store-' + Date.now() + '.jpg');
     }
   );
 }
 
-/* b443 — 내 레퍼럴 코드가 붙은 기본 공유 링크 (ctInviteShare 와 동일 규칙)
-   비로그인/실패 시 ref 없는 기본 링크 */
-async function _getMyRefLink(){
+/* b443 — 내 레퍼럴 코드 조회/생성 (ctInviteShare 와 동일 규칙) */
+async function _getMyRefCode(){
   try {
     if (_sb && _currentUser) {
       var res = await _sb.from('profiles').select('referral_code').eq('id', _currentUser.id).maybeSingle();
@@ -17771,10 +17777,47 @@ async function _getMyRefLink(){
         code = Math.random().toString(36).slice(2,10).toUpperCase();
         try { await _sb.from('profiles').update({ referral_code: code }).eq('id', _currentUser.id); } catch(e){}
       }
-      if (code) return 'https://retwork.jp?ref=' + code;
+      return code || '';
     }
   } catch(e){}
-  return 'https://retwork.jp';
+  return '';
+}
+function _getMyRefLink_fromCode(code){ return code ? 'https://retwork.jp?ref=' + code : 'https://retwork.jp'; }
+
+/* b444 — 공유 카드 캔버스를 store-photos 버킷 share/ 에 업로드 → 경로 반환
+   결정적 파일명(가게/메뉴 키) + upsert 로 재공유 시 덮어쓰기 */
+function _shareKeyHash(s){
+  var h = 0; s = String(s||'');
+  for (var i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+  return (h >>> 0).toString(36);
+}
+async function _uploadShareCard(canvas, key){
+  if (!_sb || !canvas) return null;
+  var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/jpeg', 0.85); });
+  if (!blob) return null;
+  var path = 'share/' + key + '.jpg';
+  try {
+    var up = await _sb.storage.from('store-photos').upload(path, blob, { upsert:true, contentType:'image/jpeg' });
+    if (up.error){ console.warn('[share upload]', up.error); return null; }
+    return path; // store-photos 버킷 내 경로 (/s?i= 에 그대로 전달)
+  } catch(e){ console.warn('[share upload]', e); return null; }
+}
+/* /s 공유 링크 빌드 — 풀 카드 OG 이미지 + 레퍼럴 보존 */
+function _sShareUrl(imgPath, t, d, refCode){
+  var u = 'https://retwork.jp/s?i=' + encodeURIComponent(imgPath || '');
+  if (t) u += '&t=' + encodeURIComponent(t);
+  if (d) u += '&d=' + encodeURIComponent(d);
+  if (refCode) u += '&r=' + encodeURIComponent(refCode);
+  return u;
+}
+/* 링크 공유 실행: 카드 업로드 → /s 링크 / 실패 시 레퍼럴 기본 링크 */
+async function _shareAsLink(canvas, key, title, lead, desc, refCode){
+  var path = await _uploadShareCard(canvas, key);
+  var shareUrl = path
+    ? _sShareUrl(path, title, desc, refCode)
+    : _getMyRefLink_fromCode(refCode);
+  var text = lead + '\n\n— RetWork (チリつも)\n' + shareUrl;
+  await _shareLinkOnly(title, text);
 }
 
 /* b442 — 공유 방식 선택 시트
@@ -17957,22 +18000,33 @@ async function _mdBuildShareCanvas(card){
 async function mdShareMenu(){
   var card = (_sdCards||[]).find(function(cd){ return cd.id===_mdCardId; });
   if(!card){ if(typeof showToast==='function') showToast('메뉴 정보를 찾을 수 없어요'); return; }
-  // b443 — 내 레퍼럴 코드가 붙은 기본 링크
-  var url = await _getMyRefLink();
-  var lines = ['🍽 '+(card.menu_name||'')+(card.price?' — ¥'+Number(card.price).toLocaleString():'')];
-  if (_sdName) lines.push('🏪 '+_sdName);
-  lines.push('');
-  lines.push('— RetWork (チリつも)');
-  lines.push(url);
-  var shareText = lines.join('\n');
-  // b442 — 링크 카드 / 이미지 카드 선택
+  // b444 — 레퍼럴 코드 미리 조회
+  var refCode = await _getMyRefCode();
+  var refLink = _getMyRefLink_fromCode(refCode);
+  var mTitle = card.menu_name || 'RetWork';
+  var mLeadName = '🍽 '+(card.menu_name||'')+(card.price?' — ¥'+Number(card.price).toLocaleString():'');
+  var mDesc = (_sdName ? '🏪 '+_sdName : '') + (card.price ? ' · ¥'+Number(card.price).toLocaleString() : '');
+  // 이미지 카드 공유 텍스트
+  var imgLines = [mLeadName];
+  if (_sdName) imgLines.push('🏪 '+_sdName);
+  imgLines.push(''); imgLines.push('— RetWork (チリつも)'); imgLines.push(refLink);
+  var imgShareText = imgLines.join('\n');
+  // 링크 공유용 lead
+  var lead = mLeadName + (_sdName ? '\n🏪 '+_sdName : '');
+
+  // b442 — 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
   _shareChooser(
-    function(){ _shareLinkOnly(card.menu_name||'RetWork', shareText); },
     async function(){
       if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
       var canvas = null;
       try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
-      await _shareCardFlow(canvas, card.menu_name||'RetWork', shareText, 'retwork-menu-' + Date.now() + '.jpg');
+      await _shareAsLink(canvas, 'm' + _mdCardId, mTitle, lead, mDesc || 'チリマップのメニュー情報', refCode);
+    },
+    async function(){
+      if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
+      var canvas = null;
+      try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
+      await _shareCardFlow(canvas, mTitle, imgShareText, 'retwork-menu-' + Date.now() + '.jpg');
     }
   );
 }
@@ -27110,7 +27164,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 443;
+window.__APP_BUILD__ = 444;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
