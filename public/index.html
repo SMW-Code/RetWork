@@ -169,6 +169,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .screen.active{display:flex;}
 .scroll{flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
 .scroll::-webkit-scrollbar{display:none;}
+.ct-hscroll::-webkit-scrollbar{display:none;height:0;}
+.ct-hscroll{scrollbar-width:none;}
 /* 모든 스크롤 가능 컨테이너에 overscroll 차단 — 모바일 PTR/주소창 출현 방지 */
 .att-body,.ct-screen,.screen,#ov-attendance,.overlay > *{overscroll-behavior:contain;}
 
@@ -1881,14 +1883,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="font-size:12px;font-weight:700;color:var(--gold);"><span data-i18n="common.share">共有</span> ›</div>
     </div>
-    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.4px;" data-i18n="rw.draw">チリつもドロー</div>
-    <div style="background:var(--surface);border-radius:14px;padding:16px;border:0.5px solid var(--border);margin-bottom:10px;">
-      <div style="font-size:14px;font-weight:800;color:var(--text-1);margin-bottom:4px;">🍔 マクドナルド ビッグマックセット</div>
-      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;">参加85人 · 2人当選 · 残り 12:00:00</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;">
-        <div style="background:var(--gold-light);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gold-dark);">✨ 170チリ</div>
-        <button style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="rw.join">参加する</button>
-      </div>
+    <!-- ── 치리츠모 드로우 (동적 슬라이드 — draws 테이블) ── -->
+    <div id="ct-draw-section" style="display:none;margin-bottom:14px;">
+      <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.4px;" data-i18n="rw.draw">チリつもドロー</div>
+      <div id="ct-draw-track" class="ct-hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:2px;"></div>
+      <div id="ct-draw-dots" style="display:flex;justify-content:center;gap:6px;margin-top:8px;"></div>
     </div>
 
     <!-- ── チリストア ── -->
@@ -3901,6 +3900,102 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 어드민: 치리츠모 드로우 관리 (목록) ══ -->
+<div class="overlay" id="ov-admin-draws" style="z-index:960;" onclick="if(event.target===this)closeOv('ov-admin-draws')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:540px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🎫 치리츠모 드로우 관리</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">추첨 카드 등록·수정 · 유저 노출 on/off</div>
+        </div>
+        <div onclick="closeOv('ov-admin-draws')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+
+      <button onclick="adminOpenDrawForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;">+ 새 드로우 등록</button>
+
+      <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">🎫 등록된 드로우</div>
+      <div id="adm-draws-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 드로우 추가/수정 폼 ══ -->
+<div class="overlay" id="ov-admin-draw-form" style="z-index:10001;" onclick="if(event.target===this)closeOv('ov-admin-draw-form')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div id="adm-draw-form-title" style="font-size:17px;font-weight:900;color:var(--text-1);">+ 새 드로우 등록</div>
+        <div onclick="closeOv('ov-admin-draw-form')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+
+      <!-- 이미지 업로드 -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;">경품 이미지 (선택)</div>
+        <label style="display:flex;align-items:center;gap:10px;padding:10px;border:1.5px dashed var(--border-mid);border-radius:12px;cursor:pointer;background:var(--bg);">
+          <div id="adm-draw-img-preview" style="width:54px;height:54px;border-radius:10px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--text-3);flex-shrink:0;overflow:hidden;">🎁</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-1);">이미지 선택</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px;">갤러리에서 사진 선택 (선택사항)</div>
+          </div>
+          <input type="file" accept="image/*" style="display:none;" onchange="adminHandleDrawImage(this)">
+        </label>
+      </div>
+
+      <input id="adm-draw-title" type="text" maxlength="80" placeholder="경품명 (필수, 예: マクドナルド ビッグマックセット)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);margin-bottom:8px;box-sizing:border-box;">
+      <textarea id="adm-draw-desc" rows="2" maxlength="200" placeholder="설명 (선택, 최대 200자)" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);margin-bottom:8px;box-sizing:border-box;resize:vertical;"></textarea>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">응모 치리</div>
+          <input id="adm-draw-cost" type="number" min="1" placeholder="170" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">당첨자 수</div>
+          <input id="adm-draw-winners" type="number" min="1" placeholder="2" value="2" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">1인 최대 응모</div>
+          <input id="adm-draw-maxentry" type="number" min="1" placeholder="5" value="5" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">시작 일시</div>
+          <input id="adm-draw-starts" type="datetime-local" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">종료 일시</div>
+          <input id="adm-draw-ends" type="datetime-local" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:14px;">
+        <div style="flex:0.8;">
+          <div style="font-size:10px;font-weight:700;color:var(--text-3);margin-bottom:3px;">정렬 순서</div>
+          <input id="adm-draw-sort" type="number" placeholder="0" value="0" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;">
+        </div>
+        <label style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);cursor:pointer;font-size:12px;font-weight:700;">
+          <input type="checkbox" id="adm-draw-active" checked> 유저 노출(활성)
+        </label>
+      </div>
+
+      <button onclick="adminSaveDraw()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 유저: 드로우 상세 모달 (기본 — 추후 업데이트 예정) ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-draw-detail" style="z-index:1000;" onclick="if(event.target===this)closeOv('ov-draw-detail')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:88vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div id="draw-detail-content" style="padding:6px 20px 28px;"><!-- 동적 렌더 --></div>
+  </div>
+</div>
+
 <!-- ══ 어드민: 광고 관리 (영역별 수익 + 로컬 광고) ══ -->
 <div class="overlay" id="ov-admin-ads" style="z-index:960;" onclick="if(event.target===this)closeOv('ov-admin-ads')">
   <div class="sheet" onclick="event.stopPropagation()" style="max-width:560px;width:100%;max-height:92vh;overflow-y:auto;">
@@ -4722,6 +4817,7 @@ function switchMode(mode) {
   if (!isReceipt) {
     ctUpdateCoinDisplay();
     if (typeof renderCtStore === 'function') renderCtStore();
+    if (typeof renderCtDraws === 'function') renderCtDraws();
     setTimeout(function() {
       if (!_ctMapInit) {
         ctInitMap();
@@ -4770,7 +4866,11 @@ function ctSwitchTab(name) {
     }, 100);
   }
   if (name === 'community') ctInitCommunity();
-  if (name === 'reward') { ctStopNotifTimer(); ctUpdateAttendanceCard(); ctUpdateRewardAdRemain(); }
+  if (name === 'reward') {
+    ctStopNotifTimer(); ctUpdateAttendanceCard(); ctUpdateRewardAdRemain();
+    if (typeof renderCtDraws === 'function') renderCtDraws();
+    if (typeof renderCtStore === 'function') renderCtStore();
+  }
 }
 
 function ctUpdateCoinDisplay() {
@@ -5432,6 +5532,117 @@ async function _ctStoreLoadItems() {
   _ctStoreCache = res.data || [];
   _ctStoreCacheAt = now;
   return _ctStoreCache;
+}
+
+/* ══════════════════════════════
+   치리츠모 드로우 — 유저 측 슬라이드 카드 (b432)
+   draws 테이블에서 is_active=true 로드 → 좌우 슬라이드.
+   카드 탭 → ctOpenDrawDetail (상세 모달, 추후 업데이트 예정).
+══════════════════════════════ */
+var _ctDrawsCache = [];
+
+async function renderCtDraws() {
+  var section = document.getElementById('ct-draw-section');
+  var track = document.getElementById('ct-draw-track');
+  if (!section || !track) return;
+  if (!_sb) { section.style.display = 'none'; return; }
+  var rows = [];
+  try {
+    var res = await _sb.from('draws')
+      .select('id,title,description,image_url,coin_cost,winner_count,max_entries_per_user,starts_at,ends_at,is_active,sort_order')
+      .eq('is_active', true)
+      .order('sort_order', { ascending:true })
+      .order('created_at', { ascending:false });
+    if (res.error) { console.warn('[renderCtDraws]', res.error.message); section.style.display='none'; return; }
+    rows = res.data || [];
+  } catch(e) { console.warn('[renderCtDraws] exception', e); section.style.display='none'; return; }
+
+  _ctDrawsCache = rows;
+  if (rows.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  // 카드가 1개면 풀폭, 여러 개면 약 86% 폭 (다음 카드 살짝 보이게 슬라이드 유도)
+  var single = rows.length === 1;
+  track.innerHTML = rows.map(function(d) { return _ctDrawCardHtml(d, single); }).join('');
+
+  // 닷 인디케이터
+  var dots = document.getElementById('ct-draw-dots');
+  if (dots) {
+    if (rows.length <= 1) { dots.innerHTML = ''; }
+    else {
+      dots.innerHTML = rows.map(function(_, i) {
+        return '<span class="ct-draw-dot" data-idx="'+i+'" style="width:6px;height:6px;border-radius:50%;background:'+(i===0?'var(--gold)':'var(--border-mid)')+';transition:background .2s;"></span>';
+      }).join('');
+      // 스크롤 시 활성 닷 갱신
+      track.onscroll = function() {
+        var w = track.clientWidth;
+        var idx = Math.round(track.scrollLeft / (w * 0.86 + 12));
+        var ds = dots.querySelectorAll('.ct-draw-dot');
+        ds.forEach(function(el, i){ el.style.background = (i===idx) ? 'var(--gold)' : 'var(--border-mid)'; });
+      };
+    }
+  }
+}
+
+function _ctDrawCardHtml(d, single) {
+  var basis = single ? 'flex:0 0 100%;min-width:100%;' : 'flex:0 0 86%;min-width:86%;';
+  var img = d.image_url
+    ? '<div style="height:130px;background:url('+_esc(d.image_url).replace(/'/g,'%27')+') center/cover;border-radius:12px 12px 0 0;"></div>'
+    : '<div style="height:130px;background:linear-gradient(135deg,var(--gold-light),#fff);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;font-size:42px;">🎁</div>';
+  var endTxt = d.ends_at ? _drawRemainText(d.ends_at) : '';
+  var desc = d.description ? '<div style="font-size:11px;color:var(--text-3);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(d.description)+'</div>' : '';
+  return '<div onclick="ctOpenDrawDetail(\''+d.id+'\')" style="'+basis+'scroll-snap-align:center;background:var(--surface);border:.5px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:var(--shadow-xs);">'
+    + img
+    + '<div style="padding:12px 14px 14px;">'
+    +   '<div style="font-size:14px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(d.title)+'</div>'
+    +   desc
+    +   '<div style="font-size:11px;color:var(--text-3);margin-top:6px;">🏆 '+d.winner_count+'名当選'+(endTxt ? ' · '+endTxt : '')+'</div>'
+    +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
+    +     '<div style="background:var(--gold-light);border-radius:20px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--gold-dark);">✨ '+d.coin_cost+'チリ</div>'
+    +     '<div style="background:var(--gold);color:#fff;border-radius:10px;padding:8px 18px;font-size:12px;font-weight:800;" data-i18n="rw.join">参加する</div>'
+    +   '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+// 종료까지 남은 시간 텍스트 (간단)
+function _drawRemainText(endsAt) {
+  var ms = new Date(endsAt).getTime() - Date.now();
+  if (isNaN(ms)) return '';
+  if (ms <= 0) return '終了';
+  var d = Math.floor(ms / (24*3600*1000));
+  if (d >= 1) return '残り' + d + '日';
+  var h = Math.floor(ms / (3600*1000));
+  if (h >= 1) return '残り' + h + '時間';
+  var m = Math.floor(ms / (60*1000));
+  return '残り' + m + '分';
+}
+
+// 드로우 상세 모달 — 기본 버전 (사용자가 추후 업데이트 예정)
+function ctOpenDrawDetail(id) {
+  var d = _ctDrawsCache.find(function(x){ return x.id === id; });
+  if (!d) return;
+  var box = document.getElementById('draw-detail-content');
+  if (!box) return;
+  var img = d.image_url
+    ? '<div style="height:200px;background:url('+_esc(d.image_url).replace(/'/g,'%27')+') center/cover;border-radius:14px;margin-bottom:14px;"></div>'
+    : '<div style="height:200px;background:linear-gradient(135deg,var(--gold-light),#fff);border-radius:14px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:64px;">🎁</div>';
+  var endTxt = d.ends_at ? _drawRemainText(d.ends_at) : '';
+  box.innerHTML = img
+    + '<div style="font-size:19px;font-weight:900;color:var(--text-1);margin-bottom:6px;">'+_esc(d.title)+'</div>'
+    + (d.description ? '<div style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:14px;">'+_esc(d.description)+'</div>' : '')
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">'
+    +   '<div style="background:var(--gold-light);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--gold-dark);">✨ '+d.coin_cost+'チリ</div>'
+    +   '<div style="background:var(--bg-2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text-2);">🏆 '+d.winner_count+'名当選</div>'
+    +   '<div style="background:var(--bg-2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text-2);">1人最大'+d.max_entries_per_user+'回</div>'
+    +   (endTxt ? '<div style="background:var(--bg-2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text-2);">⏳ '+endTxt+'</div>' : '')
+    + '</div>'
+    + '<button onclick="showToast(\'🎫 応募機能は準備中です\')" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);">🎫 応募する（準備中）</button>'
+    + '<div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">※ 詳細・応募フローは今後アップデート予定</div>';
+  // 항상 최상위로 — body 마운트
+  var ov = document.getElementById('ov-draw-detail');
+  if (ov && ov.parentElement !== document.body) document.body.appendChild(ov);
+  openOv('ov-draw-detail');
 }
 
 async function renderCtStore() {
@@ -18620,6 +18831,190 @@ async function adminDeleteItem(id) {
 }
 
 /* ══════════════════════════════
+   치리츠모 드로우 (draws) — 어드민 CRUD (b432)
+   store_items 패턴과 동일. draws 테이블 사용.
+══════════════════════════════ */
+var _admEditDrawId = null;
+var _admDrawImgFile = null;
+
+async function openAdminDraws() {
+  if (!_isAdmin) { showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  openOv('ov-admin-draws');
+  await _loadAdminDrawList();
+}
+
+async function _loadAdminDrawList() {
+  var wrap = document.getElementById('adm-draws-list');
+  if (!wrap || !_sb) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3);">로딩 중...</div>';
+  var res = await _sb.from('draws')
+    .select('id,title,description,image_url,coin_cost,winner_count,max_entries_per_user,starts_at,ends_at,is_active,sort_order')
+    .order('sort_order', { ascending:true })
+    .order('created_at', { ascending:false });
+  if (res.error) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--red);padding:10px;">로딩 실패: '+res.error.message+'<br><span style="font-size:10px;color:var(--text-3);">draws 테이블/컬럼 확인 — draws_admin.sql 실행 필요할 수 있음</span></div>';
+    return;
+  }
+  var rows = res.data || [];
+  if (rows.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;padding:18px;font-size:12px;color:var(--text-3);">등록된 드로우가 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(function(d) {
+    var img = d.image_url
+      ? '<img src="'+_esc(d.image_url)+'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+      : '<div style="width:48px;height:48px;border-radius:8px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🎁</div>';
+    var endTxt = d.ends_at ? new Date(d.ends_at).toLocaleDateString() : '-';
+    return '<div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">'
+      + img
+      + '<div style="flex:1;min-width:0;">'
+      +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(d.title)+'</div>'
+      +   '<div style="font-size:10px;color:var(--text-3);margin-top:2px;">✨ '+d.coin_cost+' · 당첨 '+d.winner_count+'명 · ~'+endTxt+'</div>'
+      + '</div>'
+      + '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">'
+      +   '<button onclick="adminToggleDraw(\''+d.id+'\','+(!d.is_active)+')" style="padding:4px 9px;border-radius:8px;border:none;background:'+(d.is_active?'var(--green-light)':'var(--bg-2)')+';color:'+(d.is_active?'var(--green)':'var(--text-3)')+';font-size:10px;font-weight:700;cursor:pointer;">'+(d.is_active?'노출중':'숨김')+'</button>'
+      +   '<div style="display:flex;gap:4px;">'
+      +     '<button onclick="adminEditDraw(\''+d.id+'\')" style="padding:4px 8px;border-radius:6px;border:none;background:var(--blue-bg);color:var(--blue);font-size:10px;font-weight:700;cursor:pointer;">수정</button>'
+      +     '<button onclick="adminDeleteDraw(\''+d.id+'\')" style="padding:4px 8px;border-radius:6px;border:none;background:var(--red-bg);color:var(--red);font-size:10px;font-weight:700;cursor:pointer;">삭제</button>'
+      +   '</div>'
+      + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+// datetime-local 용 — Date → 'YYYY-MM-DDTHH:mm' (로컬)
+function _toLocalDtInput(d) {
+  if (!d) return '';
+  var dt = new Date(d);
+  if (isNaN(dt.getTime())) return '';
+  var pad = function(n){ return (n<10?'0':'')+n; };
+  return dt.getFullYear()+'-'+pad(dt.getMonth()+1)+'-'+pad(dt.getDate())+'T'+pad(dt.getHours())+':'+pad(dt.getMinutes());
+}
+
+function adminOpenDrawForm(draw) {
+  _admEditDrawId = (draw && draw.id) || null;
+  _admDrawImgFile = null;
+  var titleEl = document.getElementById('adm-draw-form-title');
+  if (titleEl) titleEl.textContent = draw ? '✏️ 드로우 수정' : '+ 새 드로우 등록';
+  document.getElementById('adm-draw-title').value    = (draw && draw.title) || '';
+  document.getElementById('adm-draw-desc').value     = (draw && draw.description) || '';
+  document.getElementById('adm-draw-cost').value     = (draw && draw.coin_cost) || '';
+  document.getElementById('adm-draw-winners').value  = (draw && draw.winner_count != null) ? draw.winner_count : 2;
+  document.getElementById('adm-draw-maxentry').value = (draw && draw.max_entries_per_user != null) ? draw.max_entries_per_user : 5;
+  document.getElementById('adm-draw-sort').value     = (draw && draw.sort_order) || 0;
+  document.getElementById('adm-draw-active').checked = (!draw || draw.is_active !== false);
+  // 기간 — 신규면 오늘~+7일 기본
+  var now = new Date();
+  var wk  = new Date(Date.now() + 7*24*3600*1000);
+  document.getElementById('adm-draw-starts').value = draw && draw.starts_at ? _toLocalDtInput(draw.starts_at) : _toLocalDtInput(now);
+  document.getElementById('adm-draw-ends').value   = draw && draw.ends_at   ? _toLocalDtInput(draw.ends_at)   : _toLocalDtInput(wk);
+  // 이미지 미리보기
+  var prev = document.getElementById('adm-draw-img-preview');
+  if (prev) prev.innerHTML = (draw && draw.image_url) ? '<img src="'+_esc(draw.image_url)+'" style="width:100%;height:100%;object-fit:cover;">' : '🎁';
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
+    _admPcDrilldownTo('ov-admin-draw-form', { backMenuKey:'draws', backLabel:'드로우 관리', title:'드로우 편집' });
+  } else {
+    openOv('ov-admin-draw-form');
+  }
+}
+
+async function adminEditDraw(id) {
+  var res = await _sb.from('draws').select('*').eq('id', id).maybeSingle();
+  if (res.error || !res.data) { showToast('드로우 정보 로드 실패'); return; }
+  adminOpenDrawForm(res.data);
+}
+
+function adminHandleDrawImage(input) {
+  var f = input.files && input.files[0];
+  if (!f) return;
+  _admDrawImgFile = f;
+  var prev = document.getElementById('adm-draw-img-preview');
+  if (prev) {
+    var reader = new FileReader();
+    reader.onload = function(e){ prev.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover;">'; };
+    reader.readAsDataURL(f);
+  }
+}
+
+async function adminSaveDraw() {
+  if (!_isAdmin || !_currentUser || !_sb) return;
+  var title    = document.getElementById('adm-draw-title').value.trim();
+  var desc     = document.getElementById('adm-draw-desc').value.trim();
+  var cost     = parseInt(document.getElementById('adm-draw-cost').value) || 0;
+  var winners  = parseInt(document.getElementById('adm-draw-winners').value) || 1;
+  var maxEntry = parseInt(document.getElementById('adm-draw-maxentry').value) || 1;
+  var sort     = parseInt(document.getElementById('adm-draw-sort').value) || 0;
+  var active   = document.getElementById('adm-draw-active').checked;
+  var startsRaw= document.getElementById('adm-draw-starts').value;
+  var endsRaw  = document.getElementById('adm-draw-ends').value;
+  if (!title) { showToast('경품명을 입력해주세요'); return; }
+  if (cost <= 0) { showToast('응모 치리를 1 이상으로 입력해주세요'); return; }
+  var starts = startsRaw ? new Date(startsRaw).toISOString() : new Date().toISOString();
+  var ends   = endsRaw   ? new Date(endsRaw).toISOString()   : new Date(Date.now()+7*24*3600*1000).toISOString();
+
+  // 이미지 업로드 (있다면)
+  var imageUrl = null;
+  if (_admDrawImgFile) {
+    try {
+      var f = _admDrawImgFile;
+      if (typeof _compressImage === 'function') { try { f = await _compressImage(f, 1600, 0.82); } catch(_){} }
+      var ext = (f.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
+      var path = 'draws/' + Date.now() + '.' + ext;
+      var up = await _sb.storage.from('store-photos').upload(path, f, { upsert:false, contentType: f.type || 'image/jpeg' });
+      if (up.error) { showToast('이미지 업로드 실패: '+up.error.message); return; }
+      var pub = _sb.storage.from('store-photos').getPublicUrl(path);
+      imageUrl = pub.data && pub.data.publicUrl;
+    } catch(e) { showToast('이미지 업로드 에러: '+(e.message||e)); return; }
+  }
+
+  var payload = {
+    title: title,
+    description: desc || null,
+    coin_cost: cost,
+    winner_count: winners,
+    max_entries_per_user: maxEntry,
+    starts_at: starts,
+    ends_at: ends,
+    sort_order: sort,
+    is_active: active
+  };
+  if (imageUrl) payload.image_url = imageUrl;
+
+  var res;
+  if (_admEditDrawId) {
+    res = await _sb.from('draws').update(payload).eq('id', _admEditDrawId);
+  } else {
+    res = await _sb.from('draws').insert(payload);
+  }
+  if (res.error) { showToast('저장 실패: '+res.error.message); return; }
+  showToast(_admEditDrawId ? '✏️ 수정됐어요' : '✅ 등록됐어요');
+  _admEditDrawId = null;
+  _admDrawImgFile = null;
+  closeOv('ov-admin-draw-form');
+  await _loadAdminDrawList();
+  if (typeof renderCtDraws === 'function') renderCtDraws();  // 유저 화면 즉시 반영
+}
+
+async function adminToggleDraw(id, nextActive) {
+  if (!_isAdmin || !_sb) return;
+  var res = await _sb.from('draws').update({ is_active: nextActive }).eq('id', id);
+  if (res.error) { showToast('변경 실패: '+res.error.message); return; }
+  showToast(nextActive ? '✅ 노출 활성화' : '⏸️ 숨김');
+  await _loadAdminDrawList();
+  if (typeof renderCtDraws === 'function') renderCtDraws();
+}
+
+async function adminDeleteDraw(id) {
+  if (!_isAdmin || !_sb) return;
+  if (!confirm('이 드로우를 영구 삭제할까요?\n(참여 내역도 함께 삭제됩니다)')) return;
+  var res = await _sb.from('draws').delete().eq('id', id);
+  if (res.error) { showToast('삭제 실패: '+res.error.message); return; }
+  showToast('🗑️ 삭제됐어요');
+  await _loadAdminDrawList();
+  if (typeof renderCtDraws === 'function') renderCtDraws();
+}
+
+/* ══════════════════════════════
    공지사항 (announcements)
 ══════════════════════════════ */
 
@@ -18960,6 +19355,9 @@ var _admPcMenus = {
     { key:'items', icon:'🛍️', label:'치리스토어 상품',
       mount:'ov-admin-items',
       load:function(){ if (typeof openAdminStoreItems === 'function') openAdminStoreItems(); } },
+    { key:'draws', icon:'🎫', label:'드로우 관리',
+      mount:'ov-admin-draws',
+      load:function(){ if (typeof openAdminDraws === 'function') openAdminDraws(); } },
     { key:'exchange', icon:'📋', label:'교환요청',
       customRender:function(){ if (typeof _admPcRenderExchangeReqs === 'function') _admPcRenderExchangeReqs(); },
       badgeId:'apc-badge-exchange' },
@@ -26275,7 +26673,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 431;
+window.__APP_BUILD__ = 432;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
