@@ -6066,7 +6066,25 @@ async function ctLoadPosts() {
     return;
   }
 
-  _ctDummyPosts = (res.data || []).map(function(p) {
+  var posts = res.data || [];
+
+  // b431 — 댓글 수는 ct_comments 에서 실제 집계 (ct_posts.comments 컬럼이 stale 일 수 있어
+  //         최초 로드 시 0 으로 보이고 상세를 열어야 갱신되던 버그 해결).
+  //         집계 실패 시에만 컬럼 값으로 fallback.
+  var _ctCommentCounts = {};
+  if (posts.length && _sb) {
+    try {
+      var _ids = posts.map(function(p){ return p.id; });
+      var cc = await _sb.from('ct_comments').select('post_id').in('post_id', _ids);
+      if (!cc.error && cc.data) {
+        cc.data.forEach(function(r){ _ctCommentCounts[r.post_id] = (_ctCommentCounts[r.post_id] || 0) + 1; });
+      } else if (cc.error) {
+        console.warn('[ctLoadPosts] comment count agg err:', cc.error.message);
+      }
+    } catch(e) { console.warn('[ctLoadPosts] comment count exception:', e); }
+  }
+
+  _ctDummyPosts = posts.map(function(p) {
     var d = new Date(p.created_at);
     var imgs = Array.isArray(p.images) ? p.images : [];
     return {
@@ -6078,7 +6096,7 @@ async function ctLoadPosts() {
       user_avatar: p.user_avatar || '😊',
       likes: p.likes || 0,
       date: (d.getMonth() + 1) + '/' + d.getDate(),
-      comments: p.comments || 0,
+      comments: (_ctCommentCounts[p.id] != null ? _ctCommentCounts[p.id] : (p.comments || 0)),
       img: imgs.length ? imgs[0] : null,
       allImgs: imgs,
       user_id: p.user_id,
@@ -26257,7 +26275,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 430;
+window.__APP_BUILD__ = 431;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
