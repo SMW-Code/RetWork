@@ -1,6 +1,6 @@
 const CACHE_NAME = 'receiptiq-v0.9.0-b436';
 // manifest.json은 인라인 Blob URL로 처리됨 (Vercel 방화벽 차단 회피)
-const STATIC_CACHE = ['/icons/icon.png', '/icons/icon.svg'];
+const STATIC_CACHE = ['/icons/icon.png'];
 
 // 설치: 정적 파일만 프리캐시
 self.addEventListener('install', event => {
