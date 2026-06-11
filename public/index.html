@@ -1886,7 +1886,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- ── 치리츠모 드로우 (동적 슬라이드 — draws 테이블) ── -->
     <div id="ct-draw-section" style="display:none;margin-bottom:14px;">
       <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.4px;" data-i18n="rw.draw">チリつもドロー</div>
-      <div id="ct-draw-track" class="ct-hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:2px;"></div>
+      <div id="ct-draw-track" class="ct-hscroll" style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:0 17% 2px;box-sizing:border-box;"></div>
       <div id="ct-draw-dots" style="display:flex;justify-content:center;gap:6px;margin-top:8px;"></div>
     </div>
 
@@ -5557,26 +5557,28 @@ async function renderCtDraws() {
     rows = res.data || [];
   } catch(e) { console.warn('[renderCtDraws] exception', e); section.style.display='none'; return; }
 
-  _ctDrawsCache = rows;
-  if (rows.length === 0) { section.style.display = 'none'; return; }
+  // 디자인 확인용 더미 카드 — 운영 전 _DRAW_SHOW_DUMMIES = false 로 끄거나 제거
+  var list = _DRAW_SHOW_DUMMIES ? rows.concat(_DRAW_DUMMIES()) : rows;
+  _ctDrawsCache = list;
+  if (list.length === 0) { section.style.display = 'none'; return; }
   section.style.display = '';
 
-  // 카드가 1개면 풀폭, 여러 개면 약 86% 폭 (다음 카드 살짝 보이게 슬라이드 유도)
-  var single = rows.length === 1;
-  track.innerHTML = rows.map(function(d) { return _ctDrawCardHtml(d, single); }).join('');
+  track.innerHTML = list.map(function(d) { return _ctDrawCardHtml(d); }).join('');
 
   // 닷 인디케이터
   var dots = document.getElementById('ct-draw-dots');
   if (dots) {
-    if (rows.length <= 1) { dots.innerHTML = ''; }
+    if (list.length <= 1) { dots.innerHTML = ''; }
     else {
-      dots.innerHTML = rows.map(function(_, i) {
+      dots.innerHTML = list.map(function(_, i) {
         return '<span class="ct-draw-dot" data-idx="'+i+'" style="width:6px;height:6px;border-radius:50%;background:'+(i===0?'var(--gold)':'var(--border-mid)')+';transition:background .2s;"></span>';
       }).join('');
-      // 스크롤 시 활성 닷 갱신
+      // 스크롤 시 활성 닷 갱신 (카드 폭 66% + gap 12)
       track.onscroll = function() {
         var w = track.clientWidth;
-        var idx = Math.round(track.scrollLeft / (w * 0.86 + 12));
+        var step = w * 0.66 + 12;
+        var idx = Math.round(track.scrollLeft / step);
+        if (idx < 0) idx = 0; if (idx > list.length - 1) idx = list.length - 1;
         var ds = dots.querySelectorAll('.ct-draw-dot');
         ds.forEach(function(el, i){ el.style.background = (i===idx) ? 'var(--gold)' : 'var(--border-mid)'; });
       };
@@ -5584,8 +5586,20 @@ async function renderCtDraws() {
   }
 }
 
-function _ctDrawCardHtml(d, single) {
-  var basis = single ? 'flex:0 0 100%;min-width:100%;' : 'flex:0 0 86%;min-width:86%;';
+// 디자인 확인용 더미 드로우 2개 — 실제 운영 시 _DRAW_SHOW_DUMMIES=false 또는 이 블록 제거
+var _DRAW_SHOW_DUMMIES = true;
+function _DRAW_DUMMIES() {
+  var d3 = new Date(Date.now() + 3*24*3600*1000).toISOString();
+  var d5 = new Date(Date.now() + 5*24*3600*1000).toISOString();
+  return [
+    { id:'_dummy_a', title:'🍔 サンプル賞品A（ダミー）', description:'デザイン確認用サンプル', image_url:null, coin_cost:170, winner_count:2, max_entries_per_user:5, ends_at:d3, _dummy:true },
+    { id:'_dummy_b', title:'☕ サンプル賞品B（ダミー）', description:'デザイン確認用サンプル', image_url:null, coin_cost:90,  winner_count:5, max_entries_per_user:3, ends_at:d5, _dummy:true }
+  ];
+}
+
+function _ctDrawCardHtml(d) {
+  // 항상 66% 폭 (≈2/3) + 가운데 스냅 (트랙 좌우 패딩 17% 로 첫/끝도 센터)
+  var basis = 'flex:0 0 66%;min-width:66%;';
   var img = d.image_url
     ? '<div style="height:130px;background:url('+_esc(d.image_url).replace(/'/g,'%27')+') center/cover;border-radius:12px 12px 0 0;"></div>'
     : '<div style="height:130px;background:linear-gradient(135deg,var(--gold-light),#fff);border-radius:12px 12px 0 0;display:flex;align-items:center;justify-content:center;font-size:42px;">🎁</div>';
@@ -26673,7 +26687,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 432;
+window.__APP_BUILD__ = 433;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
