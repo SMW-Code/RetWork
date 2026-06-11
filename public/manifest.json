@@ -3,6 +3,7 @@
   "short_name": "RetWork",
   "description": "AI領収書管理＆チリつも価格共有アプリ",
   "start_url": "/index.html",
+  "id": "/index.html",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
