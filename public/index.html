@@ -17128,6 +17128,8 @@ async function openStoreDetail(sData) {
   _sdSData    = sData;
   _sdExpandId = null;
   _sdNewImgFile = null;
+  window._sdPlaceCur = null; // build 439 — 이전 가게 Places 정보 잔존 방지
+
   // 모달 먼저 열기 (렌더 오류와 무관하게 패널 표시 보장)
   openOv('ov-store-detail');
   try { _sdRenderHeader(0, 0); } catch(e) { console.error('[SD] header:', e); }
@@ -17323,6 +17325,7 @@ function _buildLocalizedHours(periods) {
 }
 
 function _sdRenderPlacesInfo(place, sData) {
+  window._sdPlaceCur = place; // build 439 — 공유 카드(영업시간/전화)용 캐시
   var wrap = document.getElementById('sd-places-info');
   if (!wrap) return;
   var openNow = place.opening_hours && place.opening_hours.isOpen ? place.opening_hours.isOpen() : null;
@@ -17521,60 +17524,262 @@ async function submitStoreEditReq(){
   } catch(e){ console.warn('[edit req]', e); showToast('전송 실패'); }
   if(btn){ btn.disabled=false; btn.textContent='送信する'; }
 }
-/* build 367 — 가게 공유 (Web Share API 우선, fallback 클립보드)
-   본문: 가게명 + 평점 + 주소 + RetWork 안내 + URL */
+/* build 439 — 가게 공유 v2: 공유 카드 이미지(캔버스) + チリつも 링크
+   카드 구성: 대표사진 히어로 + 가게명/평점 → 営業時間·電話 → 代表メニュー(사진·가격·★)
+             → クチコミ TOP3 (가게 리뷰 + 대표메뉴 리뷰 통합, 최대 3건) → retwork.jp
+   이미지 공유 미지원/실패 시: 기존 텍스트 공유로 폴백 */
+function _sdShareLoadImg(url){
+  return new Promise(function(resolve){
+    if (!url) { resolve(null); return; }
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    var done = false;
+    var to = setTimeout(function(){ if(!done){ done=true; resolve(null); } }, 4500);
+    img.onload  = function(){ if(!done){ done=true; clearTimeout(to); resolve(img); } };
+    img.onerror = function(){ if(!done){ done=true; clearTimeout(to); resolve(null); } };
+    img.src = url;
+  });
+}
+// cover 크롭으로 그리기
+function _sdShareDrawCover(x, img, X, Y, W, H){
+  var ir = img.width / img.height, r = W / H;
+  var sw, sh, sx, sy;
+  if (ir > r) { sh = img.height; sw = sh * r; sx = (img.width - sw)/2; sy = 0; }
+  else        { sw = img.width;  sh = sw / r; sx = 0; sy = (img.height - sh)/2; }
+  x.drawImage(img, sx, sy, sw, sh, X, Y, W, H);
+}
+// 캔버스 텍스트 말줄임
+function _sdShareEllip(x, txt, maxW){
+  txt = (txt || '').replace(/\s+/g, ' ').trim();
+  if (x.measureText(txt).width <= maxW) return txt;
+  while (txt.length > 1 && x.measureText(txt + '…').width > maxW) txt = txt.slice(0, -1);
+  return txt + '…';
+}
+async function _sdBuildShareCanvas(){
+  var s = _sdSData || {};
+  var name = _sdName || s.name || '';
+  var FONT='"DM Sans","Noto Sans JP","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+  var root = getComputedStyle(document.documentElement);
+  var themeMain = (root.getPropertyValue('--green') || '#16A87A').trim();
+  var themeDark = (root.getPropertyValue('--green-dark') || '#0C6B52').trim();
+
+  // ── 데이터 수집 ──
+  // 1) 대표 사진 (어드민 primary 우선 — _sdPhotoList[0])
+  var heroUrl = (window._sdPhotoList && window._sdPhotoList[0]) || '';
+  // 2) Places 정보 (영업시간/전화) — _sdRenderPlacesInfo 에서 캐시
+  var place = window._sdPlaceCur || null;
+  var hoursTxt = '';
+  if (place && place.opening_hours && place.opening_hours.weekday_text && place.opening_hours.weekday_text.length) {
+    var gi = (new Date().getDay() + 6) % 7; // Google weekday_text 는 월요일 시작
+    hoursTxt = (place.opening_hours.weekday_text[gi] || '').replace(/^[^:：]*[:：]\s*/, '');
+  }
+  var phoneTxt = (place && place.formatted_phone_number) || '';
+  // 3) 대표 메뉴 — is_featured 우선 → 평가 수 → 사진 있는 첫 카드
+  var cards = (_sdCards || []).slice();
+  cards.sort(function(a,b){
+    if (!!b.is_featured - !!a.is_featured) return (!!b.is_featured) - (!!a.is_featured);
+    return (b.rating_count||0) - (a.rating_count||0);
+  });
+  var topCard = cards.filter(function(c){ return c.image_url; })[0] || cards[0] || null;
+  // 4) 리뷰 — 가게 리뷰(store_comments) + 대표메뉴 리뷰(store_menu_comments) 통합 TOP3
+  var reviews = [];
+  try {
+    if (_sb) {
+      var q1 = _sb.from('store_comments').select('content,rating,user_name,created_at')
+        .eq('store_name', name).order('created_at',{ascending:false}).limit(10);
+      var q2 = topCard ? _sb.from('store_menu_comments').select('content,rating,created_at')
+        .eq('menu_card_id', topCard.id).order('created_at',{ascending:false}).limit(10) : Promise.resolve({data:[]});
+      var rs = await Promise.all([q1, q2]);
+      (rs[0].data || []).forEach(function(r){ if((r.content||'').trim()) reviews.push({content:r.content, rating:r.rating||0, src:'🏪'}); });
+      (rs[1].data || []).forEach(function(r){ if((r.content||'').trim()) reviews.push({content:r.content, rating:r.rating||0, src:'🍽'}); });
+      reviews.sort(function(a,b){ return (b.rating||0) - (a.rating||0); });
+      reviews = reviews.slice(0, 3);
+    }
+  } catch(e){ console.warn('[share] reviews load failed:', e); }
+  // 가게 평점 (메뉴 카드 평균)
+  var ratedCards = (_sdCards||[]).filter(function(c){ return c.rating_count > 0; });
+  var avgTxt = '';
+  if (ratedCards.length > 0) {
+    var avg = ratedCards.reduce(function(a,c){ return a + parseFloat(c.rating_avg||0); }, 0) / ratedCards.length;
+    var cnt = ratedCards.reduce(function(a,c){ return a + (c.rating_count||0); }, 0);
+    avgTxt = '★' + avg.toFixed(1) + ' (' + cnt + ')';
+  }
+
+  // 이미지 병렬 로드
+  var imgs = await Promise.all([
+    _sdShareLoadImg(heroUrl),
+    _sdShareLoadImg(topCard && topCard.image_url)
+  ]);
+  var heroImg = imgs[0], menuImg = imgs[1];
+
+  // ── 캔버스 ──
+  var W = 1080, H = 1350;
+  var c = document.createElement('canvas'); c.width = W; c.height = H;
+  var x = c.getContext('2d');
+  x.fillStyle = '#FFFFFF'; x.fillRect(0,0,W,H);
+
+  // 히어로 (대표 사진 or 그라데이션)
+  var HERO = 480;
+  if (heroImg) {
+    _sdShareDrawCover(x, heroImg, 0, 0, W, HERO);
+  } else {
+    var g = x.createLinearGradient(0,0,W,HERO);
+    g.addColorStop(0, themeMain); g.addColorStop(1, themeDark);
+    x.fillStyle = g; x.fillRect(0,0,W,HERO);
+    x.font = '120px '+FONT; x.fillText('🏪', W/2-60, HERO/2+40);
+  }
+  // 하단 오버레이 + 가게명
+  var og = x.createLinearGradient(0, HERO-220, 0, HERO);
+  og.addColorStop(0,'rgba(0,0,0,0)'); og.addColorStop(1,'rgba(0,0,0,.62)');
+  x.fillStyle = og; x.fillRect(0, HERO-220, W, 220);
+  // 브랜드 칩
+  x.fillStyle = 'rgba(0,0,0,.45)';
+  _mrRoundRect(x, 40, 40, 330, 64, 32); x.fill();
+  x.fillStyle = '#fff'; x.font = '700 30px '+FONT;
+  x.fillText('RetWork · チリつも', 64, 82);
+  // 가게명 + 평점
+  x.fillStyle = '#fff'; x.font = '900 58px '+FONT;
+  x.fillText(_sdShareEllip(x, name, W-220), 48, HERO-64);
+  if (avgTxt) {
+    x.fillStyle = '#FFD75E'; x.font = '800 34px '+FONT;
+    x.fillText(avgTxt, 48, HERO-16);
+  }
+
+  var cy = HERO + 64;
+  var PX = 48;
+  // 영업시간 / 전화
+  x.font = '600 30px '+FONT;
+  if (hoursTxt) {
+    x.fillStyle = '#333';
+    x.fillText('🕒 ' + _sdShareEllip(x, hoursTxt, W-PX*2-60), PX, cy);
+    cy += 52;
+  }
+  if (phoneTxt) {
+    x.fillStyle = '#333';
+    x.fillText('📞 ' + phoneTxt, PX, cy);
+    cy += 52;
+  }
+  if (hoursTxt || phoneTxt) cy += 8;
+  // 구분선
+  x.strokeStyle = '#E8E5DC'; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(PX, cy); x.lineTo(W-PX, cy); x.stroke();
+  cy += 56;
+
+  // 대표 메뉴
+  if (topCard) {
+    x.fillStyle = themeMain; x.font = '800 28px '+FONT;
+    x.fillText('代表メニュー', PX, cy);
+    cy += 30;
+    var MS = 230; // 메뉴 사진 크기
+    if (menuImg) {
+      x.save();
+      _mrRoundRect(x, PX, cy, MS, MS, 20); x.clip();
+      _sdShareDrawCover(x, menuImg, PX, cy, MS, MS);
+      x.restore();
+    } else {
+      x.fillStyle = '#F2EFE8';
+      _mrRoundRect(x, PX, cy, MS, MS, 20); x.fill();
+      x.font = '90px '+FONT; x.fillText('🍽', PX+MS/2-45, cy+MS/2+30);
+    }
+    var tx = PX + MS + 36, tyy = cy + 64;
+    x.fillStyle = '#1C1C1C'; x.font = '800 42px '+FONT;
+    x.fillText(_sdShareEllip(x, topCard.menu_name || '', W-tx-PX), tx, tyy);
+    tyy += 62;
+    if (topCard.price) {
+      x.fillStyle = themeDark; x.font = '900 48px '+FONT;
+      x.fillText('¥' + Number(topCard.price).toLocaleString(), tx, tyy);
+      tyy += 56;
+    }
+    if (topCard.rating_count > 0) {
+      x.fillStyle = '#C9920A'; x.font = '700 32px '+FONT;
+      x.fillText('★' + parseFloat(topCard.rating_avg||0).toFixed(1) + ' (' + topCard.rating_count + ')', tx, tyy);
+    }
+    cy += MS + 56;
+  }
+
+  // 리뷰 TOP3
+  if (reviews.length > 0) {
+    x.fillStyle = themeMain; x.font = '800 28px '+FONT;
+    x.fillText('クチコミ TOP' + reviews.length, PX, cy);
+    cy += 50;
+    reviews.forEach(function(r){
+      var line = '';
+      if (r.rating > 0) line += '★'.repeat(Math.min(5, r.rating)) + ' ';
+      x.fillStyle = '#3A3A3A'; x.font = '500 30px '+FONT;
+      x.fillText(r.src + ' ' + line + '“' + _sdShareEllip(x, r.content, W-PX*2-200) + '”', PX, cy);
+      cy += 54;
+    });
+    cy += 10;
+  }
+
+  // 푸터
+  x.fillStyle = '#F4F1E9';
+  x.fillRect(0, H-120, W, 120);
+  x.fillStyle = themeDark; x.font = '800 34px '+FONT;
+  x.fillText('retwork.jp', PX, H-48);
+  x.fillStyle = '#8A8A8A'; x.font = '500 26px '+FONT;
+  var ft = 'レシートでお得を共有 — RetWork（チリつも）';
+  var fw = x.measureText(ft).width;
+  x.fillText(ft, W-PX-fw, H-48);
+
+  return c;
+}
 async function sdShareStore(){
   var d=document.getElementById('sd-dot-popup');if(d)d.remove();
   var s = _sdSData || {};
   var name = _sdName || s.name || '';
-  // 평점 — 메뉴 카드 평점 평균
-  var ratedCards = (_sdCards||[]).filter(function(c){ return c.rating_count > 0; });
-  var ratingTxt = '';
-  if (ratedCards.length > 0) {
-    var avg = ratedCards.reduce(function(a,c){ return a + parseFloat(c.rating_avg||0); }, 0) / ratedCards.length;
-    var totalCount = ratedCards.reduce(function(a,c){ return a + (c.rating_count||0); }, 0);
-    ratingTxt = '★' + avg.toFixed(1) + ' (' + totalCount + '명 평가)';
-  }
-  // 주소 — DB.address (이미 헤더에서 사용 중)
-  var addr = '';
+  var url = 'https://retwork.jp';
+  // 텍스트 (이미지 못 보내는 환경에서도 정보 전달)
+  var lines = ['🏪 ' + name];
   try {
     var recs = (typeof DB !== 'undefined') ? DB.filter(function(r){ return r.store === name; }) : [];
-    for (var i = 0; i < recs.length; i++) {
-      if (recs[i].address) { addr = recs[i].address; break; }
-    }
+    for (var i = 0; i < recs.length; i++) { if (recs[i].address) { lines.push('📍 ' + recs[i].address); break; } }
   } catch(_){}
-
-  var url = 'https://retwork.jp';
-  // 본문 조립
-  var lines = ['🏪 ' + name];
-  if (addr) lines.push('📍 ' + addr);
-  if (ratingTxt) lines.push(ratingTxt);
   lines.push('');
-  lines.push('— RetWork (チリつも) 가성비 가게 정보 공유 앱');
+  lines.push('— RetWork (チリつも)');
   lines.push(url);
   var shareText = lines.join('\n');
 
-  // Web Share API (모바일/지원 브라우저) → fallback 클립보드
-  if (navigator.share) {
-    try {
-      await navigator.share({ title: name, text: shareText, url: url });
-      return;
-    } catch(e) {
-      // 사용자 취소면 silent, 그 외는 fallback
-      if (e && e.name === 'AbortError') return;
-      console.warn('[share] navigator.share failed, falling back to clipboard:', e);
+  if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
+  var canvas = null;
+  try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
+
+  // 이미지 + 링크 공유 (mrShare 와 동일 패턴)
+  if (canvas) {
+    var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/jpeg', 0.9); });
+    if (blob) {
+      var fname = 'retwork-store-' + Date.now() + '.jpg';
+      var file = (typeof File==='function') ? new File([blob], fname, {type:'image/jpeg'}) : null;
+      if (file && navigator.canShare && navigator.canShare({files:[file]}) && navigator.share) {
+        try {
+          await navigator.share({ title: name, text: shareText, url: url, files: [file] });
+          return;
+        } catch(e) {
+          if (e && e.name === 'AbortError') return;
+          console.warn('[share] file share failed:', e);
+        }
+      }
+      // 파일 공유 미지원 — 이미지 다운로드 + 텍스트 공유
+      if (!navigator.share) {
+        _mrDownloadBlob(blob, fname);
+        try { await navigator.clipboard.writeText(shareText); } catch(_){}
+        if (typeof showToast === 'function') showToast('🖼 카드 이미지 저장 · 링크 복사됨');
+        return;
+      }
     }
   }
-  // Fallback: 클립보드 복사
+  // 폴백: 텍스트만 공유
+  if (navigator.share) {
+    try { await navigator.share({ title: name, text: shareText, url: url }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {
       await navigator.clipboard.writeText(shareText);
       if (typeof showToast === 'function') showToast('📋 가게 정보를 복사했어요!');
-      else alert('가게 정보를 클립보드에 복사했어요!');
       return;
     } catch(e) { console.warn('[share] clipboard failed:', e); }
   }
-  // 최후 fallback — prompt
   try { window.prompt('복사하세요:', shareText); } catch(_){}
 }
 
@@ -26706,7 +26911,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 438;
+window.__APP_BUILD__ = 439;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
