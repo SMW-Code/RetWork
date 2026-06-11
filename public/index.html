@@ -17728,13 +17728,17 @@ async function sdShareStore(){
   var d=document.getElementById('sd-dot-popup');if(d)d.remove();
   var s = _sdSData || {};
   var name = _sdName || s.name || '';
-  var url = 'https://retwork.jp';
-  // 텍스트 (이미지 못 보내는 환경에서도 정보 전달)
-  var lines = ['🏪 ' + name];
+  var addr = '';
   try {
     var recs = (typeof DB !== 'undefined') ? DB.filter(function(r){ return r.store === name; }) : [];
-    for (var i = 0; i < recs.length; i++) { if (recs[i].address) { lines.push('📍 ' + recs[i].address); break; } }
+    for (var i = 0; i < recs.length; i++) { if (recs[i].address) { addr = recs[i].address; break; } }
   } catch(_){}
+  // b441 — 가게별 동적 OG 링크 (받는 쪽에 터치 가능한 프리뷰 카드)
+  var heroUrl = (window._sdPhotoList && window._sdPhotoList[0]) || '';
+  var url = _shareLinkUrl(name, addr || 'チリマップのお店情報', heroUrl);
+  // 텍스트 (이미지 못 보내는 환경에서도 정보 전달)
+  var lines = ['🏪 ' + name];
+  if (addr) lines.push('📍 ' + addr);
   lines.push('');
   lines.push('— RetWork (チリつも)');
   lines.push(url);
@@ -17744,6 +17748,16 @@ async function sdShareStore(){
   var canvas = null;
   try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
   await _shareCardFlow(canvas, name, shareText, url, 'retwork-store-' + Date.now() + '.jpg');
+}
+
+/* b441 — 동적 OG 공유 링크 빌더
+   /s 라우트가 가게·메뉴별 og:title/description/image 를 서빙
+   → 카카오톡/LINE 에서 터치하면 이동하는 링크 프리뷰 카드 생성 */
+function _shareLinkUrl(t, d, i){
+  var u = 'https://retwork.jp/s?t=' + encodeURIComponent(t || '');
+  if (d) u += '&d=' + encodeURIComponent(d);
+  if (i) u += '&i=' + encodeURIComponent(i);
+  return u;
 }
 
 /* 공유 카드 공통 플로우 — 이미지+텍스트+링크 → 폴백: 다운로드/텍스트/클립보드 */
@@ -17888,7 +17902,12 @@ async function _mdBuildShareCanvas(card){
 async function mdShareMenu(){
   var card = (_sdCards||[]).find(function(cd){ return cd.id===_mdCardId; });
   if(!card){ if(typeof showToast==='function') showToast('메뉴 정보를 찾을 수 없어요'); return; }
-  var url = 'https://retwork.jp';
+  // b441 — 메뉴별 동적 OG 링크 (메뉴 사진 + 메뉴명 프리뷰 카드)
+  var ph = _mdPhotos || [], prim = null;
+  for (var pi=0; pi<ph.length; pi++){ if (ph[pi].is_primary){ prim = ph[pi]; break; } }
+  var photoUrl = (prim && prim.photo_url) || (ph[0] && ph[0].photo_url) || card.image_url || '';
+  var mdesc = (_sdName ? '🏪 ' + _sdName : '') + (card.price ? ' · ¥' + Number(card.price).toLocaleString() : '');
+  var url = _shareLinkUrl(card.menu_name || 'RetWork', mdesc || 'チリマップのメニュー情報', photoUrl);
   var lines = ['🍽 '+(card.menu_name||'')+(card.price?' — ¥'+Number(card.price).toLocaleString():'')];
   if (_sdName) lines.push('🏪 '+_sdName);
   lines.push('');
@@ -27034,7 +27053,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 440;
+window.__APP_BUILD__ = 441;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
