@@ -17744,10 +17744,16 @@ async function sdShareStore(){
   lines.push(url);
   var shareText = lines.join('\n');
 
-  if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
-  var canvas = null;
-  try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
-  await _shareCardFlow(canvas, name, shareText, url, 'retwork-store-' + Date.now() + '.jpg');
+  // b442 — 링크 카드 / 이미지 카드 선택
+  _shareChooser(
+    function(){ _shareLinkOnly(name, shareText, url); },
+    async function(){
+      if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
+      var canvas = null;
+      try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
+      await _shareCardFlow(canvas, name, shareText, url, 'retwork-store-' + Date.now() + '.jpg');
+    }
+  );
 }
 
 /* b441 — 동적 OG 공유 링크 빌더
@@ -17758,6 +17764,42 @@ function _shareLinkUrl(t, d, i){
   if (d) u += '&d=' + encodeURIComponent(d);
   if (i) u += '&i=' + encodeURIComponent(i);
   return u;
+}
+
+/* b442 — 공유 방식 선택 시트
+   카카오톡 등은 이미지 파일 공유 시 텍스트/URL 을 버림 → 링크 카드가 안 생김
+   → 링크 공유(터치 가능한 OG 프리뷰)와 이미지 카드 공유를 사용자가 선택 */
+function _shareChooser(onLink, onImage){
+  var old = document.getElementById('share-choice-pop'); if (old) old.remove();
+  var ov = document.createElement('div');
+  ov.id = 'share-choice-pop';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
+  ov.innerHTML = '<div style="width:100%;max-width:430px;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px 28px;box-sizing:border-box;">'
+    + '<div style="width:36px;height:4px;border-radius:4px;background:var(--border-mid);margin:0 auto 14px;"></div>'
+    + '<button id="shc-link" style="width:100%;padding:15px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🔗 リンクで共有<div style="font-size:11px;font-weight:600;opacity:.85;margin-top:3px;">タップで移動できるプレビューカード（おすすめ）</div></button>'
+    + '<button id="shc-img" style="width:100%;padding:15px;border:1px solid var(--border-mid);border-radius:12px;background:var(--bg-2);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🖼 画像カードで共有<div style="font-size:11px;font-weight:600;color:var(--text-3);margin-top:3px;">お店・メニュー情報入りの画像1枚</div></button>'
+    + '<button id="shc-cancel" style="width:100%;padding:12px;border:none;border-radius:12px;background:transparent;color:var(--text-3);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;">キャンセル</button>'
+    + '</div>';
+  ov.addEventListener('click', function(e){ if (e.target === ov) ov.remove(); });
+  document.body.appendChild(ov);
+  document.getElementById('shc-link').onclick   = function(){ ov.remove(); onLink(); };
+  document.getElementById('shc-img').onclick    = function(){ ov.remove(); onImage(); };
+  document.getElementById('shc-cancel').onclick = function(){ ov.remove(); };
+}
+/* 링크만 공유 — 메신저가 OG 프리뷰 카드(터치 가능)를 생성 */
+async function _shareLinkOnly(title, shareText, url){
+  if (navigator.share) {
+    try { await navigator.share({ title: title, text: shareText, url: url }); return; }
+    catch(e) { if (e && e.name === 'AbortError') return; }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    try {
+      await navigator.clipboard.writeText(shareText);
+      if (typeof showToast === 'function') showToast('🔗 링크를 복사했어요!');
+      return;
+    } catch(e){}
+  }
+  try { window.prompt('복사하세요:', shareText); } catch(_){}
 }
 
 /* 공유 카드 공통 플로우 — 이미지+텍스트+링크 → 폴백: 다운로드/텍스트/클립보드 */
@@ -17914,10 +17956,16 @@ async function mdShareMenu(){
   lines.push('— RetWork (チリつも)');
   lines.push(url);
   var shareText = lines.join('\n');
-  if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
-  var canvas = null;
-  try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
-  await _shareCardFlow(canvas, card.menu_name||'RetWork', shareText, url, 'retwork-menu-' + Date.now() + '.jpg');
+  // b442 — 링크 카드 / 이미지 카드 선택
+  _shareChooser(
+    function(){ _shareLinkOnly(card.menu_name||'RetWork', shareText, url); },
+    async function(){
+      if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
+      var canvas = null;
+      try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
+      await _shareCardFlow(canvas, card.menu_name||'RetWork', shareText, url, 'retwork-menu-' + Date.now() + '.jpg');
+    }
+  );
 }
 
 /* ── 사진 (build 358 — store_photos + community_photos 통합 + 전체화면 뷰어) ── */
@@ -27053,7 +27101,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 441;
+window.__APP_BUILD__ = 442;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
