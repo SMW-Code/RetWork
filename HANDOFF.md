@@ -1,9 +1,60 @@
-# RetWork (チリつも) — HANDOFF (build 430 + SNS 자동화 시점)
+# RetWork (チリつも) — HANDOFF (build 445 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 430** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
-> 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`)
-> 마지막 작업: **2026-06-10** (블로그 X+Threads 자동 게시 / 이미지 편집 / 어드민 가게사진 통합)
+> 최신 빌드: **build 445** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
+> 마지막 작업: **2026-06-11** (로고 전면 교체 / 치리츠모 드로우 관리 / 가게·메뉴 공유 카드 + 동적 OG 링크)
+
+---
+
+## 0-C. 2026-06-11 세션 변경 요약 — 로고 · 드로우 · 공유
+
+### 메인 앱 (receiptiq) — build 431 ~ 445
+
+| build | 내용 |
+|---|---|
+| **431** | 치리톡 게시글 카드 댓글 수 — `ct_posts.comments`(stale) 대신 `ctLoadPosts`에서 `ct_comments` 실시간 집계 |
+| **432** | 치리츠모 **드로우(추첨) 관리** — 어드민 치리관리에 「드로우 관리」 서브탭(CRUD, `draws` 테이블), 유저측 좌우 슬라이드 카드 캐러셀 + 상세 모달(`ov-draw-detail`, 본문은 추후) ★ `draws_admin.sql` 실행 필요 |
+| **433~435** | 드로우 카드 세로 포스터형 캐러셀 재설계 (scroll-snap, 가운데 카드 기준 배치, 더미카드 토글 `_DRAW_SHOW_DUMMIES`) |
+| **436** | **로고 전면 교체** — 앱 아이콘/파비콘(`icon*.png`,`favicon.png`)을 RW 그라데이션 둥근사각으로, 실행/인증 화면 로고 추가. sw.js STATIC_CACHE 의 없는 `icon.svg` 제거(install 실패 방지) |
+| **437** | 스플래시·로그인 로고를 **투명 핀(open back)** 으로, 흰 틀 제거. manifest `any`=투명핀(`splash-*.png`) / `maskable`=그라데이션(홈 아이콘) |
+| **438** | manifest `id="/index.html"` 명시 (WebAPK 식별 안정화 — PWA 설치 멈춤 대응) |
+| **439** | **가게 공유 카드** — 가게 상세 공유를 캔버스 카드 이미지(1080×1350: 대표사진+평점+영업시간/전화+대표메뉴+리뷰TOP3)로. `navigator.share({files})` |
+| **440** | **메뉴 카드 공유** — 메뉴 상세 모달 공유 버튼(`mdShareMenu`) + 메뉴 전용 카드. 공유 플로우 공통화(`_shareCardFlow`) |
+| **441** | **동적 OG 공유 링크** — `app/s/route.ts` 신설. 가게/메뉴별 og:image/title 서빙 → 메신저에 터치 가능한 프리뷰 카드, 클릭 시 retwork.jp 리다이렉트 |
+| **442** | 공유 방식 **선택 시트**(`_shareChooser`) — 🔗 링크 공유(OG 프리뷰) / 🖼 이미지 카드 공유 (카카오톡은 이미지 첨부 시 URL 버림 → 분리 필요) |
+| **443~445** | 링크 공유 = 풀 카드 캔버스를 `store-photos/share/`에 업로드 → `/s?i=키&r=레퍼럴코드` 단축 링크 공유. 프리뷰엔 풀 카드, 클릭 시 `retwork.jp/?ref=코드`(추천 보상 보존). `t`/`d` 긴 파라미터 제거로 URL 단축 |
+
+### 공유 기능 핵심 (`sdShareStore` / `mdShareMenu`)
+- 공유 버튼 → `_shareChooser` 시트 → 링크/이미지 선택
+- **링크**: `_sdBuildShareCanvas`/`_mdBuildShareCanvas`(캔버스) → `_uploadShareCard`(store-photos/share/{key}.jpg, upsert) → `_sShareUrl`(`/s?i=키&r=코드`) → `_shareLinkOnly`
+- **이미지**: 캔버스 → `_shareCardFlow`(navigator.share files / 폴백 다운로드)
+- `_sdPlaceCur`(Places 캐시)에서 영업시간/전화 공급, `_shareKeyHash`로 결정적 파일명
+- `app/s/route.ts`: `i`=share/ 키(영숫자만, 경로조작 차단), `r`=레퍼럴 코드 → `retwork.jp/?ref=` 리다이렉트. 이미지 호스트 화이트리스트(supabase/retwork.jp)
+
+### 로고 파일 (`public/icons/`)
+- `icon.png`/`icon-192`/`icon-512`/`favicon.png` = RW 그라데이션 둥근사각 (앱 아이콘/파비콘/홈 maskable)
+- `splash-logo.png`(1400, 투명) / `splash-192`/`splash-512`(투명) = 실행 스플래시·로그인 로고 (manifest `any`)
+- 원본: `C:\Users\minus\Downloads\open back\open back.png` (투명 RW 핀)
+
+### 블로그 (retwork-blog)
+- 로고·파비콘 RW 아이콘 적용 (`app/layout.tsx` 헤더 site-logo + `app/icon.png`)
+- 7편째 글: `buta-daigaku-jimbocho.md` (神保町 豚大学 豚丼 리뷰 ★3.0, 사진 7장)
+
+### ⚠️ 이번 세션 SQL — Supabase 실행 필요
+- **`draws_admin.sql`** (b432) — `draws` 테이블 sort_order/description 컬럼 + RLS. **이미 실행 완료**(사용자 확인)
+
+### 🔧 남은 정리 작업
+- **드로우 더미카드 끄기**: `index.html` 의 `_DRAW_SHOW_DUMMIES = true` → 실서비스 전 `false`
+- **드로우 상세 모달 본문**(`ov-draw-detail`) — 사용자가 추후 디자인 제공 예정
+- 카카오톡 OG 프리뷰 캐시: 첫 공유 시 이미지 지연 가능 → 재공유 또는 [카카오 OG 캐시 초기화](https://developers.kakao.com/tool/clear/og)
+
+### 커밋 (receiptiq, 2026-06-11)
+`6ddd74b`(실행로고) `7e46f48`(아이콘) `9285fce`(b437 투명핀) `82bb8b5`(b438 manifest id) `c2e593a`(b439 가게공유) `5e2301e`(b440 메뉴공유) `29b9c35`(b441 OG링크) `ddacc1a`(b442 선택시트) `c1f668f`(b444 풀카드OG) `0cb736f`(b445 단축)
+
+### 참고
+- `package-lock.json` 갱신됨 (`web-push` 의존성 — 새 PC 에서 `npm install` 필수)
+- `blog/` 폴더는 node_modules 잔재 → `.gitignore` 에 추가됨 (블로그는 별도 repo)
 
 ---
 
@@ -104,9 +155,11 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 404;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b404';
+public/index.html → window.__APP_BUILD__ = 445;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b445';
 ```
+> ⚠️ 빌드 시 **두 곳 모두** 같은 번호로 올릴 것 (안 맞으면 SW 캐시 갱신 안 됨).
+> 인라인 스크립트 문법 검증: `node -e "...new Function..."` (배포 전 습관).
 
 ### build 404 — 어드민 모바일도 PC 타입(반응형)으로 통일
 - `openAdminDashboard`: 너비 768px 분기 제거 → **모바일·PC 모두 `openAdminPc()`**. 모바일 시트(ov-admin)는 미사용.
