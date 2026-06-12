@@ -1,9 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 456 시점)
+# RetWork (チリつも) — HANDOFF (build 469 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 456** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 469** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-12** (메뉴카드 중복방지·치리카드 관리·좋아요 · 어드민 가게 중복삭제 · 오로라 테마)
+> 마지막 작업: **2026-06-12** (오로라 그라데이션 전체화·i18n 보강·OCR 음식점 파싱·레퍼럴 근본수정 b470·유저삭제 cascade)
 
 ---
 
@@ -33,6 +33,12 @@
 | **452** | 메뉴 좋아요 버튼을 별점 아래 → 메뉴명 행 공유 버튼 옆(상단)으로 이동 |
 | **453~455** | **어드민 가게 목록 중복 표시·삭제** — `_renderStoreRow` 모든 행에 삭제 버튼(`adminDeleteStoreFromList`, 자식 일괄삭제). 중복 판정: 「이름 정규화 일치」 OR 「이름 편집거리 유사도≥0.8 AND 거리<60m」(레벤슈타인+하버사인, union-find) → 신자체/구자체(豊/豐)는 유사+근접으로 잡고 같은 동네 다른 가게 오판 방지 |
 | **456** | **오로라 테마** — `THEMES.aurora`(color #6D3BEA 퍼플, grad 시안→블루→퍼플→마젠타→코랄 = RW 로고 그라데이션) 추가 + 기본 테마를 green→aurora. 기존 사용자는 설정→테마에서 직접 선택(localStorage 저장값 유지) |
+| **457~458** | **오로라 그라데이션 전체 확장** — `background:var(--green)`/`--gold` 111곳 + 하드코딩 `linear-gradient(…var(--green),var(--green-dark))` 16곳 → `var(--green-grad)`/`var(--gold-grad)`. applyTheme 가 `--green-grad/--gold-grad`=th.grad 설정. 테마 swatch 원/프로필 헤더(sp-head)/프리미엄 카드(prem-banner)도 그라데이션. color/border(단색)는 유지 |
+| **459~461** | **유저 대면 i18n** — 하드코딩 한국어/일본어 토스트 44곳 → t()+I18N 4언어. 공유/드로우/추천/출석/프로필/가게수정/가계부/메뉴/위치/영수증날짜 + `theme.name.aurora` 키. 어드민 문구는 한국어 유지(운영자용) |
+| **462** | 메뉴 확인수(view_count) 안 오르던 문제 — `increment_menu_view` 의 `created_by IS DISTINCT FROM auth.uid()` 조건이 SECURITY DEFINER 안에서 어긋남 → RPC 무조건 +1(RETURNS INT)로 단순화 + 본인 제외는 클라(`card.created_by===_currentUser.id`)에서. ★ `menu_view_count.sql` 재실행 |
+| **463~464** | 영수증 저장 실패/세션끊김 가시화 — receipts insert 실패·`receiptId` 미수신·`user_id` null 시 조용히 누락하던 것 → showToast 경고. (어드민엔 헤더만 저장/품목 누락 = receiptId 미수신) |
+| **465** | OCR 파싱 — **음식점 영수증 규칙(RES-1~4)** GPT 프롬프트 추가: 1행 구조+들여쓰기 옵션(味玉 등)도 별도 item / 같은 메뉴 반복 추출 / ★金額 그대로(qty 재곱 금지) / sum==小計 검증. (라면집 영수증 味玉×2 누락·白ごはん ¥400→¥800 오류) |
+| **466~470** | **레퍼럴 미작동 근본 해결** ⭐ — 신규 `referred_by` 전부 NULL 이던 원인 = **`app/page.tsx` 의 `redirect("/index.html")` 이 쿼리스트링(?ref=)을 버림** → 추천코드 유실. **b470**: searchParams 받아 쿼리 보존(`/index.html?ref=…`)이 핵심 수정. 보조: b467 OAuth redirectTo 에 ref 부착 / b468 redeem 세션 폴링 재시도 / b469 head 최상단 ref 선캐치 / b466 redeem 실패 토스트. 검증: referral_rewards 행 claimed 까지 정상. ★ `referral_v2.sql` 적용 필요(이미 적용 확인) |
 
 ### 공유 기능 핵심 (`sdShareStore` / `mdShareMenu`)
 - 공유 버튼 → `_shareChooser` 시트 → 링크/이미지 선택
@@ -57,6 +63,11 @@
 - **`menu_card_likes.sql`** (b451) — `menu_card_likes` 테이블 + `store_menu_cards.like_count` + `toggle_menu_card_like` RPC. **실행 완료**(사용자 확인). 메뉴 좋아요
 - **`menu_card_dedupe.sql`** (b449, 선택) — 기존 중복 메뉴카드 병합/삭제. ⚠️ 백업 후 실행. 신규 중복은 b449 로 방지되므로 1회성
 - `admin_rls_policies.sql` 의 `stores_admin_delete` — b453 가게 목록 삭제에 필요(미적용 시 삭제 막힘 경고)
+- **`cascade_user_delete.sql`** (운영) — auth.users/profiles 참조 FK 를 CASCADE(개인데이터)/SET NULL(created_by·uploaded_by·referred_by) 로 변환 → 대시보드 유저 삭제 자동 정리. ⚠️ FK 변경, 백업 후 1회
+- `referral_v2.sql` — 레퍼럴 RPC/테이블(redeem_referral·referral_rewards 등). **적용 확인됨**
+
+### 🔴 레퍼럴/쿼리 관련 핵심 함정 (b470)
+- **`app/page.tsx` 의 `/` → `/index.html` 리다이렉트는 반드시 searchParams 를 보존해야 함.** 단순 `redirect("/index.html")` 은 `?ref=` 등 **모든 쿼리스트링을 버려서** 추천 링크·공유 링크가 전부 깨진다. (레퍼럴 referred_by 전부 NULL 사건의 진짜 원인)
 
 ### 🔧 남은 정리 작업
 - ~~드로우 더미카드 끄기~~ → **b446 에서 완전 삭제 완료** (`_DRAW_SHOW_DUMMIES`/`_DRAW_DUMMIES` 제거, 실제 draws 행만 렌더)
@@ -170,7 +181,7 @@
 
 ```
 public/index.html → window.__APP_BUILD__ = 456;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b456';
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b469';
 ```
 > ⚠️ 빌드 시 **두 곳 모두** 같은 번호로 올릴 것 (안 맞으면 SW 캐시 갱신 안 됨).
 > 인라인 스크립트 문법 검증: `node -e "...new Function..."` (배포 전 습관).
