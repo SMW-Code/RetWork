@@ -1,9 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 448 시점)
+# RetWork (チリつも) — HANDOFF (build 456 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 448** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 456** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-11** (로고 전면 교체 / 치리츠모 드로우 관리 / 가게·메뉴 공유 카드 + 동적 OG 링크)
+> 마지막 작업: **2026-06-12** (메뉴카드 중복방지·치리카드 관리·좋아요 · 어드민 가게 중복삭제 · 오로라 테마)
 
 ---
 
@@ -27,6 +27,12 @@
 | **446** | 드로우 더미카드 완전 삭제 — `renderCtDraws` 가 실제 `draws` 행만 렌더 |
 | **447** | **드로우 상세 모달 2종** — 참여 가능(「参加する ✨Nチリ」) / 치리 부족(부족분 안내 + 「広告を見てチリを受け取る」→ 리워드 탭 광고 아코디언). 공통 상단(チリドロー/사진/상품명/추첨형 타원 배지/일정/광고카드). 응모는 서버 RPC `enter_draw`(코인 차감+entry 누적 원자처리) ★ `draw_enter_rpc.sql` 실행 필요 |
 | **448** | **치리카드 탭** — 치리모드 하단 4번째 탭 「チリカード」(`ct-screen-mycard`). `created_by`=본인인 `store_menu_cards` 모음(메뉴사진/이름/가게/가격/별점 + 👁확인수). `renderMyCards`/`myCardOpen`. 확인수=`openMenuDetail` 진입 시 `increment_menu_view` RPC +1(본인 제외 누적) ★ `menu_view_count.sql` 실행 필요 |
+| **449** | **메뉴카드 중복 등록 방지** — 직접 추가(`_sdDoSubmitNewCard`)에 중복 체크 없어 치리공개+직접추가 시 2개 생성되던 버그. insert 전 같은 가게+정규화 메뉴명 조회→있으면 평점/사진만 병합 ★ 기존 중복은 `menu_card_dedupe.sql`(백업 후 실행) |
+| **450** | **어드민 치리카드 관리** — 치리관리 「🎴 치리카드 관리」(`ov-admin-mycards`). 전체 메뉴카드 조회/검색/삭제, 중복(같은 가게+정규화명) 🔴배지+「중복만 보기」. `openAdminMenuCards`/`adminDeleteMenuCard`. 유저 치리카드 탭은 보기 전용(삭제 X) |
+| **451** | 치리카드 ① 탭 순서 치즈→**치리카드**→치리토크→치리워드 ② 카드에 등록일시(🕐) ③ **메뉴 좋아요** — 메뉴 상세 ❤️ 토글(`mdToggleLike`, `menu_card_likes`+`toggle_menu_card_like` RPC, store_menu_cards.like_count), 치리카드/요약/어드민에 좋아요수 노출 ★ `menu_card_likes.sql` 실행 필요 |
+| **452** | 메뉴 좋아요 버튼을 별점 아래 → 메뉴명 행 공유 버튼 옆(상단)으로 이동 |
+| **453~455** | **어드민 가게 목록 중복 표시·삭제** — `_renderStoreRow` 모든 행에 삭제 버튼(`adminDeleteStoreFromList`, 자식 일괄삭제). 중복 판정: 「이름 정규화 일치」 OR 「이름 편집거리 유사도≥0.8 AND 거리<60m」(레벤슈타인+하버사인, union-find) → 신자체/구자체(豊/豐)는 유사+근접으로 잡고 같은 동네 다른 가게 오판 방지 |
+| **456** | **오로라 테마** — `THEMES.aurora`(color #6D3BEA 퍼플, grad 시안→블루→퍼플→마젠타→코랄 = RW 로고 그라데이션) 추가 + 기본 테마를 green→aurora. 기존 사용자는 설정→테마에서 직접 선택(localStorage 저장값 유지) |
 
 ### 공유 기능 핵심 (`sdShareStore` / `mdShareMenu`)
 - 공유 버튼 → `_shareChooser` 시트 → 링크/이미지 선택
@@ -48,6 +54,9 @@
 - **`draws_admin.sql`** (b432) — `draws` 테이블 sort_order/description 컬럼 + RLS. **실행 완료**(사용자 확인)
 - **`draw_enter_rpc.sql`** (b447) — 드로우 응모 RPC `enter_draw`(SECURITY DEFINER, 코인 차감+entry 누적). **실행 완료**(사용자 확인). security_patch 가 draw_entries UPDATE 를 REVOKE 했으므로 이 RPC 없으면 응모 실패
 - **`menu_view_count.sql`** (b448) — `store_menu_cards.view_count` 컬럼 + `increment_menu_view` RPC(본인 제외 +1). **실행 완료**(사용자 확인). 치리카드 탭 확인수 집계용
+- **`menu_card_likes.sql`** (b451) — `menu_card_likes` 테이블 + `store_menu_cards.like_count` + `toggle_menu_card_like` RPC. **실행 완료**(사용자 확인). 메뉴 좋아요
+- **`menu_card_dedupe.sql`** (b449, 선택) — 기존 중복 메뉴카드 병합/삭제. ⚠️ 백업 후 실행. 신규 중복은 b449 로 방지되므로 1회성
+- `admin_rls_policies.sql` 의 `stores_admin_delete` — b453 가게 목록 삭제에 필요(미적용 시 삭제 막힘 경고)
 
 ### 🔧 남은 정리 작업
 - ~~드로우 더미카드 끄기~~ → **b446 에서 완전 삭제 완료** (`_DRAW_SHOW_DUMMIES`/`_DRAW_DUMMIES` 제거, 실제 draws 행만 렌더)
@@ -160,8 +169,8 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 448;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b448';
+public/index.html → window.__APP_BUILD__ = 456;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b456';
 ```
 > ⚠️ 빌드 시 **두 곳 모두** 같은 번호로 올릴 것 (안 맞으면 SW 캐시 갱신 안 됨).
 > 인라인 스크립트 문법 검증: `node -e "...new Function..."` (배포 전 습관).
