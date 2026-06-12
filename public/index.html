@@ -117,6 +117,9 @@
 
 :root {
   --green:#16A87A; --green-dark:#0C6B52; --green-light:#E0F5EE; --green-mid:#A8E2CC;
+  /* b457 — 배경용 그라데이션 (applyTheme 에서 테마별 grad 로 갱신) */
+  --green-grad:linear-gradient(135deg,#22D3EE 0%,#3B82F6 25%,#7C3AED 50%,#D6409F 75%,#FB7185 100%);
+  --gold-grad:linear-gradient(135deg,#22D3EE 0%,#3B82F6 25%,#7C3AED 50%,#D6409F 75%,#FB7185 100%);
   /* 테마 색 alpha 변형 — applyTheme() 에서 동적 갱신됨 (글로우/보더/배경 hint 용도) */
   --theme-a05:#16A87A0D; --theme-a10:#16A87A1A; --theme-a15:#16A87A26;
   --theme-a18:#16A87A2E; --theme-a30:#16A87A4D; --theme-a50:#16A87A80;
@@ -183,8 +186,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 /* ── 모드 토글 버튼 (설정 패널 내) ── */
 .mode-btn{flex:1;padding:9px 0;border-radius:12px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:all .2s;font-family:var(--font);letter-spacing:-.2px;background:var(--bg);color:var(--text-3);}
-.mode-btn.receipt.active{background:var(--green);color:#fff;box-shadow:0 3px 10px var(--theme-a30);}
-.mode-btn.chiri.active{background:var(--gold);color:#fff;box-shadow:var(--gold-shadow);}
+.mode-btn.receipt.active{background:var(--green-grad);color:#fff;box-shadow:0 3px 10px var(--theme-a30);}
+.mode-btn.chiri.active{background:var(--gold-grad);color:#fff;box-shadow:var(--gold-shadow);}
 
 /* ── チリつも 화면 ── */
 .ct-screen{flex:1;display:none;flex-direction:column;background:var(--bg);min-height:0;overflow:hidden;}
@@ -219,7 +222,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .cs-price{font-size:11px;color:var(--text-3);font-weight:600;}
 .cs-coin-row{display:flex;align-items:center;margin-top:2px;margin-bottom:4px;}
 .cs-coin{background:var(--gold-light);border:1px solid var(--gold);color:var(--gold-dark);font-size:11px;font-weight:800;padding:3px 10px;border-radius:12px;}
-.cs-btn{width:100%;padding:8px;background:var(--gold);color:#fff;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.25);transition:opacity .15s;}
+.cs-btn{width:100%;padding:8px;background:var(--gold-grad);color:#fff;border:none;border-radius:9px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.25);transition:opacity .15s;}
 .cs-btn:active{opacity:.85;}
 
 /* ── Google Maps InfoWindow — 꼬리(역삼각형) 제거 + 카드 형태로 ── */
@@ -280,7 +283,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .att-cal-dow{font-size:10px;font-weight:700;color:var(--text-3);text-align:center;padding:4px 0;}
 .att-cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--text-2);position:relative;border-radius:50%;}
 .att-cal-day.today{background:var(--gold-light);color:var(--gold-dark);font-weight:800;}
-.att-cal-day.checked{background:var(--gold);color:#fff;font-weight:800;}
+.att-cal-day.checked{background:var(--gold-grad);color:#fff;font-weight:800;}
 .att-cal-day.checked::after{content:'✓';position:absolute;bottom:-2px;right:-2px;font-size:10px;color:var(--gold-dark);background:#fff;border-radius:50%;width:14px;height:14px;display:flex;align-items:center;justify-content:center;border:1px solid var(--gold);}
 .att-cal-day.empty{visibility:hidden;}
 /* 연속 보상 */
@@ -293,13 +296,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 /* 슬롯 진행 표시 */
 .att-slot-bar{display:flex;gap:5px;margin-top:10px;}
 .att-slot-cell{flex:1;height:6px;border-radius:3px;background:var(--border);overflow:hidden;}
-.att-slot-cell.done{background:var(--gold);}
+.att-slot-cell.done{background:var(--gold-grad);}
 .att-slot-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:9px;color:var(--text-3);font-weight:600;}
 
 /* ── チリつも 카테고리 칩 ── */
 .ct-cat-chip{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;
   border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;}
-.ct-cat-chip.active{background:var(--gold);color:#fff;border-color:var(--gold);}
+.ct-cat-chip.active{background:var(--gold-grad);color:#fff;border-color:var(--gold);}
 .ct-post-body{overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);}
 .ct-post-body.open{max-height:600px;}
 /* チリつもに公開 — 품목 선택 칩 */
@@ -366,7 +369,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .hdr{overflow:visible;}
 
 .chip{padding:7px 15px;border-radius:20px;font-size:12px;font-weight:600;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .18s;box-shadow:var(--shadow-xs);}
-.chip.active{background:var(--green);color:#fff;border-color:var(--green);box-shadow:0 3px 10px var(--theme-a30);}
+.chip.active{background:var(--green-grad);color:#fff;border-color:var(--green);box-shadow:0 3px 10px var(--theme-a30);}
 .pay-chip-sel{padding:7px 12px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border-mid);background:var(--bg);color:var(--text-2);cursor:pointer;white-space:nowrap;transition:all .15s;}
 .pay-chip-sel.sel{border-color:var(--green);background:var(--green-light);color:var(--green-dark);font-weight:700;}
 .spacer{height:20px;flex-shrink:0;}
@@ -408,8 +411,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 #mr-body::-webkit-scrollbar{width:0;height:0;display:none;}
 .budget-fill{height:100%;border-radius:20px;transition:width .6s cubic-bezier(.4,0,.2,1);}
 
-.alert-banner{margin:10px 16px 0;background:var(--green);border:3px solid #C8B273;border-radius:14px;padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow-sm);}
-[data-dark="1"] .alert-banner{background:var(--green);border-color:#C8B273;}
+.alert-banner{margin:10px 16px 0;background:var(--green-grad);border:3px solid #C8B273;border-radius:14px;padding:9px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:transform .15s;box-shadow:var(--shadow-sm);}
+[data-dark="1"] .alert-banner{background:var(--green-grad);border-color:#C8B273;}
 .alert-banner:active{transform:scale(.98);}
 .receipt-row{background:var(--surface);margin:0 16px 8px;border-radius:14px;padding:8px 15px;border:0.5px solid var(--border);display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm);}
 .receipt-row:hover{box-shadow:var(--shadow-md);}
@@ -455,7 +458,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .bar{width:100%;border-radius:5px 5px 0 0;background:var(--green-mid);min-height:4px;transition:height .4s;}
 .bar.hl{background:linear-gradient(180deg,var(--green),var(--green-dark));}
 .bar-l{font-size:9px;color:var(--text-3);font-weight:600;margin-top:3px;}
-.bar-tip{position:absolute;background:var(--green);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;white-space:nowrap;transform:translateX(-50%);pointer-events:none;z-index:5;top:0px;transition:opacity .2s;}
+.bar-tip{position:absolute;background:var(--green-grad);color:#fff;font-size:10px;font-weight:800;padding:3px 8px;border-radius:8px;white-space:nowrap;transform:translateX(-50%);pointer-events:none;z-index:5;top:0px;transition:opacity .2s;}
 .cat-card{background:var(--surface);border-radius:18px;border:0.5px solid var(--border);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:transform .15s,box-shadow .15s;box-shadow:var(--shadow-sm);}
 .cat-card:active{transform:scale(.98);box-shadow:var(--shadow-xs);}
 .cat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
@@ -486,7 +489,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
 .cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:5px;border-radius:10px;cursor:pointer;font-size:12px;font-weight:500;color:var(--text-1);position:relative;transition:background .15s;}
 .cal-day:hover{background:var(--green-light);}
-.cal-day.sel{background:var(--green)!important;color:#fff;}
+.cal-day.sel{background:var(--green-grad)!important;color:#fff;}
 .cal-day.today{border:2px solid var(--green);font-weight:800;}
 .cal-day.empty{opacity:0;pointer-events:none;}
 .cal-day.sun{color:var(--red);}
@@ -508,7 +511,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .road-h{position:absolute;background:#fff;height:9px;width:100%;}
 .road-v{position:absolute;background:#fff;width:9px;height:100%;}
 .map-pin{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;z-index:2;}
-.pin-bubble{background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:5px 9px;border-radius:10px;white-space:nowrap;box-shadow:0 3px 10px rgba(12,107,82,.4);transition:transform .1s;}
+.pin-bubble{background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:5px 9px;border-radius:10px;white-space:nowrap;box-shadow:0 3px 10px rgba(12,107,82,.4);transition:transform .1s;}
 .pin-bubble::after{content:'';display:block;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid var(--green);margin:0 auto;}
 .pin-bubble.comm{background:var(--blue);}
 .pin-bubble.comm::after{border-top-color:var(--blue);}
@@ -535,7 +538,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .pc-row:last-child{border-bottom:none;}
 .pc-store{flex:1;font-size:12px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .pc-price{font-size:13px;font-weight:700;color:var(--text-1);}
-.pc-badge-best{background:var(--green);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;}
+.pc-badge-best{background:var(--green-grad);color:#fff;font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;}
 .pc-badge-pct{background:var(--orange-bg);color:var(--orange);font-size:9px;font-weight:800;padding:2px 6px;border-radius:6px;white-space:nowrap;}
 .pc-savings{font-size:11px;color:var(--green);font-weight:700;margin-top:6px;}
 .pc-search{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--border);background:var(--bg-2);font-size:13px;color:var(--text-1);margin-bottom:12px;outline:none;box-sizing:border-box;}
@@ -574,7 +577,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .si:last-child{border-bottom:none;}
 .si-lbl{font-size:13px;font-weight:600;color:var(--text-1);flex:1;}
 .si-val{font-size:12px;color:var(--text-3);}
-.toggle{width:42px;height:25px;border-radius:13px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;box-shadow:0 2px 6px var(--theme-a30);}
+.toggle{width:42px;height:25px;border-radius:13px;background:var(--green-grad);position:relative;cursor:pointer;flex-shrink:0;box-shadow:0 2px 6px var(--theme-a30);}
 .toggle::after{content:'';width:19px;height:19px;border-radius:50%;background:#fff;position:absolute;right:3px;top:3px;transition:right .2s;}
 .toggle.off{background:#D1D5DB;box-shadow:none;}
 .toggle.off::after{right:20px;}
@@ -688,7 +691,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sd-photo-upload-btn:hover{background:rgba(0,0,0,.85);}
 .adm-period-btn{flex-shrink:0;padding:6px 12px;border:1px solid var(--border-mid);border-radius:16px;background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;}
 .adm-coinp-btn{padding:5px 10px;border:1px solid var(--border-mid);border-radius:14px;background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;}
-.adm-coinp-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.adm-coinp-btn.active{background:var(--green-grad);color:#fff;border-color:var(--green);}
 
 /* ─ 어드민 / 가게 상세 모달의 카드 프레임 강화 ─
    --border 변수 자체를 더 진한 값으로 override → 모달 내 모든 카드에 적용 */
@@ -724,11 +727,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 #sd-side-actions > div{
   box-shadow:0 1px 3px rgba(0,0,0,.05);
 }
-.adm-period-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+.adm-period-btn.active{background:var(--green-grad);color:#fff;border-color:var(--green);}
 .rep-reason{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);font-size:13px;color:var(--text-1);cursor:pointer;font-family:var(--font);}
 .rep-reason:has(input:checked){background:var(--red-bg);border-color:var(--red);color:var(--red);font-weight:700;}
 .rep-reason input{accent-color:var(--red);}
-.sd-photo-upload-btn .badge{background:var(--gold);color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:800;}
+.sd-photo-upload-btn .badge{background:var(--gold-grad);color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:800;}
 .sd-menu-card:active{transform:scale(.98);}
 .sd-menu-card.sd-expanded{border-color:var(--green);border-width:1.5px;box-shadow:0 4px 14px var(--theme-a18);}
 .sd-menu-card-img{width:100%;height:160px;object-fit:cover;background:var(--bg-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:42px;}
@@ -809,7 +812,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .saving-store-name{font-size:10px;color:var(--text-3);font-weight:600;margin-bottom:3px;}
 .saving-price{font-size:18px;font-weight:800;color:var(--text-1);}
 .saving-price.cheap{color:var(--green);}
-.saving-badge{display:inline-block;background:var(--green);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;margin-top:3px;}
+.saving-badge{display:inline-block;background:var(--green-grad);color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:5px;margin-top:3px;}
 .saving-total{background:var(--green-light);border-radius:14px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-top:4px;border:0.5px solid rgba(29,158,117,.2);}
 /* 다크모드 — 절약 모달 가독성 보정 */
 [data-dark="1"] .saving-item{background:var(--surface);border-color:var(--border-mid);}
@@ -841,9 +844,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .onb-desc{font-size:14px;color:var(--text-2);line-height:1.6;font-weight:500;}
 .onb-dots{display:flex;gap:6px;justify-content:center;padding:16px 0;flex-shrink:0;}
 .onb-dot{width:7px;height:7px;border-radius:50%;background:var(--border-mid);transition:all .3s;}
-.onb-dot.active{width:20px;border-radius:4px;background:var(--green);}
+.onb-dot.active{width:20px;border-radius:4px;background:var(--green-grad);}
 .onb-footer{padding:16px 24px 32px;display:flex;flex-direction:column;gap:10px;flex-shrink:0;}
-.onb-btn-main{width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);}
+.onb-btn-main{width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:14px;padding:16px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);}
 .onb-btn-skip{font-size:13px;color:var(--text-3);font-weight:600;cursor:pointer;text-align:center;padding:4px;}
 
 /* ── 광고 모달 ── */
@@ -851,9 +854,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .confirm-overlay.open{display:flex !important;}
 .confirm-sheet{background:var(--surface);width:100%;border-radius:26px 26px 0 0;padding:20px 20px 36px;animation:slideUp .3s var(--anim);}
 .wait-timer{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;background:var(--bg);border:2px solid var(--border-mid);font-size:13px;font-weight:800;color:var(--text-2);flex-shrink:0;}
-.wait-timer.done{background:var(--green);border-color:var(--green);color:#fff;}
+.wait-timer.done{background:var(--green-grad);border-color:var(--green);color:#fff;}
 .promo-info{width:100%;min-height:80px;background:var(--bg);border-radius:12px;border:1px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;overflow:hidden;margin:14px 0;}
-.confirm-action-btn{width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);opacity:.4;pointer-events:none;transition:opacity .2s;}
+.confirm-action-btn{width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:14px;padding:15px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);opacity:.4;pointer-events:none;transition:opacity .2s;}
 .confirm-action-btn.ready{opacity:1;pointer-events:auto;}
 
 /* ── 다크모드 ── */
@@ -890,9 +893,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 [data-dark="1"] .overlay { background:rgba(0,0,0,.7) !important; }
 [data-dark="1"] .bar-card { background:var(--surface) !important; border-color:var(--border) !important; }
 [data-dark="1"] .chip { background:var(--surface) !important; border-color:var(--border-mid) !important; color:var(--text-2) !important; }
-[data-dark="1"] .chip.active { background:var(--green) !important; color:#fff !important; border-color:var(--green) !important; }
+[data-dark="1"] .chip.active { background:var(--green-grad) !important; color:#fff !important; border-color:var(--green) !important; }
 [data-dark="1"] .ct-cat-chip { background:var(--surface) !important; border-color:var(--border-mid) !important; color:var(--text-2) !important; }
-[data-dark="1"] .ct-cat-chip.active { background:var(--gold) !important; color:#fff !important; border-color:var(--gold) !important; }
+[data-dark="1"] .ct-cat-chip.active { background:var(--gold-grad) !important; color:#fff !important; border-color:var(--gold) !important; }
 [data-dark="1"] .subtab-bar { background:var(--surface) !important; border-color:var(--border) !important; }
 [data-dark="1"] .subtab { color:var(--text-3) !important; }
 [data-dark="1"] .subtab.active { color:var(--green) !important; border-bottom-color:var(--green) !important; }
@@ -1084,7 +1087,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 탭 전환 — [숨김처리] 이메일 직접 로그인/회원가입 비활성화. 되살리려면 display:none → display:flex -->
     <div style="display:none;width:100%;background:var(--surface);border-radius:12px;padding:3px;margin-bottom:20px;border:0.5px solid var(--border);">
       <button id="auth-tab-login" onclick="switchAuthTab('login')"
-        style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--green);color:#fff;transition:all .2s;" data-i18n="auth.login">
+        style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--green-grad);color:#fff;transition:all .2s;" data-i18n="auth.login">
         ログイン
       </button>
       <button id="auth-tab-signup" onclick="switchAuthTab('signup')"
@@ -1132,7 +1135,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- 메인 액션 버튼 -->
     <button id="auth-main-btn" onclick="authMainAction()"
-      style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:18px;margin-top:6px;box-shadow:var(--shadow-green);">
+      style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:18px;margin-top:6px;box-shadow:var(--shadow-green);">
       로그인
     </button>
 
@@ -1335,7 +1338,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="font-size:20px;margin-bottom:6px;">📊</div>
         <div style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:4px;">더 자세한 리포트 보기</div>
         <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5;">카테고리별 분석 · 결제수단별 지출<br>아이템 랭킹 · 물가 레이더</div>
-        <div style="display:inline-block;padding:8px 18px;background:var(--gold);color:#fff;border-radius:10px;font-size:12px;font-weight:800;">📺 광고 보고 더보기</div>
+        <div style="display:inline-block;padding:8px 18px;background:var(--gold-grad);color:#fff;border-radius:10px;font-size:12px;font-weight:800;">📺 광고 보고 더보기</div>
       </div>
 
       <!-- 물가 레이더 -->
@@ -1354,7 +1357,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;padding:7px 12px;border-bottom:0.5px solid var(--border);background:var(--bg);">
           <span style="font-size:11px;color:var(--text-3);font-weight:600;" data-i18n="rep.sort">並び替え</span>
           <div id="rsort-desc" onclick="switchRadarSort('desc')"
-            style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--green);background:var(--green);color:#fff;transition:all .15s;" data-i18n="rep.sort_desc">
+            style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--green);background:var(--green-grad);color:#fff;transition:all .15s;" data-i18n="rep.sort_desc">
             変動↑ 大きい順
           </div>
           <div id="rsort-asc" onclick="switchRadarSort('asc')"
@@ -1384,7 +1387,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <span class="cal-btn" onclick="changeMonth(1)">›</span>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border);">
-        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);"></div><span data-i18n="cat.food">食料品</span></div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--green-grad);"></div><span data-i18n="cat.food">食料品</span></div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--orange);"></div><span data-i18n="cat.eat">外食</span></div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--purple);"></div><span data-i18n="cat.life">生活雑貨</span></div>
         <div style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--text-2);"><div style="width:8px;height:8px;border-radius:50%;background:var(--red);"></div><span data-i18n="cat.med">医療・健康</span></div>
@@ -1413,7 +1416,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 수동기입 + 버튼 (카드와 하단 메뉴 사이 공백) -->
     <div style="display:flex;justify-content:flex-end;padding:4px 20px 0;">
-      <button onclick="openManualEntry()" style="width:48px;height:48px;border-radius:50%;background:var(--green);color:#fff;border:none;font-size:26px;line-height:1;cursor:pointer;box-shadow:var(--shadow-green);display:flex;align-items:center;justify-content:center;font-weight:300;">+</button>
+      <button onclick="openManualEntry()" style="width:48px;height:48px;border-radius:50%;background:var(--green-grad);color:#fff;border:none;font-size:26px;line-height:1;cursor:pointer;box-shadow:var(--shadow-green);display:flex;align-items:center;justify-content:center;font-weight:300;">+</button>
     </div>
     <div class="spacer"></div>
   </div>
@@ -1438,7 +1441,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="map-panel" id="map-store-list">
     <!-- 패널 탭 토글 -->
     <div style="display:flex;gap:6px;margin-bottom:12px;">
-      <button id="mpanel-tab-stores" onclick="switchMapPanel('stores')" data-i18n="rmap.stores" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">📍 가게 목록</button>
+      <button id="mpanel-tab-stores" onclick="switchMapPanel('stores')" data-i18n="rmap.stores" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--green-grad);color:#fff;">📍 가게 목록</button>
       <button id="mpanel-tab-compare" onclick="switchMapPanel('compare')" data-i18n="rmap.compare" style="flex:1;padding:7px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);">💰 가격 비교</button>
     </div>
     <!-- 가게 목록 -->
@@ -1448,7 +1451,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 가격 비교 -->
     <div id="mpanel-compare" style="display:none;">
       <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button id="pctab-mine"    onclick="switchPcTab('mine')"    data-i18n="rmap.pc_mine" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;">🧾 내 가게</button>
+        <button id="pctab-mine"    onclick="switchPcTab('mine')"    data-i18n="rmap.pc_mine" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--green-grad);color:#fff;">🧾 내 가게</button>
         <button id="pctab-nearby" onclick="switchPcTab('nearby')"  data-i18n="rmap.pc_nearby" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);">📡 주변 미방문</button>
       </div>
       <div id="pc-mine">
@@ -1482,7 +1485,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 모드 토글 (공개 / 프라이빗) — 헤더 클릭 시 슬라이드 다운 -->
   <div id="ct-mode-bar" style="overflow:hidden;max-height:0;transition:max-height .3s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 12px;display:flex;align-items:center;justify-content:center;gap:6px;">
-      <button id="ct-mode-public" onclick="ctSetMapMode('public')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--gold);border-radius:18px;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ct.map.mode.public">🌐 公開モード</button>
+      <button id="ct-mode-public" onclick="ctSetMapMode('public')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--gold);border-radius:18px;background:var(--gold-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ct.map.mode.public">🌐 公開モード</button>
       <button id="ct-mode-private" onclick="ctSetMapMode('private')" style="flex:1;max-width:160px;padding:8px 14px;border:1px solid var(--border-mid);border-radius:18px;background:var(--surface);color:var(--text-3);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ct.map.mode.private">🔒 プライベート</button>
     </div>
   </div>
@@ -1528,7 +1531,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 이 지역 더 보기 버튼 -->
     <div style="position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:10;">
       <button onclick="ctLoadAreaPins()" id="ct-area-btn"
-        style="background:var(--gold);color:#fff;border:none;border-radius:20px;
+        style="background:var(--gold-grad);color:#fff;border:none;border-radius:20px;
                padding:8px 18px;font-size:12px;font-weight:700;cursor:pointer;
                font-family:var(--font);box-shadow:var(--gold-shadow);display:none;">
         <span data-i18n="ct.map.area_more">このエリアをもっと見る</span>
@@ -1558,7 +1561,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <circle cx="22" cy="21" r="13" fill="white" fill-opacity=".95"/>
           <text x="22" y="27" text-anchor="middle" font-size="16" font-family="Apple Color Emoji,sans-serif">✏️</text>
         </svg>
-        <div style="width:2px;height:18px;background:var(--gold);opacity:.9;margin-top:-2px;"></div>
+        <div style="width:2px;height:18px;background:var(--gold-grad);opacity:.9;margin-top:-2px;"></div>
       </div>
       <!-- 안내 토스트 (상단) -->
       <div style="position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:#fff;border-radius:20px;padding:7px 18px;font-size:12px;font-weight:700;white-space:nowrap;backdrop-filter:blur(4px);" data-i18n="ct.map.pin.hint">
@@ -1574,7 +1577,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="ct.map.pin.drag_hint">ドラッグして位置を微調整できます</div>
         </div>
         <button onclick="cancelTempPin()" style="padding:8px 13px;border-radius:10px;border:1px solid var(--border-mid);background:var(--bg);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);color:var(--text-2);flex-shrink:0;" data-i18n="btn.cancel">キャンセル</button>
-        <button onclick="openManualPinModal()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;white-space:nowrap;" data-i18n="ct.map.pin.confirm">ここに登録 →</button>
+        <button onclick="openManualPinModal()" style="padding:8px 14px;border-radius:10px;border:none;background:var(--gold-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;white-space:nowrap;" data-i18n="ct.map.pin.confirm">ここに登録 →</button>
       </div>
     </div>
 
@@ -1582,7 +1585,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="position:absolute;bottom:132px;right:14px;z-index:10;">
       <button onclick="openManualPin()"
         title="ピンを追加" data-i18n-title="ct.map.pin.add_tooltip"
-        style="background:var(--green);color:#fff;border:none;border-radius:50%;width:40px;height:40px;
+        style="background:var(--green-grad);color:#fff;border:none;border-radius:50%;width:40px;height:40px;
                display:flex;align-items:center;justify-content:center;
                box-shadow:0 4px 16px var(--theme-a50);cursor:pointer;">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.914 11.105A7.298 7.298 0 0 0 20 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 1.202 0 32 32 0 0 0 .824-.738"/><circle cx="12" cy="10" r="3"/><path d="M16 18h6"/><path d="M19 15v6"/></svg>
@@ -1592,7 +1595,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 랭킹/목록 버튼 -->
     <div style="position:absolute;bottom:80px;right:14px;z-index:10;">
       <button onclick="ctShowRanking()"
-        style="background:var(--gold);color:#fff;border:none;border-radius:50%;width:40px;height:40px;
+        style="background:var(--gold-grad);color:#fff;border:none;border-radius:50%;width:40px;height:40px;
                display:flex;align-items:center;justify-content:center;
                box-shadow:var(--gold-shadow);cursor:pointer;">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"
@@ -1653,7 +1656,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <button onclick="ctResetFilter()" style="flex:1;padding:12px;border:1.5px solid var(--border-mid);
         border-radius:12px;font-size:13px;font-weight:700;background:#fff;cursor:pointer;font-family:var(--font);color:var(--text-2);" data-i18n="btn.reset">初期化</button>
       <button onclick="ctApplyFilter()" style="flex:2;padding:12px;border:none;border-radius:12px;
-        font-size:13px;font-weight:700;background:var(--gold);color:#fff;cursor:pointer;font-family:var(--font);" data-i18n="btn.apply">適用</button>
+        font-size:13px;font-weight:700;background:var(--gold-grad);color:#fff;cursor:pointer;font-family:var(--font);" data-i18n="btn.apply">適用</button>
     </div>
   </div>
 
@@ -1670,7 +1673,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="display:flex;gap:8px;margin-bottom:14px;">
       <div id="ct-rank-tab-value" onclick="ctRankTab('value')"
         style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
-               background:var(--gold);color:#fff;" data-i18n="ct.map.rank.value">✓ コスパ</div>
+               background:var(--gold-grad);color:#fff;" data-i18n="ct.map.rank.value">✓ コスパ</div>
       <div id="ct-rank-tab-contrib" onclick="ctRankTab('contrib')"
         style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;
                background:var(--bg);color:var(--text-2);" data-i18n="ct.map.rank.contrib">貢献</div>
@@ -1728,7 +1731,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         style="width:100%;padding:9px 12px 9px 36px;border-radius:20px;border:1px solid var(--border-mid);background:#fff;font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </div>
-    <button onclick="ctOpenWrite()" style="width:38px;height:38px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--gold-shadow);flex-shrink:0;">
+    <button onclick="ctOpenWrite()" style="width:38px;height:38px;border-radius:50%;background:var(--gold-grad);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--gold-shadow);flex-shrink:0;">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
   </div>
@@ -1985,7 +1988,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <input id="cpd-comment-input" type="text" placeholder="コメントを書く..."
       onkeydown="if(event.key==='Enter')ctAddCommentDetail()"
       style="flex:1;padding:10px 15px;border-radius:24px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">
-    <button onclick="ctAddCommentDetail()" style="width:38px;height:38px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <button onclick="ctAddCommentDetail()" style="width:38px;height:38px;border-radius:50%;background:var(--gold-grad);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
     </button>
   </div>
@@ -1995,10 +1998,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
 <!-- チリつも 글쓰기 오버레이 -->
 <div id="ct-write-ov" style="display:none;position:absolute;inset:0;z-index:350;flex-direction:column;background:var(--bg);">
-  <div style="background:var(--gold);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+  <div style="background:var(--gold-grad);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
     <button onclick="ctCloseWrite()" style="background:rgba(255,255,255,.1);border:none;border-radius:8px;padding:7px 12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="ctw.back">← 戻る</button>
     <div style="font-size:15px;font-weight:800;color:#fff;" data-i18n="ctw.title">投稿を書く</div>
-    <button onclick="ctSubmitPost()" style="background:var(--gold);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ctw.submit">投稿する</button>
+    <button onclick="ctSubmitPost()" style="background:var(--gold-grad);border:none;border-radius:8px;padding:7px 16px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="ctw.submit">投稿する</button>
   </div>
   <div style="flex:1;overflow-y:auto;padding:16px;">
     <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:8px;"><span data-i18n="ctw.category">カテゴリ</span> <span style="color:var(--red);">*</span></div>
@@ -2187,7 +2190,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         style="width:100%;height:130px;border:1px solid var(--border-mid);border-radius:12px;padding:12px;font-size:14px;font-family:var(--font);resize:none;box-sizing:border-box;outline:none;background:var(--bg);color:var(--text-1);"></textarea>
       <div style="font-size:10px;color:var(--text-3);text-align:right;margin-top:4px;"><span id="ser-charcount">0</span>/500</div>
       <button onclick="submitStoreEditReq()" id="ser-submit-btn"
-        style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;">送信する</button>
+        style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;">送信する</button>
     </div>
   </div>
 </div>
@@ -2237,7 +2240,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="avatar-picker" id="avatar-picker-grid"></div>
       </div>
       <!-- 저장 버튼 -->
-      <button onclick="saveProfile()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:14px;" data-i18n="prof.save">✅ 저장</button>
+      <button onclick="saveProfile()" style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:12px;padding:11px;font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;margin-bottom:14px;" data-i18n="prof.save">✅ 저장</button>
     </div>
 
     <div class="sp-body">
@@ -2251,7 +2254,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <span id="mode-lbl-receipt" style="font-size:13px;font-weight:800;color:var(--green);transition:all .25s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><span class="lico" data-lico="receipt" data-size="15" data-color="var(--green)"></span><span data-i18n="mode.receipt">ReceiptIQ</span></span>
             <div id="mode-toggle-sw" data-mode="receipt"
               onclick="switchMode(this.dataset.mode==='receipt'?'chiri':'receipt');closeOv('ov-settings')"
-              style="width:52px;height:28px;border-radius:14px;background:var(--green);position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:0 2px 8px var(--theme-a30);">
+              style="width:52px;height:28px;border-radius:14px;background:var(--green-grad);position:relative;cursor:pointer;flex-shrink:0;transition:background .3s;box-shadow:0 2px 8px var(--theme-a30);">
               <div id="mode-toggle-knob" style="width:22px;height:22px;border-radius:50%;background:#fff;position:absolute;top:3px;left:3px;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.18);"></div>
             </div>
             <span id="mode-lbl-chiri" style="font-size:13px;font-weight:700;color:var(--text-3);transition:all .25s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><span class="lico" data-lico="map_pin" data-size="15" data-color="var(--text-3)"></span><span data-i18n="mode.chiri">チリつも</span></span>
@@ -2299,7 +2302,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="si" onclick="toggleThemeAccordion()" style="cursor:pointer;">
           <span class="lico" data-lico="palette" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span>
           <span class="si-lbl" data-i18n="settings.theme">테마 색상</span>
-          <span id="theme-acc-dot" style="width:16px;height:16px;border-radius:50%;background:var(--green);margin-left:auto;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--border-mid);"></span>
+          <span id="theme-acc-dot" style="width:16px;height:16px;border-radius:50%;background:var(--green-grad);margin-left:auto;box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--border-mid);"></span>
           <span id="theme-acc-caret" style="font-size:11px;color:var(--text-3);margin-left:10px;transition:transform .2s;">▼</span>
         </div>
         <div id="theme-acc-body" style="display:none;padding:6px 16px 12px;">
@@ -2337,7 +2340,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
               <div style="font-size:10px;color:var(--text-3);font-weight:700;letter-spacing:.5px;">RECEIPT CODE</div>
               <div id="sp-ref-code-display" style="font-size:18px;font-weight:900;color:var(--text-1);letter-spacing:1.5px;font-family:monospace;margin-top:2px;user-select:all;-webkit-user-select:all;cursor:pointer;" onclick="copyReferralCode()">— — — —</div>
             </div>
-            <button id="sp-ref-copy-btn" data-i18n="inv.copy" onclick="copyReferralCode()" style="background:var(--gold);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.3);white-space:nowrap;">📋 복사</button>
+            <button id="sp-ref-copy-btn" data-i18n="inv.copy" onclick="copyReferralCode()" style="background:var(--gold-grad);color:#fff;border:none;border-radius:10px;padding:8px 12px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:0 2px 6px rgba(232,160,32,.3);white-space:nowrap;">📋 복사</button>
           </div>
 
           <!-- ★ 추천 통계 카드 (3개 항목: 추천 친구 / 받은 치리 / 대기) -->
@@ -2360,7 +2363,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           </div>
 
           <div data-i18n="inv.desc" style="font-size:10px;color:var(--text-3);line-height:1.5;">친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200チリ</strong> 받아요 (광고 시청 후 청구)</div>
-          <button onclick="ctInviteShare()" style="background:var(--green);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;"><span class="lico" data-lico="external" data-size="15" data-color="#fff"></span><span data-i18n="inv.share">초대 링크 공유</span></button>
+          <button onclick="ctInviteShare()" style="background:var(--green-grad);color:#fff;border:none;border-radius:10px;padding:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;"><span class="lico" data-lico="external" data-size="15" data-color="#fff"></span><span data-i18n="inv.share">초대 링크 공유</span></button>
 
           <!-- 대기 추천 보상 (있을 때만 표시) → renderReferralRewardUI 가 본문/sub 텍스트 매번 i18n 으로 갱신 -->
           <div id="sp-ref-reward-banner" style="display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(6,199,85,.14),var(--surface));border:1px solid #06C755;border-radius:12px;padding:10px 14px;">
@@ -2447,7 +2450,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 취소 / 설정 -->
     <div style="display:flex;gap:8px;">
       <button onclick="closeOv('ov-custom-color')" style="flex:1;padding:13px;border:1px solid var(--border-mid);border-radius:12px;background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="btn.cancel">キャンセル</button>
-      <button onclick="_ccApply()" style="flex:2;padding:13px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="cc.apply">設定</button>
+      <button onclick="_ccApply()" style="flex:2;padding:13px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);" data-i18n="cc.apply">設定</button>
     </div>
   </div>
 </div>
@@ -2474,7 +2477,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="setBudgetQuick(100000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥100,000</div>
       <div onclick="setBudgetQuick(150000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥150,000</div>
     </div>
-    <button onclick="saveBudget()" style="width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.save">保存</button>
+    <button onclick="saveBudget()" style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.save">保存</button>
     <div onclick="clearBudget()" style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-3);cursor:pointer;padding:6px;" data-i18n="budget.clear">予算を解除</div>
   </div>
 </div>
@@ -2506,7 +2509,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <!-- 버튼 -->
   <div style="display:flex;gap:10px;margin-top:20px;width:260px;">
     <button onclick="cancelCrop()" style="flex:1;padding:13px;border-radius:14px;border:1.5px solid rgba(255,255,255,.25);background:transparent;color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.cancel">キャンセル</button>
-    <button onclick="confirmCrop()" style="flex:2;padding:13px;border-radius:14px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="avatar.apply">✅ 適用</button>
+    <button onclick="confirmCrop()" style="flex:2;padding:13px;border-radius:14px;border:none;background:var(--green-grad);color:#fff;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="avatar.apply">✅ 適用</button>
   </div>
 </div>
 
@@ -2600,7 +2603,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 분석 시작 버튼 (2장 이상일 때만 활성화) -->
     <button id="multi-analyze-btn"
       onclick="analyzeMultiReceipt()"
-      style="width:100%;padding:14px;background:var(--green);color:#fff;font-size:15px;font-weight:700;border:none;border-radius:14px;margin-top:8px;opacity:0.4;cursor:not-allowed;transition:opacity .2s;"
+      style="width:100%;padding:14px;background:var(--green-grad);color:#fff;font-size:15px;font-weight:700;border:none;border-radius:14px;margin-top:8px;opacity:0.4;cursor:not-allowed;transition:opacity .2s;"
       disabled>
       <span data-i18n="multi.analyze">🔍 AIで結合して分析</span>
     </button>
@@ -2626,12 +2629,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="sheet-title" data-i18n="saving.title">💡 節約チャンス分析</div>
     <div class="sheet-sub"><span data-i18n="saving.sub">マイレシート分析</span> · イオン vs 業務スーパー</div>
     <div class="saving-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🥛 牛乳 1L</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🥛 牛乳 1L</div><div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
       <div style="font-size:11px;color:var(--text-2);margin-top:4px;" data-i18n="saving.based">月12回購入基準</div>
       <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥198</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥158</div><div class="saving-badge">-¥40</div></div></div>
     </div>
     <div class="saving-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🍞 食パン</div><div style="background:var(--green);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🍞 食パン</div><div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
       <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥168</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥128</div><div class="saving-badge">-¥40</div></div></div>
     </div>
     <div class="saving-total">
@@ -2738,7 +2741,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <textarea id="mp-comment" placeholder="一言コメント（任意）" style="width:100%;border:none;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:60px;box-sizing:border-box;outline:none;display:block;"></textarea>
     </div>
     <!-- 공개 버튼 -->
-    <button onclick="submitManualPin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
+    <button onclick="submitManualPin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span>📍 チズに公開する</span>
       <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
     </button>
@@ -3104,7 +3107,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           </select>
           <input id="ann-ends" type="datetime-local" style="flex:1.4;padding:8px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:11px;font-family:var(--font);" title="종료 일시 (비우면 무기한)">
         </div>
-        <button onclick="adminCreateAnnouncement()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">📢 공지 발송</button>
+        <button onclick="adminCreateAnnouncement()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">📢 공지 발송</button>
       </div>
 
       <!-- 공지 리스트 -->
@@ -3128,7 +3131,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <!-- 상태 필터 -->
       <div style="display:flex;gap:6px;margin-bottom:12px;">
-        <button id="adm-ser-tab-open" onclick="loadAdminEditReqs('open')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:var(--green);color:#fff;">미처리</button>
+        <button id="adm-ser-tab-open" onclick="loadAdminEditReqs('open')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:var(--green-grad);color:#fff;">미처리</button>
         <button id="adm-ser-tab-done" onclick="loadAdminEditReqs('done')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text-3);border:.5px solid var(--border);">처리완료</button>
         <button id="adm-ser-tab-all" onclick="loadAdminEditReqs('all')" style="flex:1;padding:8px;border:none;border-radius:10px;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);background:transparent;color:var(--text-3);border:.5px solid var(--border);">전체</button>
       </div>
@@ -3158,7 +3161,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">✨ 보유 치리</div>
         <div style="display:flex;gap:6px;align-items:center;">
           <input id="adm-user-coin" type="number" min="0" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);box-sizing:border-box;text-align:right;">
-          <button onclick="admSaveUserCoin()" style="padding:9px 14px;border:none;border-radius:8px;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾</button>
+          <button onclick="admSaveUserCoin()" style="padding:9px 14px;border:none;border-radius:8px;background:var(--gold-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾</button>
         </div>
         <div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;">
           <button onclick="admAddUserCoin(100)" style="padding:5px 10px;border:none;border-radius:7px;background:var(--gold-light);color:var(--gold-dark);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">+100</button>
@@ -3181,7 +3184,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <button onclick="admSetPremium(30)" style="padding:6px 10px;border:none;border-radius:7px;background:var(--gold-light);color:var(--gold-dark);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">+1개월</button>
           <button onclick="admSetPremium(90)" style="padding:6px 10px;border:none;border-radius:7px;background:var(--gold-light);color:var(--gold-dark);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">+3개월</button>
           <button onclick="admSetPremium(365)" style="padding:6px 10px;border:none;border-radius:7px;background:var(--gold-light);color:var(--gold-dark);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">+12개월</button>
-          <button onclick="admSetPremium(-1)" style="padding:6px 10px;border:none;border-radius:7px;background:var(--gold);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">♾️ 영구</button>
+          <button onclick="admSetPremium(-1)" style="padding:6px 10px;border:none;border-radius:7px;background:var(--gold-grad);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">♾️ 영구</button>
           <button onclick="admCancelPremium()" style="padding:6px 10px;border:none;border-radius:7px;background:var(--bg-2);color:var(--text-3);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">⏸️ 해지</button>
         </div>
       </div>
@@ -3245,7 +3248,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <input id="adm-user-coin-from" type="date" style="flex:1;padding:6px;border:1px solid var(--border-mid);border-radius:6px;background:var(--bg);color:var(--text-1);font-size:11px;font-family:var(--font);box-sizing:border-box;">
           <span style="font-size:11px;color:var(--text-3);">~</span>
           <input id="adm-user-coin-to" type="date" style="flex:1;padding:6px;border:1px solid var(--border-mid);border-radius:6px;background:var(--bg);color:var(--text-1);font-size:11px;font-family:var(--font);box-sizing:border-box;">
-          <button onclick="admCoinHistApplyCustom()" style="padding:6px 10px;border:none;border-radius:6px;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">조회</button>
+          <button onclick="admCoinHistApplyCustom()" style="padding:6px 10px;border:none;border-radius:6px;background:var(--green-grad);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">조회</button>
         </div>
         <div id="adm-user-coin-list" style="max-height:300px;overflow-y:auto;border:.5px solid var(--border);border-radius:8px;background:var(--bg);"></div>
       </div>
@@ -3359,7 +3362,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 가게 사진 관리 (build 350) -->
       <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">📷 가게 사진</div>
       <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;">
-        <label style="display:block;background:var(--green);color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:8px;">
+        <label style="display:block;background:var(--green-grad);color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:8px;">
           📤 사진 업로드 (복수 선택 가능)
           <input type="file" accept="image/*" multiple onchange="_admUploadStorePhotos(this)" style="display:none;">
         </label>
@@ -3380,7 +3383,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <input id="adm-store-lng" type="number" step="0.000001" placeholder="경도 (lng)" oninput="_admStoreSyncFromInputs()" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);box-sizing:border-box;">
       </div>
 
-      <button onclick="admSaveStore()" style="width:100%;padding:13px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+      <button onclick="admSaveStore()" style="width:100%;padding:13px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
     </div>
   </div>
 </div>
@@ -3433,7 +3436,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <div id="amc-photo-count" style="font-size:10px;color:var(--text-3);font-weight:700;"></div>
         </div>
         <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:14px;">
-          <label style="display:block;background:var(--green);color:#fff;border-radius:8px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:10px;">
+          <label style="display:block;background:var(--green-grad);color:#fff;border-radius:8px;padding:11px 12px;font-size:13px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:10px;">
             📤 사진 추가 업로드 (복수 선택 가능)
             <input type="file" accept="image/*" multiple onchange="_admUploadMenuPhotos(this)" style="display:none;">
           </label>
@@ -3458,7 +3461,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
         <!-- 저장 / 삭제 -->
         <div style="display:flex;gap:8px;margin-top:10px;">
-          <button onclick="admSaveMenuCard()" style="flex:1;padding:14px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+          <button onclick="admSaveMenuCard()" style="flex:1;padding:14px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
           <button onclick="admDeleteMenuCard()" style="padding:14px 18px;border:1px solid #FEE2E2;border-radius:12px;background:#fff;color:#991B1B;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 카드 삭제</button>
         </div>
 
@@ -3496,7 +3499,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <button onclick="admPinOpenStoreEdit()" style="width:100%;padding:10px;border:1px solid var(--border-mid);border-radius:10px;background:var(--surface);color:var(--text-1);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-bottom:14px;">🏪 소속 가게 위치 수정 →</button>
 
-      <button onclick="admSavePin()" style="width:100%;padding:13px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+      <button onclick="admSavePin()" style="width:100%;padding:13px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
     </div>
   </div>
 </div>
@@ -3564,7 +3567,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
       <!-- build 363 — 저장 + 영수증 삭제 버튼 -->
       <div style="display:flex;gap:8px;">
-        <button onclick="admSaveReceipt()" style="flex:1;padding:13px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 수정 저장</button>
+        <button onclick="admSaveReceipt()" style="flex:1;padding:13px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 수정 저장</button>
         <button onclick="admDeleteReceiptFromEdit()" style="padding:13px 18px;border:1px solid #FEE2E2;border-radius:12px;background:#fff;color:#991B1B;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 삭제</button>
       </div>
     </div>
@@ -3595,7 +3598,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <span style="flex:1;font-size:11px;color:var(--text-2);">✨ 치리 1개 가치 (¥)</span>
           <input id="adm-pricing-chiri" type="number" min="0" step="0.01" style="width:96px;padding:7px 9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);text-align:right;box-sizing:border-box;">
         </div>
-        <button onclick="admSavePricing()" style="width:100%;padding:9px;border:none;border-radius:8px;background:var(--green);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장 (대시보드 추정값에 즉시 반영)</button>
+        <button onclick="admSavePricing()" style="width:100%;padding:9px;border:none;border-radius:8px;background:var(--green-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장 (대시보드 추정값에 즉시 반영)</button>
       </div>
 
       <!-- 표 1: 바우처 ↔ 필요 치리 -->
@@ -3727,7 +3730,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
       <!-- 탭 (대기 / 처리완료) + 벤워드 관리 버튼 -->
       <div style="display:flex;gap:6px;margin-bottom:14px;">
-        <button id="adm-rep-tab-pending" onclick="adminSwitchReportTab('pending')" style="flex:1;padding:9px;border:none;border-radius:10px;background:var(--green);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">대기 중 <span id="adm-rep-cnt-pending"></span></button>
+        <button id="adm-rep-tab-pending" onclick="adminSwitchReportTab('pending')" style="flex:1;padding:9px;border:none;border-radius:10px;background:var(--green-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">대기 중 <span id="adm-rep-cnt-pending"></span></button>
         <button id="adm-rep-tab-done" onclick="adminSwitchReportTab('done')" style="flex:1;padding:9px;border:none;border-radius:10px;background:var(--bg-2);color:var(--text-2);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">처리 완료</button>
         <button onclick="openAdminBannedWords()" style="padding:9px 10px;border:none;border-radius:10px;background:var(--red-bg);color:var(--red);font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);" title="벤워드 관리">🚫 벤워드</button>
         <button onclick="openAdminBannedUsers()" style="padding:9px 10px;border:none;border-radius:10px;background:#7a0000;color:#fff;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);" title="차단 사용자 관리">👤 차단</button>
@@ -3865,7 +3868,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div onclick="closeOv('ov-admin-items')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
 
-      <button onclick="adminOpenItemForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;">+ 새 상품 등록</button>
+      <button onclick="adminOpenItemForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;">+ 새 상품 등록</button>
 
       <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📋 등록된 상품</div>
       <div id="adm-items-list" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -3926,7 +3929,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </label>
       </div>
 
-      <button onclick="adminSaveItem()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+      <button onclick="adminSaveItem()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
     </div>
   </div>
 </div>
@@ -3944,7 +3947,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div onclick="closeOv('ov-admin-draws')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
 
-      <button onclick="adminOpenDrawForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;">+ 새 드로우 등록</button>
+      <button onclick="adminOpenDrawForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--gold-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;">+ 새 드로우 등록</button>
 
       <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">🎫 등록된 드로우</div>
       <div id="adm-draws-list" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -4034,7 +4037,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         </label>
       </div>
 
-      <button onclick="adminSaveDraw()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+      <button onclick="adminSaveDraw()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
     </div>
   </div>
 </div>
@@ -4064,7 +4067,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
         <div style="font-size:11px;font-weight:800;color:var(--text-3);letter-spacing:.3px;" id="adm-ad-stats-title">📊 영역별 성과 (로컬 광고)</div>
         <div style="display:flex;background:var(--bg-2);border-radius:8px;padding:2px;font-family:var(--font);">
-          <button id="adm-ad-source-local" onclick="adAdminSetSource('local')" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;">🎨 로컬</button>
+          <button id="adm-ad-source-local" onclick="adAdminSetSource('local')" style="background:var(--green-grad);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;">🎨 로컬</button>
           <button id="adm-ad-source-adsense" onclick="adAdminSetSource('adsense')" style="background:transparent;color:var(--text-3);border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;">📐 AdSense</button>
         </div>
       </div>
@@ -4089,13 +4092,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <option value="map">치리맵</option><option value="reward">리워드</option><option value="feed">치리톡</option><option value="modal">모달</option>
           </select>
           <input id="adm-rev-amount" type="number" min="0" placeholder="금액 (¥)" style="flex:1;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:12px;font-family:var(--font);">
-          <button onclick="adminSaveAdRevenue()" style="padding:9px 14px;border:none;border-radius:8px;background:var(--green);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">저장</button>
+          <button onclick="adminSaveAdRevenue()" style="padding:9px 14px;border:none;border-radius:8px;background:var(--green-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">저장</button>
         </div>
         <div id="adm-rev-list" style="margin-top:8px;font-size:11px;color:var(--text-2);"></div>
       </div>
 
       <!-- 로컬 광고 관리 -->
-      <button onclick="adminOpenAdForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:12px;">+ 로컬 광고 등록</button>
+      <button onclick="adminOpenAdForm()" style="width:100%;padding:11px;border:none;border-radius:12px;background:var(--gold-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:12px;">+ 로컬 광고 등록</button>
       <div style="font-size:11px;font-weight:800;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;">📋 등록된 로컬 광고</div>
       <div id="adm-localad-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
@@ -4199,7 +4202,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <input type="checkbox" id="adm-ad-active" checked> 활성 (노출)
       </label>
 
-      <button onclick="adminSaveLocalAd()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
+      <button onclick="adminSaveLocalAd()" style="width:100%;padding:12px;border:none;border-radius:12px;background:var(--gold-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>
     </div>
   </div>
 </div>
@@ -4473,7 +4476,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 버튼 -->
     <div style="padding:0 16px 24px;display:flex;gap:8px;">
       <button onclick="ucCancel()" style="flex:1;padding:13px;border-radius:12px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">취소</button>
-      <button onclick="ucConfirm()" style="flex:2;padding:13px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-green);">등록</button>
+      <button onclick="ucConfirm()" style="flex:2;padding:13px;border-radius:12px;border:none;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-green);">등록</button>
     </div>
   </div>
 </div>
@@ -4530,7 +4533,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <textarea id="cp-comment" placeholder="お店全体についてコメントを書いてください 例: 接客が丁寧、雰囲気が良い、混雑など" style="width:100%;border:none;padding:8px 14px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:66px;box-sizing:border-box;outline:none;display:block;"></textarea>
     </div>
     <!-- 공개 버튼 -->
-    <button id="cp-submit-btn" onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
+    <button id="cp-submit-btn" onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span data-i18n="chiri.publish_btn">📍 チズに公開する</span>
       <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
     </button>
@@ -4672,7 +4675,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border)'"></textarea>
     <div style="display:flex;gap:8px;margin-top:12px;">
       <button onclick="closeOv('ov-memo')" data-i18n="btn.cancel" style="flex:1;padding:12px;border-radius:12px;border:1px solid var(--border);background:var(--bg);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">キャンセル</button>
-      <button onclick="saveMemo()" data-i18n="rcpt.memo.save" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">💾 保存</button>
+      <button onclick="saveMemo()" data-i18n="rcpt.memo.save" style="flex:2;padding:12px;border-radius:12px;border:none;background:var(--green-grad);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">💾 保存</button>
     </div>
     <div style="text-align:center;margin-top:10px;font-size:11px;color:var(--text-3);" data-i18n="rcpt.memo.private_note">🔒 このメモはあなただけが見られます</div>
   </div>
@@ -5202,7 +5205,7 @@ function _ctRenderAttendance(){
   // ─── 카드2: 자동재생 동영상 광고 (더 prominent 하게) ───
   h += '<div class="att-card" style="padding:0;overflow:hidden;border:1.5px solid var(--gold);box-shadow:0 4px 14px rgba(232,160,32,.18);flex-shrink:0;min-height:300px;">'
     // 상단 라벨 바
-    + '<div style="background:var(--gold);color:#fff;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">'
+    + '<div style="background:var(--gold-grad);color:#fff;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">'
       + '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">📢</span><span style="font-size:11px;font-weight:800;letter-spacing:.5px;">SPONSORED VIDEO AD</span></div>'
       + '<span style="font-size:10px;font-weight:700;opacity:.85;">自動再生 ▶️</span>'
     + '</div>'
@@ -5667,7 +5670,7 @@ function _ctDrawCardHtml(d) {
     +   '<div style="font-size:11px;color:rgba(255,255,255,.88);margin-top:5px;">🏆 '+d.winner_count+'名当選'+(endTxt ? ' · '+endTxt : '')+'</div>'
     +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
     +     '<div style="background:rgba(255,255,255,.93);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:800;color:var(--gold-dark);">✨ '+d.coin_cost+'チリ</div>'
-    +     '<div style="background:var(--gold);color:#fff;border-radius:10px;padding:7px 16px;font-size:12px;font-weight:800;" data-i18n="rw.join">参加する</div>'
+    +     '<div style="background:var(--gold-grad);color:#fff;border-radius:10px;padding:7px 16px;font-size:12px;font-weight:800;" data-i18n="rw.join">参加する</div>'
     +   '</div>'
     + '</div>'
     + '</div>';
@@ -5754,7 +5757,7 @@ async function ctOpenDrawDetail(id) {
       + '<button disabled style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--border-mid);color:#fff;font-size:15px;font-weight:900;font-family:var(--font);opacity:.7;">応募済み</button>';
   } else if (enough) {
     // 참여 가능
-    foot = '<button onclick="ctEnterDraw(\''+d.id+'\')" style="width:100%;padding:16px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">'
+    foot = '<button onclick="ctEnterDraw(\''+d.id+'\')" style="width:100%;padding:16px;border:none;border-radius:14px;background:var(--gold-grad);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">'
       + '<span>参加する</span><span style="background:rgba(255,255,255,.25);border-radius:10px;padding:3px 10px;font-size:13px;">✨ '+cost+'チリ</span>'
       + '</button>'
       + '<div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">保有チリ: '+bal+'</div>';
@@ -6717,7 +6720,7 @@ function ctRenderPosts() {
   if (totalPages <= 1) { pag.innerHTML = ''; return; }
   var btnBase = 'width:32px;height:32px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;';
   var btnN = btnBase + 'border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);';
-  var btnA = btnBase + 'border:none;background:var(--gold);color:#fff;';
+  var btnA = btnBase + 'border:none;background:var(--gold-grad);color:#fff;';
   var html = '<button style="' + btnN + '" onclick="ctGoPage(' + Math.max(1, _ctPostPage - 1) + ')">‹</button>';
   for (var i = 1; i <= totalPages; i++) {
     html += '<button style="' + (i === _ctPostPage ? btnA : btnN) + '" onclick="ctGoPage(' + i + ')">' + i + '</button>';
@@ -7140,7 +7143,7 @@ function ctRenderNotifList() {
         '<div style="font-size:12px;color:var(--text-1);line-height:1.5;">' + (n.text || '') + '</div>' +
         '<div style="font-size:11px;color:var(--text-3);margin-top:3px;">' + (n.time || '') + '</div>' +
       '</div>' +
-      (n.read ? '' : '<div style="width:7px;height:7px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px;"></div>') +
+      (n.read ? '' : '<div style="width:7px;height:7px;border-radius:50%;background:var(--gold-grad);flex-shrink:0;margin-top:5px;"></div>') +
     '</div>';
   }).join('');
 }
@@ -9540,7 +9543,7 @@ function renderMonthReport(){
   html+=_mrLbl(t('mr.sec_community'))+'<div class="card" style="margin-bottom:14px;text-align:center;padding:22px 16px;color:var(--text-3);font-size:12px;line-height:1.6;white-space:pre-line;">'+_esc(t('mr.community_soon'))+'</div>';
 
   // 공유
-  html+='<button onclick="mrShare()" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);">'+t('mr.share')+'</button>';
+  html+='<button onclick="mrShare()" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);">'+t('mr.share')+'</button>';
 
   el.innerHTML=html; el.scrollTop=0;
 }
@@ -9905,7 +9908,7 @@ function showOcrLoadingMulti(previewSrc, pageCount) {
 /* OCR 분석 대기 중 광고 카드 (수익 노출) */
 function _ocrLoadingAdHtml(){
   return '<div style="margin:14px 0 4px;border:.5px solid var(--border);border-radius:14px;overflow:hidden;background:#0d0d22;box-shadow:0 3px 12px rgba(0,0,0,.08);">'
-    + '<div style="background:var(--gold);color:#fff;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;">'
+    + '<div style="background:var(--gold-grad);color:#fff;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;">'
       + '<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;">📢</span><span style="font-size:10px;font-weight:800;letter-spacing:.4px;">SPONSORED</span></div>'
       + '<span style="font-size:9px;font-weight:700;opacity:.85;">'+t('ocr.ad_badge')+'</span>'
     + '</div>'
@@ -11642,7 +11645,7 @@ function showOcrResult(previewSrc, result) {
   document.getElementById('ocr-content').innerHTML =
     '<div class="sheet-handle"></div>'
     +'<div class="sheet-title">'+t('ocr.result.title')
-    +(result.multiPage ? ' <span style="font-size:11px;font-weight:700;color:#fff;background:var(--green);padding:2px 8px;border-radius:10px;vertical-align:middle;">'+t('ocr.result.multipage')+'</span>' : '')
+    +(result.multiPage ? ' <span style="font-size:11px;font-weight:700;color:#fff;background:var(--green-grad);padding:2px 8px;border-radius:10px;vertical-align:middle;">'+t('ocr.result.multipage')+'</span>' : '')
     +'</div>'
     +noApiNote
     +'<img src="'+previewSrc+'" class="ocr-preview" alt="receipt">'
@@ -11657,7 +11660,7 @@ function showOcrResult(previewSrc, result) {
     +'</div></div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.items_recognized')+' (<span id=\'item-count\'>'+window._ocrItems.length+'</span>)</div>'
-    +'<button onclick="addOcrItem()" style="background:var(--green);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">'+t('ocr.add_item')+'</button>'
+    +'<button onclick="addOcrItem()" style="background:var(--green-grad);color:#fff;border:none;border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer;">'+t('ocr.add_item')+'</button>'
     +'</div>'
     +'<div style="background:var(--surface);border-radius:12px;border:0.5px solid var(--border);padding:0 14px;margin-bottom:12px;" id="ocr-items-list">'+itemsHtml+'</div>'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.select_category')+'</div>'
@@ -11685,7 +11688,7 @@ function showOcrResult(previewSrc, result) {
     +'<span class="lico" data-lico="receipt" data-size="17" data-color="#fff"></span>'
     +'<span data-i18n="ocr.save_budget">'+t('ocr.save_budget')+'</span>'
     +'</button>'
-    +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
+    +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
     +'<span class="lico" data-lico="map_pin" data-size="17" data-color="#fff"></span>'
     +'<span data-i18n="ocr.save_publish">'+t('ocr.save_publish')+'</span>'
     +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>'
@@ -14009,7 +14012,7 @@ function _renderItemStats(el, items) {
       + '<span style="font-size:11px;font-weight:800;color:var(--green);white-space:nowrap;margin-left:6px;">¥' + Number(it.avg_unit_price).toLocaleString() + '</span>'
       + '</div>'
       + '<div style="height:3px;background:var(--border);border-radius:2px;">'
-      + '<div style="height:3px;width:' + barW + '%;background:var(--green);border-radius:2px;"></div></div>'
+      + '<div style="height:3px;width:' + barW + '%;background:var(--green-grad);border-radius:2px;"></div></div>'
       + '</div>'
       + '<div style="font-size:9px;color:var(--text-3);white-space:nowrap;flex-shrink:0;">' + it.purchase_count + '건</div>'
       + '</div>';
@@ -14339,7 +14342,7 @@ function _renderMapStoreListPage() {
     if (totalPages > 1) {
       html += _mapAd('ad-slot-map-pag');
       var bN = 'min-width:30px;height:30px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-family:var(--font);';
-      var bA = 'min-width:30px;height:30px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--green);color:#fff;font-family:var(--font);';
+      var bA = 'min-width:30px;height:30px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:var(--green-grad);color:#fff;font-family:var(--font);';
       html += '<div style="display:flex;justify-content:center;align-items:center;gap:4px;padding:6px 0 4px;">';
       html += '<button style="'+bN+'" onclick="_mapGoPage('+Math.max(1,_mapStoreListPage-1)+')">‹</button>';
       for (var i=1;i<=totalPages;i++) html+='<button style="'+(i===_mapStoreListPage?bA:bN)+'" onclick="_mapGoPage('+i+')">'+i+'</button>';
@@ -14641,7 +14644,7 @@ function renderMapPins() {
       // 외식(eat/cafe/drink) 카테고리만 치리 공개 버튼 노출 — 슈퍼/약국/쇼핑 등은 메뉴 가격 공유 의미 없음
       +((typeof _shouldShowChiriPublish === 'function' && _shouldShowChiriPublish(s.cat))
         ? '<button onclick="event.stopPropagation();openChiriFromMapCard(\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')" '
-          +'style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--gold);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--gold-shadow);">'
+          +'style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--gold-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--gold-shadow);">'
           +'<span>📍 チリつもに公開する</span>'
           +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10チリ</span>'
           +'</button>'
@@ -15227,7 +15230,7 @@ function openShopDetail(key) {
     receiptsHtml='<div style="font-size:11px;font-weight:700;color:var(--text-3);margin:14px 0 8px;text-transform:uppercase;letter-spacing:.3px;">내 방문 내역</div>';
     myReceipts.forEach(function(r){
       receiptsHtml+='<div class="receipt-history-item">'
-        +'<div style="width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;"></div>'
+        +'<div style="width:7px;height:7px;border-radius:50%;background:var(--green-grad);flex-shrink:0;"></div>'
         +'<div style="flex:1;"><div style="font-size:12px;font-weight:700;color:var(--text-1);">'+r.items.slice(0,2).map(function(i){return i.name;}).join('·')+' 외</div>'
         +'<div style="font-size:11px;color:var(--text-3);margin-top:1px;">'+r.date+'</div></div>'
         +'<div style="font-size:13px;font-weight:800;">¥'+r.total.toLocaleString()+'</div></div>';
@@ -15677,6 +15680,10 @@ function applyTheme(key, silent) {
   r.style.setProperty('--green-light', _isDark ? (th.color + '25') : th.light);
   r.style.setProperty('--green-mid',   _isDark ? (th.color + '45') : th.mid);
   r.style.setProperty('--shadow-green','0 6px 24px '+th.dark+'4D, 0 2px 8px '+th.dark+'26');
+  // b457 — 배경용 그라데이션 변수 (grad 있으면 그라데이션, 없으면 단색)
+  var _grad = th.grad || th.color;
+  r.style.setProperty('--green-grad', _grad);
+  r.style.setProperty('--gold-grad',  _grad);
   // チリつも 테마도 동기화
   r.style.setProperty('--gold',        th.color);
   // 다크모드에서는 gold-dark(=칩/아이콘 텍스트)를 밝은 mid 톤으로 (어두운 dark 톤은 안 보임)
@@ -15779,8 +15786,8 @@ function _applyOnThemeOverride(textColor){
   styleEl.textContent =
     '[style*="var(--green)"][style*="color:#fff"],'
   + '[style*="var(--gold)"][style*="color:#fff"],'
-  + '[style*="background:var(--green)"],'
-  + '[style*="background:var(--gold)"],'
+  + '[style*="background:var(--green-grad)"],'
+  + '[style*="background:var(--gold-grad)"],'
   + '.save-btn,.att-go-btn{color:'+textColor+' !important;}';
 }
 
@@ -16566,7 +16573,7 @@ function renderThemeSwatches() {
     var key = pair[0], th = pair[1];
     var active = key === _currentTheme;
     return '<div onclick="applyTheme(\''+key+'\')" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;">'
-      +'<div style="width:36px;height:36px;border-radius:50%;background:'+th.color+';transition:all .2s;margin:0 auto;'
+      +'<div style="width:36px;height:36px;border-radius:50%;background:'+(th.grad||th.color)+';transition:all .2s;margin:0 auto;'
       +(active ? 'box-shadow:0 0 0 3px var(--surface),0 0 0 5.5px '+th.color+';transform:scale(1.12);' : 'opacity:0.75;')
       +'"></div>'
       +'<div style="font-size:9px;font-weight:'+(active?'800':'600')+';color:'+(active?th.color:'var(--text-3)')+';text-align:center;">'+t('theme.name.'+key)+'</div>'
@@ -16592,9 +16599,10 @@ function renderThemeSwatches() {
   // 아코디언 헤더의 현재 테마 색상 점 갱신
   var dot = document.getElementById('theme-acc-dot');
   if (dot) {
+    var curTh = THEMES[_currentTheme] || {};
     var curColor = (_currentTheme === 'custom')
       ? ((THEMES.custom && THEMES.custom.color) || '#888888')
-      : ((THEMES[_currentTheme] && THEMES[_currentTheme].color) || 'var(--green)');
+      : (curTh.grad || curTh.color || 'var(--green)');
     dot.style.background = curColor;
   }
 }
@@ -18062,7 +18070,7 @@ function _shareChooser(onLink, onImage){
   ov.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
   ov.innerHTML = '<div style="width:100%;max-width:430px;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px 28px;box-sizing:border-box;">'
     + '<div style="width:36px;height:4px;border-radius:4px;background:var(--border-mid);margin:0 auto 14px;"></div>'
-    + '<button id="shc-link" style="width:100%;padding:15px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🔗 リンクで共有<div style="font-size:11px;font-weight:600;opacity:.85;margin-top:3px;">タップで移動できるプレビューカード（おすすめ）</div></button>'
+    + '<button id="shc-link" style="width:100%;padding:15px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🔗 リンクで共有<div style="font-size:11px;font-weight:600;opacity:.85;margin-top:3px;">タップで移動できるプレビューカード（おすすめ）</div></button>'
     + '<button id="shc-img" style="width:100%;padding:15px;border:1px solid var(--border-mid);border-radius:12px;background:var(--bg-2);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🖼 画像カードで共有<div style="font-size:11px;font-weight:600;color:var(--text-3);margin-top:3px;">お店・メニュー情報入りの画像1枚</div></button>'
     + '<button id="shc-cancel" style="width:100%;padding:12px;border:none;border-radius:12px;background:transparent;color:var(--text-3);font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;">キャンセル</button>'
     + '</div>';
@@ -18711,7 +18719,7 @@ function _sdRenderMenus(cards,loaded){
     // build 366 — 가게 상세 페이지는 어드민도 일반 유저 뷰로 통일
     //   메뉴 카드 순서 조정은 어드민 PC '가게 편집' 영역에서만 처리
     //   ⭐ 대표 뱃지는 모두에게 노출
-    var featBadge = c.is_featured ? '<span style="position:absolute;top:8px;left:8px;background:var(--gold);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;z-index:3;">⭐ 대표</span>' : '';
+    var featBadge = c.is_featured ? '<span style="position:absolute;top:8px;left:8px;background:var(--gold-grad);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;z-index:3;">⭐ 대표</span>' : '';
     h+='<div class="sd-menu-card" onclick="openMenuDetail(\''+c.id+'\')">'
       +photoBtn
       +featBadge
@@ -18833,7 +18841,7 @@ async function _loadAdminI18n() {
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
       +   '<code style="font-size:11px;font-weight:800;color:var(--text-1);background:var(--bg-2);padding:2px 8px;border-radius:6px;">'+_esc(k)+'</code>'
       +   '<div style="display:flex;gap:4px;">'
-      +     '<button onclick="admSaveI18nKey(\''+_esc(k).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')" style="padding:4px 10px;border:none;border-radius:7px;background:var(--green);color:#fff;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>'
+      +     '<button onclick="admSaveI18nKey(\''+_esc(k).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')" style="padding:4px 10px;border:none;border-radius:7px;background:var(--green-grad);color:#fff;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장</button>'
       +     (_i18nOverrides[k] ? '<button onclick="admResetI18nKey(\''+_esc(k).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')" style="padding:4px 10px;border:1px solid var(--red);border-radius:7px;background:transparent;color:var(--red);font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">↺ 초기화</button>' : '')
       +   '</div>'
       + '</div>'
@@ -20019,7 +20027,7 @@ function openAnnouncementDetail(id) {
     + '</div>'
     + '<div style="font-size:17px;font-weight:900;color:var(--text-1);margin-bottom:10px;line-height:1.3;">'+(TYPE_ICON[ann.type]||'ℹ️')+' '+_esc(ann.title)+'</div>'
     + '<div style="font-size:13px;color:var(--text-2);line-height:1.6;white-space:pre-wrap;">'+_esc(ann.content)+'</div>'
-    + '<button onclick="closeOv(\'ov-ann-detail\')" style="margin-top:18px;width:100%;padding:12px;border:none;border-radius:12px;background:var(--green);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">확인</button>';
+    + '<button onclick="closeOv(\'ov-ann-detail\')" style="margin-top:18px;width:100%;padding:12px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">확인</button>';
   openOv('ov-ann-detail');
 }
 
@@ -21562,7 +21570,7 @@ function _admPcRenderThemeManager() {
     var active = (k === curTheme);
     return '<button onclick="_admPcThemeApply(\''+k+'\')" '
       + 'style="display:flex;align-items:center;gap:6px;padding:6px 12px;border:'+(active?'2px solid #172C58':'1px solid #E3E6EB')+';border-radius:18px;background:#fff;cursor:pointer;font-family:var(--font);font-size:11px;font-weight:'+(active?'800':'600')+';color:'+(active?'#172C58':'#374151')+';">'
-      + '<span style="width:14px;height:14px;border-radius:50%;background:'+(th.color||'#000')+';border:1px solid rgba(0,0,0,.1);"></span>'
+      + '<span style="width:14px;height:14px;border-radius:50%;background:'+(th.grad||th.color||'#000')+';border:1px solid rgba(0,0,0,.1);"></span>'
       + (th.name || k)
       + '</button>';
   }).join('');
@@ -21607,7 +21615,7 @@ function _admPcRenderThemePreviewHtml() {
     + '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">'
     // 카드 1: 메인 헤더 (테마 그라디언트)
     + '<div ' + clk('--surface') + 'border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface);">'
-    +   '<div ' + clk('--green') + 'background:var(--green);color:var(--on-theme);padding:14px 16px;">'
+    +   '<div ' + clk('--green') + 'background:var(--green-grad);color:var(--on-theme);padding:14px 16px;">'
     +     '<div style="font-size:11px;opacity:.85;font-weight:700;pointer-events:none;">[ 헤더/테마색 배경 ]</div>'
     +     '<div ' + clk('--on-theme') + 'font-size:18px;font-weight:900;margin-top:4px;background:rgba(255,255,255,.08);display:inline-block;padding:2px 8px;border-radius:6px;" title="--on-theme 카드로 이동">RetWork</div>'
     +     '<div style="font-size:10px;opacity:.8;margin-top:4px;pointer-events:none;">테마색 위 글자 가독성</div>'
@@ -21621,11 +21629,11 @@ function _admPcRenderThemePreviewHtml() {
     // 카드 2: 버튼 모음
     + '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;">'
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">버튼</div>'
-    +   '<button ' + clk('--green') + 'background:var(--green);color:var(--on-theme);border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);">메인</button>'
+    +   '<button ' + clk('--green') + 'background:var(--green-grad);color:var(--on-theme);border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);">메인</button>'
     +   '<button ' + clk('--border-mid') + 'background:var(--surface);color:var(--text-1);border:1px solid var(--border-mid);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;margin-right:6px;font-family:var(--font);">보조</button>'
     +   '<button ' + clk('--red') + 'background:var(--red);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;font-family:var(--font);">위험</button>'
     +   '<div style="margin-top:10px;">'
-    +     '<button ' + clk('--gold') + 'background:var(--gold);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);">✨ 골드</button>'
+    +     '<button ' + clk('--gold') + 'background:var(--gold-grad);color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:12px;font-weight:800;margin-right:6px;font-family:var(--font);">✨ 골드</button>'
     +     '<button ' + clk('--text-3') + 'background:var(--bg-2,#F4F5F8);color:var(--text-3);border:1px solid var(--border-mid);border-radius:10px;padding:9px 14px;font-size:12px;font-weight:700;font-family:var(--font);">비활성</button>'
     +   '</div>'
     + '</div>'
@@ -21692,12 +21700,12 @@ function _admPcRenderThemePreviewHtml() {
     +   '<div style="font-size:11px;color:var(--text-3);font-weight:700;margin-bottom:8px;">토글/진행률</div>'
     +   '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">'
     +     '<span style="font-size:13px;color:var(--text-1);font-weight:600;">다크모드</span>'
-    +     '<div ' + clk('--green') + 'width:42px;height:24px;background:var(--green);border-radius:12px;position:relative;">'
+    +     '<div ' + clk('--green') + 'width:42px;height:24px;background:var(--green-grad);border-radius:12px;position:relative;">'
     +       '<div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;right:3px;box-shadow:0 1px 3px rgba(0,0,0,.2);pointer-events:none;"></div>'
     +     '</div>'
     +   '</div>'
     +   '<div ' + clk('--green') + 'height:6px;background:var(--bg-2,#F4F5F8);border-radius:3px;overflow:hidden;margin-bottom:4px;">'
-    +     '<div style="width:65%;height:100%;background:var(--green);pointer-events:none;"></div>'
+    +     '<div style="width:65%;height:100%;background:var(--green-grad);pointer-events:none;"></div>'
     +   '</div>'
     +   '<div style="font-size:10px;color:var(--text-3);">예산 65% 사용</div>'
     + '</div>'
@@ -22822,7 +22830,7 @@ function renderEditReqCard(r){
       +'<div style="font-size:10px;color:var(--text-3);display:flex;gap:8px;align-items:center;">'+dateStr+(mapLink?(' · '+mapLink):'')+'</div>'
       +(done
         ? '<button onclick="markEditReqDone('+r.id+',false)" style="background:transparent;border:.5px solid var(--border);color:var(--text-3);border-radius:9px;padding:6px 12px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);">↩ 미처리로</button>'
-        : '<button onclick="markEditReqDone('+r.id+',true)" style="background:var(--green);border:none;color:#fff;border-radius:9px;padding:6px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);">✓ 처리완료</button>')
+        : '<button onclick="markEditReqDone('+r.id+',true)" style="background:var(--green-grad);border:none;color:#fff;border-radius:9px;padding:6px 14px;font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);">✓ 처리완료</button>')
     +'</div>'
   +'</div>';
 }
@@ -22883,7 +22891,7 @@ function adAdminSetSource(source) {
   var lb = document.getElementById('adm-ad-source-local');
   var ab = document.getElementById('adm-ad-source-adsense');
   if (lb && ab) {
-    var active = 'background:var(--green);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;';
+    var active = 'background:var(--green-grad);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;';
     var idle   = 'background:transparent;color:var(--text-3);border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:800;cursor:pointer;';
     lb.style.cssText = (source==='local')   ? active : idle;
     ab.style.cssText = (source==='adsense') ? active : idle;
@@ -27035,7 +27043,7 @@ function _mdRender(){
     h += '<div id="rf-'+c.id+'" style="display:none;padding:8px 0 0;">'
       +'<div style="display:flex;gap:6px;">'
         +'<input id="ri-'+c.id+'" type="text" placeholder="'+t('md.reply_ph')+'" style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:7px 10px;font-size:12px;font-family:var(--font);background:var(--bg);color:var(--text-1);outline:none;">'
-        +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">'+t('btn.submit')+'</button>'
+        +'<button onclick="sdSubmitReply(\''+c.id+'\',\''+cardId+'\')" style="padding:7px 12px;border-radius:10px;border:none;background:var(--green-grad);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">'+t('btn.submit')+'</button>'
       +'</div></div>'
     +'</div>';
   });
@@ -27130,7 +27138,7 @@ function _sdCommentFormHtml(cardId,commentId,initStar,initText){
     h+='<span class="sd-star-sel" id="cst-'+cardId+'-'+i+'" onclick="sdPickStar(\''+cardId+'\','+i+')" style="color:'+(i<=initStar?'var(--star)':'var(--star-empty)')+';">'+(i<=initStar?'★':'☆')+'</span>';
   h+='</div>';
   h+='<textarea id="sd-ct-'+cardId+'" placeholder="이 메뉴 어땠나요?" style="width:100%;border:1px solid var(--border-mid);border-radius:10px;padding:9px 12px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:8px;">'+(initText||'')+'</textarea>';
-  h+='<button onclick="sdSubmitComment(\''+cardId+'\''+(commentId?',\''+commentId+'\'':',null')+')" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">'+(commentId?'수정하기':'평가 등록')+'</button>';
+  h+='<button onclick="sdSubmitComment(\''+cardId+'\''+(commentId?',\''+commentId+'\'':',null')+')" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--green-grad);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">'+(commentId?'수정하기':'평가 등록')+'</button>';
   if(commentId) h+='<div onclick="sdCancelEdit(\''+cardId+'\')" style="text-align:center;color:var(--text-3);font-size:12px;margin-top:8px;cursor:pointer;padding:4px;">취소</div>';
   h+='</div>';
   return h;
@@ -27298,7 +27306,7 @@ function sdOpenAddCard(){
     +'<span class="sd-star-sel" id="cst-__new-5" onclick="sdPickStar(\'__new\',5)" style="color:#ddd;">☆</span>'
     +'</div>'
     +'<textarea id="sd-nm-comment" placeholder="한 마디 코멘트 (선택)" style="width:100%;border:1.5px solid var(--border-mid);border-radius:10px;padding:10px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:12px;"></textarea>'
-    +'<button onclick="sdSubmitNewCard()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--green);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">메뉴카드 추가</button>'
+    +'<button onclick="sdSubmitNewCard()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--green-grad);color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">메뉴카드 추가</button>'
     +'</div>';
 }
 function sdCloseAddCard(){_sdNewImgFile=null;_sdNewCat1='';_sdNewCat2='';_sdLoadMenuCards();}
@@ -27654,7 +27662,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 456;
+window.__APP_BUILD__ = 457;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
