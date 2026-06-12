@@ -11958,6 +11958,11 @@ function _doSaveOcrResult() {
     // b463 — 저장 실패를 사용자에게도 알림(기존엔 console.warn 만 → 조용히 누락)
     if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); showToast(t('toast.save_fail',{msg:res.error.message})); return; }
     var receiptId = res.data && res.data[0] && res.data[0].id;
+    // b463 — receiptId 를 못 받으면 품목/이미지가 통째로 누락됨 → 명시적 경고 + 진단 로그
+    if (!receiptId) {
+      console.warn('[save] receiptId 미수신 — 품목/이미지 저장 스킵됨. user_id=', _uid, 'res=', res.data);
+      showToast('⚠️ 영수증 헤더만 저장됐어요(품목 누락). 다시 시도해 주세요');
+    }
     if (receiptId) newEntry.id = receiptId; // 정수 임시 ID → Supabase UUID로 교체
     // 원본 영수증 이미지 보관 (비동기, 저장 흐름 막지 않음)
     if (receiptId && window._previewSrc) _uploadReceiptImage(receiptId, window._previewSrc);
@@ -27712,7 +27717,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 463;
+window.__APP_BUILD__ = 464;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
