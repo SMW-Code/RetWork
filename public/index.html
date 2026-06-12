@@ -3952,6 +3952,26 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   </div>
 </div>
 
+<!-- ══ 어드민: 치리카드(메뉴카드) 관리 ══ -->
+<div class="overlay" id="ov-admin-mycards" style="z-index:960;" onclick="if(event.target===this)closeOv('ov-admin-mycards')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:540px;width:100%;max-height:92vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🎴 치리카드 관리</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;">메뉴 카드 조회·삭제 · 중복 확인</div>
+        </div>
+        <div onclick="closeOv('ov-admin-mycards')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+      <input id="adm-mycards-search" oninput="_admMyCardsFilter()" placeholder="가게명·메뉴명 검색" style="width:100%;padding:9px 12px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:8px;">
+      <label style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--text-2);margin-bottom:12px;cursor:pointer;"><input type="checkbox" id="adm-mycards-duponly" onchange="_admMyCardsFilter()" style="cursor:pointer;"> 🔴 중복만 보기</label>
+      <div id="adm-mycards-summary" style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;"></div>
+      <div id="adm-mycards-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ 어드민: 드로우 추가/수정 폼 ══ -->
 <div class="overlay" id="ov-admin-draw-form" style="z-index:10001;" onclick="if(event.target===this)closeOv('ov-admin-draw-form')">
   <div class="sheet" onclick="event.stopPropagation()" style="max-width:480px;width:100%;max-height:92vh;overflow-y:auto;">
@@ -19563,6 +19583,97 @@ async function _loadAdminDrawList() {
   }).join('');
 }
 
+/* ════════════════════════════════════════════════════════════
+   어드민: 치리카드(메뉴카드) 관리 — 조회·삭제 + 중복 표시 (b449)
+═══════════════════════════════════════════════════════════════ */
+var _admMyCardsCache = [];
+async function openAdminMenuCards() {
+  if (!_isAdmin) { showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  openOv('ov-admin-mycards');
+  await _loadAdminMenuCardList();
+}
+async function _loadAdminMenuCardList() {
+  var wrap = document.getElementById('adm-mycards-list');
+  if (!wrap || !_sb) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3);">로딩 중...</div>';
+  var res = await _sb.from('store_menu_cards')
+    .select('id,store_name,menu_name,price,image_url,view_count,rating_count,created_at')
+    .order('store_name', { ascending:true })
+    .order('menu_name', { ascending:true });
+  if (res.error) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--red);padding:10px;">로딩 실패: '+res.error.message+'</div>';
+    return;
+  }
+  var rows = res.data || [];
+  // 정규화 키로 중복 집계 (같은 가게 + 같은 메뉴명)
+  var norm = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC').toLowerCase(); };
+  var keyCount = {};
+  rows.forEach(function(c){ c._dupKey = (c.store_name||'') + '|' + norm(c.menu_name); keyCount[c._dupKey] = (keyCount[c._dupKey]||0)+1; });
+  rows.forEach(function(c){ c._isDup = keyCount[c._dupKey] > 1; });
+  _admMyCardsCache = rows;
+  _admMyCardsRender();
+}
+function _admMyCardsFilter() { _admMyCardsRender(); }
+function _admMyCardsRender() {
+  var wrap = document.getElementById('adm-mycards-list');
+  var sumEl = document.getElementById('adm-mycards-summary');
+  if (!wrap) return;
+  var qEl = document.getElementById('adm-mycards-search');
+  var q = (qEl && qEl.value || '').trim().toLowerCase();
+  var dupEl = document.getElementById('adm-mycards-duponly');
+  var dupOnly = dupEl && dupEl.checked;
+
+  // 요약 (전체 / 중복 그룹·카드 수)
+  var dupGroups = {};
+  _admMyCardsCache.forEach(function(c){ if (c._isDup) dupGroups[c._dupKey] = true; });
+  var dupCardCount = _admMyCardsCache.filter(function(c){ return c._isDup; }).length;
+  if (sumEl) sumEl.textContent = '전체 ' + _admMyCardsCache.length + '개 · 중복 ' + Object.keys(dupGroups).length + '그룹 / ' + dupCardCount + '개';
+
+  var list = _admMyCardsCache.slice();
+  if (q) list = list.filter(function(c){ return (c.store_name||'').toLowerCase().indexOf(q) >= 0 || (c.menu_name||'').toLowerCase().indexOf(q) >= 0; });
+  if (dupOnly) list = list.filter(function(c){ return c._isDup; });
+  // 정렬: 중복 먼저 → 키별 묶음 → 오래된 순(원본이 위)
+  list.sort(function(a,b){
+    if (a._isDup !== b._isDup) return a._isDup ? -1 : 1;
+    if (a._dupKey !== b._dupKey) return a._dupKey < b._dupKey ? -1 : 1;
+    return (a.created_at||'') < (b.created_at||'') ? -1 : 1;
+  });
+  if (list.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;padding:18px;font-size:12px;color:var(--text-3);">표시할 카드가 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = list.map(_admMyCardItemHtml).join('');
+}
+function _admMyCardItemHtml(c) {
+  var img = c.image_url
+    ? '<img src="'+_esc(c.image_url)+'" style="width:48px;height:48px;border-radius:8px;object-fit:cover;flex-shrink:0;">'
+    : '<div style="width:48px;height:48px;border-radius:8px;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🍽️</div>';
+  var dupBadge = c._isDup
+    ? '<span style="display:inline-block;background:var(--red-bg);color:var(--red);font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;margin-left:6px;">🔴 중복</span>'
+    : '';
+  var meta = (c.price ? '¥'+Number(c.price).toLocaleString() : '-')
+    + ' · 👁 ' + (c.view_count||0)
+    + ' · ★' + (c.rating_count||0);
+  return '<div style="background:var(--surface);border:.5px solid '+(c._isDup?'var(--red)':'var(--border)')+';border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">'
+    + img
+    + '<div style="flex:1;min-width:0;">'
+    +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(c.menu_name||'')+dupBadge+'</div>'
+    +   '<div style="font-size:10px;color:var(--text-3);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">🏪 '+_esc(c.store_name||'')+'</div>'
+    +   '<div style="font-size:10px;color:var(--text-3);margin-top:2px;">'+meta+'</div>'
+    + '</div>'
+    + '<button onclick="adminDeleteMenuCard(\''+c.id+'\')" style="padding:6px 11px;border-radius:8px;border:none;background:var(--red-bg);color:var(--red);font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;">삭제</button>'
+    + '</div>';
+}
+async function adminDeleteMenuCard(id) {
+  if (!_sb) return;
+  if (!confirm('이 메뉴 카드를 삭제할까요?\n(평점·사진도 함께 삭제됩니다)')) return;
+  var res = await _sb.from('store_menu_cards').delete().eq('id', id).select();
+  if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
+  if (!res.data || res.data.length === 0) { showToast('삭제 권한이 없어요 (admin_rls_policies.sql 확인)'); return; }
+  showToast('🗑 삭제됐어요');
+  await _loadAdminMenuCardList(); // 중복 재계산 + 재렌더
+}
+
 // datetime-local 용 — Date → 'YYYY-MM-DDTHH:mm' (로컬)
 function _toLocalDtInput(d) {
   if (!d) return '';
@@ -20039,6 +20150,9 @@ var _admPcMenus = {
     { key:'draws', icon:'🎫', label:'드로우 관리',
       mount:'ov-admin-draws',
       load:function(){ if (typeof openAdminDraws === 'function') openAdminDraws(); } },
+    { key:'mycards', icon:'🎴', label:'치리카드 관리',
+      mount:'ov-admin-mycards',
+      load:function(){ if (typeof openAdminMenuCards === 'function') openAdminMenuCards(); } },
     { key:'exchange', icon:'📋', label:'교환요청',
       customRender:function(){ if (typeof _admPcRenderExchangeReqs === 'function') _admPcRenderExchangeReqs(); },
       badgeId:'apc-badge-exchange' },
@@ -27384,7 +27498,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 449;
+window.__APP_BUILD__ = 450;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
