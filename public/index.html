@@ -55,6 +55,16 @@
 <meta property="og:image:height" content="512">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://retwork.jp/icons/icon-512.png?v=443">
+<!-- b469 — 추천코드 최우선 캐치: 다른 초기화 코드가 URL 을 정리하기 전에 ?ref= 저장 -->
+<script>
+(function(){ try {
+  var m = (location.search || '').match(/[?&]ref=([A-Za-z0-9]{4,16})/);
+  if (!m) m = (location.hash || '').match(/[?&]ref=([A-Za-z0-9]{4,16})/);
+  if (m && m[1]) { localStorage.setItem('pending_ref', m[1].toUpperCase());
+    sessionStorage.setItem('_ref_just', '1'); }
+} catch(e){} })();
+</script>
+
 <!-- PWA manifest — 정적 link (PWA Builder/TWA 빌드 도구 인식용) + 동적 blob (Vercel 방화벽 fallback) -->
 <link rel="manifest" href="/manifest.json">
 
@@ -27737,7 +27747,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 468;
+window.__APP_BUILD__ = 469;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
