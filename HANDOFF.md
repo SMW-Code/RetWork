@@ -1,26 +1,27 @@
-# RetWork (チリつも) — HANDOFF (build 472 시점)
+# RetWork (チリつも) — HANDOFF (build 473 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 472** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 473** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-12** (b471 '대표' 뱃지 다국어화 · b472 잔여 한국어 i18n 일괄 · 銀座篝 블로그 글)
+> 마지막 작업: **2026-06-12** (b471 '대표' 뱃지 다국어화 · b472 잔여 한국어 i18n · b473 SEO canonical 수정)
 
 ---
 
-## 0-D. 2026-06-12 세션(이어서) 변경 요약 — 블로그 · 잔여 i18n
+## 0-D. 2026-06-12 세션(이어서) 변경 요약 — 블로그 · 잔여 i18n · SEO
 
-### 메인 앱 (receiptiq) — build 471 ~ 472
+### 메인 앱 (receiptiq) — build 471 ~ 473
 
 | build | 내용 |
 |---|---|
 | **471** | **'대표' 뱃지 다국어화** — 가게 상세 사진(단일/슬라이드)·메뉴 상세 사진·메뉴카드의 하드코딩 `⭐ 대표` 4곳 → `t('badge.featured')`. 언어시트 4로케일 추가(ja=代表/ko=대표/en=Featured/zh=招牌). ★ 이모지는 마크업 유지. **어드민** 가게목록·핀행·메뉴편집의 '대표' 표기는 한국어 유지(운영자용) |
 | **472** | **사용자 대면 잔여 한국어 17곳 일괄 i18n** (Explore 에이전트로 전체 스캔) — ① 메뉴 상세 평가폼: 내 평가 수정하기/평가 작성/수정하기/평가 등록/취소/"✏️ 내 평가 수정" 제목 ② 가게리뷰 동기화 토스트(실패/RLS/생성실패)·수정실패 alert ③ 차단어 토스트 2곳→기존 `toast.banned_word` 재사용 ④ 출석 추가광고 보너스: 베타우회/남은횟수/슬롯/대기/완료 + 「광고 보고 チリ 받기」(정적 `data-i18n`+동적) ⑤ 스캔 멀티촬영 안내(촬영순서/장수) ⑥ 공유 이미지저장 토스트 ⑦ 리워드 교환 placeholder. 신규 i18n 키 22개(4로케일). `t(key,params)` 는 `{var}` 다중 보간 지원 확인 |
+| **473** | **SEO canonical 색인 충돌 수정** ⭐ — GSC 「적절한 표준 태그가 포함된 대체 페이지」로 `/index.html` 색인 실패. **원인 = canonical 순환**: index.html 의 canonical 이 `/` 를 가리키는데 `/` 는 `/index.html` 로 307 리다이렉트(b470)되는 비콘텐츠 URL → Google 이 `/index.html` 을 `/` 의 대체본으로 보고 색인 제외, `/` 는 리다이렉트라 색인 불가 → **둘 다 색인 실패**. **수정**: ① index.html `<link rel=canonical>` `/` → `/index.html`(self-canonical) ② JSON-LD `url` 동일 ③ sitemap 홈 `loc` `/` → `/index.html`, lastmod 2026-06-12. ⚠️ **라우팅/ref 리다이렉트(app/page.tsx)는 그대로 유지** — 메타데이터만 수정. 홈은 `retwork.jp/index.html` 로 색인됨(깔끔한 `/` 색인 원하면 redirect→rewrite 200 으로 바꿔야 하며 next.config 수정 + 루트 no-store 헤더 필요, Next16 rewrites API 검증 후). 배포 후 GSC URL검사→색인요청→유효성 재검사 필요 |
 
 ### 블로그 (retwork-blog) — 8편째 글
 - **`ginza-kagari-otemachi.md`** — 銀座 篝 大手町店 鶏白湯Soba 리뷰 ★4.0 (미슐랭 출신/블룸버그 보도, 키오스크 결제 함정·2열 줄서기·〆ご飯 등). 사진 6장(`public/images/ginza-kagari-otemachi/`: main/sign/exterior/topping/condiments/receipt, 1400px 리사이즈). 커밋 `0860d1a`
 
 ### 커밋 (2026-06-12 이어서)
-- receiptiq: `b26b0b8`(b471 badge i18n) → `c2930ad`(b472 잔여 i18n) — 모두 push 완료
+- receiptiq: `b26b0b8`(b471 badge i18n) → `c2930ad`(b472 잔여 i18n) → `53128b6`(HANDOFF) → `9df79b1`(b473 SEO canonical) — 모두 push 완료
 - retwork-blog: `0860d1a`(銀座篝 글) — push 완료
 
 ### 💡 i18n 작업 메모 (다음에 같은 작업 시)
