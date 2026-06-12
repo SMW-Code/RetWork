@@ -23532,38 +23532,55 @@ function _renderAdminDetail() {
     }
   }
 
-  // b454 — 가게 중복 의심 마킹: 같은 이름(정규화) OR 같은 위치(좌표 3자리, ~100m)
-  //   OCR 이 신자체/구자체(豊/豐)를 다르게 인식해도 좌표로 잡음
+  // b455 — 가게 중복 의심 마킹: 「이름 정규화 일치」 OR 「이름 유사(편집거리) AND 위치 근접(~60m)」
+  //   좌표만으로는 같은 동네 다른 가게를 오판 → 이름 유사도와 거리를 함께 본다.
   if (_admDetailType === 'stores') {
     var _normStore = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC').toLowerCase(); };
-    var _coordKey = function(s){
-      if (s.lat == null || s.lng == null) return null;
-      return parseFloat(s.lat).toFixed(3) + ',' + parseFloat(s.lng).toFixed(3);
+    var _lev = function(a, b){
+      var m=a.length, n=b.length; if(!m) return n; if(!n) return m;
+      var prev=[], cur=[], i, j;
+      for(j=0;j<=n;j++) prev[j]=j;
+      for(i=1;i<=m;i++){ cur[0]=i;
+        for(j=1;j<=n;j++){ cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a.charAt(i-1)===b.charAt(j-1)?0:1)); }
+        for(j=0;j<=n;j++) prev[j]=cur[j];
+      }
+      return prev[n];
     };
-    var byName = {}, byCoord = {};
-    filtered.forEach(function(s){
-      s._isDup = false; s._isOrigin = false; s._dupGroupSize = 1;
-      var nk = _normStore(s.name); if (nk) { (byName[nk] = byName[nk] || []).push(s); }
-      var ck = _coordKey(s);       if (ck) { (byCoord[ck] = byCoord[ck] || []).push(s); }
+    var _nameSim = function(a, b){ a=_normStore(a); b=_normStore(b); if(!a||!b) return 0; if(a===b) return 1;
+      var mx=Math.max(a.length,b.length); return mx ? (1 - _lev(a,b)/mx) : 0; };
+    var _distM = function(a, b){
+      if (a.lat==null||a.lng==null||b.lat==null||b.lng==null) return Infinity;
+      var dLat=(a.lat-b.lat)*111000;
+      var dLng=(a.lng-b.lng)*111000*Math.cos(a.lat*Math.PI/180);
+      return Math.sqrt(dLat*dLat+dLng*dLng);
+    };
+    // union-find 로 중복 그룹 묶기
+    var n = filtered.length, parent = [];
+    for (var pi=0; pi<n; pi++){ parent[pi]=pi; filtered[pi]._isDup=false; filtered[pi]._isOrigin=false; filtered[pi]._dupGroupSize=1; }
+    var _find = function(x){ while(parent[x]!==x){ parent[x]=parent[parent[x]]; x=parent[x]; } return x; };
+    for (var a1=0; a1<n; a1++){
+      for (var b1=a1+1; b1<n; b1++){
+        var sameName = _normStore(filtered[a1].name) === _normStore(filtered[b1].name);
+        var dup = sameName;
+        if (!dup) {
+          var d = _distM(filtered[a1], filtered[b1]);
+          if (d < 60 && _nameSim(filtered[a1].name, filtered[b1].name) >= 0.8) dup = true;
+        }
+        if (dup) parent[_find(a1)] = _find(b1);
+      }
+    }
+    var grp = {};
+    for (var gi=0; gi<n; gi++){ var r=_find(gi); (grp[r]=grp[r]||[]).push(filtered[gi]); }
+    var sDupTotal = 0;
+    Object.keys(grp).forEach(function(k){
+      var arr = grp[k]; if (arr.length <= 1) return;
+      arr.sort(function(x,y){ return (x.created_at||'').localeCompare(y.created_at||''); });
+      arr.forEach(function(s, idx){ s._dupGroupSize = arr.length; if (idx>0){ s._isDup=true; } else { s._isOrigin=true; } });
+      sDupTotal += (arr.length - 1);
     });
-    var _markGroup = function(groups){
-      Object.keys(groups).forEach(function(k){
-        var arr = groups[k];
-        if (arr.length <= 1) return;
-        arr.sort(function(a,b){ return (a.created_at||'').localeCompare(b.created_at||''); });
-        arr.forEach(function(s, idx){
-          s._dupGroupSize = Math.max(s._dupGroupSize || 1, arr.length);
-          if (idx > 0) s._isDup = true;
-        });
-      });
-    };
-    _markGroup(byName); _markGroup(byCoord);
-    // 그룹 내 _isDup 아닌 첫 행은 원본 표시
-    filtered.forEach(function(s){ if (s._dupGroupSize > 1 && !s._isDup) s._isOrigin = true; });
-    var sDupTotal = filtered.filter(function(s){ return s._isDup; }).length;
     if (sDupTotal > 0) {
       dupBanner = '<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:8px 10px;margin-bottom:8px;">'
-        + '<span style="font-size:11px;color:#92400E;font-weight:700;">🔁 중복 의심 가게 ' + sDupTotal + '개 — 같은 이름 또는 같은 위치. 🔴중복 행을 삭제하세요(가장 오래된 1개는 ✓원본 보존).</span>'
+        + '<span style="font-size:11px;color:#92400E;font-weight:700;">🔁 중복 의심 가게 ' + sDupTotal + '개 — 비슷한 이름 + 가까운 위치. 🔴중복 행을 삭제하세요(가장 오래된 1개는 ✓원본 보존).</span>'
         + '</div>';
     }
   }
@@ -27636,7 +27653,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 454;
+window.__APP_BUILD__ = 455;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
