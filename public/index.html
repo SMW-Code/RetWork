@@ -2029,6 +2029,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><polygon points="3,6 9,3 15,6 21,3 21,18 15,21 9,18 3,21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg></span>
     <span class="ct-tab-lbl" data-i18n="ct.tab.map">チズ</span>
   </div>
+  <div class="ct-tab" id="ct-tab-mycard" onclick="ctSwitchTab('mycard')">
+    <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="13" y2="15"/></svg></span>
+    <span class="ct-tab-lbl" data-i18n="ct.tab.mycard">チリカード</span>
+  </div>
   <div class="ct-tab" id="ct-tab-community" onclick="ctSwitchTab('community')">
     <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
     <span class="ct-tab-lbl" data-i18n="ct.tab.talk">チリトーク</span>
@@ -2036,10 +2040,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="ct-tab" id="ct-tab-reward" onclick="ctSwitchTab('reward')">
     <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M19 12v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9"/><path d="M12 8a4 4 0 0 0-4-4 2 2 0 0 0 0 4h4zM12 8a4 4 0 0 1 4-4 2 2 0 0 1 0 4h-4z"/></svg></span>
     <span class="ct-tab-lbl" data-i18n="ct.tab.reward">チリワード</span>
-  </div>
-  <div class="ct-tab" id="ct-tab-mycard" onclick="ctSwitchTab('mycard')">
-    <span class="ct-tab-icon"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="15" x2="13" y2="15"/></svg></span>
-    <span class="ct-tab-lbl" data-i18n="ct.tab.mycard">チリカード</span>
   </div>
 </div>
 
@@ -5839,7 +5839,7 @@ async function renderMyCards() {
   var rows = [];
   try {
     var res = await _sb.from('store_menu_cards')
-      .select('id,store_name,menu_name,price,category,image_url,rating_avg,rating_count,view_count,created_at')
+      .select('id,store_name,menu_name,price,category,image_url,rating_avg,rating_count,view_count,like_count,created_at')
       .eq('created_by', _currentUser.id)
       .order('created_at', { ascending:false });
     if (res.error) { console.warn('[renderMyCards]', res.error.message); }
@@ -5856,18 +5856,28 @@ async function renderMyCards() {
     return;
   }
 
-  // 요약 (총 카드수 · 총 확인수)
+  // 요약 (총 카드수 · 총 확인수 · 총 좋아요)
   var totalViews = rows.reduce(function(a,c){ return a + (c.view_count||0); }, 0);
-  var summary = '<div style="display:flex;gap:10px;margin-bottom:14px;">'
-    + '<div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;text-align:center;">'
-    +   '<div style="font-size:20px;font-weight:900;color:var(--text-1);">'+rows.length+'</div>'
-    +   '<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-top:2px;">'+t('ct.mycard.cards')+'</div></div>'
-    + '<div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 14px;text-align:center;">'
-    +   '<div style="font-size:20px;font-weight:900;color:var(--gold-dark);">'+totalViews.toLocaleString()+'</div>'
-    +   '<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-top:2px;">'+t('ct.mycard.total_views')+'</div></div>'
+  var totalLikes = rows.reduce(function(a,c){ return a + (c.like_count||0); }, 0);
+  var _sumCell = function(val, label, color){
+    return '<div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 8px;text-align:center;">'
+      + '<div style="font-size:19px;font-weight:900;color:'+color+';">'+val+'</div>'
+      + '<div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;">'+label+'</div></div>';
+  };
+  var summary = '<div style="display:flex;gap:8px;margin-bottom:14px;">'
+    + _sumCell(rows.length, t('ct.mycard.cards'), 'var(--text-1)')
+    + _sumCell(totalViews.toLocaleString(), t('ct.mycard.total_views'), 'var(--gold-dark)')
+    + _sumCell(totalLikes.toLocaleString(), t('ct.mycard.total_likes'), '#E0245E')
     + '</div>';
 
   wrap.innerHTML = summary + rows.map(_myCardItemHtml).join('');
+}
+function _myCardDateStr(iso) {
+  if (!iso) return '';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  var p = function(n){ return (n<10?'0':'')+n; };
+  return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
 }
 function _myCardItemHtml(c) {
   var img = c.image_url
@@ -5877,20 +5887,25 @@ function _myCardItemHtml(c) {
     ? '<span style="color:var(--star);font-weight:800;">★'+parseFloat(c.rating_avg||0).toFixed(1)+'</span> <span style="color:var(--text-3);">('+c.rating_count+')</span>'
     : '<span style="color:var(--text-3);">'+t('ct.mycard.no_rating')+'</span>';
   var views = (c.view_count||0).toLocaleString();
+  var likes = (c.like_count||0).toLocaleString();
+  var dateStr = _myCardDateStr(c.created_at);
   return '<div onclick="myCardOpen(\''+c.id+'\')" style="display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:12px;margin-bottom:10px;cursor:pointer;">'
     + img
     + '<div style="flex:1;min-width:0;">'
     +   '<div style="font-size:15px;font-weight:800;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_esc(c.menu_name||'')+'</div>'
-    +   '<div style="font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 6px;">🏪 '+_esc(c.store_name||'')+'</div>'
-    +   '<div style="display:flex;align-items:center;gap:12px;font-size:12px;">'
+    +   '<div style="font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 5px;">🏪 '+_esc(c.store_name||'')+'</div>'
+    +   '<div style="display:flex;align-items:center;gap:12px;font-size:12px;margin-bottom:4px;">'
     +     (c.price ? '<span style="font-weight:800;color:var(--text-1);">¥'+Number(c.price).toLocaleString()+'</span>' : '')
     +     '<span>'+rating+'</span>'
     +   '</div>'
+    +   (dateStr ? '<div style="font-size:10px;color:var(--text-3);">🕐 '+dateStr+'</div>' : '')
     + '</div>'
-    // 확인수 배지
-    + '<div style="text-align:center;flex-shrink:0;padding-left:6px;">'
-    +   '<div style="font-size:17px;font-weight:900;color:var(--gold-dark);line-height:1;">'+views+'</div>'
-    +   '<div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:3px;display:flex;align-items:center;gap:3px;justify-content:center;">👁 '+t('ct.mycard.views')+'</div>'
+    // 확인수 + 좋아요 배지
+    + '<div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;padding-left:6px;text-align:center;">'
+    +   '<div><div style="font-size:16px;font-weight:900;color:var(--gold-dark);line-height:1;">'+views+'</div>'
+    +     '<div style="font-size:9px;color:var(--text-3);font-weight:600;margin-top:2px;">👁 '+t('ct.mycard.views')+'</div></div>'
+    +   '<div><div style="font-size:16px;font-weight:900;color:#E0245E;line-height:1;">'+likes+'</div>'
+    +     '<div style="font-size:9px;color:var(--text-3);font-weight:600;margin-top:2px;">❤️ '+t('ct.mycard.likes')+'</div></div>'
     + '</div>'
     + '</div>';
 }
@@ -12432,7 +12447,7 @@ var I18N = {
     // 탭바 (사용자 메인 4탭)
     'tab.home':'ホーム','tab.history':'履歴','tab.calendar':'カレンダー','tab.map':'マップ','tab.profile':'プロフィール',
     'ct.tab.map':'チズ','ct.tab.talk':'チリトーク','ct.tab.reward':'チリワード','ct.tab.mycard':'チリカード',
-    'ct.mycard.title':'🎴 チリカード','ct.mycard.sub':'登録したメニューカード','ct.mycard.empty_title':'まだ登録したカードがありません','ct.mycard.empty_sub':'お店の詳細からメニューカードを追加すると、ここに集まります。','ct.mycard.cards':'カード','ct.mycard.total_views':'合計確認数','ct.mycard.views':'確認','ct.mycard.no_rating':'評価なし',
+    'ct.mycard.title':'🎴 チリカード','ct.mycard.sub':'登録したメニューカード','ct.mycard.empty_title':'まだ登録したカードがありません','ct.mycard.empty_sub':'お店の詳細からメニューカードを追加すると、ここに集まります。','ct.mycard.cards':'カード','ct.mycard.total_views':'合計確認数','ct.mycard.views':'確認','ct.mycard.no_rating':'評価なし','ct.mycard.likes':'いいね','ct.mycard.total_likes':'合計いいね',
     'mode.receipt':'ReceiptIQ','mode.chiri':'チリつも',
     // 헤더
     'header.subtitle':'AI レシート家計簿',
@@ -12717,7 +12732,7 @@ var I18N = {
   ko: {
     'tab.home':'홈','tab.history':'내역','tab.calendar':'달력','tab.map':'맵','tab.profile':'프로필',
     'ct.tab.map':'치즈','ct.tab.talk':'치리토크','ct.tab.reward':'치리워드','ct.tab.mycard':'치리카드',
-    'ct.mycard.title':'🎴 치리카드','ct.mycard.sub':'내가 등록한 메뉴카드','ct.mycard.empty_title':'아직 등록한 카드가 없어요','ct.mycard.empty_sub':'가게 상세에서 메뉴카드를 추가하면 여기에 모여요.','ct.mycard.cards':'카드','ct.mycard.total_views':'총 확인수','ct.mycard.views':'확인','ct.mycard.no_rating':'평가 없음',
+    'ct.mycard.title':'🎴 치리카드','ct.mycard.sub':'내가 등록한 메뉴카드','ct.mycard.empty_title':'아직 등록한 카드가 없어요','ct.mycard.empty_sub':'가게 상세에서 메뉴카드를 추가하면 여기에 모여요.','ct.mycard.cards':'카드','ct.mycard.total_views':'총 확인수','ct.mycard.views':'확인','ct.mycard.no_rating':'평가 없음','ct.mycard.likes':'좋아요','ct.mycard.total_likes':'총 좋아요',
     'mode.receipt':'ReceiptIQ','mode.chiri':'치리츠모',
     'header.subtitle':'AI 영수증 가계부',
     'greeting.morning':'좋은 아침이에요','greeting.afternoon':'좋은 오후예요','greeting.evening':'좋은 저녁이에요',
@@ -12950,7 +12965,7 @@ var I18N = {
   en: {
     'tab.home':'Home','tab.history':'History','tab.calendar':'Calendar','tab.map':'Map','tab.profile':'Profile',
     'ct.tab.map':'Map','ct.tab.talk':'Talk','ct.tab.reward':'Reward','ct.tab.mycard':'Cards',
-    'ct.mycard.title':'🎴 My Cards','ct.mycard.sub':'Menu cards you created','ct.mycard.empty_title':'No cards yet','ct.mycard.empty_sub':'Add menu cards from store details and they will appear here.','ct.mycard.cards':'Cards','ct.mycard.total_views':'Total views','ct.mycard.views':'views','ct.mycard.no_rating':'No rating',
+    'ct.mycard.title':'🎴 My Cards','ct.mycard.sub':'Menu cards you created','ct.mycard.empty_title':'No cards yet','ct.mycard.empty_sub':'Add menu cards from store details and they will appear here.','ct.mycard.cards':'Cards','ct.mycard.total_views':'Total views','ct.mycard.views':'views','ct.mycard.no_rating':'No rating','ct.mycard.likes':'likes','ct.mycard.total_likes':'Total likes',
     'mode.receipt':'ReceiptIQ','mode.chiri':'Chiri',
     'header.subtitle':'AI Receipt Budget',
     'greeting.morning':'Good morning','greeting.afternoon':'Good afternoon','greeting.evening':'Good evening',
@@ -13183,7 +13198,7 @@ var I18N = {
   zh: {
     'tab.home':'主页','tab.history':'记录','tab.calendar':'日历','tab.map':'地图','tab.profile':'个人',
     'ct.tab.map':'地图','ct.tab.talk':'闲谈','ct.tab.reward':'奖励','ct.tab.mycard':'卡片',
-    'ct.mycard.title':'🎴 我的菜单卡','ct.mycard.sub':'我创建的菜单卡','ct.mycard.empty_title':'还没有创建的卡片','ct.mycard.empty_sub':'在店铺详情中添加菜单卡后会显示在这里。','ct.mycard.cards':'卡片','ct.mycard.total_views':'总查看数','ct.mycard.views':'查看','ct.mycard.no_rating':'暂无评价',
+    'ct.mycard.title':'🎴 我的菜单卡','ct.mycard.sub':'我创建的菜单卡','ct.mycard.empty_title':'还没有创建的卡片','ct.mycard.empty_sub':'在店铺详情中添加菜单卡后会显示在这里。','ct.mycard.cards':'卡片','ct.mycard.total_views':'总查看数','ct.mycard.views':'查看','ct.mycard.no_rating':'暂无评价','ct.mycard.likes':'点赞','ct.mycard.total_likes':'总点赞',
     'mode.receipt':'ReceiptIQ','mode.chiri':'Chiri',
     'header.subtitle':'AI 票据账本',
     'greeting.morning':'早上好','greeting.afternoon':'下午好','greeting.evening':'晚上好',
@@ -19597,7 +19612,7 @@ async function _loadAdminMenuCardList() {
   if (!wrap || !_sb) return;
   wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3);">로딩 중...</div>';
   var res = await _sb.from('store_menu_cards')
-    .select('id,store_name,menu_name,price,image_url,view_count,rating_count,created_at')
+    .select('id,store_name,menu_name,price,image_url,view_count,like_count,rating_count,created_at')
     .order('store_name', { ascending:true })
     .order('menu_name', { ascending:true });
   if (res.error) {
@@ -19653,7 +19668,9 @@ function _admMyCardItemHtml(c) {
     : '';
   var meta = (c.price ? '¥'+Number(c.price).toLocaleString() : '-')
     + ' · 👁 ' + (c.view_count||0)
-    + ' · ★' + (c.rating_count||0);
+    + ' · ❤️ ' + (c.like_count||0)
+    + ' · ★' + (c.rating_count||0)
+    + (c.created_at ? ' · '+(c.created_at||'').slice(0,10) : '');
   return '<div style="background:var(--surface);border:.5px solid '+(c._isDup?'var(--red)':'var(--border)')+';border-radius:12px;padding:10px 12px;display:flex;align-items:center;gap:10px;">'
     + img
     + '<div style="flex:1;min-width:0;">'
@@ -26632,6 +26649,7 @@ async function openMenuDetail(cardId){
   _sdCmtPage[cardId] = 0;
   _mdComments = [];
   _mdPhotos = [];
+  _mdLiked = false; _mdLikeCount = (card.like_count||0); // b451 — 좋아요 초기값
   // build 361 — 가게 상세 모달의 stacking context 회피 → body 로 이동
   var ov = document.getElementById('ov-menu-detail');
   if (ov && ov.parentElement !== document.body) {
@@ -26641,13 +26659,61 @@ async function openMenuDetail(cardId){
   _mdRender(); // 즉시 스켈레톤 표시
   // b448 — 확인수 +1 (본인 카드는 RPC 내부에서 제외). fire-and-forget
   if (_sb && cardId) { try { _sb.rpc('increment_menu_view', { p_card_id: cardId }); } catch(e){} }
-  // 댓글 + 사진 병렬 로드 후 재렌더
+  // 댓글 + 사진 + 좋아요 병렬 로드 후 재렌더
   var results = await Promise.all([
     _sdLoadCommentsForCard(cardId),
-    _mdLoadPhotos(cardId)
+    _mdLoadPhotos(cardId),
+    _mdLoadLike(cardId)
   ]);
   _mdComments = results[0] || [];
   _mdRender();
+}
+// b451 — 메뉴 카드 좋아요 상태/수 로드
+var _mdLiked = false, _mdLikeCount = 0;
+async function _mdLoadLike(cardId){
+  _mdLiked = false; _mdLikeCount = 0;
+  if (!_sb || !cardId) return;
+  try {
+    var res = await _sb.from('menu_card_likes').select('user_id').eq('menu_card_id', cardId);
+    if (!res.error) {
+      var data = res.data || [];
+      _mdLikeCount = data.length;
+      if (_currentUser) _mdLiked = data.some(function(r){ return r.user_id === _currentUser.id; });
+    }
+  } catch(e){ console.warn('[mdLoadLike]', e); }
+}
+async function mdToggleLike(){
+  if (!_sb || !_currentUser) { showToast(t('toast.login_required')); return; }
+  if (!_mdCardId) return;
+  // 낙관적 토글
+  _mdLiked = !_mdLiked;
+  _mdLikeCount = Math.max(0, _mdLikeCount + (_mdLiked ? 1 : -1));
+  _mdRenderLikeBtn();
+  try {
+    var r = await _sb.rpc('toggle_menu_card_like', { p_card_id: _mdCardId });
+    if (r.error || !r.data || !r.data.ok) {
+      // 롤백
+      _mdLiked = !_mdLiked;
+      _mdLikeCount = Math.max(0, _mdLikeCount + (_mdLiked ? 1 : -1));
+      _mdRenderLikeBtn();
+      console.warn('[toggle like]', r.error || (r.data && r.data.err));
+      return;
+    }
+    _mdLiked = !!r.data.liked;
+    _mdLikeCount = r.data.count || 0;
+    _mdRenderLikeBtn();
+    // 카드 캐시 동기화 (치리카드/목록 반영)
+    var c = _sdCards.find(function(x){ return x.id === _mdCardId; });
+    if (c) c.like_count = _mdLikeCount;
+  } catch(e){ console.warn('[toggle like] exception', e); }
+}
+function _mdRenderLikeBtn(){
+  var btn = document.getElementById('md-like-btn');
+  if (!btn) return;
+  btn.style.background = _mdLiked ? '#FDE2EC' : 'var(--bg-2)';
+  btn.style.borderColor = _mdLiked ? '#E0245E' : 'var(--border)';
+  btn.innerHTML = '<span style="font-size:17px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
+    + '<span style="font-size:14px;font-weight:800;color:'+(_mdLiked?'#E0245E':'var(--text-2)')+';">'+_mdLikeCount+'</span>';
 }
 function closeMenuDetail(){
   closeOv('ov-menu-detail');
@@ -26808,6 +26874,11 @@ function _mdRender(){
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
       +'<span style="font-size:18px;font-weight:800;color:var(--star);">'+stars+ratingCnt+'</span>'
       +'<span style="font-size:22px;font-weight:800;color:var(--text-1);">'+(card.price?'¥'+Number(card.price).toLocaleString():'')+'</span>'
+    +'</div>'
+    // b451 — 좋아요 버튼 (타 유저가 누름)
+    +'<div onclick="mdToggleLike()" id="md-like-btn" style="display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:9px 18px;border-radius:999px;border:1px solid '+(_mdLiked?'#E0245E':'var(--border)')+';background:'+(_mdLiked?'#FDE2EC':'var(--bg-2)')+';cursor:pointer;">'
+      +'<span style="font-size:17px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
+      +'<span style="font-size:14px;font-weight:800;color:'+(_mdLiked?'#E0245E':'var(--text-2)')+';">'+_mdLikeCount+'</span>'
     +'</div></div>';
 
   // 별점 분포
@@ -27498,7 +27569,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 450;
+window.__APP_BUILD__ = 451;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
