@@ -15616,6 +15616,7 @@ var _QUOTES_BY_LANG = {
 };
 
 var THEMES = {
+  aurora:  { name: '오로라',   color: '#6D3BEA', dark: '#4A1FB8', light: '#EDE7FE', mid: '#B69CF5', grad: 'linear-gradient(135deg,#22D3EE 0%,#3B82F6 25%,#7C3AED 50%,#D6409F 75%,#FB7185 100%)' },
   green:   { name: '에메랄드', color: '#00644D', dark: '#004132', light: '#E0ECEA', mid: '#7FB2A6', grad: 'linear-gradient(140deg,#388674 0%,#00644D 55%,#004132 100%)' },
   blue:    { name: '오션블루', color: '#0279F7', dark: '#014FA1', light: '#E1EFFE', mid: '#80BCFB', grad: 'linear-gradient(140deg,#3A97F9 0%,#0279F7 55%,#014FA1 100%)' },
   purple:  { name: '퍼플',    color: '#380193', dark: '#240160', light: '#E7E0F2', mid: '#9B80C9', grad: 'linear-gradient(140deg,#6439AB 0%,#380193 55%,#240160 100%)' },
@@ -15627,7 +15628,7 @@ var THEMES = {
   lime:    { name: '라임',    color: '#38CF39', dark: '#248725', light: '#E7F9E7', mid: '#9BE79C', grad: 'linear-gradient(140deg,#60E361 0%,#38CF39 55%,#248725 100%)' },
   magenta: { name: '마젠타',  color: '#E30884', dark: '#940556', light: '#FCE1F0', mid: '#F183C2', grad: 'linear-gradient(140deg,#E83A9C 0%,#E30884 55%,#940556 100%)' },
 };
-var _currentTheme = localStorage.getItem('receiptiq_theme') || 'green';
+var _currentTheme = localStorage.getItem('receiptiq_theme') || 'aurora';
 var _isDark = false;
 
 function applyDarkMode(isDark, silent) {
@@ -27653,7 +27654,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 455;
+window.__APP_BUILD__ = 456;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
