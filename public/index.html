@@ -17355,6 +17355,8 @@ async function authGoogle() {
   }
   // 루트로 복귀. standalone이면 URL에 ?pwaret=1 표식 (크롬 탭이 저장소 없이도 인식)
   var redirectTo = window.location.origin + '/' + (isStandalone ? '?pwaret=1' : '');
+  // b467 — 보류 추천코드를 콜백 URL 에 실어 OAuth 중 유실 방지 (복귀 시 재캐치)
+  try { var _prefG = localStorage.getItem('pending_ref'); if (_prefG) redirectTo += (redirectTo.indexOf('?')>=0?'&':'?') + 'ref=' + encodeURIComponent(_prefG); } catch(e){}
   await _sb.auth.signInWithOAuth({
     provider: 'google',
     options: { redirectTo: redirectTo }
@@ -17378,6 +17380,8 @@ async function authLine() {
   }
   // retwork.jp 루트로 복귀. standalone이면 URL에 ?pwaret=1 표식 (크롬 탭이 저장소 없이도 인식)
   var redirectTo = window.location.origin + '/' + (isStandalone ? '?pwaret=1' : '');
+  // b467 — 보류 추천코드를 콜백 URL 에 실어 OAuth 중 유실 방지 (복귀 시 재캐치)
+  try { var _prefL = localStorage.getItem('pending_ref'); if (_prefL) redirectTo += (redirectTo.indexOf('?')>=0?'&':'?') + 'ref=' + encodeURIComponent(_prefL); } catch(e){}
   // Supabase Custom Provider (OIDC) 로 LINE 등록됨 → provider identifier: 'custom:line-v2'
   // (기존 'custom:line'은 Supabase Dashboard 버그로 수정/삭제 불가하여 'line-v2'로 재생성)
   var res = await _sb.auth.signInWithOAuth({
@@ -27733,7 +27737,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 466;
+window.__APP_BUILD__ = 467;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
