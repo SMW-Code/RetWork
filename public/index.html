@@ -26784,8 +26784,16 @@ async function openMenuDetail(cardId){
   }
   openOv('ov-menu-detail');
   _mdRender(); // 즉시 스켈레톤 표시
-  // b448 — 확인수 +1 (본인 카드는 RPC 내부에서 제외). fire-and-forget
-  if (_sb && cardId) { try { _sb.rpc('increment_menu_view', { p_card_id: cardId }); } catch(e){} }
+  // b462 — 확인수 +1: 본인 카드는 클라에서 제외(자기 조회 안 셈), 그 외엔 무조건 +1
+  if (_sb && cardId) {
+    var _vcCard = _sdCards.find(function(c){ return c.id === cardId; });
+    var _isMyCard = _vcCard && _currentUser && _vcCard.created_by && _vcCard.created_by === _currentUser.id;
+    if (!_isMyCard) {
+      _sb.rpc('increment_menu_view', { p_card_id: cardId }).then(function(r){
+        if (r && r.error) console.warn('[increment_menu_view]', r.error.message || r.error);
+      }).catch(function(e){ console.warn('[increment_menu_view]', e); });
+    }
+  }
   // 댓글 + 사진 + 좋아요 병렬 로드 후 재렌더
   var results = await Promise.all([
     _sdLoadCommentsForCard(cardId),
@@ -27698,7 +27706,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 461;
+window.__APP_BUILD__ = 462;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
