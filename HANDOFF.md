@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 446 시점)
+# RetWork (チリつも) — HANDOFF (build 447 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 446** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 447** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
 > 마지막 작업: **2026-06-11** (로고 전면 교체 / 치리츠모 드로우 관리 / 가게·메뉴 공유 카드 + 동적 OG 링크)
 
@@ -25,6 +25,7 @@
 | **442** | 공유 방식 **선택 시트**(`_shareChooser`) — 🔗 링크 공유(OG 프리뷰) / 🖼 이미지 카드 공유 (카카오톡은 이미지 첨부 시 URL 버림 → 분리 필요) |
 | **443~445** | 링크 공유 = 풀 카드 캔버스를 `store-photos/share/`에 업로드 → `/s?i=키&r=레퍼럴코드` 단축 링크 공유. 프리뷰엔 풀 카드, 클릭 시 `retwork.jp/?ref=코드`(추천 보상 보존). `t`/`d` 긴 파라미터 제거로 URL 단축 |
 | **446** | 드로우 더미카드 완전 삭제 — `renderCtDraws` 가 실제 `draws` 행만 렌더 |
+| **447** | **드로우 상세 모달 2종** — 참여 가능(「参加する ✨Nチリ」) / 치리 부족(부족분 안내 + 「広告を見てチリを受け取る」→ 리워드 탭 광고 아코디언). 공통 상단(チリドロー/사진/상품명/추첨형 타원 배지/일정/광고카드). 응모는 서버 RPC `enter_draw`(코인 차감+entry 누적 원자처리) ★ `draw_enter_rpc.sql` 실행 필요 |
 
 ### 공유 기능 핵심 (`sdShareStore` / `mdShareMenu`)
 - 공유 버튼 → `_shareChooser` 시트 → 링크/이미지 선택
@@ -43,7 +44,8 @@
 - 7편째 글: `buta-daigaku-jimbocho.md` (神保町 豚大学 豚丼 리뷰 ★3.0, 사진 7장)
 
 ### ⚠️ 이번 세션 SQL — Supabase 실행 필요
-- **`draws_admin.sql`** (b432) — `draws` 테이블 sort_order/description 컬럼 + RLS. **이미 실행 완료**(사용자 확인)
+- **`draws_admin.sql`** (b432) — `draws` 테이블 sort_order/description 컬럼 + RLS. **실행 완료**(사용자 확인)
+- **`draw_enter_rpc.sql`** (b447) — 드로우 응모 RPC `enter_draw`(SECURITY DEFINER, 코인 차감+entry 누적). **실행 완료**(사용자 확인). security_patch 가 draw_entries UPDATE 를 REVOKE 했으므로 이 RPC 없으면 응모 실패
 
 ### 🔧 남은 정리 작업
 - ~~드로우 더미카드 끄기~~ → **b446 에서 완전 삭제 완료** (`_DRAW_SHOW_DUMMIES`/`_DRAW_DUMMIES` 제거, 실제 draws 행만 렌더)
@@ -156,8 +158,8 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 446;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b446';
+public/index.html → window.__APP_BUILD__ = 447;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b447';
 ```
 > ⚠️ 빌드 시 **두 곳 모두** 같은 번호로 올릴 것 (안 맞으면 SW 캐시 갱신 안 됨).
 > 인라인 스크립트 문법 검증: `node -e "...new Function..."` (배포 전 습관).
