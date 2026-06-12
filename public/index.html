@@ -4985,9 +4985,9 @@ function ctAddCoin(amount, desc, type) {
         // 사용자 안내
         var err = (r.data && r.data.err) || (r.error && r.error.message) || 'unknown';
         if (err === 'daily_limit') {
-          showToast('🚫 오늘 적립 한도를 초과했어요 (' + (r.data.limit||'?') + '회/일)');
+          showToast(t('coin.daily_limit',{limit:(r.data.limit||'?')}));
         } else if (err === 'cooldown') {
-          showToast('⏳ ' + (r.data.wait_sec || r.data.retry_sec || '') + '초 후 다시 시도해주세요');
+          showToast(t('coin.cooldown',{sec:(r.data.wait_sec||r.data.retry_sec||'')}));
         } else if (err === 'invalid_type' || err === 'amount_oob') {
           console.warn('[coin] invalid call:', err, finalType, amount);
         } else {
@@ -8267,8 +8267,8 @@ function saveManualEntry() {
   var selPay = document.querySelector('#manual-pay-select .pay-chip-sel.sel');
   var pay   = selPay ? selPay.getAttribute('data-pay') : null;
 
-  if (!date) { alert('날짜를 입력해주세요.'); return; }
-  if (total <= 0) { alert('금액을 입력해주세요.'); return; }
+  if (!date) { alert(t('manual.date_req')); return; }
+  if (total <= 0) { alert(t('manual.amount_req')); return; }
 
   var items = _manualItems.filter(function(it){ return it.name || it.price > 0; })
     .map(function(it){ return { name: it.name||'품목', qty: it.qty||1, price: it.price * (it.qty||1) }; });
@@ -9247,7 +9247,7 @@ function _mrBuildCardCanvas(){
     var y=_mrY, m=_mrM;
     var key = y+'-'+String(m).padStart(2,'0');
     var cur = (typeof DB!=='undefined'?DB:[]).filter(function(r){return r.date && r.date.indexOf(key)===0;});
-    if (!cur.length) { if(typeof showToast==='function') showToast('이번 달 데이터가 없어요'); return null; }
+    if (!cur.length) { if(typeof showToast==='function') showToast(t('mr.no_data')); return null; }
 
     var total = cur.reduce(function(s,r){return s+(r.total||0);},0);
     var count = cur.length;
@@ -9622,7 +9622,7 @@ function cancelMultiScan() {
 function handleMultiImageFile(input) {
   if (!input.files || !input.files[0]) return;
   if (multiPages.length >= 5) {
-    alert('최대 5장까지 추가할 수 있어요.');
+    alert(t('photo.max5'));
     return;
   }
   var file = input.files[0];
@@ -11804,12 +11804,12 @@ function _checkAndFormatYMD(y, mo, d, raw){
   if (diffYears > 5) {
     console.warn('[receipt date] 5+ years past — 확인 필요:', raw, '→', y);
     if (typeof showToast === 'function') {
-      setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 — 확인해 주세요'); }, 600);
+      setTimeout(function(){ showToast(t('date.past_warn',{y:y})); }, 600);
     }
   } else if (diffYears < -1) {
     console.warn('[receipt date] 1+ year future:', raw, '→', y);
     if (typeof showToast === 'function') {
-      setTimeout(function(){ showToast('⚠️ 영수증 날짜 '+y+'년 (미래). 확인해 주세요'); }, 600);
+      setTimeout(function(){ showToast(t('date.future_warn',{y:y})); }, 600);
     }
   }
   return _formatYMD(y, mo, d);
@@ -12458,6 +12458,13 @@ var I18N = {
     // 프리미엄/플랜
     'share.making':'🖼 共有カードを作成中...','share.link_copied':'🔗 リンクをコピーしました！','share.img_saved':'🖼 カード画像を保存・リンクをコピー','share.copied':'📋 コピーしました！','share.menu_not_found':'メニュー情報が見つかりません',
     'draw.insufficient':'チリが不足しています','draw.max_entries':'参加可能回数を使い切りました','draw.closed':'応募期間外です','draw.fail':'応募に失敗しました','draw.complete':'🎫 応募完了！抽選をお楽しみに','toast.process_fail':'処理に失敗しました',
+    'ref.done':'🎁 紹介が完了しました！紹介者にも報酬が入ります。','ref.no_reward':'受け取れる紹介報酬がありません','ref.cap':'本日の紹介報酬の上限（{cap}件）に達しました。明日また受け取れます','ref.cap_simple':'本日の紹介報酬の上限に達しました','ref.invite_fail':'招待リンクの作成に失敗しました',
+    'coin.daily_limit':'🚫 本日の獲得上限に達しました（{limit}回/日）','coin.cooldown':'⏳ {sec}秒後にもう一度お試しください',
+    'ser.too_short':'内容をもう少し詳しく入力してください','ser.send_fail':'送信に失敗しました。しばらくして再度お試しください','ser.send_fail2':'送信に失敗しました',
+    'prof.img_applied':'✅ 画像を適用しました！保存を押してください。','prof.img_upload_fail':'画像アップロード失敗: {msg}','prof.img_error':'画像処理エラー: {msg}','prof.saved':'✅ プロフィールを保存しました！',
+    'manual.date_req':'日付を入力してください。','manual.amount_req':'金額を入力してください。','mr.no_data':'今月のデータがありません','photo.max5':'最大5枚まで追加できます。',
+    'mdc.ph':'このメニューはいかがでしたか？','mdc.select_rating':'評価（星）を選択してください',
+    'pin.tap_set':'📍 地図をタップして「{store}」の位置を設定してください','pin.saved':'✅「{store}」の位置を保存しました！','premium.coming':'🚀 プレミアム購読機能は準備中です！','date.past_warn':'⚠️ レシートの日付 {y}年 — ご確認ください','date.future_warn':'⚠️ レシートの日付 {y}年（未来）。ご確認ください',
     'premium.title':'プレミアム アップグレード','premium.sub':'スキャン無制限 · 広告非表示','premium.unit':'/月',
     'plan.free':'無料プラン','plan.premium':'プレミアム',
     // 설정
@@ -12743,6 +12750,13 @@ var I18N = {
     'greeting.morning':'좋은 아침이에요','greeting.afternoon':'좋은 오후예요','greeting.evening':'좋은 저녁이에요',
     'share.making':'🖼 공유 카드 만드는 중...','share.link_copied':'🔗 링크를 복사했어요!','share.img_saved':'🖼 카드 이미지 저장 · 링크 복사됨','share.copied':'📋 복사했어요!','share.menu_not_found':'메뉴 정보를 찾을 수 없어요',
     'draw.insufficient':'치리가 부족해요','draw.max_entries':'참여 가능 횟수를 모두 사용했어요','draw.closed':'응모 기간이 아니에요','draw.fail':'응모에 실패했어요','draw.complete':'🎫 응모 완료! 추첨을 기대해주세요','toast.process_fail':'처리에 실패했어요',
+    'ref.done':'🎁 추천이 완료됐어요! 추천해주신 분께 보상이 적립됩니다.','ref.no_reward':'받을 추천 보상이 없어요','ref.cap':'오늘 추천 보상 한도({cap}건)에 도달했어요. 내일 다시 받을 수 있어요','ref.cap_simple':'오늘 추천 보상 한도에 도달했어요','ref.invite_fail':'초대 링크 생성 실패',
+    'coin.daily_limit':'🚫 오늘 적립 한도를 초과했어요 ({limit}회/일)','coin.cooldown':'⏳ {sec}초 후 다시 시도해주세요',
+    'ser.too_short':'내용을 조금 더 자세히 적어주세요','ser.send_fail':'전송 실패. 잠시 후 다시 시도해주세요','ser.send_fail2':'전송 실패',
+    'prof.img_applied':'✅ 이미지가 적용됐어요! 저장을 눌러주세요.','prof.img_upload_fail':'이미지 업로드 실패: {msg}','prof.img_error':'이미지 처리 에러: {msg}','prof.saved':'✅ 프로필이 저장됐어요!',
+    'manual.date_req':'날짜를 입력해주세요.','manual.amount_req':'금액을 입력해주세요.','mr.no_data':'이번 달 데이터가 없어요','photo.max5':'최대 5장까지 추가할 수 있어요.',
+    'mdc.ph':'이 메뉴 어땠나요?','mdc.select_rating':'별점을 선택해주세요',
+    'pin.tap_set':'📍 지도를 탭해서 "{store}" 위치를 설정하세요','pin.saved':'✅ "{store}" 위치가 저장됐어요!','premium.coming':'🚀 프리미엄 구독 기능은 준비 중이에요!','date.past_warn':'⚠️ 영수증 날짜 {y}년 — 확인해 주세요','date.future_warn':'⚠️ 영수증 날짜 {y}년 (미래). 확인해 주세요',
     'premium.title':'프리미엄 업그레이드','premium.sub':'무제한 스캔 · 광고 제거','premium.unit':'/월',
     'plan.free':'무료 플랜','plan.premium':'프리미엄',
     'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
@@ -12978,6 +12992,13 @@ var I18N = {
     'greeting.morning':'Good morning','greeting.afternoon':'Good afternoon','greeting.evening':'Good evening',
     'share.making':'🖼 Creating share card...','share.link_copied':'🔗 Link copied!','share.img_saved':'🖼 Image saved · link copied','share.copied':'📋 Copied!','share.menu_not_found':'Menu not found',
     'draw.insufficient':'Not enough Chiri','draw.max_entries':'No entries left','draw.closed':'Entry period closed','draw.fail':'Entry failed','draw.complete':'🎫 Entry complete! Good luck','toast.process_fail':'Action failed',
+    'ref.done':'🎁 Referral complete! Your referrer gets a reward too.','ref.no_reward':'No referral rewards to claim','ref.cap':'Daily referral reward limit ({cap}) reached. Try again tomorrow','ref.cap_simple':'Daily referral reward limit reached','ref.invite_fail':'Failed to create invite link',
+    'coin.daily_limit':'🚫 Daily earn limit reached ({limit}/day)','coin.cooldown':'⏳ Try again in {sec}s',
+    'ser.too_short':'Please add a bit more detail','ser.send_fail':'Send failed. Please try again later','ser.send_fail2':'Send failed',
+    'prof.img_applied':'✅ Image applied! Tap Save.','prof.img_upload_fail':'Image upload failed: {msg}','prof.img_error':'Image error: {msg}','prof.saved':'✅ Profile saved!',
+    'manual.date_req':'Please enter a date.','manual.amount_req':'Please enter an amount.','mr.no_data':'No data this month','photo.max5':'You can add up to 5 photos.',
+    'mdc.ph':'How was this menu?','mdc.select_rating':'Please select a rating',
+    'pin.tap_set':'📍 Tap the map to set "{store}" location','pin.saved':'✅ "{store}" location saved!','premium.coming':'🚀 Premium subscription is coming soon!','date.past_warn':'⚠️ Receipt date {y} — please check','date.future_warn':'⚠️ Receipt date {y} (future). Please check',
     'premium.title':'Premium Upgrade','premium.sub':'Unlimited scans · Ad-free','premium.unit':'/mo',
     'plan.free':'Free plan','plan.premium':'Premium',
     'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
@@ -13213,6 +13234,13 @@ var I18N = {
     'greeting.morning':'早上好','greeting.afternoon':'下午好','greeting.evening':'晚上好',
     'share.making':'🖼 正在生成分享卡...','share.link_copied':'🔗 已复制链接！','share.img_saved':'🖼 已保存图片·已复制链接','share.copied':'📋 已复制！','share.menu_not_found':'未找到菜单信息',
     'draw.insufficient':'Chiri不足','draw.max_entries':'参与次数已用完','draw.closed':'不在报名期内','draw.fail':'报名失败','draw.complete':'🎫 报名完成！敬请期待抽奖','toast.process_fail':'处理失败',
+    'ref.done':'🎁 推荐完成！推荐人也会获得奖励。','ref.no_reward':'没有可领取的推荐奖励','ref.cap':'今日推荐奖励上限（{cap}）已达。明天可再领取','ref.cap_simple':'今日推荐奖励上限已达','ref.invite_fail':'邀请链接生成失败',
+    'coin.daily_limit':'🚫 已达今日获取上限（{limit}次/日）','coin.cooldown':'⏳ 请{sec}秒后重试',
+    'ser.too_short':'请再详细填写一些','ser.send_fail':'发送失败。请稍后重试','ser.send_fail2':'发送失败',
+    'prof.img_applied':'✅ 已应用图片！请点击保存。','prof.img_upload_fail':'图片上传失败: {msg}','prof.img_error':'图片处理错误: {msg}','prof.saved':'✅ 个人资料已保存！',
+    'manual.date_req':'请输入日期。','manual.amount_req':'请输入金额。','mr.no_data':'本月暂无数据','photo.max5':'最多可添加5张。',
+    'mdc.ph':'这道菜如何？','mdc.select_rating':'请选择评分',
+    'pin.tap_set':'📍 点击地图设置「{store}」位置','pin.saved':'✅ 已保存「{store}」位置！','premium.coming':'🚀 高级订阅功能即将推出！','date.past_warn':'⚠️ 收据日期 {y}年 — 请确认','date.future_warn':'⚠️ 收据日期 {y}年（未来）。请确认',
     'premium.title':'升级高级版','premium.sub':'无限扫描 · 无广告','premium.unit':'/月',
     'plan.free':'免费版','plan.premium':'高级版',
     'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
@@ -15138,7 +15166,7 @@ var _manualPinListener = null;
 
 function startManualPin(storeName) {
   _manualPinStore = storeName;
-  showToast('📍 지도를 탭해서 "' + storeName + '" 위치를 설정하세요');
+  showToast(t('pin.tap_set',{store:storeName}));
   if (_manualPinListener) google.maps.event.removeListener(_manualPinListener);
   _manualPinListener = _map.addListener('click', function(e) {
     var lat = e.latLng.lat();
@@ -15157,7 +15185,7 @@ function startManualPin(storeName) {
       .eq('user_id', _currentUser ? _currentUser.id : null)
       .then(function() { renderMapPins(); });
 
-    showToast('✅ "' + _manualPinStore + '" 위치가 저장됐어요!');
+    showToast(t('pin.saved',{store:_manualPinStore}));
   });
 }
 
@@ -16435,7 +16463,7 @@ function confirmCrop() {
   if (spDisp) spDisp.innerHTML = '<img src="'+_userAvatarImg+'" style="width:100%;height:100%;object-fit:cover;" alt="">';
 
   _closeCropper();
-  showToast('✅ 이미지가 적용됐어요! 저장을 눌러주세요.');
+  showToast(t('prof.img_applied'));
 }
 
 function _closeCropper() {
@@ -16468,7 +16496,7 @@ async function saveProfile() {
         var path = 'avatars/' + _currentUser.id + '/' + Date.now() + '.jpg';
         var up = await _sb.storage.from('store-photos').upload(path, blob, { upsert: true, contentType: 'image/jpeg' });
         if (up.error) {
-          showToast('이미지 업로드 실패: ' + up.error.message);
+          showToast(t('prof.img_upload_fail',{msg:up.error.message}));
           return;
         }
         var pub = _sb.storage.from('store-photos').getPublicUrl(path);
@@ -16477,7 +16505,7 @@ async function saveProfile() {
           _userAvatarImg = avatarUrlForDB; // localStorage에도 URL로 저장 → 작음
         }
       } catch(e) {
-        showToast('이미지 처리 에러: ' + (e.message||e));
+        showToast(t('prof.img_error',{msg:(e.message||e)}));
         return;
       }
     } else {
@@ -16513,7 +16541,7 @@ async function saveProfile() {
   // 피커 닫기
   var panel = document.getElementById('profile-edit-panel');
   if (panel) panel.style.display = 'none';
-  showToast('✅ 프로필이 저장됐어요!');
+  showToast(t('prof.saved'));
 }
 
 // 로그인 시 Supabase profiles에서 프로필 불러와서 로컬에 반영
@@ -17001,7 +17029,7 @@ function ctCloseFullscreenAd() {
 }
 
 function openPremium() {
-  showToast('🚀 프리미엄 구독 기능은 준비 중이에요!');
+  showToast(t('premium.coming'));
 }
 
 var _showAppDeferCount = 0;
@@ -17758,7 +17786,7 @@ async function submitStoreEditReq(){
   var content=ta?ta.value.trim():'';
   if(req.kind==='location'){
     if(!content) content='（位置の修正リクエスト・詳細なし）';
-  } else if(content.length<3){ showToast('내용을 조금 더 자세히 적어주세요'); return; }
+  } else if(content.length<3){ showToast(t('ser.too_short')); return; }
   if(!_sb||!_currentUser){ showToast(t('toast.login_required')); return; }
   var btn=document.getElementById('ser-submit-btn');
   if(btn){ btn.disabled=true; btn.textContent='送信中...'; }
@@ -17778,9 +17806,9 @@ async function submitStoreEditReq(){
       delete payload.kind;
       res=await _sb.from('store_edit_requests').insert(payload);
     }
-    if(res.error){ console.warn('[edit req]', res.error); showToast('전송 실패. 잠시 후 다시 시도해주세요'); }
+    if(res.error){ console.warn('[edit req]', res.error); showToast(t('ser.send_fail')); }
     else { closeOv('ov-store-edit-req'); showToast(req.kind==='location'?'📍 位置修正リクエストを受け付けました。確認後に反映されます。':t('sd.req_edit_done')); }
-  } catch(e){ console.warn('[edit req]', e); showToast('전송 실패'); }
+  } catch(e){ console.warn('[edit req]', e); showToast(t('ser.send_fail2')); }
   if(btn){ btn.disabled=false; btn.textContent='送信する'; }
 }
 /* build 439 — 가게 공유 v2: 공유 카드 이미지(캔버스) + チリつも 링크
@@ -27145,7 +27173,7 @@ function _sdCommentFormHtml(cardId,commentId,initStar,initText){
   for(var i=1;i<=5;i++)
     h+='<span class="sd-star-sel" id="cst-'+cardId+'-'+i+'" onclick="sdPickStar(\''+cardId+'\','+i+')" style="color:'+(i<=initStar?'var(--star)':'var(--star-empty)')+';">'+(i<=initStar?'★':'☆')+'</span>';
   h+='</div>';
-  h+='<textarea id="sd-ct-'+cardId+'" placeholder="이 메뉴 어땠나요?" style="width:100%;border:1px solid var(--border-mid);border-radius:10px;padding:9px 12px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:8px;">'+(initText||'')+'</textarea>';
+  h+='<textarea id="sd-ct-'+cardId+'" placeholder="'+t('mdc.ph')+'" style="width:100%;border:1px solid var(--border-mid);border-radius:10px;padding:9px 12px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--bg);resize:none;height:60px;box-sizing:border-box;outline:none;display:block;margin-bottom:8px;">'+(initText||'')+'</textarea>';
   h+='<button onclick="sdSubmitComment(\''+cardId+'\''+(commentId?',\''+commentId+'\'':',null')+')" style="width:100%;padding:10px;border-radius:10px;border:none;background:var(--green-grad);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">'+(commentId?'수정하기':'평가 등록')+'</button>';
   if(commentId) h+='<div onclick="sdCancelEdit(\''+cardId+'\')" style="text-align:center;color:var(--text-3);font-size:12px;margin-top:8px;cursor:pointer;padding:4px;">취소</div>';
   h+='</div>';
@@ -27159,7 +27187,7 @@ async function sdSubmitComment(cardId,existingId){
   if(!_currentUser||!_sb) return;
   var st=_sdCStar[cardId]||0;
   var tx=(document.getElementById('sd-ct-'+cardId)||{value:''}).value.trim();
-  if(!st){alert('별점을 선택해주세요');return;}
+  if(!st){alert(t('mdc.select_rating'));return;}
   // 벤워드 사전 검사
   if(tx){
     var banned = await _checkContentForBannedWord(tx);
@@ -27670,7 +27698,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 459;
+window.__APP_BUILD__ = 460;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -27760,7 +27788,7 @@ window._redeemPendingRef = async function _redeemPendingRef(){
     var d = res.data || {};
     if (d.ok){
       try{localStorage.removeItem('pending_ref');}catch(e){}
-      if (typeof showToast === 'function') showToast('🎁 추천이 완료됐어요! 추천해주신 분께 보상이 적립됩니다.');
+      if (typeof showToast === 'function') showToast(t('ref.done'));
       // build 316 — 추천자에게 푸시 알림 (친구 가입 알림)
       if (d.referrer) {
         var myName = (document.getElementById('sp-nickname-display') || {}).textContent || 'ゲスト';
@@ -27837,9 +27865,9 @@ window.claimReferralRewardViaAd = async function claimReferralRewardViaAd(){
   if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast(t('toast.login_required')); return; }
   await loadReferralStatus();
   var s = window._refStatus || {};
-  if ((s.pending||0) <= 0) { if (typeof showToast==='function') showToast('받을 추천 보상이 없어요'); return; }
+  if ((s.pending||0) <= 0) { if (typeof showToast==='function') showToast(t('ref.no_reward')); return; }
   if ((s.claimable_today||0) <= 0) {
-    if (typeof showToast==='function') showToast('오늘 추천 보상 한도(' + (s.cap||10) + '건)에 도달했어요. 내일 다시 받을 수 있어요');
+    if (typeof showToast==='function') showToast(t('ref.cap',{cap:(s.cap||10)}));
     return;
   }
   // 전체화면 광고 → 완료 콜백에서 1건 청구 (광고 1회 = 보상 1건)
@@ -27855,9 +27883,9 @@ window.claimReferralRewardViaAd = async function claimReferralRewardViaAd(){
         }
         await loadReferralStatus();
       } else if (d.err === 'daily_cap') {
-        if (typeof showToast==='function') showToast('오늘 추천 보상 한도에 도달했어요');
+        if (typeof showToast==='function') showToast(t('ref.cap_simple'));
       } else if (d.err === 'no_pending') {
-        if (typeof showToast==='function') showToast('받을 추천 보상이 없어요');
+        if (typeof showToast==='function') showToast(t('ref.no_reward'));
       } else {
         console.warn('[ref claim]', d.err || res.error);
       }
@@ -27879,7 +27907,7 @@ window.ctInviteShare = async function ctInviteShare(){
     try { await _sb.from('profiles').update({ referral_code: code }).eq('id', _currentUser.id); }
     catch(e) { console.warn('[invite] code save failed', e); }
   }
-  if (!code) { if (typeof showToast==='function') showToast('초대 링크 생성 실패'); return; }
+  if (!code) { if (typeof showToast==='function') showToast(t('ref.invite_fail')); return; }
   var url = 'https://retwork.jp?ref=' + code;
   var text = '🎁 RetWork でレシート家計簿、はじめよう!\nAIが自動入力、節約も楽しく 📸\n' + url;
   // 카톡/라인 등 chat 앱이 받을 때 URL 중복 노출 + 링크 프리뷰 카드의 canonical URL 사용 문제 회피:
