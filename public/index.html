@@ -23532,23 +23532,38 @@ function _renderAdminDetail() {
     }
   }
 
-  // b453 — 가게 중복 의심 마킹 (같은 정규화 이름 2개 이상)
+  // b454 — 가게 중복 의심 마킹: 같은 이름(정규화) OR 같은 위치(좌표 3자리, ~100m)
+  //   OCR 이 신자체/구자체(豊/豐)를 다르게 인식해도 좌표로 잡음
   if (_admDetailType === 'stores') {
     var _normStore = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC').toLowerCase(); };
-    var sGroups = {};
-    filtered.forEach(function(s){ var k=_normStore(s.name); if(!sGroups[k]) sGroups[k]=[]; sGroups[k].push(s); });
-    var sDupTotal = 0;
-    Object.keys(sGroups).forEach(function(k){
-      var arr = sGroups[k];
-      if (arr.length > 1) {
-        arr.sort(function(a,b){ return (a.created_at||'').localeCompare(b.created_at||''); });
-        arr.forEach(function(s, idx){ s._isDup = idx>0; s._isOrigin = idx===0; s._dupGroupSize = arr.length; });
-        sDupTotal += (arr.length - 1);
-      } else { arr[0]._isDup = false; arr[0]._dupGroupSize = 1; }
+    var _coordKey = function(s){
+      if (s.lat == null || s.lng == null) return null;
+      return parseFloat(s.lat).toFixed(3) + ',' + parseFloat(s.lng).toFixed(3);
+    };
+    var byName = {}, byCoord = {};
+    filtered.forEach(function(s){
+      s._isDup = false; s._isOrigin = false; s._dupGroupSize = 1;
+      var nk = _normStore(s.name); if (nk) { (byName[nk] = byName[nk] || []).push(s); }
+      var ck = _coordKey(s);       if (ck) { (byCoord[ck] = byCoord[ck] || []).push(s); }
     });
+    var _markGroup = function(groups){
+      Object.keys(groups).forEach(function(k){
+        var arr = groups[k];
+        if (arr.length <= 1) return;
+        arr.sort(function(a,b){ return (a.created_at||'').localeCompare(b.created_at||''); });
+        arr.forEach(function(s, idx){
+          s._dupGroupSize = Math.max(s._dupGroupSize || 1, arr.length);
+          if (idx > 0) s._isDup = true;
+        });
+      });
+    };
+    _markGroup(byName); _markGroup(byCoord);
+    // 그룹 내 _isDup 아닌 첫 행은 원본 표시
+    filtered.forEach(function(s){ if (s._dupGroupSize > 1 && !s._isDup) s._isOrigin = true; });
+    var sDupTotal = filtered.filter(function(s){ return s._isDup; }).length;
     if (sDupTotal > 0) {
       dupBanner = '<div style="background:#FEF3C7;border:1px solid #F59E0B;border-radius:8px;padding:8px 10px;margin-bottom:8px;">'
-        + '<span style="font-size:11px;color:#92400E;font-weight:700;">🔁 중복 의심 가게 ' + sDupTotal + '개 — 같은 이름. 🔴중복 표시된 행의 삭제 버튼으로 정리하세요(가장 오래된 1개는 원본으로 보존).</span>'
+        + '<span style="font-size:11px;color:#92400E;font-weight:700;">🔁 중복 의심 가게 ' + sDupTotal + '개 — 같은 이름 또는 같은 위치. 🔴중복 행을 삭제하세요(가장 오래된 1개는 ✓원본 보존).</span>'
         + '</div>';
     }
   }
@@ -24798,7 +24813,7 @@ async function admSaveReceipt() {
 
 function _renderStoreRow(s) {
   var locStr = (s.lat && s.lng) ? '📍 '+parseFloat(s.lat).toFixed(4)+', '+parseFloat(s.lng).toFixed(4) : '위치 없음';
-  // b453 — 중복 그룹 배지 + 삭제 버튼
+  // b454 — 중복 배지(자동판정) + 삭제 버튼(모든 가게 노출)
   var inDupGroup = s._dupGroupSize > 1;
   var badge = '';
   if (inDupGroup) {
@@ -24806,9 +24821,7 @@ function _renderStoreRow(s) {
       ? '<span style="background:var(--red-bg);color:var(--red);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;flex-shrink:0;">🔴 중복</span>'
       : '<span style="background:var(--green-light);color:var(--green-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;flex-shrink:0;">✓ 원본</span>';
   }
-  var delBtn = inDupGroup
-    ? '<button onclick="event.stopPropagation();adminDeleteStoreFromList(\''+s.id+'\')" style="background:var(--red-bg);color:var(--red);border:none;border-radius:7px;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;flex-shrink:0;font-family:var(--font);">삭제</button>'
-    : '';
+  var delBtn = '<button onclick="event.stopPropagation();adminDeleteStoreFromList(\''+s.id+'\')" style="background:var(--red-bg);color:var(--red);border:none;border-radius:7px;padding:4px 10px;font-size:10px;font-weight:800;cursor:pointer;flex-shrink:0;font-family:var(--font);">삭제</button>';
   return '<div onclick="openAdminStoreDetail(\''+s.id+'\')" style="cursor:pointer;background:var(--surface);border:.5px solid '+(s._isDup?'var(--red)':'var(--border)')+';border-radius:10px;padding:9px 12px;transition:transform .12s;">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;">'
     +   '<span style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">🏪 '+_esc(s.name||'(이름 없음)')+' ›'+_newBadgeIfRecent(s.created_at)+'</span>'
@@ -27623,7 +27636,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 453;
+window.__APP_BUILD__ = 454;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
