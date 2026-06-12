@@ -5644,31 +5644,141 @@ function _drawRemainText(endsAt) {
   return '残り' + m + '分';
 }
 
-// 드로우 상세 모달 — 기본 버전 (사용자가 추후 업데이트 예정)
-function ctOpenDrawDetail(id) {
+// 일정 포맷 — "6/10 11:00 ~ 6/13 10:59"
+function _drawFmtDate(iso) {
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function _drawSchedule(d) {
+  var s = d.starts_at ? _drawFmtDate(d.starts_at) : '';
+  var e = d.ends_at ? _drawFmtDate(d.ends_at) : '';
+  if (s && e) return s + ' ~ ' + e;
+  return e || s || '';
+}
+
+// 드로우 상세 모달 — 참여 가능 / 치리 부족 두 케이스 (b447)
+async function ctOpenDrawDetail(id) {
   var d = _ctDrawsCache.find(function(x){ return x.id === id; });
   if (!d) return;
   var box = document.getElementById('draw-detail-content');
   if (!box) return;
+
+  // 내 참여 누적 횟수 조회 → 남은 응모 가능 횟수
+  var entered = 0;
+  if (_sb && _currentUser) {
+    try {
+      var er = await _sb.from('draw_entries').select('entry_count').eq('draw_id', id).eq('user_id', _currentUser.id).maybeSingle();
+      entered = (er.data && er.data.entry_count) || 0;
+    } catch(e){ console.warn('[draw entry load]', e); }
+  }
+  var maxE = d.max_entries_per_user || 1;
+  var remainEntries = Math.max(0, maxE - entered);
+  var cost = d.coin_cost || 0;
+  var bal = _ctCoinBalance || 0;
+  var enough = bal >= cost;
+  var schedule = _drawSchedule(d);
+
+  // ── 공통 상단 ──
   var img = d.image_url
     ? '<div style="height:200px;background:url('+_esc(d.image_url).replace(/'/g,'%27')+') center/cover;border-radius:14px;margin-bottom:14px;"></div>'
     : '<div style="height:200px;background:linear-gradient(135deg,var(--gold-light),#fff);border-radius:14px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;font-size:64px;">🎁</div>';
-  var endTxt = d.ends_at ? _drawRemainText(d.ends_at) : '';
-  box.innerHTML = img
-    + '<div style="font-size:19px;font-weight:900;color:var(--text-1);margin-bottom:6px;">'+_esc(d.title)+'</div>'
-    + (d.description ? '<div style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:14px;">'+_esc(d.description)+'</div>' : '')
-    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">'
-    +   '<div style="background:var(--gold-light);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--gold-dark);">✨ '+d.coin_cost+'チリ</div>'
-    +   '<div style="background:var(--bg-2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text-2);">🏆 '+d.winner_count+'名当選</div>'
-    +   '<div style="background:var(--bg-2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text-2);">1人最大'+d.max_entries_per_user+'回</div>'
-    +   (endTxt ? '<div style="background:var(--bg-2);border-radius:20px;padding:7px 14px;font-size:13px;font-weight:700;color:var(--text-2);">⏳ '+endTxt+'</div>' : '')
+
+  var head = '<div style="font-size:12px;font-weight:800;color:var(--gold-dark);letter-spacing:.5px;margin-bottom:10px;">🎫 チリドロー</div>'
+    + img
+    + '<div style="font-size:20px;font-weight:900;color:var(--text-1);margin-bottom:10px;line-height:1.3;">'+_esc(d.title)+'</div>'
+    // 추첨형 타원 배지
+    + '<div style="display:inline-flex;align-items:center;gap:6px;background:var(--gold-light);border:1px solid var(--gold);border-radius:999px;padding:7px 16px;margin-bottom:12px;">'
+    +   '<span style="font-size:13px;">🎰</span><span style="font-size:13px;font-weight:800;color:var(--gold-dark);">抽選型・ランダム抽選</span>'
     + '</div>'
-    + '<button onclick="showToast(\'🎫 応募機能は準備中です\')" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);">🎫 応募する（準備中）</button>'
-    + '<div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">※ 詳細・応募フローは今後アップデート予定</div>';
+    // 일정
+    + (schedule ? '<div style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2);font-weight:600;margin-bottom:6px;"><span>🗓</span><span>'+_esc(schedule)+'</span></div>' : '')
+    + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">'
+    +   '<span style="background:var(--bg-2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--text-2);">🏆 '+d.winner_count+'名当選</span>'
+    +   '<span style="background:var(--bg-2);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:700;color:var(--text-2);">残り応募 '+remainEntries+'/'+maxE+'回</span>'
+    + '</div>'
+    + '<div style="font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:16px;">応募券（'+cost+'チリ）でランダム抽選に参加します。</div>'
+    // 광고 영역 카드
+    + '<div id="draw-ad-slot" style="border:1px dashed var(--border-mid);border-radius:14px;min-height:120px;display:flex;align-items:center;justify-content:center;background:var(--bg-2);margin-bottom:18px;overflow:hidden;">'
+    +   '<div style="text-align:center;color:var(--text-3);font-size:11px;"><div style="font-size:24px;margin-bottom:4px;">📺</div>広告</div>'
+    + '</div>';
+
+  // ── 케이스별 하단 ──
+  var foot;
+  if (remainEntries <= 0) {
+    // 응모 횟수 소진
+    foot = '<div style="background:var(--bg-2);border-radius:14px;padding:16px;text-align:center;font-size:13px;color:var(--text-2);line-height:1.6;margin-bottom:8px;">'
+      + '今回の応募可能回数（'+maxE+'回）をすべて使い切りました。<br>抽選結果をお楽しみに！</div>'
+      + '<button disabled style="width:100%;padding:15px;border:none;border-radius:14px;background:var(--border-mid);color:#fff;font-size:15px;font-weight:900;font-family:var(--font);opacity:.7;">応募済み</button>';
+  } else if (enough) {
+    // 참여 가능
+    foot = '<button onclick="ctEnterDraw(\''+d.id+'\')" style="width:100%;padding:16px;border:none;border-radius:14px;background:var(--gold);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;">'
+      + '<span>参加する</span><span style="background:rgba(255,255,255,.25);border-radius:10px;padding:3px 10px;font-size:13px;">✨ '+cost+'チリ</span>'
+      + '</button>'
+      + '<div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">保有チリ: '+bal+'</div>';
+  } else {
+    // 치리 부족
+    var lack = cost - bal;
+    foot = '<div style="background:#FFF4E5;border:1px solid #FFD9A0;border-radius:14px;padding:16px;margin-bottom:12px;">'
+      + '<div style="font-size:13px;font-weight:800;color:#B26A00;margin-bottom:6px;">チリが不足しています（あと '+lack+'チリ）</div>'
+      + '<div style="font-size:12px;color:#8A5A10;line-height:1.6;">参加可能回数は残っていますが、保有チリが足りません。広告を見てチリを貯めてから、もう一度参加してください。</div>'
+      + '</div>'
+      + '<button onclick="ctGoRewardAd()" style="width:100%;padding:16px;border:none;border-radius:14px;background:var(--navy);color:#fff;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);">📺 広告を見てチリを受け取る</button>'
+      + '<div style="font-size:11px;color:var(--text-3);text-align:center;margin-top:10px;">保有チリ: '+bal+' / 必要: '+cost+'</div>';
+  }
+
+  box.innerHTML = head + foot;
+
+  // 광고 배너 주입 (AdSense 승인 후 placeholder 대체)
+  setTimeout(function(){ try { _injectAd('draw-ad-slot', 'reward'); } catch(e){} }, 150);
+
   // 항상 최상위로 — body 마운트
   var ov = document.getElementById('ov-draw-detail');
   if (ov && ov.parentElement !== document.body) document.body.appendChild(ov);
   openOv('ov-draw-detail');
+}
+
+// 드로우 응모 — 서버 RPC enter_draw (코인 차감 + entry_count 누적을 원자적으로)
+var _drawEntering = false;
+async function ctEnterDraw(id) {
+  var d = _ctDrawsCache.find(function(x){ return x.id === id; });
+  if (!d) return;
+  if (!_sb || !_currentUser) { showToast(t('toast.login_required')); return; }
+  if (_drawEntering) return;
+  _drawEntering = true;
+  try {
+    var r = await _sb.rpc('enter_draw', { p_draw_id: id });
+    if (r.error || !r.data || !r.data.ok) {
+      var err = (r.data && r.data.err) || (r.error && r.error.message) || 'unknown';
+      if (err === 'insufficient') { showToast('チリが不足しています'); }
+      else if (err === 'max_entries') { showToast('参加可能回数を使い切りました'); }
+      else if (err === 'closed') { showToast('応募期間外です'); }
+      else if (err === 'auth') { showToast(t('toast.login_required')); }
+      else { console.warn('[enter_draw]', err); showToast('応募に失敗しました'); }
+      ctOpenDrawDetail(id);
+      return;
+    }
+    // 성공 — 로컬 코인 동기화
+    if (typeof r.data.balance === 'number') { _ctCoinBalance = r.data.balance; ctUpdateCoinDisplay(); }
+    showToast('🎫 応募完了！抽選をお楽しみに');
+    ctOpenDrawDetail(id);
+  } catch(e) {
+    console.warn('[enter_draw] exception', e);
+    showToast('応募に失敗しました');
+  } finally {
+    _drawEntering = false;
+  }
+}
+
+// 치리 부족 → 리워드 탭의 「광고 보고 チリ 받기」로 이동
+function ctGoRewardAd() {
+  closeOv('ov-draw-detail');
+  if (typeof ctSwitchTab === 'function') ctSwitchTab('reward');
+  setTimeout(function(){
+    if (typeof ctToggleRewardAdPanel === 'function' && !_ctRadOpen) ctToggleRewardAdPanel();
+    var el = document.getElementById('ct-rad-panel');
+    if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'center' });
+  }, 250);
 }
 
 async function renderCtStore() {
@@ -27145,7 +27255,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 446;
+window.__APP_BUILD__ = 447;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
