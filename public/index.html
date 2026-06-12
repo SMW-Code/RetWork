@@ -26712,7 +26712,7 @@ function _mdRenderLikeBtn(){
   if (!btn) return;
   btn.style.background = _mdLiked ? '#FDE2EC' : 'var(--bg-2)';
   btn.style.borderColor = _mdLiked ? '#E0245E' : 'var(--border)';
-  btn.innerHTML = '<span style="font-size:17px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
+  btn.innerHTML = '<span style="font-size:16px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
     + '<span style="font-size:14px;font-weight:800;color:'+(_mdLiked?'#E0245E':'var(--text-2)')+';">'+_mdLikeCount+'</span>';
 }
 function closeMenuDetail(){
@@ -26865,20 +26865,22 @@ function _mdRender(){
   var ratingCnt=card.rating_count>0?(' <span style="font-size:13px;color:var(--text-3);font-weight:600;">('+card.rating_count+')</span>'):'';
   h += '<div style="padding:18px 20px 14px;border-bottom:.5px solid var(--border);">'
     +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">'
-      +'<div style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;">'+(card.menu_name||'')+'</div>'
-      +'<div onclick="mdShareMenu()" title="'+t('sd.share')+'" style="width:36px;height:36px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--green);">'
-        +'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>'
+      +'<div style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;flex:1;min-width:0;">'+(card.menu_name||'')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
+        // b451 — 좋아요 버튼 (공유 옆)
+        +'<div onclick="mdToggleLike()" id="md-like-btn" style="height:36px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:999px;border:1px solid '+(_mdLiked?'#E0245E':'var(--border)')+';background:'+(_mdLiked?'#FDE2EC':'var(--bg-2)')+';cursor:pointer;">'
+          +'<span style="font-size:16px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
+          +'<span style="font-size:14px;font-weight:800;color:'+(_mdLiked?'#E0245E':'var(--text-2)')+';">'+_mdLikeCount+'</span>'
+        +'</div>'
+        +'<div onclick="mdShareMenu()" title="'+t('sd.share')+'" style="width:36px;height:36px;border-radius:10px;background:var(--green-light);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--green);">'
+          +'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>'
+        +'</div>'
       +'</div>'
     +'</div>'
     +(card.category?'<div style="font-size:13px;color:var(--text-3);font-weight:500;margin-bottom:10px;">'+card.category+'</div>':'')
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
       +'<span style="font-size:18px;font-weight:800;color:var(--star);">'+stars+ratingCnt+'</span>'
       +'<span style="font-size:22px;font-weight:800;color:var(--text-1);">'+(card.price?'¥'+Number(card.price).toLocaleString():'')+'</span>'
-    +'</div>'
-    // b451 — 좋아요 버튼 (타 유저가 누름)
-    +'<div onclick="mdToggleLike()" id="md-like-btn" style="display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:9px 18px;border-radius:999px;border:1px solid '+(_mdLiked?'#E0245E':'var(--border)')+';background:'+(_mdLiked?'#FDE2EC':'var(--bg-2)')+';cursor:pointer;">'
-      +'<span style="font-size:17px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
-      +'<span style="font-size:14px;font-weight:800;color:'+(_mdLiked?'#E0245E':'var(--text-2)')+';">'+_mdLikeCount+'</span>'
     +'</div></div>';
 
   // 별점 분포
@@ -27569,7 +27571,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 451;
+window.__APP_BUILD__ = 452;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
