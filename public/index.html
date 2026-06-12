@@ -5567,8 +5567,7 @@ async function renderCtDraws() {
     rows = res.data || [];
   } catch(e) { console.warn('[renderCtDraws] exception', e); section.style.display='none'; return; }
 
-  // 디자인 확인용 더미 카드 — 운영 전 _DRAW_SHOW_DUMMIES = false 로 끄거나 제거
-  var list = _DRAW_SHOW_DUMMIES ? rows.concat(_DRAW_DUMMIES()) : rows;
+  var list = rows;
   _ctDrawsCache = list;
   if (list.length === 0) { section.style.display = 'none'; return; }
   section.style.display = '';
@@ -5609,17 +5608,6 @@ async function renderCtDraws() {
       track.scrollLeft = midIdx * step;
     });
   }
-}
-
-// 디자인 확인용 더미 드로우 2개 — 실제 운영 시 _DRAW_SHOW_DUMMIES=false 또는 이 블록 제거
-var _DRAW_SHOW_DUMMIES = true;
-function _DRAW_DUMMIES() {
-  var d3 = new Date(Date.now() + 3*24*3600*1000).toISOString();
-  var d5 = new Date(Date.now() + 5*24*3600*1000).toISOString();
-  return [
-    { id:'_dummy_a', title:'🍔 サンプル賞品A（ダミー）', description:'デザイン確認用サンプル', image_url:null, coin_cost:170, winner_count:2, max_entries_per_user:5, ends_at:d3, _dummy:true },
-    { id:'_dummy_b', title:'☕ サンプル賞品B（ダミー）', description:'デザイン確認用サンプル', image_url:null, coin_cost:90,  winner_count:5, max_entries_per_user:3, ends_at:d5, _dummy:true }
-  ];
 }
 
 function _ctDrawCardHtml(d) {
@@ -27157,7 +27145,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 445;
+window.__APP_BUILD__ = 446;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
