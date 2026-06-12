@@ -1,7 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 445 시점)
+# RetWork (チリつも) — HANDOFF (build 446 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 445** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 446** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
 > 마지막 작업: **2026-06-11** (로고 전면 교체 / 치리츠모 드로우 관리 / 가게·메뉴 공유 카드 + 동적 OG 링크)
 
@@ -24,6 +24,7 @@
 | **441** | **동적 OG 공유 링크** — `app/s/route.ts` 신설. 가게/메뉴별 og:image/title 서빙 → 메신저에 터치 가능한 프리뷰 카드, 클릭 시 retwork.jp 리다이렉트 |
 | **442** | 공유 방식 **선택 시트**(`_shareChooser`) — 🔗 링크 공유(OG 프리뷰) / 🖼 이미지 카드 공유 (카카오톡은 이미지 첨부 시 URL 버림 → 분리 필요) |
 | **443~445** | 링크 공유 = 풀 카드 캔버스를 `store-photos/share/`에 업로드 → `/s?i=키&r=레퍼럴코드` 단축 링크 공유. 프리뷰엔 풀 카드, 클릭 시 `retwork.jp/?ref=코드`(추천 보상 보존). `t`/`d` 긴 파라미터 제거로 URL 단축 |
+| **446** | 드로우 더미카드 완전 삭제 — `renderCtDraws` 가 실제 `draws` 행만 렌더 |
 
 ### 공유 기능 핵심 (`sdShareStore` / `mdShareMenu`)
 - 공유 버튼 → `_shareChooser` 시트 → 링크/이미지 선택
@@ -45,8 +46,8 @@
 - **`draws_admin.sql`** (b432) — `draws` 테이블 sort_order/description 컬럼 + RLS. **이미 실행 완료**(사용자 확인)
 
 ### 🔧 남은 정리 작업
-- **드로우 더미카드 끄기**: `index.html` 의 `_DRAW_SHOW_DUMMIES = true` → 실서비스 전 `false`
-- **드로우 상세 모달 본문**(`ov-draw-detail`) — 사용자가 추후 디자인 제공 예정
+- ~~드로우 더미카드 끄기~~ → **b446 에서 완전 삭제 완료** (`_DRAW_SHOW_DUMMIES`/`_DRAW_DUMMIES` 제거, 실제 draws 행만 렌더)
+- **드로우 상세 모달 본문**(`ov-draw-detail`) — 사용자가 추후 디자인 제공 예정 (현재 모달 골격만)
 - 카카오톡 OG 프리뷰 캐시: 첫 공유 시 이미지 지연 가능 → 재공유 또는 [카카오 OG 캐시 초기화](https://developers.kakao.com/tool/clear/og)
 
 ### 커밋 (receiptiq, 2026-06-11)
@@ -155,8 +156,8 @@
 ## 1. 빌드 / 캐시
 
 ```
-public/index.html → window.__APP_BUILD__ = 445;
-public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b445';
+public/index.html → window.__APP_BUILD__ = 446;
+public/sw.js      → CACHE_NAME = 'receiptiq-v0.9.0-b446';
 ```
 > ⚠️ 빌드 시 **두 곳 모두** 같은 번호로 올릴 것 (안 맞으면 SW 캐시 갱신 안 됨).
 > 인라인 스크립트 문법 검증: `node -e "...new Function..."` (배포 전 습관).
