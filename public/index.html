@@ -5795,21 +5795,21 @@ async function ctEnterDraw(id) {
     var r = await _sb.rpc('enter_draw', { p_draw_id: id });
     if (r.error || !r.data || !r.data.ok) {
       var err = (r.data && r.data.err) || (r.error && r.error.message) || 'unknown';
-      if (err === 'insufficient') { showToast('チリが不足しています'); }
-      else if (err === 'max_entries') { showToast('参加可能回数を使い切りました'); }
-      else if (err === 'closed') { showToast('応募期間外です'); }
+      if (err === 'insufficient') { showToast(t('draw.insufficient')); }
+      else if (err === 'max_entries') { showToast(t('draw.max_entries')); }
+      else if (err === 'closed') { showToast(t('draw.closed')); }
       else if (err === 'auth') { showToast(t('toast.login_required')); }
-      else { console.warn('[enter_draw]', err); showToast('応募に失敗しました'); }
+      else { console.warn('[enter_draw]', err); showToast(t('draw.fail')); }
       ctOpenDrawDetail(id);
       return;
     }
     // 성공 — 로컬 코인 동기화
     if (typeof r.data.balance === 'number') { _ctCoinBalance = r.data.balance; ctUpdateCoinDisplay(); }
-    showToast('🎫 応募完了！抽選をお楽しみに');
+    showToast(t('draw.complete'));
     ctOpenDrawDetail(id);
   } catch(e) {
     console.warn('[enter_draw] exception', e);
-    showToast('応募に失敗しました');
+    showToast(t('draw.fail'));
   } finally {
     _drawEntering = false;
   }
@@ -6882,7 +6882,7 @@ async function ctTogglePostLikeDetail() {
   var p = _ctDummyPosts.find(function(x){ return x.id === id; });
   try {
     var res = await _sb.rpc('toggle_post_like', { p_post_id: id });
-    if (!res.data || !res.data.ok) { showToast('처리에 실패했어요'); return; }
+    if (!res.data || !res.data.ok) { showToast(t('toast.process_fail')); return; }
     var liked = res.data.liked;
     var count = res.data.count;
     // 상태 반영
@@ -6901,7 +6901,7 @@ async function ctTogglePostLikeDetail() {
       _sendSocialPush(p.user_id, '❤️ 좋아요를 받았어요', myName + ' 님이 「' + (p.title || '게시글') + '」에 좋아요를 눌렀어요', { url: '/', tag: 'like-' + id, priority: 'low' });
     }
   } catch(e) {
-    showToast('처리에 실패했어요');
+    showToast(t('toast.process_fail'));
   } finally {
     _cpdLikeBusy = false;
   }
@@ -12456,6 +12456,8 @@ var I18N = {
     'header.subtitle':'AI レシート家計簿',
     'greeting.morning':'おはようございます','greeting.afternoon':'こんにちは','greeting.evening':'こんばんは',
     // 프리미엄/플랜
+    'share.making':'🖼 共有カードを作成中...','share.link_copied':'🔗 リンクをコピーしました！','share.img_saved':'🖼 カード画像を保存・リンクをコピー','share.copied':'📋 コピーしました！','share.menu_not_found':'メニュー情報が見つかりません',
+    'draw.insufficient':'チリが不足しています','draw.max_entries':'参加可能回数を使い切りました','draw.closed':'応募期間外です','draw.fail':'応募に失敗しました','draw.complete':'🎫 応募完了！抽選をお楽しみに','toast.process_fail':'処理に失敗しました',
     'premium.title':'プレミアム アップグレード','premium.sub':'スキャン無制限 · 広告非表示','premium.unit':'/月',
     'plan.free':'無料プラン','plan.premium':'プレミアム',
     // 설정
@@ -12739,6 +12741,8 @@ var I18N = {
     'mode.receipt':'ReceiptIQ','mode.chiri':'치리츠모',
     'header.subtitle':'AI 영수증 가계부',
     'greeting.morning':'좋은 아침이에요','greeting.afternoon':'좋은 오후예요','greeting.evening':'좋은 저녁이에요',
+    'share.making':'🖼 공유 카드 만드는 중...','share.link_copied':'🔗 링크를 복사했어요!','share.img_saved':'🖼 카드 이미지 저장 · 링크 복사됨','share.copied':'📋 복사했어요!','share.menu_not_found':'메뉴 정보를 찾을 수 없어요',
+    'draw.insufficient':'치리가 부족해요','draw.max_entries':'참여 가능 횟수를 모두 사용했어요','draw.closed':'응모 기간이 아니에요','draw.fail':'응모에 실패했어요','draw.complete':'🎫 응모 완료! 추첨을 기대해주세요','toast.process_fail':'처리에 실패했어요',
     'premium.title':'프리미엄 업그레이드','premium.sub':'무제한 스캔 · 광고 제거','premium.unit':'/월',
     'plan.free':'무료 플랜','plan.premium':'프리미엄',
     'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
@@ -12972,6 +12976,8 @@ var I18N = {
     'mode.receipt':'ReceiptIQ','mode.chiri':'Chiri',
     'header.subtitle':'AI Receipt Budget',
     'greeting.morning':'Good morning','greeting.afternoon':'Good afternoon','greeting.evening':'Good evening',
+    'share.making':'🖼 Creating share card...','share.link_copied':'🔗 Link copied!','share.img_saved':'🖼 Image saved · link copied','share.copied':'📋 Copied!','share.menu_not_found':'Menu not found',
+    'draw.insufficient':'Not enough Chiri','draw.max_entries':'No entries left','draw.closed':'Entry period closed','draw.fail':'Entry failed','draw.complete':'🎫 Entry complete! Good luck','toast.process_fail':'Action failed',
     'premium.title':'Premium Upgrade','premium.sub':'Unlimited scans · Ad-free','premium.unit':'/mo',
     'plan.free':'Free plan','plan.premium':'Premium',
     'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
@@ -13205,6 +13211,8 @@ var I18N = {
     'mode.receipt':'ReceiptIQ','mode.chiri':'Chiri',
     'header.subtitle':'AI 票据账本',
     'greeting.morning':'早上好','greeting.afternoon':'下午好','greeting.evening':'晚上好',
+    'share.making':'🖼 正在生成分享卡...','share.link_copied':'🔗 已复制链接！','share.img_saved':'🖼 已保存图片·已复制链接','share.copied':'📋 已复制！','share.menu_not_found':'未找到菜单信息',
+    'draw.insufficient':'Chiri不足','draw.max_entries':'参与次数已用完','draw.closed':'不在报名期内','draw.fail':'报名失败','draw.complete':'🎫 报名完成！敬请期待抽奖','toast.process_fail':'处理失败',
     'premium.title':'升级高级版','premium.sub':'无限扫描 · 无广告','premium.unit':'/月',
     'plan.free':'免费版','plan.premium':'高级版',
     'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
@@ -17751,7 +17759,7 @@ async function submitStoreEditReq(){
   if(req.kind==='location'){
     if(!content) content='（位置の修正リクエスト・詳細なし）';
   } else if(content.length<3){ showToast('내용을 조금 더 자세히 적어주세요'); return; }
-  if(!_sb||!_currentUser){ showToast('로그인 후 사용 가능해요'); return; }
+  if(!_sb||!_currentUser){ showToast(t('toast.login_required')); return; }
   var btn=document.getElementById('ser-submit-btn');
   if(btn){ btn.disabled=true; btn.textContent='送信中...'; }
   try {
@@ -17998,13 +18006,13 @@ async function sdShareStore(){
   // b442 — 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
   _shareChooser(
     async function(){
-      if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
+      if (typeof showToast === 'function') showToast(t('share.making'));
       var canvas = null;
       try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
       await _shareAsLink(canvas, 's' + _shareKeyHash(name), name, lead, refCode);
     },
     async function(){
-      if (typeof showToast === 'function') showToast('🖼 공유 카드 만드는 중...');
+      if (typeof showToast === 'function') showToast(t('share.making'));
       var canvas = null;
       try { canvas = await _sdBuildShareCanvas(); } catch(e){ console.warn('[share] card build failed:', e); }
       await _shareCardFlow(canvas, name, imgShareText, 'retwork-store-' + Date.now() + '.jpg');
@@ -18090,7 +18098,7 @@ async function _shareLinkOnly(title, shareText){
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {
       await navigator.clipboard.writeText(shareText);
-      if (typeof showToast === 'function') showToast('🔗 링크를 복사했어요!');
+      if (typeof showToast === 'function') showToast(t('share.link_copied'));
       return;
     } catch(e){}
   }
@@ -18117,7 +18125,7 @@ async function _shareCardFlow(canvas, title, shareText, fname){
       if (!navigator.share) {
         _mrDownloadBlob(blob, fname);
         try { await navigator.clipboard.writeText(shareText); } catch(_){}
-        if (typeof showToast === 'function') showToast('🖼 카드 이미지 저장 · 링크 복사됨');
+        if (typeof showToast === 'function') showToast(t('share.img_saved'));
         return;
       }
     }
@@ -18130,7 +18138,7 @@ async function _shareCardFlow(canvas, title, shareText, fname){
   if (navigator.clipboard && navigator.clipboard.writeText) {
     try {
       await navigator.clipboard.writeText(shareText);
-      if (typeof showToast === 'function') showToast('📋 복사했어요!');
+      if (typeof showToast === 'function') showToast(t('share.copied'));
       return;
     } catch(e) { console.warn('[share] clipboard failed:', e); }
   }
@@ -18239,7 +18247,7 @@ async function _mdBuildShareCanvas(card){
 }
 async function mdShareMenu(){
   var card = (_sdCards||[]).find(function(cd){ return cd.id===_mdCardId; });
-  if(!card){ if(typeof showToast==='function') showToast('메뉴 정보를 찾을 수 없어요'); return; }
+  if(!card){ if(typeof showToast==='function') showToast(t('share.menu_not_found')); return; }
   // b444 — 레퍼럴 코드 미리 조회
   var refCode = await _getMyRefCode();
   var refLink = _getMyRefLink_fromCode(refCode);
@@ -18256,13 +18264,13 @@ async function mdShareMenu(){
   // b442 — 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
   _shareChooser(
     async function(){
-      if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
+      if (typeof showToast==='function') showToast(t('share.making'));
       var canvas = null;
       try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
       await _shareAsLink(canvas, 'm' + _shareKeyHash(_mdCardId), mTitle, lead, refCode);
     },
     async function(){
-      if (typeof showToast==='function') showToast('🖼 공유 카드 만드는 중...');
+      if (typeof showToast==='function') showToast(t('share.making'));
       var canvas = null;
       try { canvas = await _mdBuildShareCanvas(card); } catch(e){ console.warn('[share] menu card build failed:', e); }
       await _shareCardFlow(canvas, mTitle, imgShareText, 'retwork-menu-' + Date.now() + '.jpg');
@@ -27662,7 +27670,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 458;
+window.__APP_BUILD__ = 459;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -27826,7 +27834,7 @@ window.renderReferralRewardUI = function renderReferralRewardUI(){
 };
 
 window.claimReferralRewardViaAd = async function claimReferralRewardViaAd(){
-  if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast('로그인 후 사용 가능해요'); return; }
+  if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast(t('toast.login_required')); return; }
   await loadReferralStatus();
   var s = window._refStatus || {};
   if ((s.pending||0) <= 0) { if (typeof showToast==='function') showToast('받을 추천 보상이 없어요'); return; }
@@ -27859,7 +27867,7 @@ window.claimReferralRewardViaAd = async function claimReferralRewardViaAd(){
 
 // (3) 내 추천코드로 초대 링크 공유 (없으면 생성)
 window.ctInviteShare = async function ctInviteShare(){
-  if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast('로그인 후 사용 가능해요'); return; }
+  if (!_sb || !_currentUser) { if (typeof showToast==='function') showToast(t('toast.login_required')); return; }
   var code = null;
   try {
     var res = await _sb.from('profiles').select('referral_code').eq('id', _currentUser.id).maybeSingle();
