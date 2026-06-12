@@ -1,9 +1,33 @@
-# RetWork (チリつも) — HANDOFF (build 469 시점)
+# RetWork (チリつも) — HANDOFF (build 472 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 469** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 472** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-12** (오로라 그라데이션 전체화·i18n 보강·OCR 음식점 파싱·레퍼럴 근본수정 b470·유저삭제 cascade)
+> 마지막 작업: **2026-06-12** (b471 '대표' 뱃지 다국어화 · b472 잔여 한국어 i18n 일괄 · 銀座篝 블로그 글)
+
+---
+
+## 0-D. 2026-06-12 세션(이어서) 변경 요약 — 블로그 · 잔여 i18n
+
+### 메인 앱 (receiptiq) — build 471 ~ 472
+
+| build | 내용 |
+|---|---|
+| **471** | **'대표' 뱃지 다국어화** — 가게 상세 사진(단일/슬라이드)·메뉴 상세 사진·메뉴카드의 하드코딩 `⭐ 대표` 4곳 → `t('badge.featured')`. 언어시트 4로케일 추가(ja=代表/ko=대표/en=Featured/zh=招牌). ★ 이모지는 마크업 유지. **어드민** 가게목록·핀행·메뉴편집의 '대표' 표기는 한국어 유지(운영자용) |
+| **472** | **사용자 대면 잔여 한국어 17곳 일괄 i18n** (Explore 에이전트로 전체 스캔) — ① 메뉴 상세 평가폼: 내 평가 수정하기/평가 작성/수정하기/평가 등록/취소/"✏️ 내 평가 수정" 제목 ② 가게리뷰 동기화 토스트(실패/RLS/생성실패)·수정실패 alert ③ 차단어 토스트 2곳→기존 `toast.banned_word` 재사용 ④ 출석 추가광고 보너스: 베타우회/남은횟수/슬롯/대기/완료 + 「광고 보고 チリ 받기」(정적 `data-i18n`+동적) ⑤ 스캔 멀티촬영 안내(촬영순서/장수) ⑥ 공유 이미지저장 토스트 ⑦ 리워드 교환 placeholder. 신규 i18n 키 22개(4로케일). `t(key,params)` 는 `{var}` 다중 보간 지원 확인 |
+
+### 블로그 (retwork-blog) — 8편째 글
+- **`ginza-kagari-otemachi.md`** — 銀座 篝 大手町店 鶏白湯Soba 리뷰 ★4.0 (미슐랭 출신/블룸버그 보도, 키오스크 결제 함정·2열 줄서기·〆ご飯 등). 사진 6장(`public/images/ginza-kagari-otemachi/`: main/sign/exterior/topping/condiments/receipt, 1400px 리사이즈). 커밋 `0860d1a`
+
+### 커밋 (2026-06-12 이어서)
+- receiptiq: `b26b0b8`(b471 badge i18n) → `c2930ad`(b472 잔여 i18n) — 모두 push 완료
+- retwork-blog: `0860d1a`(銀座篝 글) — push 완료
+
+### 💡 i18n 작업 메모 (다음에 같은 작업 시)
+- 사용자 대면 한국어 찾기: Explore 에이전트에 "user-facing 함수(sd*/md*/ct*/render*/open*, 어드민 adm*/admin* 제외)의 HTML 문자열·토스트 내 한글" 스캔 의뢰가 효율적
+- 키 추가 위치: 각 로케일 블록의 `'photo.max5'…'badge.featured'` 줄 뒤에 한 줄로 append (4곳: ja~12502 / ko~12794 / en~13036 / zh~13278 부근)
+- 어드민 문구(`_renderStoreRow`/`_renderPinRow`/`openAdminEditMenuCard` 등)는 **한국어 유지**가 규칙
+- JS 문법 검증: `node -e` 로 `<script>` 블록 `new Function()` 순회 (JSON-LD `type=application/ld+json` 블록은 스킵)
 
 ---
 
