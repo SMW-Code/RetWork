@@ -11942,6 +11942,11 @@ function _doSaveOcrResult() {
   // Supabase에 저장 — INSERT 완료 후 위치 검색 순차 실행
   var _storeAddress = r.address || null;
   var _uid = _currentUser ? _currentUser.id : null;
+  // b463 — 세션 끊김 가드: user_id 없이 저장하면 본인 내역에 안 잡힘(RLS)
+  if (!_uid) {
+    console.warn('[save] 세션 없음 — user_id null 로 저장됨, 본인 내역에 안 보일 수 있음');
+    showToast('⚠️ ' + t('toast.login_required'));
+  }
 
   _sb.from('receipts').insert({
     store_name: store,
@@ -11950,7 +11955,8 @@ function _doSaveOcrResult() {
     payment_method: r.pay || null,
     user_id: _uid
   }).select().then(function(res) {
-    if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); return; }
+    // b463 — 저장 실패를 사용자에게도 알림(기존엔 console.warn 만 → 조용히 누락)
+    if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); showToast(t('toast.save_fail',{msg:res.error.message})); return; }
     var receiptId = res.data && res.data[0] && res.data[0].id;
     if (receiptId) newEntry.id = receiptId; // 정수 임시 ID → Supabase UUID로 교체
     // 원본 영수증 이미지 보관 (비동기, 저장 흐름 막지 않음)
@@ -27706,7 +27712,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 462;
+window.__APP_BUILD__ = 463;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
