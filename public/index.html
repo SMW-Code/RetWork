@@ -27101,6 +27101,16 @@ function sdSubmitNewCard(){
   }
 }
 async function _sdDoSubmitNewCard(p){
+  // b449 — 중복 방지: 같은 가게에 같은(정규화) 메뉴명 카드가 이미 있으면
+  //   새 카드 생성 대신 기존 카드에 평점/코멘트/사진만 추가 (치리 공개와 동일 규칙)
+  var _normMenu = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
+  var _existCard = null;
+  try {
+    var exq = await _sb.from('store_menu_cards').select('id,menu_name,image_url').eq('store_name', _sdName);
+    var tgt = _normMenu(p.name);
+    (exq.data||[]).forEach(function(c){ if (_normMenu(c.menu_name) === tgt) _existCard = c; });
+  } catch(e){ console.warn('[newCard dup check]', e); }
+
   var imgUrl=null;
   if(p.imgFile){
     try {
@@ -27120,12 +27130,25 @@ async function _sdDoSubmitNewCard(p){
       console.error('[menu img err]', e);
     }
   }
-  var ins=await _sb.from('store_menu_cards').insert({
-    store_name:_sdName,menu_name:p.name,category:p.cat||null,price:p.price,
-    image_url:imgUrl,rating_avg:p.st||0,rating_count:p.st?1:0,created_by:_currentUser.id
-  }).select().single();
-  if(ins.data && p.st>0){
-    await _sb.from('store_menu_comments').insert({menu_card_id:ins.data.id,user_id:_currentUser.id,rating:p.st,content:p.cmt||null});
+
+  if (_existCard && _existCard.id) {
+    // 기존 카드에 병합 — 평점/코멘트 + 사진(비었으면 대표로, 아니면 추가사진)
+    if (p.st>0 || (p.cmt||'').trim()) {
+      try { await _sb.from('store_menu_comments').insert({ menu_card_id:_existCard.id, user_id:_currentUser.id, rating:p.st>0?p.st:null, content:(p.cmt||'').trim()||null }); } catch(e){}
+    }
+    if (imgUrl) {
+      if (!_existCard.image_url) { try { await _sb.from('store_menu_cards').update({ image_url:imgUrl }).eq('id', _existCard.id); } catch(e){} }
+      else { try { await _sb.from('store_menu_photos').insert({ menu_card_id:_existCard.id, image_url:imgUrl, uploaded_by:_currentUser.id }); } catch(e){} }
+    }
+    showToast('既に登録されたメニューです。評価・写真を追加しました');
+  } else {
+    var ins=await _sb.from('store_menu_cards').insert({
+      store_name:_sdName,menu_name:p.name,category:p.cat||null,price:p.price,
+      image_url:imgUrl,rating_avg:p.st||0,rating_count:p.st?1:0,created_by:_currentUser.id
+    }).select().single();
+    if(ins.data && p.st>0){
+      await _sb.from('store_menu_comments').insert({menu_card_id:ins.data.id,user_id:_currentUser.id,rating:p.st,content:p.cmt||null});
+    }
   }
   _sdNewImgFile=null;
   _sdNewCat1=''; _sdNewCat2='';
@@ -27361,7 +27384,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 448;
+window.__APP_BUILD__ = 449;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
