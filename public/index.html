@@ -27737,7 +27737,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 467;
+window.__APP_BUILD__ = 468;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -27820,7 +27820,14 @@ if ('serviceWorker' in navigator) {
 window._redeemPendingRef = async function _redeemPendingRef(){
   var code = (function(){ try{return localStorage.getItem('pending_ref');}catch(e){return null;} })();
   if (!code) return;
-  if (!_sb || !_currentUser) return;
+  // b468 — 세션(_currentUser) 아직 준비 안 됐으면 최대 8회(약 6초) 폴링 재시도
+  if (!_sb || !_currentUser) {
+    window._refRetry = (window._refRetry || 0) + 1;
+    if (window._refRetry <= 8) { setTimeout(window._redeemPendingRef, 800); }
+    else { console.warn('[ref redeem] 세션 준비 안 됨 — 재시도 중단'); }
+    return;
+  }
+  window._refRetry = 0;
   try {
     var res = await _sb.rpc('redeem_referral', { p_code: code });
     if (res.error) {
