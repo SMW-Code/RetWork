@@ -17,12 +17,14 @@
 | **472** | **사용자 대면 잔여 한국어 17곳 일괄 i18n** (Explore 에이전트로 전체 스캔) — ① 메뉴 상세 평가폼: 내 평가 수정하기/평가 작성/수정하기/평가 등록/취소/"✏️ 내 평가 수정" 제목 ② 가게리뷰 동기화 토스트(실패/RLS/생성실패)·수정실패 alert ③ 차단어 토스트 2곳→기존 `toast.banned_word` 재사용 ④ 출석 추가광고 보너스: 베타우회/남은횟수/슬롯/대기/완료 + 「광고 보고 チリ 받기」(정적 `data-i18n`+동적) ⑤ 스캔 멀티촬영 안내(촬영순서/장수) ⑥ 공유 이미지저장 토스트 ⑦ 리워드 교환 placeholder. 신규 i18n 키 22개(4로케일). `t(key,params)` 는 `{var}` 다중 보간 지원 확인 |
 | **473** | **SEO canonical 색인 충돌 수정** ⭐ — GSC 「적절한 표준 태그가 포함된 대체 페이지」로 `/index.html` 색인 실패. **원인 = canonical 순환**: index.html 의 canonical 이 `/` 를 가리키는데 `/` 는 `/index.html` 로 307 리다이렉트(b470)되는 비콘텐츠 URL → Google 이 `/index.html` 을 `/` 의 대체본으로 보고 색인 제외, `/` 는 리다이렉트라 색인 불가 → **둘 다 색인 실패**. **수정**: ① index.html `<link rel=canonical>` `/` → `/index.html`(self-canonical) ② JSON-LD `url` 동일 ③ sitemap 홈 `loc` `/` → `/index.html`, lastmod 2026-06-12. ⚠️ **라우팅/ref 리다이렉트(app/page.tsx)는 그대로 유지** — 메타데이터만 수정. 홈은 `retwork.jp/index.html` 로 색인됨(깔끔한 `/` 색인 원하면 redirect→rewrite 200 으로 바꿔야 하며 next.config 수정 + 루트 no-store 헤더 필요, Next16 rewrites API 검증 후). 배포 후 GSC URL검사→색인요청→유효성 재검사 필요 |
 
-### 블로그 (retwork-blog) — 8편째 글
+### 블로그 (retwork-blog) — 8편째 글 + SEO
 - **`ginza-kagari-otemachi.md`** — 銀座 篝 大手町店 鶏白湯Soba 리뷰 ★4.0 (미슐랭 출신/블룸버그 보도, 키오스크 결제 함정·2열 줄서기·〆ご飯 등). 사진 6장(`public/images/ginza-kagari-otemachi/`: main/sign/exterior/topping/condiments/receipt, 1400px 리사이즈). 커밋 `0860d1a`
+- **포스트 SEO 개선** (`b67d96d`, `app/posts/[slug]/page.tsx`): ① `BlogPosting` JSON-LD(headline/image/datePublished/author/publisher) ② 글 하단 「他の記事も読む」 최신 4개 상호 내부링크. → GSC 「발견됨-현재 색인 생성되지 않음」(discovered, not indexed) 완화 목적
+- **GSC 「발견됨-색인 안 됨」 진단(2026-06-12)**: 블로그 글 5개가 이 상태. **버그 아님** — 블로그는 SSG(force-static, 본문 서버렌더)·canonical 정확·robots index·sitemap 동적·홈 내부링크 전부 정상. 원인=신규 도메인 낮은 크롤 우선순위. **해결 = 사용자가 GSC URL검사→색인요청(가장 효과적) + retwork.jp→blog 백링크 + 시간.** 코드로 막는 요소 없음
 
 ### 커밋 (2026-06-12 이어서)
 - receiptiq: `b26b0b8`(b471 badge i18n) → `c2930ad`(b472 잔여 i18n) → `53128b6`(HANDOFF) → `9df79b1`(b473 SEO canonical) — 모두 push 완료
-- retwork-blog: `0860d1a`(銀座篝 글) — push 완료
+- retwork-blog: `0860d1a`(銀座篝 글) → `b67d96d`(포스트 SEO: JSON-LD + 관련글 링크) — push 완료
 
 ### 💡 i18n 작업 메모 (다음에 같은 작업 시)
 - 사용자 대면 한국어 찾기: Explore 에이전트에 "user-facing 함수(sd*/md*/ct*/render*/open*, 어드민 adm*/admin* 제외)의 HTML 문자열·토스트 내 한글" 스캔 의뢰가 효율적
