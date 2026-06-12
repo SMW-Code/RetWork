@@ -27733,7 +27733,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 465;
+window.__APP_BUILD__ = 466;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -27819,8 +27819,14 @@ window._redeemPendingRef = async function _redeemPendingRef(){
   if (!_sb || !_currentUser) return;
   try {
     var res = await _sb.rpc('redeem_referral', { p_code: code });
-    if (res.error) { console.warn('[ref redeem]', res.error); return; }
+    if (res.error) {
+      console.warn('[ref redeem] RPC error', res.error);
+      // referral_v2.sql 미적용(함수/테이블 없음) 등 → 사용자에게도 표시(진단)
+      if (typeof showToast === 'function') showToast('추천 적용 실패: ' + (res.error.message || res.error.code || 'RPC 오류'));
+      return;
+    }
     var d = res.data || {};
+    console.log('[ref redeem] result', d);
     if (d.ok){
       try{localStorage.removeItem('pending_ref');}catch(e){}
       if (typeof showToast === 'function') showToast(t('ref.done'));
@@ -27835,8 +27841,16 @@ window._redeemPendingRef = async function _redeemPendingRef(){
         );
       }
     } else if (d.err === 'already_redeemed' || d.err === 'code_not_found' || d.err === 'self_referral') {
-      // 재시도 무의미 → 정리
+      // 재시도 무의미 → 정리 + 진단 토스트
       try{localStorage.removeItem('pending_ref');}catch(e){}
+      if (typeof showToast === 'function') {
+        if (d.err === 'code_not_found')      showToast('추천 코드를 찾을 수 없어요 (' + code + ')');
+        else if (d.err === 'self_referral')  showToast('본인 추천 코드로는 적립되지 않아요');
+        else if (d.err === 'already_redeemed') showToast('이미 추천이 적용된 계정이에요');
+      }
+    } else if (d.err) {
+      console.warn('[ref redeem] err', d.err);
+      if (typeof showToast === 'function') showToast('추천 적용 실패: ' + d.err);
     }
   } catch(e){ console.warn('[ref redeem]', e); }
 };
