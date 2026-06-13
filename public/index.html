@@ -5965,11 +5965,14 @@ function openCtStoreFull() {
   _ctStoreFullShown = CT_STORE_FULL_INITIAL;
   var ov = document.getElementById('ov-ct-store-full');
   if (ov) ov.style.display = 'flex';
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 뒤로가기 안정화: 열 때 히스토리 엔트리 미리 쌓음
   renderCtStoreFull();
 }
 function closeCtStoreFull() {
   var ov = document.getElementById('ov-ct-store-full');
+  var _was = ov && ov.style.display && ov.style.display!=='none';
   if (ov) ov.style.display = 'none';
+  if(_was && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
 }
 function ctStoreFullMore() {
   _ctStoreFullShown += CT_STORE_PAGE;
@@ -15589,6 +15592,7 @@ function vote(btn,type){ var n=parseInt(btn.textContent.replace(/[^0-9]/g,'')); 
 function openOv(id){
   document.getElementById(id).classList.add('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); window._ovStack.push(id); // 뒤로가기 스택
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 모달 열 때 히스토리 엔트리 미리 쌓음(뒤로가기 안정화)
   if (id === 'ov-settings') {
     renderThemeSwatches();
     loadProfileToSettings();
@@ -15678,8 +15682,11 @@ function copyReferralCode() {
   }
 }
 function closeOv(id){
-  document.getElementById(id).classList.remove('open');
+  var _ovEl=document.getElementById(id); var _ovWasOpen=_ovEl&&_ovEl.classList.contains('open');
+  if(_ovEl) _ovEl.classList.remove('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); // 뒤로가기 스택
+  // UI(닫기 버튼)로 닫으면 열 때 쌓은 히스토리 엔트리를 회수. (뒤로가기로 닫힌 경우 _riqInPop=true → 회수 안 함)
+  if(_ovWasOpen && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
   if (id === 'ov-settings') {
     var panel = document.getElementById('profile-edit-panel');
     if (panel) panel.style.display = 'none';
@@ -15732,20 +15739,24 @@ function showAppToast(msg){
     return false;
   }
   function _onBack(){
-    if (_closeTopModal()){ _reguard(); return; }               // ① 모달 닫기(역순)
-    if (_mode()==='chiri'){                                     // ② 치리모드: map 베이스로
-      var cs=document.querySelector('.ct-screen.active'); var cur=cs?cs.id.replace('ct-screen-',''):'map';
-      if(cur!=='map' && typeof ctSwitchTab==='function'){ try{ ctSwitchTab('map'); }catch(e){} _reguard(); return; }
-    } else {                                                   // ②' 영수증모드: home 베이스로
-      var rs=document.querySelector('.screen.active'); var cur2=rs?rs.id.replace('screen-',''):'home';
-      if(cur2!=='home' && typeof switchTab==='function'){ try{ switchTab('home'); }catch(e){} _reguard(); return; }
-    }
-    // ③ 베이스 탭: 1.8초 내 두 번째 back = 종료 허용(가드 재설치 안 함). 타이머 대신 타임스탬프(모바일 throttle 무관)
-    var now=Date.now();
-    if (now - _lastBackAt < 1800) return;
-    _lastBackAt=now;
-    try{ showAppToast(typeof t==='function' ? t('nav.back_exit') : '뒤로 버튼을 한 번 더 누르면 종료됩니다'); }catch(e){}
-    _reguard();
+    if (window._riqExpectPop>0){ window._riqExpectPop--; return; } // UI(닫기버튼)가 부른 history.back → 이미 처리됨, 무시
+    window._riqInPop=true;
+    try{
+      if (_closeTopModal()){ return; }                         // ① 모달 닫기 — 엔트리는 열 때 미리 쌓음(재설치 불필요)
+      if (_mode()==='chiri'){                                   // ② 치리모드: map 베이스로
+        var cs=document.querySelector('.ct-screen.active'); var cur=cs?cs.id.replace('ct-screen-',''):'map';
+        if(cur!=='map' && typeof ctSwitchTab==='function'){ try{ ctSwitchTab('map'); }catch(e){} _reguard(); return; }
+      } else {                                                 // ②' 영수증모드: home 베이스로
+        var rs=document.querySelector('.screen.active'); var cur2=rs?rs.id.replace('screen-',''):'home';
+        if(cur2!=='home' && typeof switchTab==='function'){ try{ switchTab('home'); }catch(e){} _reguard(); return; }
+      }
+      // ③ 베이스 탭: 토스트(동기 표시) + 가드 재설치. 1.8초 내 두 번째 back = 종료 허용
+      var now=Date.now();
+      if (now - _lastBackAt < 1800) return;
+      _lastBackAt=now;
+      try{ showAppToast(typeof t==='function' ? t('nav.back_exit') : '뒤로 버튼을 한 번 더 누르면 종료됩니다'); }catch(e){}
+      _reguard();
+    } finally { window._riqInPop=false; }
   }
   function _init(){ _guard(); window.addEventListener('popstate', _onBack); }
   if (document.readyState==='loading') window.addEventListener('DOMContentLoaded', _init); else _init();
@@ -28056,7 +28067,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 476;
+window.__APP_BUILD__ = 477;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
