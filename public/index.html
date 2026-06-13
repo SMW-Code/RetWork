@@ -15110,15 +15110,17 @@ function closeOvOutside(e,id){if(e.target===document.getElementById(id))closeOv(
 
 /* ── 파비콘 디자인 토스트 (종료 안내 등) ── */
 function showAppToast(msg){
-  var old=document.getElementById('_riq-apptoast'); if(old) old.remove();
-  var toast=document.createElement('div');
-  toast.id='_riq-apptoast';
-  toast.style.cssText='position:absolute;bottom:92px;left:50%;transform:translateX(-50%) translateY(12px);display:flex;align-items:center;gap:10px;background:rgba(15,26,23,.96);color:#fff;padding:10px 16px 10px 11px;border-radius:16px;font-size:13px;font-weight:700;z-index:99999;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.10);opacity:0;transition:opacity .22s ease, transform .22s cubic-bezier(.4,0,.2,1);';
-  toast.innerHTML='<img src="/icons/icon-192.png" width="28" height="28" style="border-radius:8px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);" alt="">'
-    +'<span>'+(typeof _esc==='function'?_esc(msg):msg)+'</span>';
-  document.getElementById('app').appendChild(toast);
-  requestAnimationFrame(function(){ toast.style.opacity='1'; toast.style.transform='translateX(-50%) translateY(0)'; });
-  setTimeout(function(){ if(!toast.parentNode) return; toast.style.opacity='0'; toast.style.transform='translateX(-50%) translateY(12px)'; setTimeout(function(){ toast.remove(); },240); }, 2000);
+  try{
+    var old=document.getElementById('_riq-apptoast'); if(old) old.remove();
+    var toast=document.createElement('div');
+    toast.id='_riq-apptoast';
+    // position:fixed + 안전영역 위 + 최대 z-index → 시스템 내비바/스택에 안 가려지고 즉시 표시
+    toast.style.cssText='position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 96px);transform:translateX(-50%);display:flex;align-items:center;gap:10px;background:rgba(15,26,23,.97);color:#fff;padding:11px 17px 11px 12px;border-radius:18px;font-size:13.5px;font-weight:700;z-index:2147483647;white-space:nowrap;box-shadow:0 12px 34px rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);pointer-events:none;font-family:var(--font);';
+    toast.innerHTML='<img src="/icons/icon-192.png?v='+(window.__APP_BUILD__||1)+'" width="30" height="30" style="border-radius:8px;flex-shrink:0;box-shadow:0 1px 5px rgba(0,0,0,.35);" alt="">'
+      +'<span>'+(typeof _esc==='function'?_esc(msg):msg)+'</span>';
+    (document.body||document.getElementById('app')).appendChild(toast);
+    setTimeout(function(){ if(toast && toast.parentNode) toast.remove(); }, 2200);
+  }catch(e){ try{ if(typeof showToast==='function') showToast(msg); }catch(_){} } // 실패 시 기본 토스트로 폴백
 }
 
 /* ── 안드로이드/브라우저 뒤로가기 가로채기 ──
@@ -26500,7 +26502,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 429;
+window.__APP_BUILD__ = 430;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
