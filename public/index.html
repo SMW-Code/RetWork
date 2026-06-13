@@ -15710,6 +15710,8 @@ function showAppToast(msg){
   window._riqBackInit = true;
   var _lastBackAt=0;
   function _guard(){ try{ history.pushState({riqBack:1},''); }catch(e){} }
+  // ⚠ popstate 처리 도중의 pushState는 안드로이드 PWA에서 무시될 수 있음 → 가드 재설치를 popstate 밖으로 지연
+  function _reguard(){ try{ setTimeout(_guard, 0); }catch(e){ _guard(); } }
   function _mode(){ var sw=document.getElementById('mode-toggle-sw'); return (sw&&sw.dataset&&sw.dataset.mode)||'receipt'; }
   function _visDisp(el){ return el && el.style && el.style.display && el.style.display!=='none'; } // display 기반 표시 여부
   function _closeTopModal(){
@@ -15730,20 +15732,20 @@ function showAppToast(msg){
     return false;
   }
   function _onBack(){
-    if (_closeTopModal()){ _guard(); return; }                 // ① 모달 닫기(역순)
+    if (_closeTopModal()){ _reguard(); return; }               // ① 모달 닫기(역순)
     if (_mode()==='chiri'){                                     // ② 치리모드: map 베이스로
       var cs=document.querySelector('.ct-screen.active'); var cur=cs?cs.id.replace('ct-screen-',''):'map';
-      if(cur!=='map' && typeof ctSwitchTab==='function'){ try{ ctSwitchTab('map'); }catch(e){} _guard(); return; }
+      if(cur!=='map' && typeof ctSwitchTab==='function'){ try{ ctSwitchTab('map'); }catch(e){} _reguard(); return; }
     } else {                                                   // ②' 영수증모드: home 베이스로
       var rs=document.querySelector('.screen.active'); var cur2=rs?rs.id.replace('screen-',''):'home';
-      if(cur2!=='home' && typeof switchTab==='function'){ try{ switchTab('home'); }catch(e){} _guard(); return; }
+      if(cur2!=='home' && typeof switchTab==='function'){ try{ switchTab('home'); }catch(e){} _reguard(); return; }
     }
     // ③ 베이스 탭: 1.8초 내 두 번째 back = 종료 허용(가드 재설치 안 함). 타이머 대신 타임스탬프(모바일 throttle 무관)
     var now=Date.now();
     if (now - _lastBackAt < 1800) return;
     _lastBackAt=now;
     try{ showAppToast(typeof t==='function' ? t('nav.back_exit') : '뒤로 버튼을 한 번 더 누르면 종료됩니다'); }catch(e){}
-    _guard();
+    _reguard();
   }
   function _init(){ _guard(); window.addEventListener('popstate', _onBack); }
   if (document.readyState==='loading') window.addEventListener('DOMContentLoaded', _init); else _init();
@@ -28054,7 +28056,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 475;
+window.__APP_BUILD__ = 476;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
