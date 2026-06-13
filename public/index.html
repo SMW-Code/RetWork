@@ -12598,7 +12598,7 @@ var I18N = {
     'ocr.select_category':'카테고리 선택','ocr.no_items':'품목 없음. 아래 + 버튼으로 추가해주세요.',
     'ocr.qty':'수량','ocr.subtotal':'소계','ocr.tax':'세금','ocr.total':'합계',
     'ocr.col_item':'품목','ocr.col_amount':'금액','ocr.sum_ok':'합계 일치','ocr.sum_check':'합계 불일치 — 확인 필요',
-    'nav.back_exit':'한 번 더 누르면 종료합니다',
+    'nav.back_exit':'뒤로 버튼을 한 번 더 누르면 종료됩니다',
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
     'ocr.store_unknown':'불명','ocr.save_budget':'가계부에 저장하기','ocr.save_publish':'가계부 저장 ＆ 치리츠모 공개','ocr.item_unit':'품목',
     'ocr.title':'📷 영수증 분석 중...','ocr.title_split':'📜 분할 영수증 분석 중...','ocr.checking':'영수증을 확인하고 있어요','ocr.organizing':'품목을 정리하고 있어요','ocr.wait':'잠시만 기다려주세요','ocr.reading_page':'{i}/{n}장 읽고 있어요','ocr.ad_badge':'분석 중...',
@@ -15009,6 +15009,7 @@ function vote(btn,type){ var n=parseInt(btn.textContent.replace(/[^0-9]/g,'')); 
 ══════════════════════════════ */
 function openOv(id){
   document.getElementById(id).classList.add('open');
+  window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); window._ovStack.push(id); // 뒤로가기 스택
   if (id === 'ov-settings') {
     renderThemeSwatches();
     loadProfileToSettings();
@@ -15099,6 +15100,7 @@ function copyReferralCode() {
 }
 function closeOv(id){
   document.getElementById(id).classList.remove('open');
+  window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); // 뒤로가기 스택
   if (id === 'ov-settings') {
     var panel = document.getElementById('profile-edit-panel');
     if (panel) panel.style.display = 'none';
@@ -15106,23 +15108,51 @@ function closeOv(id){
 }
 function closeOvOutside(e,id){if(e.target===document.getElementById(id))closeOv(id);}
 
+/* ── 파비콘 디자인 토스트 (종료 안내 등) ── */
+function showAppToast(msg){
+  var old=document.getElementById('_riq-apptoast'); if(old) old.remove();
+  var toast=document.createElement('div');
+  toast.id='_riq-apptoast';
+  toast.style.cssText='position:absolute;bottom:92px;left:50%;transform:translateX(-50%) translateY(12px);display:flex;align-items:center;gap:10px;background:rgba(15,26,23,.96);color:#fff;padding:10px 16px 10px 11px;border-radius:16px;font-size:13px;font-weight:700;z-index:99999;white-space:nowrap;box-shadow:0 10px 30px rgba(0,0,0,.38);border:1px solid rgba(255,255,255,.10);opacity:0;transition:opacity .22s ease, transform .22s cubic-bezier(.4,0,.2,1);';
+  toast.innerHTML='<img src="/icons/icon-192.png" width="28" height="28" style="border-radius:8px;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.3);" alt="">'
+    +'<span>'+(typeof _esc==='function'?_esc(msg):msg)+'</span>';
+  document.getElementById('app').appendChild(toast);
+  requestAnimationFrame(function(){ toast.style.opacity='1'; toast.style.transform='translateX(-50%) translateY(0)'; });
+  setTimeout(function(){ if(!toast.parentNode) return; toast.style.opacity='0'; toast.style.transform='translateX(-50%) translateY(12px)'; setTimeout(function(){ toast.remove(); },240); }, 2000);
+}
+
 /* ── 안드로이드/브라우저 뒤로가기 가로채기 ──
-   SPA라 탭/모달 전환이 히스토리에 안 쌓여 시스템 뒤로가기가 앱 밖으로 나가버리는 문제 해결.
-   뒤로가기 → ① 열린 모달 닫기 → ② 홈이 아니면 홈 탭으로 → ③ 홈+아무것도 없으면 "한 번 더 누르면 종료". */
+   뒤로가기 → ① 모달 스택(최근 연 것부터) 닫기 → ② 모드별 베이스 탭(영수증=home / 치리=map)으로
+   → ③ 베이스 탭이면 "한 번 더 누르면 종료" 디자인 토스트, 2초 내 한 번 더 = 종료. PWA·웹 공통. */
 (function(){
   if (window._riqBackInit) return;
   window._riqBackInit = true;
   var _armed=false, _timer=null;
-  function _openOvs(){ return Array.prototype.slice.call(document.querySelectorAll('[id^="ov-"].open')); }
-  function _curTab(){ var a=document.querySelector('.tab.active'); return a ? a.id.replace('tab-','') : 'home'; }
   function _guard(){ try{ history.pushState({riqBack:1},''); }catch(e){} }
+  function _mode(){ var sw=document.getElementById('mode-toggle-sw'); return (sw&&sw.dataset&&sw.dataset.mode)||'receipt'; }
+  function _closeTopModal(){
+    // 1) open-스택의 top부터 (실제 .open인 것). 스택이 비면 DOM에서 .open 검색
+    var st=window._ovStack||[];
+    while(st.length){ var id=st[st.length-1], el=document.getElementById(id);
+      if(el && el.classList.contains('open')){ try{ closeOv(id); }catch(e){ el.classList.remove('open'); st.pop(); } return true; }
+      st.pop(); // 이미 닫힌 잔여 항목 정리
+    }
+    var dom=Array.prototype.slice.call(document.querySelectorAll('[id^="ov-"].open'));
+    if(dom.length){ try{ closeOv(dom[dom.length-1].id); }catch(e){ dom[dom.length-1].classList.remove('open'); } return true; }
+    return false;
+  }
   function _onBack(){
-    var ovs=_openOvs();
-    if (ovs.length){ try{ closeOv(ovs[ovs.length-1].id); }catch(e){} _guard(); return; } // 가장 위 모달 닫기
-    if (_curTab()!=='home'){ try{ switchTab('home'); }catch(e){} _guard(); return; }      // 다른 탭 → 홈
-    if (_armed) return;                                                                     // 두 번째 → 종료 허용
+    if (_closeTopModal()){ _guard(); return; }                 // ① 모달 닫기
+    if (_mode()==='chiri'){                                     // ② 치리모드: map 베이스로
+      var cs=document.querySelector('.ct-screen.active'); var cur=cs?cs.id.replace('ct-screen-',''):'map';
+      if(cur!=='map' && typeof ctSwitchTab==='function'){ try{ ctSwitchTab('map'); }catch(e){} _guard(); return; }
+    } else {                                                   // ②' 영수증모드: home 베이스로
+      var rs=document.querySelector('.screen.active'); var cur2=rs?rs.id.replace('screen-',''):'home';
+      if(cur2!=='home' && typeof switchTab==='function'){ try{ switchTab('home'); }catch(e){} _guard(); return; }
+    }
+    if (_armed) return;                                        // ③ 베이스 탭: 두 번째 back = 종료 허용
     _armed=true; if(_timer)clearTimeout(_timer); _timer=setTimeout(function(){_armed=false;},2000);
-    try{ if(typeof showToast==='function') showToast(typeof t==='function' ? t('nav.back_exit') : '한 번 더 누르면 종료합니다'); }catch(e){}
+    try{ showAppToast(typeof t==='function' ? t('nav.back_exit') : '뒤로 버튼을 한 번 더 누르면 종료됩니다'); }catch(e){}
     _guard();
   }
   function _init(){ _guard(); window.addEventListener('popstate', _onBack); }
