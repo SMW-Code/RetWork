@@ -249,54 +249,27 @@ function render(res){
 }
 
 /* ============================================================
- *  4) EXIF orientation 자동보정 (Vision은 EXIF를 무시하므로 픽셀을 똑바로 돌려 보냄)
+ *  4) 이미지 전처리 — 운영(index.html)과 동일
+ *     createImageBitmap(imageOrientation:'from-image')로 EXIF를 똑바로 보정 +
+ *     긴 변 2400px로 축소 후 JPEG base64 (Vercel 본문 크기 초과 방지)
+ *     → Vision이 받는 이미지가 이미 똑바로라 좌표 회전 불필요
  * ============================================================ */
-function getOrientation(buf){
-  var b=new Uint8Array(buf);
-  for(var k=0;k<b.length-6;k++){
-    if(b[k]===0x45&&b[k+1]===0x78&&b[k+2]===0x69&&b[k+3]===0x66&&b[k+4]===0&&b[k+5]===0){
-      var tiff=k+6, little=b[tiff]===0x49;
-      function r16(o){return little?(b[o]|b[o+1]<<8):(b[o]<<8|b[o+1]);}
-      function r32(o){return little?(b[o]|b[o+1]<<8|b[o+2]<<16|b[o+3]<<24):(b[o]<<24|b[o+1]<<16|b[o+2]<<8|b[o+3]);}
-      var ifd=tiff+r32(tiff+4), n=r16(ifd);
-      for(var j=0;j<n;j++){ var e=ifd+2+j*12; if(r16(e)===0x0112) return r16(e+8); }
-      return 1;
+function preprocessUpright(file){
+  var MAX=2400;
+  return (async function(){
+    var bmp;
+    try { bmp = await createImageBitmap(file, { imageOrientation:'from-image' }); }
+    catch(_) {
+      bmp = await new Promise(function(res,rej){ var im=new Image(); im.onload=function(){res(im);}; im.onerror=rej; im.src=URL.createObjectURL(file); });
     }
-  }
-  return 1;
-}
-// JPEG 원본 픽셀 크기 + EXIF orientation
-function jpegMeta(buf){
-  var b=new Uint8Array(buf), W=0,H=0,i=2;
-  while(i<b.length){
-    if(b[i]!==0xFF){i++;continue;}
-    var m=b[i+1];
-    if(m>=0xC0&&m<=0xCF&&m!==0xC4&&m!==0xC8&&m!==0xCC){ H=(b[i+5]<<8)|b[i+6]; W=(b[i+7]<<8)|b[i+8]; break; }
-    if(m===0xD8||m===0xD9){ i+=2; continue; }
-    i+=2+((b[i+2]<<8)|b[i+3]);
-  }
-  var ori=1; try{ ori=getOrientation(buf); }catch(_){}
-  return {W:W,H:H,ori:ori};
-}
-// EXIF orientation 대로 좌표를 똑바로 회전 (이미지 재인코딩 없이 = 검증된 방식)
-function rotateAnn(annotations,W,H,ori){
-  if(ori===1||!W||!H) return annotations;
-  return annotations.map(function(a){
-    return {description:a.description, boundingPoly:{vertices:(a.boundingPoly.vertices||[]).map(function(p){
-      var x=p.x||0,y=p.y||0;
-      switch(ori){
-        case 3: return {x:W-1-x, y:H-1-y};   // 180°
-        case 6: return {x:H-1-y, y:x};       // 90° CW
-        case 8: return {x:y,     y:W-1-x};   // 90° CCW
-        default: return {x:x, y:y};
-      }
-    })}};
-  });
-}
-function abToB64(buf){
-  var b=new Uint8Array(buf), CH=0x8000, s='';
-  for(var i=0;i<b.length;i+=CH){ s+=String.fromCharCode.apply(null,b.subarray(i,i+CH)); }
-  return btoa(s);
+    var w=bmp.width||bmp.naturalWidth, h=bmp.height||bmp.naturalHeight;
+    var s=Math.max(w,h)>MAX ? MAX/Math.max(w,h) : 1;
+    var cw=Math.round(w*s), ch=Math.round(h*s);
+    var c=document.createElement('canvas'); c.width=cw; c.height=ch;
+    c.getContext('2d').drawImage(bmp,0,0,cw,ch);
+    if(bmp.close){ try{ bmp.close(); }catch(_){} }
+    return { b64:c.toDataURL('image/jpeg',0.92).split(',')[1], w:cw, h:ch };
+  })();
 }
 
 /* ============================================================
@@ -321,23 +294,20 @@ document.getElementById('btnJson').onclick=function(){
 };
 document.getElementById('file').onchange=function(e){
   var f=e.target.files[0]; if(!f) return;
-  setStatus('이미지 읽는 중…');
-  var rd=new FileReader();
-  rd.onload=function(){
-    var buf=rd.result;
-    var meta=jpegMeta(buf);
-    setStatus('Vision API 호출 중… (EXIF orientation='+meta.ori+', '+meta.W+'×'+meta.H+')');
-    fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base64Image:abToB64(buf)})})
-      .then(function(r){return r.json();})
-      .then(function(data){
-        if(data.error) throw new Error(data.error.message||'vision error');
-        var ann=rotateAnn(findAnnotations(data), meta.W, meta.H, meta.ori);
-        render(parseTable(ann));
-        setStatus('완료 — 실제 사진 (orientation '+meta.ori+' 좌표 회전 적용)');
-      })
-      .catch(function(err){ setStatus('<span class="err">'+err.message+'</span>'); });
-  };
-  rd.readAsArrayBuffer(f);
+  setStatus('이미지 처리 중… (EXIF 보정·축소)');
+  preprocessUpright(f).then(function(pre){
+    setStatus('Vision API 호출 중… ('+pre.w+'×'+pre.h+')');
+    return fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base64Image:pre.b64})});
+  }).then(function(r){
+    return r.text().then(function(txt){
+      var data; try{ data=JSON.parse(txt); }catch(_){ throw new Error('서버 응답 오류('+r.status+'): '+txt.slice(0,80)); }
+      if(data.error) throw new Error(data.error.message||'vision error');
+      return data;
+    });
+  }).then(function(data){
+    render(parseTable(findAnnotations(data)));   // 이미지가 이미 똑바로 → 좌표 회전 불필요
+    setStatus('완료 — 실제 사진');
+  }).catch(function(err){ setStatus('<span class="err">'+err.message+'</span>'); });
 };
 
 /* ============================================================
