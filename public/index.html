@@ -9716,7 +9716,24 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
         rawText = data.responses[0].fullTextAnnotation.text;
       }
 
-      // 항상 하이브리드 모드 (백엔드 /api/gpt 경유)
+      // ① 좌표 기반 표복원 파서 먼저 시도 — 검증(품목합==小計/合計) 통과 시 GPT 생략 (PARSING.md)
+      try {
+        var anns = data.responses && data.responses[0] && data.responses[0].textAnnotations;
+        if (anns && anns.length > 1) {
+          var coord = parseReceiptByCoords(anns.slice(1), rawText);
+          if (coord && coord._valid) {
+            console.log('[parse] 좌표 파서 채택: ' + coord.items.length + '품목, 품목합 ¥' + (coord.subtotal||coord.total));
+            window._rawOcrText   = rawText;
+            window._parsedResult = coord;
+            window._previewSrc   = previewSrc;
+            _showDebugUI(previewSrc, rawText, coord, false);
+            return;
+          }
+          console.log('[parse] 좌표 파서 검증 실패 → GPT 폴백');
+        }
+      } catch (e) { console.warn('[parse] 좌표 파서 오류 → GPT 폴백:', e.message); }
+
+      // ② 폴백: 기존 하이브리드 GPT 모드 (백엔드 /api/gpt 경유)
       var statusEl = document.querySelector('.ocr-status');
       if (statusEl) {
         statusEl.innerHTML = '<div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">'+t('ocr.organizing')+'<br><span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div>';
@@ -10850,6 +10867,155 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
 
   document.getElementById('ocr-content').innerHTML = html;
   openOv('ov-ocr');
+}
+
+// ══════════════════════════════
+// 좌표 기반 표복원 파서 (상세: PARSING.md)
+//   Vision textAnnotations(글자 좌표)로 영수증을 표로 복원 → 품목/수량/금액
+//   운영 이미지는 preprocessReceiptImage에서 EXIF 보정 완료 → 좌표 회전 안 함
+//   검증(품목합 == 小計/合計) 통과 시에만 _valid=true → 자동 채택, 아니면 GPT 폴백
+//   ⚠ 로직 수정 시 public/table-proto.html(실험)과 PARSING.md도 함께 갱신할 것
+// ══════════════════════════════
+function parseReceiptByCoords(annotations, rawText) {
+  if (!annotations || !annotations.length) return null;
+
+  function toYen(s){
+    var c=String(s).replace(/[¥￥\\＊*\s()_]/g,'');
+    if(/^\d+\.\d{3}$/.test(c)) c=c.replace('.','');
+    else c=c.replace(/[,\.]/g,'');
+    return parseInt(c)||0;
+  }
+  var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|点数|外税|内税|お預|お釣|発行)/;
+  function cleanName(s){
+    var t=s.replace(/【[^】]*】/g,'').replace(/[【】\s]/g,'');
+    for(var i=0;i<3;i++){ t=t.replace(/^[外軽内\*＊]+/,'').replace(/^\d+/,''); }
+    return t;
+  }
+  function extractWords(anns){
+    return anns.map(function(a){
+      var v=(a.boundingPoly&&a.boundingPoly.vertices)||[];
+      var xs=v.map(function(p){return p.x||0;});
+      var ys=v.map(function(p){return p.y||0;});
+      var top=Math.min.apply(null,ys),bottom=Math.max.apply(null,ys);
+      var left=Math.min.apply(null,xs),right=Math.max.apply(null,xs);
+      return {t:a.description,cy:(top+bottom)/2,cx:(left+right)/2,top:top,bottom:bottom,left:left,right:right,h:Math.max(1,bottom-top)};
+    }).filter(function(w){ return w.t && w.t.indexOf('\n')===-1; });
+  }
+
+  var words=extractWords(annotations);
+  if(!words.length) return null;
+
+  var L=Math.min.apply(null,words.map(function(w){return w.left;}));
+  var R=Math.max.apply(null,words.map(function(w){return w.right;}));
+  var W=Math.max(1,R-L);
+  var nameColX=L+0.50*W, priceColX=L+0.60*W;
+
+  function isMoneyShape(t){ return /^[¥￥\\]?\(?[\d,\.]+\)?[外軽内\*＊]?$/.test(t.replace(/\s/g,'')) && /\d/.test(t); }
+  function isPriceTok(w){ var v=toYen(w.t); return w.cx>priceColX && isMoneyShape(w.t) && v>=10 && v<1e7; }
+
+  var hs=words.map(function(w){return w.h;}).sort(function(a,b){return a-b;});
+  var medH=hs[Math.floor(hs.length/2)]||20;
+  var band=Math.max(16, medH*0.7);
+  function lineText(cy){
+    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<band;})
+      .sort(function(a,b){return a.cx-b.cx;}).map(function(w){return w.t;}).join('');
+  }
+  function finPrice(re){
+    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy));})
+      .sort(function(a,b){return a.cy-b.cy;});
+    return ps.length?ps[0]:null;
+  }
+
+  var anchorYs=words.filter(function(w){return /人数|伝票|テーブル|領収/.test(w.t);}).map(function(w){return w.cy;});
+  var topY=anchorYs.length?Math.max.apply(null,anchorYs)+30:-1e9;
+  var firstFin=[finPrice(/小計/),finPrice(/税抜/),finPrice(/合計|総額|お会計/)].filter(Boolean).sort(function(a,b){return a.cy-b.cy;})[0];
+  var botY=firstFin?firstFin.cy-band:1e9;
+
+  var nameWords=words.filter(function(w){
+    return w.cx<priceColX && w.cy>topY-50 && w.cy<botY
+      && !/^@?[\d,\.]+$/.test(w.t) && w.t!=='@' && !/^[¥￥\\]+$/.test(w.t);
+  }).sort(function(a,b){return a.cy-b.cy;});
+  var nameLines=[];
+  nameWords.forEach(function(w){
+    var Ln=nameLines[nameLines.length-1];
+    if(Ln && Math.abs(w.cy-Ln.cy)<35){ Ln.toks.push(w); Ln.cy=(Ln.cy*Ln.n+w.cy)/(Ln.n+1); Ln.n++; }
+    else nameLines.push({cy:w.cy,n:1,toks:[w]});
+  });
+  nameLines.forEach(function(Ln){
+    Ln.toks.sort(function(a,b){return a.cx-b.cx;});
+    Ln.raw=Ln.toks.map(function(tk){return tk.t;}).join('').replace(/\s/g,'');
+    Ln.text=cleanName(Ln.raw);
+    Ln.unitish=/個|@|^\(/.test(Ln.raw);
+  });
+
+  var units=[];
+  words.filter(function(w){return w.t.indexOf('@')!==-1;}).forEach(function(at){
+    var m=at.t.match(/@[¥￥\\]?([\d,]+)/);
+    if(m){ units.push({cy:at.cy,val:toYen(m[1])}); return; }
+    var num=words.filter(function(w){return w.cx>at.cx && Math.abs(w.cy-at.cy)<band && isMoneyShape(w.t);})
+      .sort(function(a,b){return a.cx-b.cx;})[0];
+    if(num) units.push({cy:at.cy,val:toYen(num.t)});
+  });
+
+  var prices=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;})
+    .sort(function(a,b){return a.cy-b.cy;});
+  var items=[];
+  prices.forEach(function(p){
+    var best=null,bd=1e9;
+    nameLines.forEach(function(Ln){
+      if(Ln.used || Ln.unitish) return;
+      var dy=p.cy-Ln.cy;
+      if(dy>=-30 && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
+    });
+    var name=best?best.text:'';
+    if(!name || META_NAME.test(name)) return;
+    best.used=true;
+    var price=toYen(p.t);
+    var qTok=words.filter(function(w){
+      return w.cx>nameColX && w.cx<p.cx && Math.abs(w.cy-p.cy)<band
+        && /^\d{1,2}$/.test(w.t) && parseInt(w.t)<100;
+    }).sort(function(a,b){return Math.abs(a.cy-p.cy)-Math.abs(b.cy-p.cy);})[0];
+    var qty=qTok?parseInt(qTok.t):null;
+    var unitCands=units.filter(function(u){return u.val>0 && Math.abs(u.cy-p.cy)<band*2.5;})
+      .sort(function(a,b){return Math.abs(a.cy-p.cy)-Math.abs(b.cy-p.cy);});
+    for(var ui=0;ui<unitCands.length;ui++){
+      var uv=unitCands[ui].val, dv=price/uv;
+      if(price%uv===0 && dv>=1 && dv<=99){ if(qty===null||qty!==dv) qty=dv; break; }
+    }
+    items.push({name:name, qty:qty||1, price:price});
+  });
+
+  var subTok=finPrice(/小計/), totTok=finPrice(/合計|総額|お会計/);
+  var subtotal=subTok?toYen(subTok.t):0, total=totTok?toYen(totTok.t):0;
+  var itemSum=items.reduce(function(a,i){return a+i.price;},0);
+  var target=subtotal||total;
+  var valid = items.length>0 && target>0 && itemSum===target;
+
+  // store / date / cat (rawText 보조)
+  var store='';
+  var rawLines=(rawText||'').split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>1;});
+  for(var si=0; si<Math.min(rawLines.length,12); si++){
+    var ln=rawLines[si].replace(/^[\*\=\~\-_#・·\s]+|[\*\=\~\-_#・·\s]+$/g,''); // 양끝 장식 제거
+    if(!ln) continue;
+    if(/領収|登録|番号|TEL|住所|電話|^\d|レシート|伝票|テーブル|店舗#|端末|精算|発行|prototype|ptotype/i.test(ln)) continue;
+    if(ln.replace(/[^぀-ヿ一-鿿A-Za-z]/g,'').length < 2) continue; // 의미있는 글자 2+
+    store=ln; break;
+  }
+  var receiptDate=null;
+  var dm=(rawText||'').match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/);
+  if(dm) receiptDate=dm[1]+'-'+String(parseInt(dm[2])).padStart(2,'0')+'-'+String(parseInt(dm[3])).padStart(2,'0');
+
+  return {
+    store: store || '店舗名不明',
+    items: items,
+    subtotal: subtotal,
+    tax8: 0, tax10: 0,
+    total: total || subtotal || itemSum,
+    totalItems: items.reduce(function(a,i){return a+(i.qty||1);},0),
+    cat: (typeof autoClassify==='function') ? autoClassify(store, items) : 'other',
+    date: receiptDate,
+    _valid: valid
+  };
 }
 
 function parseReceiptText(rawText) {

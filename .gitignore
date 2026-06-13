@@ -41,3 +41,9 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# 로컬 파싱 테스트용 영수증 사진(개인정보) + 스크래치 산출물
+/test*.jpg
+/test*.jpeg
+/test*.png
+/vision-out.json

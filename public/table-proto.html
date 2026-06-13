@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>좌표 기반 표 복원 파서 — 프로토타입</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#181b22; --panel2:#1f242d; --line:#2a3038;
+    --text:#e8edf2; --text2:#9aa6b2; --text3:#67727e;
+    --green:#34c759; --green-bg:rgba(52,199,89,.12);
+    --red:#ff453a; --red-bg:rgba(255,69,58,.12);
+    --blue:#0a84ff; --amber:#ffd60a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Noto Sans KR",sans-serif;
+    line-height:1.55;font-size:14px;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:920px;margin:0 auto;padding:24px 16px 80px}
+  h1{font-size:20px;margin:0 0 4px}
+  .sub{color:var(--text2);font-size:13px;margin:0 0 20px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:16px}
+  .card h2{font-size:14px;margin:0 0 12px;color:var(--text2);font-weight:700;letter-spacing:.02em}
+  .btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--panel2);
+    color:var(--text);border-radius:10px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer}
+  .btn:hover{border-color:#3a4452}
+  .btn.primary{background:var(--blue);border-color:var(--blue);color:#fff}
+  .row-btns{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  textarea{width:100%;min-height:120px;background:var(--bg);color:var(--text);border:1px solid var(--line);
+    border-radius:10px;padding:10px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;resize:vertical}
+  input[type=file]{font-size:12px;color:var(--text2)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--text3);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+  td.num{text-align:right;font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+  .pill.item{background:var(--green-bg);color:var(--green)}
+  .badge{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;font-weight:700;font-size:14px}
+  .badge.ok{background:var(--green-bg);color:var(--green)}
+  .badge.ng{background:var(--red-bg);color:var(--red)}
+  .muted{color:var(--text3);font-size:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:680px){.grid2{grid-template-columns:1fr}}
+  .rowline{font-family:ui-monospace,monospace;font-size:12px;color:var(--text2);padding:3px 0;border-bottom:1px dashed var(--line)}
+  .rowline b{color:var(--text)}
+  .err{color:var(--red);font-size:13px}
+  .tag{font-size:11px;color:var(--text3)}
+  details summary{cursor:pointer;color:var(--text2);font-size:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧾 좌표 기반 표 복원 파서 <span class="tag">prototype v2</span></h1>
+  <p class="sub">Vision 글자 좌표(x,y)로 영수증을 <b>표(행·열)로 복원</b>해서 파싱합니다. EXIF 회전 자동보정 · 2줄 품목 구조 · @단가 수량역산 · 小計/合計 검증 포함.</p>
+
+  <div class="card">
+    <h2>입력</h2>
+    <div class="row-btns" style="margin-bottom:12px">
+      <button class="btn primary" id="btnSample">📋 예시(銀座篝) 불러오기</button>
+      <label class="btn">📷 영수증 사진<input type="file" id="file" accept="image/*" style="display:none"></label>
+      <span class="muted" id="fileHint">사진 업로드 → EXIF 회전보정 → /api/vision → 표 복원</span>
+    </div>
+    <details>
+      <summary>또는 Vision API JSON 직접 붙여넣기 (textAnnotations 포함)</summary>
+      <textarea id="jsonIn" placeholder='{"responses":[{"textAnnotations":[ ... ]}]}'></textarea>
+      <button class="btn" id="btnJson" style="margin-top:8px">JSON 파싱</button>
+    </details>
+    <div id="status" class="muted" style="margin-top:10px"></div>
+  </div>
+
+  <div id="out"></div>
+</div>
+
+<script>
+/* ============================================================
+ *  1) Vision 응답 → 단어(word) 박스 리스트
+ * ============================================================ */
+function extractWords(annotations){
+  return annotations.map(function(a){
+    var v=(a.boundingPoly&&a.boundingPoly.vertices)||[];
+    var xs=v.map(function(p){return p.x||0;});
+    var ys=v.map(function(p){return p.y||0;});
+    var top=Math.min.apply(null,ys),bottom=Math.max.apply(null,ys);
+    var left=Math.min.apply(null,xs),right=Math.max.apply(null,xs);
+    return {t:a.description,cy:(top+bottom)/2,cx:(left+right)/2,
+      top:top,bottom:bottom,left:left,right:right,h:Math.max(1,bottom-top)};
+  }).filter(function(w){ return w.t && w.t.indexOf('\n')===-1; });
+}
+
+function toYen(s){
+  var c=String(s).replace(/[¥￥\\＊*\s()_]/g,'');
+  if(/^\d+\.\d{3}$/.test(c)) c=c.replace('.','');
+  else c=c.replace(/[,\.]/g,'');
+  return parseInt(c)||0;
+}
+var FIN_KW=/(小計|税抜|消費税|合計|総額|お会計|現金|釣|預|クレジット|電子マネー|ポイント)/;
+// 품목명이 아닌(헤더·합계·메타) 줄 판별
+var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|点数|外税|内税|お預|お釣|発行)/;
+// 이름 정리: 【…】 부가표기 제거 → 앞 세금마커(外/軽/内/*)·상품코드 제거
+function cleanName(s){
+  var t=s.replace(/【[^】]*】/g,'').replace(/[【】\s]/g,'');
+  for(var i=0;i<3;i++){ t=t.replace(/^[外軽内\*＊]+/,'').replace(/^\d+/,''); }
+  return t;
+}
+
+/* ============================================================
+ *  2) 표 복원 파싱  (이미지 크기 무관 상대좌표)
+ *
+ *  열 구조:  [이름 ...] | [수량] | [금액(우측정렬)]
+ *  품목 1줄(이름+수량+금액) 과 2줄(이름 / @단가 수량 금액) 모두 대응
+ * ============================================================ */
+function parseTable(annotations){
+  var words=extractWords(annotations);
+  if(!words.length) throw new Error('좌표가 있는 단어를 찾지 못했습니다 (textAnnotations 없음)');
+
+  var L=Math.min.apply(null,words.map(function(w){return w.left;}));
+  var R=Math.max.apply(null,words.map(function(w){return w.right;}));
+  var W=Math.max(1,R-L);
+  var nameColX  = L + 0.50*W;   // 이름: cx < nameColX
+  var priceColX = L + 0.60*W;   // 금액: cx > priceColX (값 ≥ 100)
+
+  // 금액 모양: 앞 ¥, 뒤 세금구분 접미사(外/軽/内/*) 허용 — 예: ¥300外
+  function isMoneyShape(t){ return /^[¥￥\\]?\(?[\d,\.]+\)?[外軽内\*＊]?$/.test(t.replace(/\s/g,'')) && /\d/.test(t); }
+  // 금액열(우측)에 있으면 작은 값(¥68 등)도 가격. 단 등록번호·전화 같은 비현실적 큰 수(>1천만엔)는 제외
+  function isPriceTok(w){ var v=toYen(w.t); return w.cx>priceColX && isMoneyShape(w.t) && v>=10 && v<1e7; }
+  // 같은 줄로 볼 cy 허용폭 — 행 간격보다 작아야 인접 줄과 안 섞임
+  var hs=words.map(function(w){return w.h;}).sort(function(a,b){return a-b;});
+  var medH=hs[Math.floor(hs.length/2)]||20;
+  var band=Math.max(16, medH*0.7);
+  function lineText(cy){                         // 좌측열에서 이 cy줄의 텍스트(분리된 小/計도 합쳐짐)
+    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<band;})
+      .sort(function(a,b){return a.cx-b.cx;}).map(function(w){return w.t;}).join('');
+  }
+  function kwCy(re){
+    var a=words.filter(function(w){return re.test(w.t);}).sort(function(x,y){return x.cy-y.cy;});
+    return a.length?a[0].cy:null;
+  }
+  function finPrice(re){                         // 키워드가 같은 줄에 있는 금액토큰(가장 위)
+    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy));})
+      .sort(function(a,b){return a.cy-b.cy;});
+    return ps.length?ps[0]:null;
+  }
+
+  // 품목 영역: 헤더(人数/伝票/テーブル) 중 "가장 아래" 줄 밑 ~ 첫 금융줄(小計/税抜/合計) 위
+  // 헤더 앵커: 품목 "바로 위"에 오는 키워드만 (登録番号는 영수증마다 위/아래라 제외)
+  var anchorYs=words.filter(function(w){return /人数|伝票|テーブル|領収/.test(w.t);}).map(function(w){return w.cy;});
+  var topY=anchorYs.length?Math.max.apply(null,anchorYs)+30:-1e9;
+  var firstFin=[finPrice(/小計/),finPrice(/税抜/),finPrice(/合計|総額|お会計/)]
+    .filter(Boolean).sort(function(a,b){return a.cy-b.cy;})[0];
+  var botY=firstFin?firstFin.cy-band:1e9;
+
+  // 이름 토큰: 금액열 왼쪽의 비숫자 토큰(숫자 코드·수량은 제외). 상품명이 가운데까지 와도 잡게 priceColX 기준
+  var nameWords=words.filter(function(w){
+    return w.cx<priceColX && w.cy>topY-50 && w.cy<botY
+      && !/^@?[\d,\.]+$/.test(w.t) && w.t!=='@' && !/^[¥￥\\]+$/.test(w.t);
+  }).sort(function(a,b){return a.cy-b.cy;});
+  var nameLines=[];
+  nameWords.forEach(function(w){
+    var Ln=nameLines[nameLines.length-1];
+    if(Ln && Math.abs(w.cy-Ln.cy)<35){ Ln.toks.push(w); Ln.cy=(Ln.cy*Ln.n+w.cy)/(Ln.n+1); Ln.n++; }
+    else nameLines.push({cy:w.cy,n:1,toks:[w]});
+  });
+  nameLines.forEach(function(Ln){
+    Ln.toks.sort(function(a,b){return a.cx-b.cx;});
+    Ln.raw=Ln.toks.map(function(t){return t.t;}).join('').replace(/\s/g,'');
+    Ln.text=cleanName(Ln.raw);
+    Ln.unitish=/個|@|^\(/.test(Ln.raw);     // (N個x @단가) 같은 단가줄
+  });
+
+  // @단가 토큰 — "@320" "@¥2,110" "@ ¥600" 모두 대응
+  var units=[];
+  words.filter(function(w){return w.t.indexOf('@')!==-1;}).forEach(function(at){
+    var m=at.t.match(/@[¥￥\\]?([\d,]+)/);
+    if(m){ units.push({cy:at.cy,val:toYen(m[1])}); return; }
+    // "@" 단독 → 같은 줄 오른쪽의 금액 토큰
+    var num=words.filter(function(w){return w.cx>at.cx && Math.abs(w.cy-at.cy)<band && isMoneyShape(w.t);})
+      .sort(function(a,b){return a.cx-b.cx;})[0];
+    if(num) units.push({cy:at.cy,val:toYen(num.t)});
+  });
+
+  // 품목 금액(우측열) 기준으로 조립
+  var prices=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;})
+    .sort(function(a,b){return a.cy-b.cy;});
+  var items=[];
+  prices.forEach(function(p){
+    // 이 금액의 가장 가까운 위쪽(또는 같은 줄) 미사용 이름 줄 (단가줄 제외)
+    var best=null,bd=1e9;
+    nameLines.forEach(function(Ln){
+      if(Ln.used || Ln.unitish) return;
+      var dy=p.cy-Ln.cy;                          // 이름이 위면 dy>0
+      if(dy>=-30 && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
+    });
+    var name=best?best.text:'';
+    // 이름이 없거나 헤더/메타 줄이면 품목 아님 → 건너뜀
+    if(!name || META_NAME.test(name)) return;
+    best.used=true;
+    var price=toYen(p.t);
+    // 수량: 이름열~이 금액 사이의 작은 정수
+    var qTok=words.filter(function(w){
+      return w.cx>nameColX && w.cx<p.cx && Math.abs(w.cy-p.cy)<band
+        && /^\d{1,2}$/.test(w.t) && parseInt(w.t)<100;
+    }).sort(function(a,b){return Math.abs(a.cy-p.cy)-Math.abs(b.cy-p.cy);})[0];
+    var qty=qTok?parseInt(qTok.t):null;
+    // @단가가 있으면 수량 역산(보정/복구). 가까운 후보부터, 나눠떨어지는 단가를 채택
+    var unitCands=units.filter(function(u){return u.val>0 && Math.abs(u.cy-p.cy)<band*2.5;})
+      .sort(function(a,b){return Math.abs(a.cy-p.cy)-Math.abs(b.cy-p.cy);});
+    for(var ui=0;ui<unitCands.length;ui++){
+      var uv=unitCands[ui].val, dv=price/uv;
+      if(price%uv===0 && dv>=1 && dv<=99){ if(qty===null||qty!==dv) qty=dv; break; }
+    }
+    items.push({name:name, qty:qty||1, price:price});
+  });
+
+  // 小計 / 合計
+  var subTok=finPrice(/小計/), totTok=finPrice(/合計|総額|お会計/);
+  var sub=subTok?toYen(subTok.t):0, tot=totTok?toYen(totTok.t):0;
+  var sum=items.reduce(function(a,i){return a+i.price;},0);
+  var target=sub||tot;                          // 외세는 小計, 내세는 小計=合計
+  return {items:items, sum:sum, subtotal:sub, total:tot, target:target,
+    ok:(target>0 && sum===target)};
+}
+
+/* ============================================================
+ *  3) 렌더링
+ * ============================================================ */
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function render(res){
+  var out=document.getElementById('out');
+  var label=res.subtotal?'小計':'合計';
+  var badge=res.target
+    ? (res.ok
+        ? '<div class="badge ok">✅ 검증 통과 · 품목합 ¥'+res.sum.toLocaleString()+' = '+label+' ¥'+res.target.toLocaleString()+'</div>'
+        : '<div class="badge ng">⚠️ 불일치 · 품목합 ¥'+res.sum.toLocaleString()+' ≠ '+label+' ¥'+res.target.toLocaleString()+' (차액 ¥'+Math.abs(res.target-res.sum).toLocaleString()+')</div>')
+    : '<div class="badge ng">小計/合計 행을 못 찾음</div>';
+  var taxNote=(res.subtotal&&res.total&&res.total!==res.subtotal)
+    ? '<div class="muted" style="margin-top:6px">小計 ¥'+res.subtotal.toLocaleString()+' → 合計 ¥'+res.total.toLocaleString()+' (외세 · 소비세 ¥'+(res.total-res.subtotal).toLocaleString()+')</div>' : '';
+  var itemsHtml=res.items.map(function(it){
+    return '<tr><td>'+esc(it.name)+'</td><td class="num">'+it.qty+'</td><td class="num">¥'+(it.price||0).toLocaleString()+'</td></tr>';
+  }).join('');
+  var rowsHtml=res.items.map(function(it,i){
+    return '<div class="rowline"><span class="pill item">'+(i+1)+'</span> <b>'+esc(it.name)+'</b> <span class="muted">×'+it.qty+' · ¥'+(it.price||0).toLocaleString()+'</span></div>';
+  }).join('');
+  out.innerHTML='<div class="card">'+badge+taxNote+'</div>'
+    +'<div class="grid2">'
+    +'<div class="card"><h2>✅ 인식된 품목 ('+res.items.length+'件)</h2>'
+    +'<table><thead><tr><th>품목</th><th class="num">수량</th><th class="num">금액</th></tr></thead><tbody>'+itemsHtml+'</tbody></table></div>'
+    +'<div class="card"><h2>🔍 복원 상세</h2>'+rowsHtml+'</div>'
+    +'</div>';
+}
+
+/* ============================================================
+ *  4) EXIF orientation 자동보정 (Vision은 EXIF를 무시하므로 픽셀을 똑바로 돌려 보냄)
+ * ============================================================ */
+function getOrientation(buf){
+  var b=new Uint8Array(buf);
+  for(var k=0;k<b.length-6;k++){
+    if(b[k]===0x45&&b[k+1]===0x78&&b[k+2]===0x69&&b[k+3]===0x66&&b[k+4]===0&&b[k+5]===0){
+      var tiff=k+6, little=b[tiff]===0x49;
+      function r16(o){return little?(b[o]|b[o+1]<<8):(b[o]<<8|b[o+1]);}
+      function r32(o){return little?(b[o]|b[o+1]<<8|b[o+2]<<16|b[o+3]<<24):(b[o]<<24|b[o+1]<<16|b[o+2]<<8|b[o+3]);}
+      var ifd=tiff+r32(tiff+4), n=r16(ifd);
+      for(var j=0;j<n;j++){ var e=ifd+2+j*12; if(r16(e)===0x0112) return r16(e+8); }
+      return 1;
+    }
+  }
+  return 1;
+}
+// JPEG 원본 픽셀 크기 + EXIF orientation
+function jpegMeta(buf){
+  var b=new Uint8Array(buf), W=0,H=0,i=2;
+  while(i<b.length){
+    if(b[i]!==0xFF){i++;continue;}
+    var m=b[i+1];
+    if(m>=0xC0&&m<=0xCF&&m!==0xC4&&m!==0xC8&&m!==0xCC){ H=(b[i+5]<<8)|b[i+6]; W=(b[i+7]<<8)|b[i+8]; break; }
+    if(m===0xD8||m===0xD9){ i+=2; continue; }
+    i+=2+((b[i+2]<<8)|b[i+3]);
+  }
+  var ori=1; try{ ori=getOrientation(buf); }catch(_){}
+  return {W:W,H:H,ori:ori};
+}
+// EXIF orientation 대로 좌표를 똑바로 회전 (이미지 재인코딩 없이 = 검증된 방식)
+function rotateAnn(annotations,W,H,ori){
+  if(ori===1||!W||!H) return annotations;
+  return annotations.map(function(a){
+    return {description:a.description, boundingPoly:{vertices:(a.boundingPoly.vertices||[]).map(function(p){
+      var x=p.x||0,y=p.y||0;
+      switch(ori){
+        case 3: return {x:W-1-x, y:H-1-y};   // 180°
+        case 6: return {x:H-1-y, y:x};       // 90° CW
+        case 8: return {x:y,     y:W-1-x};   // 90° CCW
+        default: return {x:x, y:y};
+      }
+    })}};
+  });
+}
+function abToB64(buf){
+  var b=new Uint8Array(buf), CH=0x8000, s='';
+  for(var i=0;i<b.length;i+=CH){ s+=String.fromCharCode.apply(null,b.subarray(i,i+CH)); }
+  return btoa(s);
+}
+
+/* ============================================================
+ *  5) 입력 핸들러
+ * ============================================================ */
+function setStatus(h){ document.getElementById('status').innerHTML=h; }
+function findAnnotations(json){
+  if(json&&json.responses&&json.responses[0]&&json.responses[0].textAnnotations) return json.responses[0].textAnnotations.slice(1);
+  if(json&&json.textAnnotations) return json.textAnnotations.slice(1);
+  if(Array.isArray(json)&&json[0]&&json[0].boundingPoly) return json;
+  throw new Error('textAnnotations를 찾을 수 없습니다');
+}
+
+document.getElementById('btnSample').onclick=function(){
+  setStatus('예시(銀座篝 大手町店) 표 복원 중…');
+  try{ render(parseTable(SAMPLE)); setStatus('완료 — 예시 데이터 (회전 없음)'); }
+  catch(e){ setStatus('<span class="err">'+e.message+'</span>'); }
+};
+document.getElementById('btnJson').onclick=function(){
+  try{ render(parseTable(findAnnotations(JSON.parse(document.getElementById('jsonIn').value)))); setStatus('완료 — 붙여넣은 JSON'); }
+  catch(e){ setStatus('<span class="err">'+e.message+'</span>'); }
+};
+document.getElementById('file').onchange=function(e){
+  var f=e.target.files[0]; if(!f) return;
+  setStatus('이미지 읽는 중…');
+  var rd=new FileReader();
+  rd.onload=function(){
+    var buf=rd.result;
+    var meta=jpegMeta(buf);
+    setStatus('Vision API 호출 중… (EXIF orientation='+meta.ori+', '+meta.W+'×'+meta.H+')');
+    fetch('/api/vision',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({base64Image:abToB64(buf)})})
+      .then(function(r){return r.json();})
+      .then(function(data){
+        if(data.error) throw new Error(data.error.message||'vision error');
+        var ann=rotateAnn(findAnnotations(data), meta.W, meta.H, meta.ori);
+        render(parseTable(ann));
+        setStatus('완료 — 실제 사진 (orientation '+meta.ori+' 좌표 회전 적용)');
+      })
+      .catch(function(err){ setStatus('<span class="err">'+err.message+'</span>'); });
+  };
+  rd.readAsArrayBuffer(f);
+};
+
+/* ============================================================
+ *  예시 데이터 — 銀座篝 大手町店 (좌표 재현, 똑바로 세워진 영수증)
+ * ============================================================ */
+function box(text,left,top,right,bottom){
+  return {description:text,boundingPoly:{vertices:[
+    {x:left,y:top},{x:right,y:top},{x:right,y:bottom},{x:left,y:bottom}]}};
+}
+var SAMPLE=[ {description:'(전체)'} ];
+(function(){
+  var Wt=28;
+  function priceLeft(v){ return 712 - String(v).length*16; }
+  var lines=[
+    {toks:['鶏白湯Soba','並盛'], qty:'1', price:'¥1,300'},
+    {toks:['味玉'],             qty:'1', price:'¥200'},
+    {toks:['鶏白湯Soba','並盛'], qty:'2', price:'¥2,600'},
+    {toks:['味玉'],             qty:'2', price:'¥400'},
+    {toks:['白ごはん'],          qty:'2', price:'¥400'},
+    {toks:['小計'],             qty:'',  price:'¥4,900'},
+    {toks:['合計'],             qty:'',  price:'¥4,900'}
+  ];
+  var y=300;
+  lines.forEach(function(ln){
+    var x=70;
+    ln.toks.forEach(function(t){ var w=t.length*22; SAMPLE.push(box(t,x,y,x+w,y+Wt)); x+=w+16; });
+    if(ln.qty) SAMPLE.push(box(ln.qty,540,y,560,y+Wt));
+    var pl=priceLeft(ln.price);
+    SAMPLE.push(box(ln.price,pl,y,712,y+Wt));
+    y+=44;
+  });
+})();
+</script>
+</body>
+</html>
