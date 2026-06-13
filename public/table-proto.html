@@ -255,7 +255,7 @@ function render(res){
  *     → Vision이 받는 이미지가 이미 똑바로라 좌표 회전 불필요
  * ============================================================ */
 function preprocessUpright(file){
-  var MAX=2400;
+  var MAX=4000, LIMIT=4.0*1024*1024; // 좌표 파서 컬럼 분리에 충분한 해상도 + Vercel 본문 한도 가드
   return (async function(){
     var bmp;
     try { bmp = await createImageBitmap(file, { imageOrientation:'from-image' }); }
@@ -268,7 +268,9 @@ function preprocessUpright(file){
     var c=document.createElement('canvas'); c.width=cw; c.height=ch;
     c.getContext('2d').drawImage(bmp,0,0,cw,ch);
     if(bmp.close){ try{ bmp.close(); }catch(_){} }
-    return { b64:c.toDataURL('image/jpeg',0.92).split(',')[1], w:cw, h:ch };
+    var q=0.92, url=c.toDataURL('image/jpeg',q);
+    while(url.length>LIMIT && q>0.55){ q-=0.1; url=c.toDataURL('image/jpeg',q); } // 너무 크면 품질↓ 재인코딩
+    return { b64:url.split(',')[1], w:cw, h:ch };
   })();
 }
 

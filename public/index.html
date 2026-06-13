@@ -9569,9 +9569,11 @@ function _unsharpMask(data, w, h, amount){
 
 async function preprocessReceiptImage(file, opts){
   opts = opts || {};
-  var MAX = opts.maxSize || 2400;
+  // 좌표 파서가 컬럼을 분리하려면 세로 긴 영수증도 가로 해상도가 충분해야 함 → MAX 4000
+  // (2400이면 세로긴 영수증 가로가 ~983px로 떨어져 글자가 뭉개짐) — 본문 크기는 아래 가드로 제한
+  var MAX = opts.maxSize || 4000;
   var MIN = opts.minSize || 1200;
-  var quality = opts.quality || 0.94;
+  var quality = opts.quality || 0.92;
 
   // 1) 로드 + EXIF 방향 자동 보정 (createImageBitmap 사용)
   var bitmap;
@@ -9641,11 +9643,24 @@ async function preprocessReceiptImage(file, opts){
     }
   } catch(e){ /* 픽셀 처리 실패해도 원본 사용 */ }
 
-  // 4) 고품질 JPEG 재인코딩
+  // 4) 고품질 JPEG 재인코딩 + 본문 크기 가드 (Vercel ~4.5MB 한도)
   var dataUrl = canvas.toDataURL('image/jpeg', quality);
+  var LIMIT = 4.0 * 1024 * 1024;            // base64 문자수 ~4.0MB
+  while (dataUrl.length > LIMIT && quality > 0.55) {   // 품질부터 낮춰 재인코딩
+    quality -= 0.1;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
+  while (dataUrl.length > LIMIT && canvas.width > 1200) {  // 그래도 크면 해상도 축소
+    var nc = document.createElement('canvas');
+    nc.width = Math.round(canvas.width * 0.85);
+    nc.height = Math.round(canvas.height * 0.85);
+    nc.getContext('2d').drawImage(canvas, 0, 0, nc.width, nc.height);
+    canvas = nc; cw = nc.width; ch = nc.height;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
   var base64 = dataUrl.split(',')[1];
 
-  console.log('[preprocess] '+cw+'x'+ch+', '+(Date.now()-t0)+'ms');
+  console.log('[preprocess] '+cw+'x'+ch+', q'+quality.toFixed(2)+', '+Math.round(base64.length/1024)+'KB, '+(Date.now()-t0)+'ms');
   return { base64: base64, dataUrl: dataUrl, width: cw, height: ch, scale: scale };
 }
 

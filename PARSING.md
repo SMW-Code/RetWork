@@ -38,8 +38,9 @@ Vision 응답의 `textAnnotations[]`에는 **글자마다 boundingPoly(좌표)**
 - **같은 y(높이)** → 같은 "행" 복원
 - **x(가로 위치)** → 이름/수량/금액 "열" 분리
 
-> ⚠️ 운영 앱은 `preprocessReceiptImage()`에서 `createImageBitmap(file, {imageOrientation:'from-image'})`로 **EXIF를 이미 보정**해 Vision에 보낸다. 따라서 **운영 파서는 좌표 회전을 하지 않는다.**
-> (프로토타입 `table-proto.html`은 원본 사진을 직접 받으므로 EXIF orientation을 읽어 좌표를 회전한다 — 이 차이를 기억할 것.)
+> ⚠️ 운영 앱은 `preprocessReceiptImage()`에서 `createImageBitmap(file, {imageOrientation:'from-image'})`로 **EXIF를 이미 보정**(픽셀을 똑바로)해 Vision에 보낸다. 따라서 **운영 파서는 좌표 회전을 하지 않는다.** 프로토타입 `table-proto.html`도 동일하게 `preprocessUpright()`로 보정 후 보낸다.
+
+> 🔑 **해상도가 정확도를 좌우한다.** 세로로 긴 영수증을 "긴 변 2400px"로 줄이면 **가로(컬럼 방향)가 ~983px로 떨어져** 글자가 뭉개지고 컬럼 분리가 깨진다(이름 합쳐짐·품목 누락). 그래서 전처리 `MAX`를 **4000px**로 둔다(가로 ~1500px 이상 확보). 본문 크기는 가드로 ~4MB 이내 유지. — 이 값(2400→4000)이 실패→통과를 가른 결정적 요인이었다. **OCR 결과가 갑자기 나빠지면 전처리 해상도부터 의심할 것.**
 
 ---
 
@@ -128,7 +129,9 @@ Vision 응답의 `textAnnotations[]`에는 **글자마다 boundingPoly(좌표)**
 | 다이소 | 2줄 줄바꿈 이름·동일가 반복 | 부분 | ❌ 자동차단 |
 | 오염 사진 | 화면 반사·다른 영수증 겹침 | 오염 | ❌ 자동차단 |
 
-**깨끗한 일반 영수증 4종은 품목·수량까지 정확, 까다롭거나 오염된 2종은 검증이 차단. 틀린 데이터 통과 0건.**
+**실제 운영 전처리 경로(`createImageBitmap` EXIF보정 + 4000px 축소)로 재검증한 결과**: 깨끗한 5종(스시·마트·라멘·규카츠 + 오염사진도 고해상도에선 실제 품목 복원) 통과, **다이소(2줄 줄바꿈 이름)만 검증 차단→GPT 폴백**. 틀린 데이터 통과 0건.
+
+> ⚠️ **교훈**: 같은 6종을 2400px 축소로 돌리면 3종이 실패했다. 처음엔 "원본+좌표회전" 경로로만 검증해서 이 해상도 함정을 놓쳤다. **반드시 실제 운영 경로(createImageBitmap+4000)로 검증할 것.**
 
 ---
 
@@ -144,7 +147,8 @@ Vision 응답의 `textAnnotations[]`에는 **글자마다 boundingPoly(좌표)**
 ## 6. 디버깅 & 업그레이드 방법
 
 1. **프로토타입으로 재현**: `public/table-proto.html` 을 열고(dev 서버 `npm run dev` → `http://localhost:3000/table-proto.html`) 문제 사진을 업로드 → "복원 상세"에서 어느 단계가 어긋났는지 확인.
-2. **일괄 회귀 테스트**: 문제 사진을 프로젝트 폴더에 `testN.jpg`로 두고 `node _batchtest.js` → 모든 케이스가 여전히 통과하는지(회귀) 확인. **한 곳을 고치면 다른 곳이 깨지기 쉬우니 항상 전체 재실행.**
+2. **일괄 회귀 테스트(파서 로직)**: 문제 사진을 `testN.jpg`로 두고 `node _batchtest.js` → 모든 케이스가 여전히 통과하는지(회귀) 확인. **한 곳을 고치면 다른 곳이 깨지기 쉬우니 항상 전체 재실행.**
+   - ⚠️ 단, `_batchtest.js`는 **원본 풀해상도 + 좌표회전**으로 돌려서 **운영의 축소(createImageBitmap+4000) 경로와 다르다**(해상도 함정을 못 잡음). **운영과 동일한 결과를 보려면 반드시 `table-proto.html`에 사진을 직접 업로드**해서 확인할 것 — 이게 production-faithful 테스트다.
 3. 고친 로직은 `table-proto.html`(실험)과 `index.html`의 `parseReceiptByCoords`(운영)에 **둘 다 반영**하고, 이 문서의 해당 단계와 §4·§5도 갱신.
 
 ### 튜닝 파라미터 (한 곳에서 조정)
@@ -156,6 +160,7 @@ Vision 응답의 `textAnnotations[]`에는 **글자마다 boundingPoly(좌표)**
 | 금액 하한/상한 | `10` / `1e7` | 가격 인정 범위 |
 | 이름 매칭 dy | `[-30, 150]`, 비용 `|dy-50|` | 금액↔이름 줄 거리 |
 | @단가 수량 | `1~99`, 나눠떨어짐 | 역산 채택 조건 |
+| 전처리 해상도 | `MAX 4000px` (index.html `preprocessReceiptImage`, table-proto `preprocessUpright`) | 컬럼 분리에 필요한 가로 해상도 확보 (본문 크기 가드로 ~4MB 제한) |
 
 ---
 
