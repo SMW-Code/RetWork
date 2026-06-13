@@ -15758,7 +15758,10 @@ function showAppToast(msg){
       _reguard();
     } finally { window._riqInPop=false; }
   }
-  function _init(){ _guard(); window.addEventListener('popstate', _onBack); }
+  // 베이스 가드가 소비됐으면(끝에 가드 없음) 다시 쌓기 — 사용자 제스처 시 호출(popstate 밖이라 안드로이드 PWA도 신뢰)
+  // → 종료 직전 토스트가 항상 뜨도록 베이스 가드를 늘 유지
+  function _ensureBaseGuard(){ try{ var s=history.state; if(!s || (!s.riqBack && !s.riqNav)){ history.pushState({riqBack:1},''); } }catch(e){} }
+  function _init(){ _guard(); window.addEventListener('popstate', _onBack); document.addEventListener('pointerdown', _ensureBaseGuard, true); }
   if (document.readyState==='loading') window.addEventListener('DOMContentLoaded', _init); else _init();
 })();
 
@@ -28067,7 +28070,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 477;
+window.__APP_BUILD__ = 478;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
