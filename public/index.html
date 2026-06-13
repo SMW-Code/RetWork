@@ -10077,9 +10077,11 @@ function _unsharpMask(data, w, h, amount){
 
 async function preprocessReceiptImage(file, opts){
   opts = opts || {};
-  var MAX = opts.maxSize || 2400;
+  // 좌표 파서가 컬럼을 분리하려면 세로 긴 영수증도 가로 해상도가 충분해야 함 → MAX 4000
+  // (2400이면 세로긴 영수증 가로가 ~983px로 떨어져 글자가 뭉개짐) — 본문 크기는 아래 가드로 제한
+  var MAX = opts.maxSize || 4000;
   var MIN = opts.minSize || 1200;
-  var quality = opts.quality || 0.94;
+  var quality = opts.quality || 0.92;
 
   // 1) 로드 + EXIF 방향 자동 보정 (createImageBitmap 사용)
   var bitmap;
@@ -10149,11 +10151,24 @@ async function preprocessReceiptImage(file, opts){
     }
   } catch(e){ /* 픽셀 처리 실패해도 원본 사용 */ }
 
-  // 4) 고품질 JPEG 재인코딩
+  // 4) 고품질 JPEG 재인코딩 + 본문 크기 가드 (Vercel ~4.5MB 한도)
   var dataUrl = canvas.toDataURL('image/jpeg', quality);
+  var LIMIT = 4.0 * 1024 * 1024;            // base64 문자수 ~4.0MB
+  while (dataUrl.length > LIMIT && quality > 0.55) {   // 품질부터 낮춰 재인코딩
+    quality -= 0.1;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
+  while (dataUrl.length > LIMIT && canvas.width > 1200) {  // 그래도 크면 해상도 축소
+    var nc = document.createElement('canvas');
+    nc.width = Math.round(canvas.width * 0.85);
+    nc.height = Math.round(canvas.height * 0.85);
+    nc.getContext('2d').drawImage(canvas, 0, 0, nc.width, nc.height);
+    canvas = nc; cw = nc.width; ch = nc.height;
+    dataUrl = canvas.toDataURL('image/jpeg', quality);
+  }
   var base64 = dataUrl.split(',')[1];
 
-  console.log('[preprocess] '+cw+'x'+ch+', '+(Date.now()-t0)+'ms');
+  console.log('[preprocess] '+cw+'x'+ch+', q'+quality.toFixed(2)+', '+Math.round(base64.length/1024)+'KB, '+(Date.now()-t0)+'ms');
   return { base64: base64, dataUrl: dataUrl, width: cw, height: ch, scale: scale };
 }
 
@@ -10224,7 +10239,24 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
         rawText = data.responses[0].fullTextAnnotation.text;
       }
 
-      // 항상 하이브리드 모드 (백엔드 /api/gpt 경유)
+      // ① 좌표 기반 표복원 파서 먼저 시도 — 검증(품목합==小計/合計) 통과 시 GPT 생략 (PARSING.md)
+      try {
+        var anns = data.responses && data.responses[0] && data.responses[0].textAnnotations;
+        if (anns && anns.length > 1) {
+          var coord = parseReceiptByCoords(anns.slice(1), rawText);
+          if (coord && coord._valid) {
+            console.log('[parse] 좌표 파서 채택: ' + coord.items.length + '품목, 품목합 ¥' + (coord.subtotal||coord.total));
+            window._rawOcrText   = rawText;
+            window._parsedResult = coord;
+            window._previewSrc   = previewSrc;
+            _showDebugUI(previewSrc, rawText, coord, false);
+            return;
+          }
+          console.log('[parse] 좌표 파서 검증 실패 → GPT 폴백');
+        }
+      } catch (e) { console.warn('[parse] 좌표 파서 오류 → GPT 폴백:', e.message); }
+
+      // ② 폴백: 기존 하이브리드 GPT 모드 (백엔드 /api/gpt 경유)
       var statusEl = document.querySelector('.ocr-status');
       if (statusEl) {
         statusEl.innerHTML = '<div class="runner">🏃</div><div style="font-size:13px;color:var(--text-2);font-weight:600;">'+t('ocr.organizing')+'<br><span style="font-size:11px;color:var(--text-3);">'+t('ocr.wait')+'</span></div>';
@@ -11334,25 +11366,45 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
     linesHtml += '</div>';
   }
 
+  // 품목을 표(品目 | 数量 | 金額)로 표시
+  var _cellB = 'border-bottom:0.5px solid rgba(0,0,0,0.06);padding:7px 4px;';
+  var _thS = 'font-size:10px;color:#8FA89E;font-weight:700;padding:0 4px 5px;border-bottom:1px solid rgba(0,0,0,0.1);';
   var itemsHtml = '';
   if (parsed.items && parsed.items.length > 0) {
+    var rowsHtml = '';
     for (var ii = 0; ii < parsed.items.length; ii++) {
       var it = parsed.items[ii];
-      var qtyStr = it.qty > 1 ? ' &times;' + it.qty : '';
-      itemsHtml += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:0.5px solid rgba(0,0,0,0.06);">';
-      itemsHtml += '<span style="flex:1;color:#0F1A17;">' + it.name + qtyStr + '</span>';
-      itemsHtml += '<span style="color:#1D9E75;font-weight:800;">&#165;' + (it.price||0).toLocaleString() + '</span>';
-      itemsHtml += '</div>';
+      rowsHtml += '<tr>'
+        + '<td style="'+_cellB+'font-size:13px;color:#0F1A17;">' + _esc(it.name) + '</td>'
+        + '<td style="'+_cellB+'text-align:center;font-size:12px;color:#67727e;font-variant-numeric:tabular-nums;white-space:nowrap;">&times;' + (it.qty||1) + '</td>'
+        + '<td style="'+_cellB+'text-align:right;font-size:13px;font-weight:800;color:#1D9E75;font-variant-numeric:tabular-nums;white-space:nowrap;">&#165;' + (it.price||0).toLocaleString() + '</td>'
+        + '</tr>';
     }
+    itemsHtml = '<table style="width:100%;border-collapse:collapse;">'
+      + '<thead><tr><th style="text-align:left;'+_thS+'">'+t('ocr.col_item')+'</th>'
+      + '<th style="text-align:center;'+_thS+'">'+t('ocr.qty')+'</th>'
+      + '<th style="text-align:right;'+_thS+'">'+t('ocr.col_amount')+'</th></tr></thead>'
+      + '<tbody>' + rowsHtml + '</tbody></table>';
   } else {
     itemsHtml = '<div style="font-size:12px;color:#E24B4A;padding:6px 0;">'+t('ocr.recognize_fail')+'</div>';
   }
 
   var _itemCnt = parsed.items ? parsed.items.length : 0;
+  // 합계 검증: 품목합 == 小計/合計 (외세는 ×1.1/1.08 역산)
+  var _sum = 0; if (parsed.items) for (var si2=0; si2<parsed.items.length; si2++) _sum += (parsed.items[si2].price||0);
+  var _sub = parsed.subtotal||0, _tot = parsed.total||0;
+  var _ok = _itemCnt>0 && ((_sub>0 && _sum===_sub) || (_tot>0 && _sum===_tot)
+            || (_tot>0 && (Math.round(_sum*1.10)===_tot || Math.round(_sum*1.08)===_tot)));
+  var _badge = _itemCnt>0
+    ? (_ok
+        ? '<div style="margin-top:8px;font-size:11px;font-weight:800;color:#1D9E75;background:rgba(29,158,117,.12);border-radius:8px;padding:6px 10px;">&#10003; '+t('ocr.sum_ok')+' · &#165;'+_sum.toLocaleString()+'</div>'
+        : '<div style="margin-top:8px;font-size:11px;font-weight:800;color:#C77A12;background:rgba(255,171,0,.14);border-radius:8px;padding:6px 10px;">&#9888; '+t('ocr.sum_check')+' · &#165;'+_sum.toLocaleString()+(_tot?' / &#165;'+_tot.toLocaleString():'')+'</div>')
+    : '';
   var summaryHtml = ''
-    + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.store')+': <strong>' + (parsed.store||t('ocr.store_unknown')) + '</strong></div>'
+    + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.store')+': <strong>' + _esc(parsed.store||t('ocr.store_unknown')) + '</strong></div>'
     + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.items')+': <strong>' + t('ocr.debug.count_n',{n:_itemCnt}) + '</strong></div>'
-    + '<div style="font-size:12px;color:#0F1A17;">'+t('ocr.debug.total')+': <strong>&#165;' + (parsed.total||0).toLocaleString() + '</strong></div>';
+    + '<div style="font-size:12px;color:#0F1A17;">'+t('ocr.debug.total')+': <strong>&#165;' + (parsed.total||0).toLocaleString() + '</strong></div>'
+    + _badge;
 
   var html = ''
     + '<div class="sheet-handle"></div>'
@@ -11374,6 +11426,163 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
 
   document.getElementById('ocr-content').innerHTML = html;
   openOv('ov-ocr');
+}
+
+// ══════════════════════════════
+// 좌표 기반 표복원 파서 (상세: PARSING.md)
+//   Vision textAnnotations(글자 좌표)로 영수증을 표로 복원 → 품목/수량/금액
+//   운영 이미지는 preprocessReceiptImage에서 EXIF 보정 완료 → 좌표 회전 안 함
+//   검증(품목합 == 小計/合計) 통과 시에만 _valid=true → 자동 채택, 아니면 GPT 폴백
+//   ⚠ 로직 수정 시 public/table-proto.html(실험)과 PARSING.md도 함께 갱신할 것
+// ══════════════════════════════
+function parseReceiptByCoords(annotations, rawText) {
+  if (!annotations || !annotations.length) return null;
+
+  function toYen(s){
+    var c=String(s).replace(/[¥￥\\＊*\s()_]/g,'');
+    if(/^\d+\.\d{3}$/.test(c)) c=c.replace('.','');
+    else c=c.replace(/[,\.]/g,'');
+    return parseInt(c)||0;
+  }
+  var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|商品|単価|点数|金額|外税|内税|お預|お釣|発行)/;
+  function cleanName(s){
+    var t=s.replace(/【[^】]*】/g,'').replace(/[【】\s]/g,'');
+    for(var i=0;i<3;i++){ t=t.replace(/^[外軽内\*＊]+/,'').replace(/^\d+/,''); }
+    return t;
+  }
+  function extractWords(anns){
+    return anns.map(function(a){
+      var v=(a.boundingPoly&&a.boundingPoly.vertices)||[];
+      var xs=v.map(function(p){return p.x||0;});
+      var ys=v.map(function(p){return p.y||0;});
+      var top=Math.min.apply(null,ys),bottom=Math.max.apply(null,ys);
+      var left=Math.min.apply(null,xs),right=Math.max.apply(null,xs);
+      return {t:a.description,cy:(top+bottom)/2,cx:(left+right)/2,top:top,bottom:bottom,left:left,right:right,h:Math.max(1,bottom-top)};
+    }).filter(function(w){ return w.t && w.t.indexOf('\n')===-1; });
+  }
+
+  var words=extractWords(annotations);
+  if(!words.length) return null;
+
+  var L=Math.min.apply(null,words.map(function(w){return w.left;}));
+  var R=Math.max.apply(null,words.map(function(w){return w.right;}));
+  var W=Math.max(1,R-L);
+  var nameColX=L+0.50*W, priceColX=L+0.60*W;
+
+  function isMoneyShape(t){ return /^[¥￥\\]?\(?[\d,\.]+\)?[外軽内\*＊]?$/.test(t.replace(/\s/g,'')) && /\d/.test(t); }
+  function moneyTok(w){ var v=toYen(w.t); return isMoneyShape(w.t) && v>=10 && v<1e7; } // 등록번호 등 비현실적 큰 수 제외
+  function isPriceTok(w){ return moneyTok(w) && w.cx>priceColX; }
+
+  var hs=words.map(function(w){return w.h;}).sort(function(a,b){return a-b;});
+  var medH=hs[Math.floor(hs.length/2)]||20;
+  var band=Math.max(16, medH*0.7);
+  function lineText(cy, mul){
+    var b=band*(mul||1);
+    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<b;})
+      .sort(function(a,b){return a.cx-b.cx;}).map(function(w){return w.t;}).join('');
+  }
+  function finPrice(re){                         // 푸터 큰 폰트 어긋남 대비 band 1.4배
+    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy,1.4));})
+      .sort(function(a,b){return a.cy-b.cy;});
+    return ps.length?ps[0]:null;
+  }
+
+  var anchorYs=words.filter(function(w){return /人数|伝票|テーブル|領収/.test(w.t);}).map(function(w){return w.cy;});
+  var topY=anchorYs.length?Math.max.apply(null,anchorYs)+30:-1e9;
+  var firstFin=[finPrice(/小計/),finPrice(/税抜/),finPrice(/合計|総額|お会計/)].filter(Boolean).sort(function(a,b){return a.cy-b.cy;})[0];
+  var botY=firstFin?firstFin.cy-band:1e9;
+
+  var nameWords=words.filter(function(w){
+    return w.cx<priceColX && w.cy>topY-50 && w.cy<botY
+      && !/^@?[\d,\.]+$/.test(w.t) && w.t!=='@' && !/^[¥￥\\]+$/.test(w.t);
+  }).sort(function(a,b){return a.cy-b.cy;});
+  var nameLines=[];
+  nameWords.forEach(function(w){
+    var Ln=nameLines[nameLines.length-1];
+    if(Ln && Math.abs(w.cy-Ln.cy)<35){ Ln.toks.push(w); Ln.cy=(Ln.cy*Ln.n+w.cy)/(Ln.n+1); Ln.n++; }
+    else nameLines.push({cy:w.cy,n:1,toks:[w]});
+  });
+  nameLines.forEach(function(Ln){
+    Ln.toks.sort(function(a,b){return a.cx-b.cx;});
+    Ln.raw=Ln.toks.map(function(tk){return tk.t;}).join('').replace(/\s/g,'');
+    Ln.text=cleanName(Ln.raw);
+    Ln.unitish=/個|@|^\(/.test(Ln.raw);
+  });
+
+  var units=[];
+  words.filter(function(w){return w.t.indexOf('@')!==-1;}).forEach(function(at){
+    var m=at.t.match(/@[¥￥\\]?([\d,]+)/);
+    if(m){ units.push({cy:at.cy,val:toYen(m[1])}); return; }
+    var num=words.filter(function(w){return w.cx>at.cx && Math.abs(w.cy-at.cy)<band && isMoneyShape(w.t);})
+      .sort(function(a,b){return a.cx-b.cx;})[0];
+    if(num) units.push({cy:at.cy,val:toYen(num.t)});
+  });
+
+  var _allP=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;});
+  // 같은 행에 숫자열이 여러 개면(単価|点数|金額) 맨 오른쪽=라인합계(金額)만 가격으로
+  var prices=_allP.filter(function(p){
+    return !_allP.some(function(q){ return q!==p && Math.abs(q.cy-p.cy)<band && q.cx>p.cx; });
+  }).sort(function(a,b){return a.cy-b.cy;});
+  var items=[];
+  prices.forEach(function(p){
+    var best=null,bd=1e9;
+    nameLines.forEach(function(Ln){
+      if(Ln.used || Ln.unitish) return;
+      var dy=p.cy-Ln.cy;
+      if(dy>=-band && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
+    });
+    var name=best?best.text:'';
+    if(!name || META_NAME.test(name)) return;
+    best.used=true;
+    var price=toYen(p.t);
+    var qTok=words.filter(function(w){
+      return w.cx>nameColX && w.cx<p.cx && Math.abs(w.cy-p.cy)<band
+        && /^\d{1,2}$/.test(w.t) && parseInt(w.t)<100;
+    }).sort(function(a,b){return Math.abs(a.cy-p.cy)-Math.abs(b.cy-p.cy);})[0];
+    var qty=qTok?parseInt(qTok.t):null;
+    var unitCands=units.filter(function(u){return u.val>0 && Math.abs(u.cy-p.cy)<band*2.5;})
+      .sort(function(a,b){return Math.abs(a.cy-p.cy)-Math.abs(b.cy-p.cy);});
+    for(var ui=0;ui<unitCands.length;ui++){
+      var uv=unitCands[ui].val, dv=price/uv;
+      if(price%uv===0 && dv>=1 && dv<=99){ if(qty===null||qty!==dv) qty=dv; break; }
+    }
+    items.push({name:name, qty:qty||1, price:price});
+  });
+
+  var subTok=finPrice(/小計/), totTok=finPrice(/合計|総額|お会計/);
+  var subtotal=subTok?toYen(subTok.t):0, total=totTok?toYen(totTok.t):0;
+  var itemSum=items.reduce(function(a,i){return a+i.price;},0);
+  var target=subtotal||total;
+  // 검증: 품목합 == 小計 | 合計(내세) | 合計÷1.1·1.08(외세, 小計 없을 때 세율 역산)
+  var valid = items.length>0 && (
+        (subtotal>0 && itemSum===subtotal) || (total>0 && itemSum===total)
+        || (total>0 && (Math.round(itemSum*1.10)===total || Math.round(itemSum*1.08)===total)));
+
+  // store / date / cat (rawText 보조)
+  var store='';
+  var rawLines=(rawText||'').split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>1;});
+  for(var si=0; si<Math.min(rawLines.length,12); si++){
+    var ln=rawLines[si].replace(/^[\*\=\~\-_#・·\s]+|[\*\=\~\-_#・·\s]+$/g,''); // 양끝 장식 제거
+    if(!ln) continue;
+    if(/領収|登録|番号|TEL|住所|電話|^\d|レシート|伝票|テーブル|店舗#|端末|精算|発行|prototype|ptotype/i.test(ln)) continue;
+    if(ln.replace(/[^぀-ヿ一-鿿A-Za-z]/g,'').length < 2) continue; // 의미있는 글자 2+
+    store=ln; break;
+  }
+  var receiptDate=null;
+  var dm=(rawText||'').match(/(\d{4})[年\/\-](\d{1,2})[月\/\-](\d{1,2})/);
+  if(dm) receiptDate=dm[1]+'-'+String(parseInt(dm[2])).padStart(2,'0')+'-'+String(parseInt(dm[3])).padStart(2,'0');
+
+  return {
+    store: store || '店舗名不明',
+    items: items,
+    subtotal: subtotal,
+    tax8: 0, tax10: 0,
+    total: total || subtotal || itemSum,
+    totalItems: items.reduce(function(a,i){return a+(i.qty||1);},0),
+    cat: (typeof autoClassify==='function') ? autoClassify(store, items) : 'other',
+    date: receiptDate,
+    _valid: valid
+  };
 }
 
 function parseReceiptText(rawText) {
@@ -12671,6 +12880,7 @@ var I18N = {
     'ocr.store_name':'店名','ocr.date':'日付','ocr.items_recognized':'認識された品目','ocr.add_item':'+ 品目追加',
     'ocr.select_category':'カテゴリ選択','ocr.no_items':'品目なし。下の + ボタンで追加してください。',
     'ocr.qty':'数量','ocr.subtotal':'小計','ocr.tax':'税','ocr.total':'合計',
+    'ocr.col_item':'品目','ocr.col_amount':'金額','ocr.sum_ok':'合計一致','ocr.sum_check':'合計と不一致 — 要確認',
     'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
     'ocr.store_unknown':'不明','ocr.save_budget':'家計簿に保存','ocr.save_publish':'家計簿に保存 ＆ チリつもに公開','ocr.item_unit':'品目',
     'ocr.title':'📷 レシート解析中...','ocr.title_split':'📜 分割レシート解析中...','ocr.checking':'レシートを確認しています','ocr.organizing':'商品を整理しています','ocr.wait':'しばらくお待ちください','ocr.reading_page':'{i}/{n}枚目を読み取り中','ocr.ad_badge':'分析中...',
@@ -12924,6 +13134,7 @@ var I18N = {
     'ocr.store_name':'가게 이름','ocr.date':'날짜','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
     'ocr.select_category':'카테고리 선택','ocr.no_items':'품목 없음. 아래 + 버튼으로 추가해주세요.',
     'ocr.qty':'수량','ocr.subtotal':'소계','ocr.tax':'세금','ocr.total':'합계',
+    'ocr.col_item':'품목','ocr.col_amount':'금액','ocr.sum_ok':'합계 일치','ocr.sum_check':'합계 불일치 — 확인 필요',
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
     'ocr.store_unknown':'불명','ocr.save_budget':'가계부에 저장하기','ocr.save_publish':'가계부 저장 ＆ 치리츠모 공개','ocr.item_unit':'품목',
     'ocr.title':'📷 영수증 분석 중...','ocr.title_split':'📜 분할 영수증 분석 중...','ocr.checking':'영수증을 확인하고 있어요','ocr.organizing':'품목을 정리하고 있어요','ocr.wait':'잠시만 기다려주세요','ocr.reading_page':'{i}/{n}장 읽고 있어요','ocr.ad_badge':'분석 중...',
@@ -13167,6 +13378,7 @@ var I18N = {
     'ocr.store_name':'Store Name','ocr.date':'Date','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
     'ocr.select_category':'Select Category','ocr.no_items':'No items. Tap + below to add.',
     'ocr.qty':'Qty','ocr.subtotal':'Subtotal','ocr.tax':'Tax','ocr.total':'Total',
+    'ocr.col_item':'Item','ocr.col_amount':'Amount','ocr.sum_ok':'Total matches','ocr.sum_check':'Total mismatch — check',
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
     'ocr.store_unknown':'Unknown','ocr.save_budget':'Save to Budget','ocr.save_publish':'Save & Publish to Chiri','ocr.item_unit':'items',
     'ocr.title':'📷 Analyzing receipt...','ocr.title_split':'📜 Analyzing split receipt...','ocr.checking':'Reading your receipt','ocr.organizing':'Organizing items','ocr.wait':'Please wait a moment','ocr.reading_page':'Reading page {i}/{n}','ocr.ad_badge':'Analyzing...',
@@ -13410,6 +13622,7 @@ var I18N = {
     'ocr.store_name':'店名','ocr.date':'日期','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
     'ocr.select_category':'选择类别','ocr.no_items':'无商品。点击下方 + 添加。',
     'ocr.qty':'数量','ocr.subtotal':'小计','ocr.tax':'税','ocr.total':'合计',
+    'ocr.col_item':'品目','ocr.col_amount':'金额','ocr.sum_ok':'合计一致','ocr.sum_check':'合计不符 — 请确认',
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
     'ocr.store_unknown':'未知','ocr.save_budget':'保存到账本','ocr.save_publish':'保存账本并发布到Chiri','ocr.item_unit':'件',
     'ocr.title':'📷 正在分析票据...','ocr.title_split':'📜 正在分析分割票据...','ocr.checking':'正在确认票据','ocr.organizing':'正在整理商品','ocr.wait':'请稍候','ocr.reading_page':'正在读取第 {i}/{n} 张','ocr.ad_badge':'分析中...',
