@@ -11880,6 +11880,13 @@ function showOcrResult(previewSrc, result) {
   }).join('');
   var noApiNote = '';
 
+  // 영수증 날짜를 연/월/일 직접입력 필드로 (네이티브 picker의 연 변경 불편 해소)
+  var _dRaw = _sanitizeReceiptDate(result.date || '');
+  var _dNow = new Date();
+  var _dP = (/^\d{4}-\d{2}-\d{2}$/.test(_dRaw) ? _dRaw
+    : (_dNow.getFullYear()+'-'+String(_dNow.getMonth()+1).padStart(2,'0')+'-'+String(_dNow.getDate()).padStart(2,'0'))).split('-');
+  var _dY=parseInt(_dP[0]), _dM=parseInt(_dP[1]), _dD=parseInt(_dP[2]);
+
   document.getElementById('ocr-content').innerHTML =
     '<div class="sheet-handle"></div>'
     +'<div class="sheet-title">'+t('ocr.result.title')
@@ -11894,7 +11901,13 @@ function showOcrResult(previewSrc, result) {
     // build 345 — 영수증 날짜 편집 카드 (GPT 오역 시 사용자 즉시 수정 가능)
     +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">'
     +'<div style="flex:1;"><div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;" data-i18n="ocr.date">날짜</div>'
-    +'<input type="date" id="ocr-date" value="'+_esc(_sanitizeReceiptDate(result.date || ''))+'" style="background:transparent;border:none;font-size:15px;font-weight:800;color:var(--text-1);font-family:var(--font);width:100%;padding:0;outline:none;">'
+    +'<div style="display:flex;align-items:center;gap:4px;">'
+    +  '<input type="number" inputmode="numeric" id="ocr-date-y" value="'+_dY+'" min="1900" max="2100" aria-label="year" style="width:62px;background:transparent;border:none;border-bottom:1px dashed var(--border-mid);font-size:15px;font-weight:800;color:var(--text-1);font-family:var(--font);text-align:center;padding:2px 0;outline:none;">'
+    +  '<span style="font-size:13px;color:var(--text-3);font-weight:700;">-</span>'
+    +  '<input type="number" inputmode="numeric" id="ocr-date-m" value="'+_dM+'" min="1" max="12" aria-label="month" style="width:40px;background:transparent;border:none;border-bottom:1px dashed var(--border-mid);font-size:15px;font-weight:800;color:var(--text-1);font-family:var(--font);text-align:center;padding:2px 0;outline:none;">'
+    +  '<span style="font-size:13px;color:var(--text-3);font-weight:700;">-</span>'
+    +  '<input type="number" inputmode="numeric" id="ocr-date-d" value="'+_dD+'" min="1" max="31" aria-label="day" style="width:40px;background:transparent;border:none;border-bottom:1px dashed var(--border-mid);font-size:15px;font-weight:800;color:var(--text-1);font-family:var(--font);text-align:center;padding:2px 0;outline:none;">'
+    +'</div>'
     +'</div></div>'
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
     +'<div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;text-transform:uppercase;">'+t('ocr.items_recognized')+' (<span id=\'item-count\'>'+window._ocrItems.length+'</span>)</div>'
@@ -12151,9 +12164,15 @@ function _doSaveOcrResult() {
   // items를 window._ocrItems에서 읽기 (수정 반영)
   var finalItems = (window._ocrItems || r.items || []).filter(function(it){ return it.price > 0; });
   var finalTotal = window._originalTotal || r.total || finalItems.reduce(function(a,it){ return a + it.price; }, 0);
-  // build 345 — 사용자가 편집한 날짜 input 값을 최우선으로 사용
-  var dateInputEl = document.getElementById('ocr-date');
-  var userDate = dateInputEl ? dateInputEl.value : '';
+  // 사용자가 편집한 날짜(연/월/일 직접입력) 값을 최우선으로 사용
+  var _ey=document.getElementById('ocr-date-y'), _em=document.getElementById('ocr-date-m'), _ed=document.getElementById('ocr-date-d');
+  var userDate = '';
+  if (_ey && _em && _ed) {
+    var _yy=parseInt(_ey.value,10), _mm=parseInt(_em.value,10), _dd=parseInt(_ed.value,10);
+    if (_yy>=1900 && _yy<=2100 && _mm>=1 && _mm<=12 && _dd>=1 && _dd<=31) {
+      userDate = _yy+'-'+String(_mm).padStart(2,'0')+'-'+String(_dd).padStart(2,'0');
+    }
+  }
   var now = new Date();
   var dateStr;
   if (userDate && /^\d{4}-\d{2}-\d{2}$/.test(userDate)) {
