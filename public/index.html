@@ -10900,7 +10900,7 @@ function parseReceiptByCoords(annotations, rawText) {
     else c=c.replace(/[,\.]/g,'');
     return parseInt(c)||0;
   }
-  var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|点数|外税|内税|お預|お釣|発行)/;
+  var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|商品|単価|点数|金額|外税|内税|お預|お釣|発行)/;
   function cleanName(s){
     var t=s.replace(/【[^】]*】/g,'').replace(/[【】\s]/g,'');
     for(var i=0;i<3;i++){ t=t.replace(/^[外軽内\*＊]+/,'').replace(/^\d+/,''); }
@@ -10926,17 +10926,19 @@ function parseReceiptByCoords(annotations, rawText) {
   var nameColX=L+0.50*W, priceColX=L+0.60*W;
 
   function isMoneyShape(t){ return /^[¥￥\\]?\(?[\d,\.]+\)?[外軽内\*＊]?$/.test(t.replace(/\s/g,'')) && /\d/.test(t); }
-  function isPriceTok(w){ var v=toYen(w.t); return w.cx>priceColX && isMoneyShape(w.t) && v>=10 && v<1e7; }
+  function moneyTok(w){ var v=toYen(w.t); return isMoneyShape(w.t) && v>=10 && v<1e7; } // 등록번호 등 비현실적 큰 수 제외
+  function isPriceTok(w){ return moneyTok(w) && w.cx>priceColX; }
 
   var hs=words.map(function(w){return w.h;}).sort(function(a,b){return a-b;});
   var medH=hs[Math.floor(hs.length/2)]||20;
   var band=Math.max(16, medH*0.7);
-  function lineText(cy){
-    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<band;})
+  function lineText(cy, mul){
+    var b=band*(mul||1);
+    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<b;})
       .sort(function(a,b){return a.cx-b.cx;}).map(function(w){return w.t;}).join('');
   }
-  function finPrice(re){
-    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy));})
+  function finPrice(re){                         // 푸터 큰 폰트 어긋남 대비 band 1.4배
+    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy,1.4));})
       .sort(function(a,b){return a.cy-b.cy;});
     return ps.length?ps[0]:null;
   }
@@ -10972,15 +10974,18 @@ function parseReceiptByCoords(annotations, rawText) {
     if(num) units.push({cy:at.cy,val:toYen(num.t)});
   });
 
-  var prices=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;})
-    .sort(function(a,b){return a.cy-b.cy;});
+  var _allP=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;});
+  // 같은 행에 숫자열이 여러 개면(単価|点数|金額) 맨 오른쪽=라인합계(金額)만 가격으로
+  var prices=_allP.filter(function(p){
+    return !_allP.some(function(q){ return q!==p && Math.abs(q.cy-p.cy)<band && q.cx>p.cx; });
+  }).sort(function(a,b){return a.cy-b.cy;});
   var items=[];
   prices.forEach(function(p){
     var best=null,bd=1e9;
     nameLines.forEach(function(Ln){
       if(Ln.used || Ln.unitish) return;
       var dy=p.cy-Ln.cy;
-      if(dy>=-30 && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
+      if(dy>=-band && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
     });
     var name=best?best.text:'';
     if(!name || META_NAME.test(name)) return;
@@ -11004,7 +11009,10 @@ function parseReceiptByCoords(annotations, rawText) {
   var subtotal=subTok?toYen(subTok.t):0, total=totTok?toYen(totTok.t):0;
   var itemSum=items.reduce(function(a,i){return a+i.price;},0);
   var target=subtotal||total;
-  var valid = items.length>0 && target>0 && itemSum===target;
+  // 검증: 품목합 == 小計 | 合計(내세) | 合計÷1.1·1.08(외세, 小計 없을 때 세율 역산)
+  var valid = items.length>0 && (
+        (subtotal>0 && itemSum===subtotal) || (total>0 && itemSum===total)
+        || (total>0 && (Math.round(itemSum*1.10)===total || Math.round(itemSum*1.08)===total)));
 
   // store / date / cat (rawText 보조)
   var store='';

@@ -95,7 +95,7 @@ function toYen(s){
 }
 var FIN_KW=/(小計|税抜|消費税|合計|総額|お会計|現金|釣|預|クレジット|電子マネー|ポイント)/;
 // 품목명이 아닌(헤더·합계·메타) 줄 판별
-var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|点数|外税|内税|お預|お釣|発行)/;
+var META_NAME=/(店|登録|番号|精算|会計|領収|レシート|TEL|担当|係|レジ|伝票|テーブル|人数|年|ポイント|顧客|会員|累計|対象額|商品|単価|点数|金額|外税|内税|お預|お釣|発行)/;
 // 이름 정리: 【…】 부가표기 제거 → 앞 세금마커(外/軽/内/*)·상품코드 제거
 function cleanName(s){
   var t=s.replace(/【[^】]*】/g,'').replace(/[【】\s]/g,'');
@@ -121,22 +121,23 @@ function parseTable(annotations){
 
   // 금액 모양: 앞 ¥, 뒤 세금구분 접미사(外/軽/内/*) 허용 — 예: ¥300外
   function isMoneyShape(t){ return /^[¥￥\\]?\(?[\d,\.]+\)?[外軽内\*＊]?$/.test(t.replace(/\s/g,'')) && /\d/.test(t); }
-  // 금액열(우측)에 있으면 작은 값(¥68 등)도 가격. 단 등록번호·전화 같은 비현실적 큰 수(>1천만엔)는 제외
-  function isPriceTok(w){ var v=toYen(w.t); return w.cx>priceColX && isMoneyShape(w.t) && v>=10 && v<1e7; }
+  function moneyTok(w){ var v=toYen(w.t); return isMoneyShape(w.t) && v>=10 && v<1e7; } // 등록번호 등 비현실적 큰 수 제외
+  function isPriceTok(w){ return moneyTok(w) && w.cx>priceColX; }
   // 같은 줄로 볼 cy 허용폭 — 행 간격보다 작아야 인접 줄과 안 섞임
   var hs=words.map(function(w){return w.h;}).sort(function(a,b){return a-b;});
   var medH=hs[Math.floor(hs.length/2)]||20;
   var band=Math.max(16, medH*0.7);
-  function lineText(cy){                         // 좌측열에서 이 cy줄의 텍스트(분리된 小/計도 합쳐짐)
-    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<band;})
+  function lineText(cy, mul){                     // 좌측열에서 이 cy줄의 텍스트(분리된 小/計도 합쳐짐)
+    var b=band*(mul||1);
+    return words.filter(function(w){return w.cx<priceColX && Math.abs(w.cy-cy)<b;})
       .sort(function(a,b){return a.cx-b.cx;}).map(function(w){return w.t;}).join('');
   }
   function kwCy(re){
     var a=words.filter(function(w){return re.test(w.t);}).sort(function(x,y){return x.cy-y.cy;});
     return a.length?a[0].cy:null;
   }
-  function finPrice(re){                         // 키워드가 같은 줄에 있는 금액토큰(가장 위)
-    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy));})
+  function finPrice(re){                         // 키워드가 같은 줄에 있는 금액토큰(가장 위). 푸터 큰 폰트 어긋남 대비 band 1.4배
+    var ps=words.filter(isPriceTok).filter(function(w){return re.test(lineText(w.cy,1.4));})
       .sort(function(a,b){return a.cy-b.cy;});
     return ps.length?ps[0]:null;
   }
@@ -179,16 +180,19 @@ function parseTable(annotations){
   });
 
   // 품목 금액(우측열) 기준으로 조립
-  var prices=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;})
-    .sort(function(a,b){return a.cy-b.cy;});
+  var _allP=words.filter(function(w){return isPriceTok(w) && w.cy>topY && w.cy<botY;});
+  // 같은 행에 숫자열이 여러 개면(単価|点数|金額) 맨 오른쪽=라인합계(金額)만 가격으로
+  var prices=_allP.filter(function(p){
+    return !_allP.some(function(q){ return q!==p && Math.abs(q.cy-p.cy)<band && q.cx>p.cx; });
+  }).sort(function(a,b){return a.cy-b.cy;});
   var items=[];
   prices.forEach(function(p){
     // 이 금액의 가장 가까운 위쪽(또는 같은 줄) 미사용 이름 줄 (단가줄 제외)
     var best=null,bd=1e9;
     nameLines.forEach(function(Ln){
       if(Ln.used || Ln.unitish) return;
-      var dy=p.cy-Ln.cy;                          // 이름이 위면 dy>0
-      if(dy>=-30 && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
+      var dy=p.cy-Ln.cy;                          // 이름이 위면 dy>0 (금액이 이름보다 약간 위면 dy<0)
+      if(dy>=-band && dy<=150){ var cost=Math.abs(dy-50); if(cost<bd){bd=cost;best=Ln;} }
     });
     var name=best?best.text:'';
     // 이름이 없거나 헤더/메타 줄이면 품목 아님 → 건너뜀
@@ -215,9 +219,12 @@ function parseTable(annotations){
   var subTok=finPrice(/小計/), totTok=finPrice(/合計|総額|お会計/);
   var sub=subTok?toYen(subTok.t):0, tot=totTok?toYen(totTok.t):0;
   var sum=items.reduce(function(a,i){return a+i.price;},0);
-  var target=sub||tot;                          // 외세는 小計, 내세는 小計=合計
+  // 검증: 품목합 == 小計 | 合計(내세) | 合計÷1.1·1.08(외세, 小計 없을 때 세율 역산)
+  var hit = (sub>0 && sub===sum) || (tot>0 && tot===sum)
+        || (tot>0 && (Math.round(sum*1.10)===tot || Math.round(sum*1.08)===tot));
+  var target=sub||tot;                          // 표시용
   return {items:items, sum:sum, subtotal:sub, total:tot, target:target,
-    ok:(target>0 && sum===target)};
+    ok:(sum>0 && hit)};
 }
 
 /* ============================================================
