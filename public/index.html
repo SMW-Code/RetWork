@@ -6279,18 +6279,18 @@ function ctRenderPricePins() {
     var rep = (g.store && g.store.featured_price)
       ? g.store.featured_price
       : Math.min.apply(null, g.items.map(function(i) { return i.price; }));
-    if (g.pending || rep <= _ctPriceMax) _activeGroups.push(g); else _dimGroups.push(g);
+    g._dim = !(g.pending || rep <= _ctPriceMax);
+    if (g._dim) _dimGroups.push(g); else _activeGroups.push(g);
   });
 
-  // 비활성(가격 초과) 가게는 줌과 무관하게 항상 흐림 마커로 표시 — 숨기지 않음
-  _dimGroups.forEach(function(g) { _ctAddStoreMarker(g, true); });
-
   if (zoom < CT_CLUSTER_ZOOM) {
-    /* ── 클러스터 모드 (활성 핀만 클러스터링) ── */
+    /* ── 클러스터 모드 ──
+       활성+비활성 함께 한 셀로 묶음. 카운트는 둘 다 포함.
+       셀에 활성 가게가 하나라도 있으면 선명 클러스터, 전부 비활성이면 흐림 클러스터 */
     var gridSize = 0.0012 * Math.pow(2, 16 - zoom);
     var cells = {};
-    _activeGroups.forEach(function(g) {
-      var p = { stores: g.store };   // 가게 단위 클러스터링(활성 핀만). 아래 셀 로직은 p.stores 참조
+    _activeGroups.concat(_dimGroups).forEach(function(g) {
+      var p = { stores: g.store, _dim: !!g._dim };   // 가게 단위. 아래 셀 로직은 p.stores 참조
       var s = p.stores;
       if (!s || s.lat == null || s.lng == null) return;
       var lat = parseFloat(s.lat);
@@ -6298,10 +6298,11 @@ function ctRenderPricePins() {
       var clat = Math.floor(lat / gridSize);
       var clng = Math.floor(lng / gridSize);
       var ck   = clat + ',' + clng;
-      if (!cells[ck]) cells[ck] = { pins: [], sumLat: 0, sumLng: 0 };
+      if (!cells[ck]) cells[ck] = { pins: [], sumLat: 0, sumLng: 0, hasActive: false };
       cells[ck].pins.push(p);
       cells[ck].sumLat += lat;
       cells[ck].sumLng += lng;
+      if (!p._dim) cells[ck].hasActive = true;
     });
 
     Object.values(cells).forEach(function(cell) {
@@ -6323,6 +6324,7 @@ function ctRenderPricePins() {
           if (pn && _storeHasPrivateNote(pn)) { clusterHasPrivateNote = true; break; }
         }
       }
+      var clusterDim = !cell.hasActive;   // 전부 비활성 셀이면 흐림 클러스터
       var w   = Math.min(32 + cnt * 2, 56);
       var r   = w / 2;
       var marker = new google.maps.Marker({
@@ -6333,7 +6335,8 @@ function ctRenderPricePins() {
           scaledSize: new google.maps.Size(w, w),
           anchor: new google.maps.Point(r, r)
         },
-        zIndex: clusterHasPrivateNote ? 15 : 5
+        opacity: clusterDim ? 0.42 : 1,                         // 전부 비활성 = 흐림
+        zIndex: clusterHasPrivateNote ? 15 : (clusterDim ? 3 : 5)
       });
       (function(pins, cLatRef, cLngRef){
         marker.addListener('click', function() {
@@ -6383,9 +6386,9 @@ function ctRenderPricePins() {
     });
 
   } else {
-    /* ── 개별 핀 모드 — 활성(가격 상한 이하) 가게만 선명 마커.
-       비활성(초과) 가게는 위에서 이미 흐림 마커로 렌더됨 ── */
+    /* ── 개별 핀 모드 (확대 시) — 활성=선명, 비활성=흐림 개별 마커 ── */
     _activeGroups.forEach(function(group) { _ctAddStoreMarker(group, false); });
+    _dimGroups.forEach(function(group) { _ctAddStoreMarker(group, true); });
   }
 }
 
@@ -28109,7 +28112,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 482;
+window.__APP_BUILD__ = 483;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
