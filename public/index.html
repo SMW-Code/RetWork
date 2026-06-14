@@ -1526,6 +1526,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
                display:flex;align-items:center;gap:5px;white-space:nowrap;">
         <span>~¥</span><span id="ct-filter-label">1,500</span>
         <span style="color:var(--text-3);font-weight:400;">×</span>
+        <span id="ct-price-hidden-badge" title="가격대를 올리면 더 보여요"
+          style="display:none;margin-left:3px;background:var(--gold);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:800;line-height:1.5;"></span>
       </div>
       <!-- 검색 -->
       <div style="flex:1;background:#fff;border-radius:20px;padding:7px 13px;font-size:12px;
@@ -6235,6 +6237,19 @@ function ctRenderPricePins() {
     return true;
   });
 
+  // 가격 상한 때문에 숨겨진 핀 개수 안내 (좌표·카테고리는 통과하는데 가격만 초과한 핀)
+  var _hiddenByPrice = _ctPins.filter(function(p) {
+    if (!p.stores) return false;
+    if (_ctPendingPins.indexOf(p) >= 0) return false;
+    if (_ctCatFilter !== 'all' && p.stores.category !== _ctCatFilter) return false;
+    return p.price > _ctPriceMax;
+  }).length;
+  var _hb = document.getElementById('ct-price-hidden-badge');
+  if (_hb) {
+    if (_hiddenByPrice > 0) { _hb.style.display = ''; _hb.textContent = '+' + _hiddenByPrice; }
+    else { _hb.style.display = 'none'; }
+  }
+
   var zoom = _ctMap.getZoom() || 15;
 
   if (zoom < CT_CLUSTER_ZOOM) {
@@ -6419,6 +6434,7 @@ function ctResetFilter() {
   document.querySelectorAll('.ct-cat-chip').forEach(function(c) {
     c.classList.toggle('active', c.dataset.cat === 'all');
   });
+  ctRenderPricePins(); // 숨김 배지·마커 즉시 갱신
 }
 function ctUpdatePriceFilter(val) {
   _ctPriceMax = parseInt(val);
@@ -28098,7 +28114,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 480;
+window.__APP_BUILD__ = 481;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
