@@ -1,9 +1,62 @@
-# RetWork (チリつも) — HANDOFF (build 473 시점)
+# RetWork (チリつも) — HANDOFF (build 483 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 473** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 483** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-12** (b471 '대표' 뱃지 다국어화 · b472 잔여 한국어 i18n · b473 SEO canonical 수정)
+> 마지막 작업: **2026-06-14** (안드로이드 PWA 뒤로가기 전면 개편 b474~480 · 치즈맵 가격핀 비활성 마커/클러스터 b481~483)
+
+> ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
+> ```bash
+> node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
+> ```
+
+---
+
+## 0-E. 2026-06-14 세션 — 안드로이드 뒤로가기 · 치즈맵 가격핀 (build 474~483)
+
+### A. 안드로이드 PWA 시스템 뒤로가기 전면 개편 (build 474~480) — 완료
+**문제:** 안드로이드 PWA에서 시스템 뒤로가기 시 모달이 역순으로 닫히지 않고 앱이 바로 종료. 베이스 탭 종료 전 토스트도 불안정.
+**근본 원인:** 안드로이드 PWA는 `popstate` 핸들러 **안에서** 호출한 `history.pushState`를 무시 → 가드 재설치 실패.
+**해결 모델:**
+- **모달 열 때** 미리 `history.pushState({riqNav:1},'')` 엔트리를 쌓음(사용자 액션에서, popstate 밖).
+- **UI로 닫을 때**(`closeOv` 등)는 `window._riqInPop` 가드 하에 `history.back()`으로 동기화, `window._riqExpectPop` 카운터로 중복 방지.
+- 뒤로가기 핸들러 `_closeTopModal()`이 ① openOv 스택(.open) ② DOM `[id^="ov-"].open` ③ **display 기반 풀스크린 오버레이**를 z-index 내림차순으로 닫음.
+- **베이스 가드 재설치(b478):** 가드가 한 번 소비되면(첫 종료 토스트 후) 다음 화면 탭(pointerdown) 시 `_ensureBaseGuard`로 재push → 종료 토스트 **항상** 표시.
+
+**display 기반 풀스크린 전수 동기화(b479~480):** `.open` 클래스 없이 `style.display='flex'`로 여는 풀스크린들도 모두 열 때 pushState / 닫을 때 history.back 동기화 + `_closeTopModal` 등록:
+`ov-ct-post-detail`(게시글상세 z370)·`ov-ct-store-full`(치리스토어 z360)·`ct-write-ov`(글쓰기 z350)·`ov-img-viewer`(z9999)·`ov-avatar-crop`(z9999)·`ov-month-report`(월간리포트 z380)·`ov-admin-pc`(어드민 z9500).
+**의도적 제외:** `ov-reward-ad`(보상형 광고) — 뒤로가기로 닫으면 광고 스킵=매출손실 → **보류(미결정, 아래 ▶다음 후보).**
+
+### B. 치즈맵 가격핀 — 어드민엔 보이는데 지도엔 안 뜸 (build 481~483) — 완료
+**원인(실데이터 확정):** 어드민 가게핀 목록과 치즈맵 마커는 **같은 `price_pins` 테이블**. 지도 쪽에만 걸리는 필터로 누락. 사례 `cafe&meal MUJI東京有明` 핀 `選べる4品デリセット`=**¥1,550**인데 가격필터 기본상한 **¥1,500**을 50엔 초과 → 조용히 숨겨짐.
+**지도 필터 4종(`ctLoadPricePins`/`ctRenderPricePins`):** ①가격상한 `price>_ctPriceMax`(기본1500/슬라이더max3000) ②좌표 null ③`.limit(300)`(지역필터 없음, 어드민은 1000) ④카테고리.
+**최종 해결(b483) — 숨기지 말고 비활성(흐림) 마커로:**
+- `ctRenderPricePins`: `_ctPins`를 **가게 단위 그룹화**(`_allGroups`) → 대표가격(`featured_price`>최저가)으로 `_activeGroups`(상한이하/pending) vs `_dimGroups`(초과) 분리(`g._dim`).
+- 공통 헬퍼 `_ctAddStoreMarker(group,isDim)`: 활성 opacity 1 / 비활성 0.38.
+- **확대(개별, zoom≥`CT_CLUSTER_ZOOM`=17):** 활성=선명 + 비활성=흐림 개별 마커.
+- **축소(클러스터):** 활성+비활성 한 셀로 묶어 숫자 원형. **셀에 활성 하나라도 있으면 선명 클러스터, 전부 비활성이면 흐림 클러스터(opacity 0.42)**. 카운트는 둘 다 포함.
+- 슬라이더 올려 적용 시 비활성→활성 전환(가성비 컨셉 유지). `ctApplyFilter`/`ctResetFilter`가 재렌더.
+- (b481의 `+N` 숨김배지는 "뭔지 모르겠다" 피드백으로 b482에서 제거)
+
+### 커밋 (2026-06-14, 모두 main push 완료)
+`51e3587`(b478 베이스가드복구) → `d7f8f48`(b479 게시글상세) → `1bbdef6`(b480 display전수) → `61ad649`(b481 숨김배지) → `024200b`(b482 비활성마커) → `aee40b1`(b483 비활성클러스터)
+*(b474~477은 직전 세션에서 뒤로가기 1차 시도들 — pushState-in-popstate 문제 진단 과정)*
+
+### ▶ 다음 후보 / 미결정
+- **`ov-reward-ad`(보상형 광고) 뒤로가기 처리 미정.** 광고 중 뒤로가기 시 앱 종료됨. (1)뒤로가기 무시(광고·앱 유지, 스킵방지) (2)닫기 — 사용자 결정 필요.
+- 안드로이드 실기기에서 b483 뒤로가기/클러스터 최종 확인(데스크톱 프리뷰로는 안드로이드 popstate 재현 불가).
+- 치즈맵 `.limit(300)`+지역필터 없음 — 핀 300개 초과로 늘면 오래된 핀 누락 가능(현재 전체 26개).
+
+### 데이터 직접 확인법 (Supabase REST, 공개키 = `index.html` `supabase.createClient` 2번째 인자)
+```bash
+KEY="<publishable key>"; URL="https://fkvfbxfgidrvymoftkdd.supabase.co/rest/v1"
+curl -s "$URL/stores?name=ilike.%25키워드%25&select=id,name,lat,lng,featured_price" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+curl -s "$URL/price_pins?store_id=eq.<id>&select=item_name,price" -H "apikey: $KEY" -H "Authorization: Bearer $KEY"
+```
+
+### 로컬 전용/미커밋 (production에 올리지 말 것)
+- `public/scan-proto.html`·`public/receipt-parser.js` — dewarp(원근보정) 프로토타입, **셸브**. `public/` 아래라 커밋하면 retwork.jp에 공개됨 → **커밋 금지**.
+- `test1.jpg`~`test7.jpg` — 파서 검증용 로컬 테스트 사진. 커밋 불필요.
 
 ---
 
