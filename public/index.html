@@ -2683,7 +2683,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <!-- ══ 월별 리포트 (종합 인사이트 전체화면) ══ -->
 <div id="ov-month-report" style="display:none;position:absolute;inset:0;z-index:380;flex-direction:column;background:var(--bg);">
   <div style="background:var(--surface);padding:12px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:.5px solid var(--border);">
-    <div onclick="document.getElementById('ov-month-report').style.display='none'" style="width:34px;height:34px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text-2);cursor:pointer;flex-shrink:0;">←</div>
+    <div onclick="closeMonthReport()" style="width:34px;height:34px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text-2);cursor:pointer;flex-shrink:0;">←</div>
     <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:12px;">
       <div onclick="mrChangeMonth(-1)" style="font-size:16px;color:var(--text-3);cursor:pointer;padding:4px 8px;">‹</div>
       <div style="font-size:16px;font-weight:900;color:var(--text-1);" id="mr-month-label">2026年 5月</div>
@@ -7388,6 +7388,7 @@ function ctShowNotice(idx) {
 function ctOpenWrite() {
   var ov = document.getElementById('ct-write-ov');
   if (ov) ov.style.display = 'flex';
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 뒤로가기 안정화: 열 때 히스토리 엔트리 미리 쌓음
   _ctWriteCat = 'free';
   _ctWriteImgs = [];
   document.getElementById('ct-write-title').value = '';
@@ -7399,7 +7400,9 @@ function ctOpenWrite() {
 
 function ctCloseWrite() {
   var ov = document.getElementById('ct-write-ov');
+  var _was = ov && ov.style.display && ov.style.display!=='none';
   if (ov) ov.style.display = 'none';
+  if(_was && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
 }
 
 function ctRenderWriteCats() {
@@ -9238,7 +9241,14 @@ function _openMonthReportInner(){
   _mrY = (typeof calYear !== 'undefined' && calYear) ? calYear : now.getFullYear();
   _mrM = (typeof calMonth !== 'undefined' && calMonth) ? calMonth : now.getMonth()+1;
   document.getElementById('ov-month-report').style.display = 'flex';
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 뒤로가기 안정화: 열 때 히스토리 엔트리 미리 쌓음
   renderMonthReport();
+}
+function closeMonthReport() {
+  var ov = document.getElementById('ov-month-report');
+  var _was = ov && ov.style.display && ov.style.display!=='none';
+  if (ov) ov.style.display = 'none';
+  if(_was && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
 }
 function mrChangeMonth(dir){
   var now = new Date();
@@ -12541,12 +12551,15 @@ function openImgViewer(encodedSrc) {
   if (!ov || !img) return;
   img.src = src;
   ov.style.display = 'flex';
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 뒤로가기 안정화: 열 때 히스토리 엔트리 미리 쌓음
   document.body.style.overflow = 'hidden';
 }
 function closeImgViewer() {
   var ov = document.getElementById('ov-img-viewer');
+  var _was = ov && ov.style.display && ov.style.display!=='none';
   if (ov) ov.style.display = 'none';
   document.body.style.overflow = '';
+  if(_was && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
 }
 
 
@@ -15738,8 +15751,13 @@ function showAppToast(msg){
       try{ closeOv(opens[0].id); }catch(e){ opens[0].classList.remove('open'); } return true;
     }
     // ③ display 기반 풀스크린 오버레이 (.open 클래스 안 씀) — z-index 높은 것부터
-    if(_visDisp(document.getElementById('ov-ct-post-detail')) && typeof closeCtPostDetail==='function'){ try{ closeCtPostDetail(); }catch(e){} return true; }
-    if(_visDisp(document.getElementById('ov-ct-store-full')) && typeof closeCtStoreFull==='function'){ try{ closeCtStoreFull(); }catch(e){} return true; }
+    if(_visDisp(document.getElementById('ov-img-viewer')) && typeof closeImgViewer==='function'){ try{ closeImgViewer(); }catch(e){} return true; }       // z9999
+    if(_visDisp(document.getElementById('ov-avatar-crop')) && typeof _closeCropper==='function'){ try{ _closeCropper(); }catch(e){} return true; }          // z9999
+    if(_visDisp(document.getElementById('ov-admin-pc')) && typeof closeAdminPc==='function'){ try{ closeAdminPc(); }catch(e){} return true; }                // z9500
+    if(_visDisp(document.getElementById('ov-month-report')) && typeof closeMonthReport==='function'){ try{ closeMonthReport(); }catch(e){} return true; }     // z380
+    if(_visDisp(document.getElementById('ov-ct-post-detail')) && typeof closeCtPostDetail==='function'){ try{ closeCtPostDetail(); }catch(e){} return true; } // z370
+    if(_visDisp(document.getElementById('ov-ct-store-full')) && typeof closeCtStoreFull==='function'){ try{ closeCtStoreFull(); }catch(e){} return true; }    // z360
+    if(_visDisp(document.getElementById('ct-write-ov')) && typeof ctCloseWrite==='function'){ try{ ctCloseWrite(); }catch(e){} return true; }                // z350
     return false;
   }
   function _onBack(){
@@ -16685,6 +16703,7 @@ function openCropper(imgEl, src) {
   // 오버레이 표시
   var ov = document.getElementById('ov-avatar-crop');
   ov.style.display = 'flex';
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 뒤로가기 안정화: 열 때 히스토리 엔트리 미리 쌓음
 
   // 이벤트 등록
   var cc = document.getElementById('crop-container');
@@ -16832,7 +16851,9 @@ function confirmCrop() {
 
 function _closeCropper() {
   var ov = document.getElementById('ov-avatar-crop');
+  var _was = ov && ov.style.display && ov.style.display!=='none';
   ov.style.display = 'none';
+  if(_was && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
   var cc = document.getElementById('crop-container');
   cc.removeEventListener('mousedown',  _cropMouseDown);
   cc.removeEventListener('touchstart', _cropTouchStart);
@@ -22919,6 +22940,7 @@ function openAdminPc() {
   var el = document.getElementById('ov-admin-pc');
   if (!el) { console.warn('[admPc] modal not found'); return; }
   el.style.display = 'flex';
+  try{ history.pushState({riqNav:1},''); }catch(e){} // 뒤로가기 안정화: 열 때 히스토리 엔트리 미리 쌓음
   _admPcSwitchTab('overview');
   // 사용자 이메일 표시
   var emEl = document.getElementById('apc-user-email');
@@ -22933,8 +22955,10 @@ function closeAdminPc() {
   _admPcUnmountAll();              // 마운트된 시트가 있으면 원래 모달로 복귀
   _admPcCloseAllAdminModals();     // 사용자가 폴백 메뉴로 띄운 어드민 모달도 닫기
   var el = document.getElementById('ov-admin-pc');
+  var _was = el && el.style.display && el.style.display!=='none';
   if (el) el.style.display = 'none';
   _admPcCurrentMenu = null;
+  if(_was && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
 }
 
 function _admPcSwitchTab(tab) {
@@ -28074,7 +28098,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 479;
+window.__APP_BUILD__ = 480;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
