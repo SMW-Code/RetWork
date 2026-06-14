@@ -1526,8 +1526,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
                display:flex;align-items:center;gap:5px;white-space:nowrap;">
         <span>~¥</span><span id="ct-filter-label">1,500</span>
         <span style="color:var(--text-3);font-weight:400;">×</span>
-        <span id="ct-price-hidden-badge" title="가격대를 올리면 더 보여요"
-          style="display:none;margin-left:3px;background:var(--gold);color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;font-weight:800;line-height:1.5;"></span>
       </div>
       <!-- 검색 -->
       <div style="flex:1;background:#fff;border-radius:20px;padding:7px 13px;font-size:12px;
@@ -6229,34 +6227,70 @@ function ctRenderPricePins() {
   if (!_ctMap) return;
   console.log('[ctRenderPricePins] mode=', _ctMapMode, 'privateNoteStores=', Object.keys(_privateNoteStores).length, 'pins=', _ctPins.length);
 
-  var filtered = _ctPins.filter(function(p) {
-    if (!p.stores) return false;
-    if (_ctPendingPins.indexOf(p) >= 0) return true;
-    if (p.price > _ctPriceMax) return false;
-    if (_ctCatFilter !== 'all' && p.stores.category !== _ctCatFilter) return false;
-    return true;
-  });
-
-  // 가격 상한 때문에 숨겨진 핀 개수 안내 (좌표·카테고리는 통과하는데 가격만 초과한 핀)
-  var _hiddenByPrice = _ctPins.filter(function(p) {
-    if (!p.stores) return false;
-    if (_ctPendingPins.indexOf(p) >= 0) return false;
-    if (_ctCatFilter !== 'all' && p.stores.category !== _ctCatFilter) return false;
-    return p.price > _ctPriceMax;
-  }).length;
-  var _hb = document.getElementById('ct-price-hidden-badge');
-  if (_hb) {
-    if (_hiddenByPrice > 0) { _hb.style.display = ''; _hb.textContent = '+' + _hiddenByPrice; }
-    else { _hb.style.display = 'none'; }
-  }
-
   var zoom = _ctMap.getZoom() || 15;
 
+  // 가게 마커 생성 헬퍼 (활성=선명 / 비활성=흐림). 개별 핀 모드와 비활성 핀 렌더가 공유
+  function _ctAddStoreMarker(group, isDim) {
+    var icon     = CT_CAT_EMOJI[group.store.category] || '🍽️';
+    var minPrice = (group.store && group.store.featured_price)
+      ? group.store.featured_price
+      : Math.min.apply(null, group.items.map(function(i) { return i.price; }));
+    var multi    = group.items.length > 1;
+    var hasPrivateNote = (_ctMapMode === 'private') && _storeHasPrivateNote(group.store.name);
+    var pinW = hasPrivateNote ? 112 : 100;
+    var marker = new google.maps.Marker({
+      position: { lat: parseFloat(group.store.lat), lng: parseFloat(group.store.lng) },
+      map: _ctMap,
+      icon: {
+        url: ctMakePinSVG(icon, minPrice, false, multi, hasPrivateNote),
+        scaledSize: new google.maps.Size(pinW, 36),
+        anchor: new google.maps.Point(pinW/2, 36)
+      },
+      title: group.store.name,
+      opacity: isDim ? 0.38 : 1,                            // 가격 상한 초과 = 흐리게(비활성)
+      zIndex: hasPrivateNote ? 20 : (isDim ? 0 : 2)         // 활성 핀을 위로
+    });
+    (function(storeObj, mk) {
+      mk.addListener('click', function() {
+        openStoreDetail({
+          name: storeObj.name,
+          lat:  parseFloat(storeObj.lat),
+          lng:  parseFloat(storeObj.lng),
+          cat:  storeObj.category || 'other'
+        });
+      });
+    })(group.store, marker);
+    _ctMarkers.push(marker);
+  }
+
+  // 가게별 그룹화 (가격 무관, 좌표·카테고리만 통과) → 대표가격으로 활성/비활성 분리
+  var _allGroups = {};
+  _ctPins.forEach(function(p) {
+    if (!p.stores || p.stores.lat == null || p.stores.lng == null) return;
+    var _pend = _ctPendingPins.indexOf(p) >= 0;
+    if (!_pend && _ctCatFilter !== 'all' && p.stores.category !== _ctCatFilter) return;
+    var sid = p.stores.name;
+    if (!_allGroups[sid]) _allGroups[sid] = { store: p.stores, items: [], pending: false };
+    _allGroups[sid].items.push({ name: p.item_name || '', price: p.price, comment: p.comment || '' });
+    if (_pend) _allGroups[sid].pending = true;
+  });
+  var _activeGroups = [], _dimGroups = [];
+  Object.values(_allGroups).forEach(function(g) {
+    var rep = (g.store && g.store.featured_price)
+      ? g.store.featured_price
+      : Math.min.apply(null, g.items.map(function(i) { return i.price; }));
+    if (g.pending || rep <= _ctPriceMax) _activeGroups.push(g); else _dimGroups.push(g);
+  });
+
+  // 비활성(가격 초과) 가게는 줌과 무관하게 항상 흐림 마커로 표시 — 숨기지 않음
+  _dimGroups.forEach(function(g) { _ctAddStoreMarker(g, true); });
+
   if (zoom < CT_CLUSTER_ZOOM) {
-    /* ── 클러스터 모드 ── */
+    /* ── 클러스터 모드 (활성 핀만 클러스터링) ── */
     var gridSize = 0.0012 * Math.pow(2, 16 - zoom);
     var cells = {};
-    filtered.forEach(function(p) {
+    _activeGroups.forEach(function(g) {
+      var p = { stores: g.store };   // 가게 단위 클러스터링(활성 핀만). 아래 셀 로직은 p.stores 참조
       var s = p.stores;
       if (!s || s.lat == null || s.lng == null) return;
       var lat = parseFloat(s.lat);
@@ -6349,48 +6383,9 @@ function ctRenderPricePins() {
     });
 
   } else {
-    /* ── 개별 핀 모드 ── */
-    var storeGroups = {};
-    filtered.forEach(function(p) {
-      var sid = p.stores.name;
-      if (!storeGroups[sid]) storeGroups[sid] = { store: p.stores, items: [] };
-      storeGroups[sid].items.push({ name: p.item_name || '', price: p.price, comment: p.comment || '' });
-    });
-
-    Object.values(storeGroups).forEach(function(group, idx) {
-      var icon     = CT_CAT_EMOJI[group.store.category] || '🍽️';
-      // 대표 가격 우선: stores.featured_price (어드민 지정) > minPrice (서브메뉴 포함)
-      var minPrice = (group.store && group.store.featured_price)
-        ? group.store.featured_price
-        : Math.min.apply(null, group.items.map(function(i) { return i.price; }));
-      var multi    = group.items.length > 1;
-      var hasPrivateNote = (_ctMapMode === 'private') && _storeHasPrivateNote(group.store.name);
-      var pinW = hasPrivateNote ? 112 : 100;
-      var marker   = new google.maps.Marker({
-        position: { lat: parseFloat(group.store.lat), lng: parseFloat(group.store.lng) },
-        map: _ctMap,
-        icon: {
-          // isTop 파라미터는 더 이상 시각적 차이를 만들지 않음 (false 전달)
-          url: ctMakePinSVG(icon, minPrice, false, multi, hasPrivateNote),
-          scaledSize: new google.maps.Size(pinW, 36),
-          anchor: new google.maps.Point(pinW/2, 36)
-        },
-        title: group.store.name,
-        zIndex: hasPrivateNote ? 20 : 1
-      });
-      // 마커 클릭 → 가게 상세 모달
-      (function(storeObj, mk) {
-        mk.addListener('click', function() {
-          openStoreDetail({
-            name: storeObj.name,
-            lat:  parseFloat(storeObj.lat),
-            lng:  parseFloat(storeObj.lng),
-            cat:  storeObj.category || 'other'
-          });
-        });
-      })(group.store, marker);
-      _ctMarkers.push(marker);
-    });
+    /* ── 개별 핀 모드 — 활성(가격 상한 이하) 가게만 선명 마커.
+       비활성(초과) 가게는 위에서 이미 흐림 마커로 렌더됨 ── */
+    _activeGroups.forEach(function(group) { _ctAddStoreMarker(group, false); });
   }
 }
 
@@ -28114,7 +28109,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 481;
+window.__APP_BUILD__ = 482;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
