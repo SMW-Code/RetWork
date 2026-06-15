@@ -2780,10 +2780,27 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div id="mp-location-text" style="font-size:11px;color:var(--text-2);" data-i18n="mp.location.text">🗺️ チズで選択した場所</div>
       </div>
     </div>
+    <!-- 숨은 파일 입력: 영수증 OCR / 사진 업로드 -->
+    <input type="file" id="ct-receipt-input" accept="image/*" style="display:none" onchange="ctReceiptOnFile(this)">
+    <input type="file" id="mp-photo-input" accept="image/*" style="display:none" onchange="mpOnPhotoPicked(this)">
+    <!-- 영수증으로 등록 (OCR → 치리공개 자동 라우팅) -->
+    <button onclick="ctReceiptRegisterStart()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--green-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
+      <span style="font-size:16px;">📸</span><span data-i18n="mp.receipt_btn">レシートで登録（自動入力）</span>
+    </button>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--text-3);font-size:11px;font-weight:600;">
+      <div style="flex:1;height:1px;background:var(--border);"></div><span data-i18n="mp.or_manual">または手動で入力</span><div style="flex:1;height:1px;background:var(--border);"></div>
+    </div>
     <!-- 가게명 -->
     <div style="margin-bottom:12px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">お店の名前 <span style="color:var(--red);">*</span></div>
       <input id="mp-store" type="text" placeholder="例：なか卯 四日市店" style="width:100%;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+    </div>
+    <!-- 가게 사진 -->
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;" data-i18n="mp.store_photo">お店の写真（任意）</div>
+      <div id="mp-store-photo" onclick="mpPickStorePhoto()" style="height:88px;border-radius:12px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;">
+        <div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;" data-i18n="mp.add_photo">写真を追加</div></div>
+      </div>
     </div>
     <!-- 카테고리 -->
     <div style="margin-bottom:12px;">
@@ -12342,6 +12359,12 @@ function showOcrResult(previewSrc, result) {
   window._ocrResult = result;
   window._originalTotal = result.total; // GPT가 읽은 합계 (合計) 보존
   window._taxOffset = undefined; // 새 영수증 → 세금 offset 초기화 (syncOcrItems에서 자동 계산)
+
+  // 영수증으로 등록(치리맵) 모드 → OCR 결과를 그대로 치리공개 모달로 라우팅 (지도중앙 좌표 사용)
+  if (window._scanForChiriMap) {
+    window._scanForChiriMap = false;
+    setTimeout(function(){ try { saveAndPublishChiri(); } catch(e){ console.warn('[scan→chiri]', e); } }, 60);
+  }
 }
 
 function selectOcrCat(el, cat) {
@@ -12700,6 +12723,9 @@ function saveAndPublishChiri() {
 function openChiriPublish() {
   var r = window._ocrResult;
   if (!r) return;
+  // 치리맵 영수증등록에서 강제된 좌표(지도중앙) 소비 — 일반 흐름이면 null
+  window._cpPos = window._cpForcedPos || null;
+  window._cpForcedPos = null;
   var storeEl = document.getElementById('ocr-store');
   var store = storeEl ? storeEl.textContent.trim() : (r.store || '不明');
 
@@ -12953,7 +12979,8 @@ async function submitChiriPublish() {
   var storeAddress = r.address || null;
   var commentEl = document.getElementById('cp-comment');
   var commentText = commentEl ? commentEl.value.trim() : '';
-  var fallback = _ctUserPos || { lat: 35.6762, lng: 139.6503 };
+  var fallback = window._cpPos || _ctUserPos || { lat: 35.6762, lng: 139.6503 };
+  var _forcedPos = !!window._cpPos;   // 치리맵에서 지도중앙으로 직접 지정한 경우 → 지오코딩 보정 안 함
 
   // 벤워드 사전 검사 — 차단어 발견 시 즉시 중단 (다른 데이터 저장 전에 막음)
   if (commentText) {
@@ -13076,14 +13103,20 @@ async function submitChiriPublish() {
   if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
 
   // geocoding — 백그라운드로 가게 정확 좌표 갱신 (핀 중복 삽입 없음)
-  searchAndPinStore(store, storeAddress, function(lat, lng) {
-    if (!lat) return;
-    newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
-    if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
-    if (_currentUser && _sb) {
-      _sb.from('stores').update({ lat: lat, lng: lng }).eq('name', store).then(function(){});
-    }
-  });
+  //   단, 치리맵에서 지도중앙으로 직접 좌표를 지정한 경우(_forcedPos)는 그 위치를 존중 → 보정 skip
+  if (_forcedPos) {
+    window._cpPos = null;
+    if (_currentUser && _sb) _sb.from('stores').update({ lat: fallback.lat, lng: fallback.lng }).eq('name', store).then(function(){});
+  } else {
+    searchAndPinStore(store, storeAddress, function(lat, lng) {
+      if (!lat) return;
+      newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
+      if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
+      if (_currentUser && _sb) {
+        _sb.from('stores').update({ lat: lat, lng: lng }).eq('name', store).then(function(){});
+      }
+    });
+  }
 }
 
 function _afterChiriPublish() {
@@ -13191,7 +13224,7 @@ var I18N = {
     // 아바타
     'avatar.title':'アバター編集','avatar.hint':'ドラッグで位置調整<br>スライダーでサイズ調整','avatar.apply':'✅ 適用',
     // 수동 핀
-    'mp.title':'✏️ 手動でピンを追加','mp.location':'📍 ピン位置','mp.location.text':'🗺️ チズで選択した場所',
+    'mp.title':'✏️ 手動でピンを追加','mp.location':'📍 ピン位置','mp.location.text':'🗺️ チズで選択した場所','mp.receipt_btn':'レシートで登録（自動入力）','mp.or_manual':'または手動で入力','mp.store_photo':'お店の写真（任意）','mp.add_photo':'写真を追加',
     // 온보딩
     'onb.pattern_title':'支出パターンを一目で','onb.pattern_desc':'カテゴリ別分析・カレンダー・レポートで<br>自分の消費習慣を簡単に把握し<br>予算をスマートに管理',
     'onb.start':'支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。',
@@ -13467,7 +13500,7 @@ var I18N = {
     'cal.title':'달력','cal.sub':'날짜별 지출 확인','cal.month_summary':'이달 요약','cal.month_total':'총 지출',
     'edit.title':'영수증 편집','edit.store':'가게명 / 지출처','edit.date':'날짜','edit.amount':'금액','edit.memo':'메모','edit.category':'카테고리',
     'avatar.title':'아바타 편집','avatar.hint':'드래그로 위치 조정<br>슬라이더로 크기 조절','avatar.apply':'✅ 적용',
-    'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치',
+    'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치','mp.receipt_btn':'영수증으로 등록 (자동입력)','mp.or_manual':'또는 수동 입력','mp.store_photo':'가게 사진 (선택)','mp.add_photo':'사진 추가',
     'onb.pattern_title':'지출 패턴을 한눈에','onb.pattern_desc':'카테고리별 분석 · 달력 · 리포트로<br>내 소비 습관을 쉽게 파악하고<br>예산을 스마트하게 관리해요.',
     'onb.start':'지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.',
     'ct.map.sub':'영수증으로 이어지는, 동네의 알찬 지도',
@@ -13713,7 +13746,7 @@ var I18N = {
     'cal.title':'Calendar','cal.sub':'Spend by date','cal.month_summary':"Month Summary",'cal.month_total':'Total',
     'edit.title':'Edit Receipt','edit.store':'Store / Payee','edit.date':'Date','edit.amount':'Amount','edit.memo':'Memo','edit.category':'Category',
     'avatar.title':'Edit Avatar','avatar.hint':'Drag to position<br>Slider to resize','avatar.apply':'✅ Apply',
-    'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map',
+    'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map','mp.receipt_btn':'Register via receipt (auto-fill)','mp.or_manual':'or enter manually','mp.store_photo':'Store photo (optional)','mp.add_photo':'Add photo',
     'onb.pattern_title':'See your spending at a glance','onb.pattern_desc':'Category analysis · Calendar · Reports<br>understand habits and<br>manage budget smartly.',
     'onb.start':'Track expenses, understand habits.<br>Today’s receipt becomes tomorrow’s insight.',
     'ct.map.sub':'A neighborhood map powered by receipts',
@@ -13959,7 +13992,7 @@ var I18N = {
     'cal.title':'日历','cal.sub':'按日期查看支出','cal.month_summary':'本月总结','cal.month_total':'总支出',
     'edit.title':'编辑票据','edit.store':'店名 / 支出对象','edit.date':'日期','edit.amount':'金额','edit.memo':'备注','edit.category':'类别',
     'avatar.title':'头像编辑','avatar.hint':'拖动调整位置<br>滑动调整尺寸','avatar.apply':'✅ 应用',
-    'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置',
+    'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置','mp.receipt_btn':'用小票登记（自动填充）','mp.or_manual':'或手动输入','mp.store_photo':'店铺照片（可选）','mp.add_photo':'添加照片',
     'onb.pattern_title':'一眼看清消费习惯','onb.pattern_desc':'分类分析 · 日历 · 报表<br>轻松掌握消费习惯<br>智能管理预算',
     'onb.start':'记录支出，掌握习惯。<br>今天的票据是明天的洞察。',
     'ct.map.sub':'用票据连接的，街区实惠地图',
@@ -15599,6 +15632,11 @@ function openManualPinModal() {
   _mpCategory = 'other';
   _mpItems = [{ name: '', price: '' }];
 
+  // 사진 상태 초기화 (가게 + 메뉴별)
+  window._mpStorePhotoFile = null;
+  var mpSpBox = document.getElementById('mp-store-photo');
+  if (mpSpBox) mpSpBox.innerHTML = '<div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">'+t('mp.add_photo')+'</div></div>';
+
   var catLabel = document.getElementById('mp-cat-label');
   var catArrow = document.getElementById('mp-cat-arrow');
   var catAcc   = document.getElementById('mp-cat-accordion');
@@ -15628,10 +15666,14 @@ function renderMpItems() {
   var el = document.getElementById('mp-items-list');
   if (!el) return;
   el.innerHTML = _mpItems.map(function(it, i) {
+    var photoBtn = it.photoUrl
+      ? '<div onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border-radius:8px;background:url(\''+String(it.photoUrl).replace(/\x27/g,'%27')+'\') center/cover;cursor:pointer;flex-shrink:0;border:1.5px solid var(--gold);"></div>'
+      : '<button onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border:1.5px dashed var(--border-mid);background:var(--bg);border-radius:8px;color:var(--text-3);font-size:15px;cursor:pointer;flex-shrink:0;padding:0;">📷</button>';
     return '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">'
-      + '<input value="' + (it.name||'') + '" oninput="_mpItems['+i+'].name=this.value" placeholder="メニュー名" style="flex:1;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
-      + '<input value="' + (it.price||'') + '" oninput="_mpItems['+i+'].price=this.value" type="number" placeholder="¥" style="width:72px;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
-      + (_mpItems.length > 1 ? '<button onclick="removeMpItem('+i+')" style="width:32px;height:32px;border:none;background:var(--bg);border-radius:8px;color:var(--text-3);font-size:16px;cursor:pointer;flex-shrink:0;">✕</button>' : '')
+      + '<input value="' + (it.name||'') + '" oninput="_mpItems['+i+'].name=this.value" placeholder="メニュー名" style="flex:1;min-width:0;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
+      + '<input value="' + (it.price||'') + '" oninput="_mpItems['+i+'].price=this.value" type="number" placeholder="¥" style="width:64px;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
+      + photoBtn
+      + (_mpItems.length > 1 ? '<button onclick="removeMpItem('+i+')" style="width:30px;height:30px;border:none;background:var(--bg);border-radius:8px;color:var(--text-3);font-size:15px;cursor:pointer;flex-shrink:0;padding:0;">✕</button>' : '')
       + '</div>';
   }).join('');
 }
@@ -15644,6 +15686,39 @@ function addMpItem() {
 function removeMpItem(idx) {
   _mpItems.splice(idx, 1);
   renderMpItems();
+}
+
+// ── 영수증으로 등록: 지도중앙 좌표 고정 → OCR → 치리공개 모달로 자동 라우팅 ──
+function ctReceiptRegisterStart() {
+  var pos = (_mpManualLat && _mpManualLng) ? { lat:_mpManualLat, lng:_mpManualLng } : (_ctUserPos || { lat:35.6762, lng:139.6503 });
+  window._cpForcedPos = pos;        // submitChiriPublish 가 이 좌표를 핀 위치로 사용(지오코딩 보정 skip)
+  window._scanForChiriMap = true;   // showOcrResult 종료 후 치리공개로 라우팅
+  closeOv('ov-manual-pin');
+  var i = document.getElementById('ct-receipt-input');
+  if (i) { i.value=''; i.click(); }
+}
+function ctReceiptOnFile(input) {
+  if (!input.files || !input.files[0]) { window._scanForChiriMap=false; window._cpForcedPos=null; return; }
+  handleImageFile(input);   // 기존 OCR 파이프라인(전처리→Vision→GPT→showOcrResult)
+}
+
+// ── 수동핀 모달: 가게/메뉴 사진 픽 (cp 패턴 미러) ──
+var _mpPhotoTarget = null;
+function mpPickStorePhoto(){ _mpPhotoTarget='store'; var i=document.getElementById('mp-photo-input'); if(i){ i.value=''; i.click(); } }
+function mpPickItemPhoto(idx){ _mpPhotoTarget=idx; var i=document.getElementById('mp-photo-input'); if(i){ i.value=''; i.click(); } }
+function mpOnPhotoPicked(input){
+  var f = input.files && input.files[0]; if(!f) return;
+  var url = URL.createObjectURL(f);
+  if (_mpPhotoTarget === 'store'){
+    window._mpStorePhotoFile = f;
+    var box = document.getElementById('mp-store-photo');
+    if (box) box.innerHTML = '<img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block;">';
+  } else if (typeof _mpPhotoTarget === 'number') {
+    var it = _mpItems[_mpPhotoTarget];
+    if (it){ it.photoFile = f; it.photoUrl = url; }
+    renderMpItems();
+  }
+  _mpPhotoTarget = null;
 }
 
 function toggleMpCat() {
@@ -15718,6 +15793,11 @@ async function submitManualPin() {
   // Supabase 저장
   if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
 
+  // ★ 가게 대표사진 + 메뉴별 사진 → store_community_photos / store_menu_cards (백그라운드)
+  var _mpSP = window._mpStorePhotoFile || null;
+  if (_currentUser) _mpPersistPhotosAndCards(storeName, validItems, _mpCategory, _mpSP);
+  window._mpStorePhotoFile = null;
+
   // 가게명으로 좌표 보정 (백그라운드)
   searchAndPinStore(storeName, null, function(lat, lng) {
     if (lat) {
@@ -15725,6 +15805,43 @@ async function submitManualPin() {
       if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
     }
   });
+}
+
+// 수동핀: 가게 대표사진 업로드 + 메뉴별 사진 → 메뉴카드 생성/갱신 (치리공개 로직 미러)
+async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
+  if (!_sb || !_currentUser) return;
+  var hasPhotos = !!storePhotoFile || items.some(function(it){ return it.photoFile; });
+  if (hasPhotos) showToast('🔄 写真をアップロード中…');
+  window._cpStore = store;   // _cpUploadPhoto 경로 base
+  try {
+    if (storePhotoFile) {
+      var _u = await _cpUploadPhoto(storePhotoFile, 'community');
+      if (_u) { try { await _sb.from('store_community_photos').insert({ store_name:store, photo_url:_u, uploaded_by:_currentUser.id }); } catch(e){ console.warn('[mp store photo]', e); } }
+    }
+    // 메뉴카드 생성/갱신 (같은 가게+정규화명 있으면 사진만 보강)
+    var _norm = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
+    var exist = await _sb.from('store_menu_cards').select('id,menu_name,image_url').eq('store_name', store);
+    var emap = {}; (exist.data||[]).forEach(function(c){ emap[_norm(c.menu_name)] = c; });
+    for (var i=0; i<items.length; i++){
+      var it = items[i];
+      var photo = it.photoFile ? await _cpUploadPhoto(it.photoFile, 'menu-cards') : null;
+      var card = emap[_norm(it.name)];
+      if (card && card.id) {
+        if (photo) {
+          if (!card.image_url) { try { await _sb.from('store_menu_cards').update({ image_url:photo }).eq('id', card.id); card.image_url=photo; } catch(e){} }
+          else { try { await _sb.from('store_menu_photos').insert({ menu_card_id:card.id, image_url:photo, uploaded_by:_currentUser.id }); } catch(e){} }
+        }
+      } else {
+        var ins = await _sb.from('store_menu_cards').insert({
+          store_name:store, menu_name:it.name, category:category||'other',
+          price:parseInt(it.price)||0, image_url:photo,
+          rating_avg:0, rating_count:0, created_by:_currentUser.id
+        }).select().maybeSingle();
+        if (ins.data) emap[_norm(it.name)] = ins.data;
+      }
+    }
+    if (hasPhotos) showToast('✅ 写真を保存しました');
+  } catch(e){ console.warn('[mp persist]', e); }
 }
 
 /* 가성비 맵 가게 카드 → 치리츠모 공개 */
@@ -28478,7 +28595,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 488;
+window.__APP_BUILD__ = 489;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
