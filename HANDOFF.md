@@ -1,14 +1,28 @@
-# RetWork (チリつも) — HANDOFF (build 483 시점)
+# RetWork (チリつも) — HANDOFF (build 484 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 483** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 484** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-14** (안드로이드 PWA 뒤로가기 전면 개편 b474~480 · 치즈맵 가격핀 비활성 마커/클러스터 b481~483)
+> 마지막 작업: **2026-06-15** (치리카드 개편 b484 — 서브탭 내/전체 · 가격/카테고리/지역 필터 · 페이지뷰 10카드+광고2)
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-F. 2026-06-15 세션 — 치리카드 개편 (build 484)
+
+**요청:** 치리카드 탭에 페이지뷰(카드 11개씩) + 광고카드 + 상단 필터(가격/카테고리/지역 都道府県→시정촌). 협의 결과 아래로 확정:
+- **서브탭 2개**: 「내 카드」(본인 created_by) / 「전체 카드」(모든 유저 — 가성비 발견). 기존 단일 "내 카드" 뷰 → 서브탭 토글로 확장
+- **페이지뷰**: 페이지당 메뉴카드 **10 + 광고카드 2** (`CC_PER_PAGE=10`, `CC_AD_AFTER=[4,9]` → 4·9번째 카드 뒤 광고). 광고카드 `_ccAdCardHtml`은 메뉴카드 행과 동일 크기(96px, dashed, 📢, `rw.ad`) — AdSense 승인 후 실광고 교체 가능. 하단 prev/next 페이저(`md.prev`/`md.next` 재사용)
+- **필터 3종**(`cc-filter-bar`): 가격(범위 5단계)·카테고리(로드 데이터서 동적)·**지역(都道府県 select → 시정촌 select 캐스케이드, `_ccOnPrefChange`)**
+- **지역 추출**: store_menu_cards엔 지역 없음 → 로드 후 `stores.address`(영수증 OCR 자유텍스트) 200개 청크로 조회 → `_ccParseRegion`이 47都道府県 prefix + 첫 市/区/町/村 파싱해 카드에 `_pref/_city` 부착. 미상은 도도부현 필터 「기타(`__other`)」로 묶음. **별도 DB 작업 없음**
+
+**핵심 함수**(index.html, `renderMyCards` 영역 ~5847): `renderMyCards`(서브탭 렌더+로드 진입) / `_ccSwitchSub` / `_ccLoad`(탭별 fetch+지역부착, `_ccLoadedTab` 캐시·진입마다 갱신) / `_ccRenderFilters` / `_ccOnPrefChange` / `_ccApplyFilter` / `_ccFilteredRows` / `_ccRenderGrid`(요약[내카드만]+건수+타일+광고삽입+페이저) / `_ccGoPage` / `_ccAdCardHtml` / `_ccParseRegion` / `_JP_PREFS`. `_myCardItemHtml`/`_myCardDateStr`/`myCardOpen` 재사용. i18n 4로케일 `cc.*` 키 추가.
+**커밋:** `1c0ed19` (push 완료). build 484 / sw b484.
+**⚠️ 데이터 의존:** 지역 필터는 가게에 `address`가 있어야 분류됨 — OCR로 주소 없는 가게 많으면 대부분 「기타」. 실배포 분포 보고 조정 가능. 전체 카드 탭은 `limit(1000)` 클라이언트 필터링(현 규모 OK, 추후 서버사이드 필터/무한스크롤 검토).
 
 ---
 
