@@ -1,9 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 486 시점)
+# RetWork (チリつも) — HANDOFF (build 487 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 486** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 487** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-15** (치리카드 개편 b484~486 — 필터 바텀시트(내/전체·가격·카테고리·지역) · 페이지뷰 10카드+광고2 · 요약+필터 한 줄)
+> 마지막 작업: **2026-06-15** (치리카드 b484~487 — 필터 바텀시트 · 페이지뷰 10카드+광고2 · 요약+필터 한 줄 · 지역필터 좌표 역지오코딩으로 수정)
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
@@ -24,8 +24,10 @@
 - **지역 추출**: store_menu_cards엔 지역 없음 → 소스별 로드 시 `stores.address`(OCR 자유텍스트) 200개 청크 조회 → `_ccParseRegion`(47都道府県 prefix + 첫 市/区/町/村) 파싱해 `_pref/_city` 부착. 미상=「기타(`__other`)」. **별도 DB 작업 없음**
 
 **핵심 함수**(index.html `renderMyCards` 영역 ~5847): 데이터=`_ccEnsureData(src)`(소스별 fetch+지역부착, `_ccDataCache={mine,all}` 캐시) · `_ccActiveRows` · `_ccParseRegion`/`_JP_PREFS`. 진입=`renderMyCards`(진입마다 활성소스 캐시무효화 후 재로드). 상단바=`_ccRenderTopbar`/`_ccActiveFilterCount`. 시트=`_ccOpenFilter`/`_ccCloseFilter`/`_ccPickSource`/`_ccSheetPrice`/`_ccUpdatePriceLabel`/`_ccSheetCat`/`_ccFillRegionSelects`/`_ccFillCitySelect`/`_ccSheetPref`/`_ccSheetCity`/`_ccResetCardFilter`/`_ccApplyCardFilter`. 그리드=`_ccFilteredRows`/`_ccRenderGrid`(건수+타일+광고+페이저)/`_ccGoPage`/`_ccAdCardHtml`. 상태=`_ccTab`(적용소스)/`_ccPendSource`(시트선택)/`_ccPriceMax`/`_ccCat`/`_ccPref`/`_ccCity`/`_ccPage`. `_myCardItemHtml`/`_myCardDateStr`/`myCardOpen` 재사용. i18n `cc.*`(tab_mine/tab_all/source/region/region_all/region_other/city_all/no_result/count/all_empty_sub 등) 4로케일.
-**커밋:** `1c0ed19`(b484 초기·서브탭형) → `15b8b0f`(b485 바텀시트화) → `79babc6`(b486 요약+필터 한 줄). 모두 push. build 486 / sw b486.
-**⚠️ 데이터 의존:** 지역 필터는 가게 `address` 있어야 분류 — OCR로 주소 없는 가게 많으면 대부분 「기타」. 전체 탭은 `limit(1000)` 클라 필터링(추후 서버사이드/무한스크롤 검토). 카테고리 칩은 맵 canonical 키 기준이라 store_menu_cards.category 가 다른 값이면 「すべて」서만 보임.
+**🔴 지역 필터 수정(b487) — 중요:** 처음엔 지역을 `stores.address` 에서 파싱했으나 **stores 엔 주소가 저장 안 됨**(`_persistPinToSupabase`·admin 모두 address 미기록, 주소는 receipts에만 희박) → 전부 「기타」로 빠져 도도부현이 안 떴음. **수정 = 좌표 역지오코딩**: 거의 모든 가게에 있는 `stores.lat/lng` 를 Google Maps Geocoder(이미 로드)로 역지오코딩 → 都道府県/시정촌. `_ccRegionCache`(localStorage `cc_region_cache` 영구 캐시) + 백그라운드(`_ccGeocodeMissing`, 미캐시만 스로틀 110ms·세션당 150건 상한, 맵API 로딩 전이면 1.5s×4회 재시도). 지오코딩 완료 시 시트 도도부현 옵션·지역필터 결과 자동 갱신. 東京 23구는 sublocality_level_1(◯◯区) 보정. **두 탭 모두 DB 작업 없이 동작.** ⚠️ 첫 진입 직후 필터 열면 아직 지오코딩 중이라 도도부현 일부만; 몇 초 뒤/다음 진입부턴 완전. 관련 함수: `_ccGeocodeLatLng`/`_ccGeocodeMissing`/`_ccRegionCache`/`_ccSaveRegionCache`. (`_ccParseRegion` 제거됨)
+
+**커밋:** `1c0ed19`(b484 초기·서브탭형) → `15b8b0f`(b485 바텀시트화) → `79babc6`(b486 요약+필터 한 줄) → `68b03f6`(b487 지역 좌표 역지오코딩). 모두 push. build 487 / sw b487.
+**⚠️ 데이터 의존:** 지역=`stores.lat/lng` 역지오코딩(주소 불필요). 전체 탭은 `limit(1000)` 클라 필터링(추후 서버사이드/무한스크롤 검토). 카테고리 칩은 맵 canonical 키 기준이라 store_menu_cards.category 가 다른 값이면 「すべて」서만 보임. 지오코딩은 Google 과금 대상 — 캐시로 1회/가게 제한하지만 'all' 탭 대량이면 비용 주의(상한 150).
 
 ---
 
