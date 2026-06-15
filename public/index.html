@@ -2785,7 +2785,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <input type="file" id="mp-photo-input" accept="image/*" style="display:none" onchange="mpOnPhotoPicked(this)">
     <!-- 영수증으로 등록 (OCR → 치리공개 자동 라우팅) -->
     <button onclick="ctReceiptRegisterStart()" style="width:100%;padding:12px;border-radius:12px;border:none;background:var(--green-grad);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;">
-      <span style="font-size:16px;">📸</span><span data-i18n="mp.receipt_btn">レシートで登録（自動入力）</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;flex-shrink:0;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><span data-i18n="mp.receipt_btn">レシートで登録（自動入力）</span>
     </button>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;color:var(--text-3);font-size:11px;font-weight:600;">
       <div style="flex:1;height:1px;background:var(--border);"></div><span data-i18n="mp.or_manual">または手動で入力</span><div style="flex:1;height:1px;background:var(--border);"></div>
@@ -15662,7 +15662,7 @@ function renderMpItems() {
   el.innerHTML = _mpItems.map(function(it, i) {
     var photoBtn = it.photoUrl
       ? '<div onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border-radius:8px;background:url(\''+String(it.photoUrl).replace(/\x27/g,'%27')+'\') center/cover;cursor:pointer;flex-shrink:0;border:1.5px solid var(--gold);"></div>'
-      : '<button onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border:1.5px dashed var(--border-mid);background:var(--bg);border-radius:8px;color:var(--text-3);font-size:15px;cursor:pointer;flex-shrink:0;padding:0;">📷</button>';
+      : '<button onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border:1.5px dashed var(--border-mid);background:var(--bg);border-radius:8px;color:var(--text-3);cursor:pointer;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></button>';
     return '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">'
       + '<input value="' + (it.name||'') + '" oninput="_mpItems['+i+'].name=this.value" placeholder="メニュー名" style="flex:1;min-width:0;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
       + '<input value="' + (it.price||'') + '" oninput="_mpItems['+i+'].price=this.value" type="number" placeholder="¥" style="width:64px;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
@@ -28589,7 +28589,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 492;
+window.__APP_BUILD__ = 493;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
