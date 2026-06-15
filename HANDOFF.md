@@ -1,14 +1,29 @@
-# RetWork (チリつも) — HANDOFF (build 487 시점)
+# RetWork (チリつも) — HANDOFF (build 488 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 487** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 488** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-15** (치리카드 b484~487 — 필터 바텀시트 · 페이지뷰 10카드+광고2 · 요약+필터 한 줄 · 지역필터 좌표 역지오코딩으로 수정)
+> 마지막 작업: **2026-06-15** (치리카드 b484~487 · b488 SEO — / 를 rewrite(200)로 서빙 + canonical / 로 환원, GSC 표준충돌 해소)
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-G. 2026-06-15 — SEO 루트 색인 최종 해결 (build 488)
+
+**문제:** GSC `https://retwork.jp/index.html` → 「중복 페이지, Google이 사용자와 다른 표준 선택」. 사용자 선언 canonical=`/index.html`(b473)을 **Google이 무시하고 루트 `/` 를 표준으로 재선택**. 그런데 `/` 는 `app/page.tsx` 의 307 리다이렉트(비콘텐츠)라 색인 불가 → 둘 다 색인 실패.
+
+**해결(=Google 선호 `/` 에 맞춤):**
+- `next.config.ts`: **`async rewrites(){ return { beforeFiles:[{source:'/',destination:'/index.html'}] }; }`** → 루트 `/` 가 **307 아닌 200**으로 정적 `public/index.html` 콘텐츠를 서빙(URL 그대로, `?ref=` 보존). `beforeFiles` 라 `app/page.tsx` 보다 먼저 적용(페이지 오버라이드). `app/page.tsx`(ref보존 리다이렉트)는 폴백으로 **존치**.
+- `next.config` headers 에 `source:"/"` no-store 추가(스테일 방지).
+- index.html `<link rel=canonical>` + JSON-LD `url` + sitemap 홈 `loc` 를 `/index.html` → **`/`** 환원.
+
+**검증:** `next build` 통과(16.2.6). 로컬 `next start`: `/`=200(본문 canonical=/ · __APP_BUILD__ 포함), `/?ref=TEST`=200, `/index.html`=200. **GSC 실시간 테스트: "URL을 Google에 등록할 수 있음" + 사용자 선언 표준=`https://retwork.jp/` 확인 → 색인 생성 요청 완료(2026-06-15).** Google 선택 표준은 재크롤(수일) 후 `/` 로 일치 예정.
+**커밋:** `18715e8` (push). build 488 / sw b488.
+**⚠️ 함정:** `/` → `/index.html` 은 **rewrite(200)** 여야 함(redirect 금지 — 색인 안 됨). canonical/sitemap/JSON-LD 전부 `/` 로 통일. (b470 redirect·b473 self-/index.html 은 폐기된 접근). 남은 권장: Vercel 도메인에서 `www.retwork.jp`→`retwork.jp` 리다이렉트 확인(GSC 참조페이지에 www 있었음).
 
 ---
 
