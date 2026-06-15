@@ -2453,6 +2453,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="sg">
         <div class="si" onclick="window.open('./about.html','_blank')" style="cursor:pointer;"><span class="lico" data-lico="info" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.about">サイトについて</span><span class="si-val">›</span></div>
         <div class="si" onclick="window.open('./blog/','_blank')" style="cursor:pointer;"><span class="lico" data-lico="pencil" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.blog">節約ブログ</span><span class="si-val">›</span></div>
+        <div class="si" onclick="window.open('https://blog.retwork.jp','_blank')" style="cursor:pointer;"><span class="lico" data-lico="map_pin" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.gourmet_blog">グルメブログ</span><span class="si-val">›</span></div>
         <div class="si" onclick="window.open('./privacy.html','_blank')" style="cursor:pointer;"><span class="lico" data-lico="shield" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.privacy">プライバシーポリシー</span><span class="si-val">›</span></div>
         <div class="si" onclick="window.open('./terms.html','_blank')" style="cursor:pointer;"><span class="lico" data-lico="receipt" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.terms">利用規約</span><span class="si-val">›</span></div>
         <div class="si" onclick="authLogout()" style="cursor:pointer;"><span class="lico" data-lico="logout" data-size="18" data-color="var(--red)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.logout" style="color:var(--red);">로그아웃</span></div>
@@ -13163,7 +13164,7 @@ var I18N = {
     'settings.dark':'ダークモード','settings.fontsize':'文字サイズ','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
     'settings.lang':'言語','settings.currency':'通貨','settings.theme':'テーマカラー',
     'settings.week_start':'週の開始曜日','week.sun':'日曜日','week.mon':'月曜日',
-    'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.logout':'ログアウト',
+    'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.gourmet_blog':'グルメブログ','settings.logout':'ログアウト',
     'settings.profile':'プロフィール','settings.notif.title':'通知','settings.account':'アカウント','settings.legal':'規約・お問い合わせ',
     // 공통 버튼
     'btn.save':'保存','btn.cancel':'キャンセル','btn.close':'閉じる','btn.delete':'削除','btn.edit':'編集','btn.add':'追加','btn.share':'共有','btn.register':'登録','btn.confirm':'確認','btn.ok':'OK','btn.next':'次へ','btn.back':'戻る','btn.retry':'再試行',
@@ -13458,7 +13459,7 @@ var I18N = {
     'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
     'settings.lang':'언어','settings.currency':'통화','settings.theme':'테마 색상',
     'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일',
-    'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.logout':'로그아웃',
+    'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.gourmet_blog':'그루메 블로그','settings.logout':'로그아웃',
     'settings.profile':'프로필','settings.notif.title':'알림','settings.account':'계정','settings.legal':'약관 · 문의',
     'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도',
     'scan.title':'영수증 스캔','scan.camera':'카메라','scan.gallery':'갤러리','scan.cancel':'취소',
@@ -13704,7 +13705,7 @@ var I18N = {
     'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
     'settings.lang':'Language','settings.currency':'Currency','settings.theme':'Theme Color',
     'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday',
-    'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.logout':'Logout',
+    'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.gourmet_blog':'Gourmet Blog','settings.logout':'Logout',
     'settings.profile':'Profile','settings.notif.title':'Notifications','settings.account':'Account','settings.legal':'Legal & Contact',
     'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry',
     'scan.title':'Scan Receipt','scan.camera':'Camera','scan.gallery':'Gallery','scan.cancel':'Cancel',
@@ -13950,7 +13951,7 @@ var I18N = {
     'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
     'settings.lang':'语言','settings.currency':'货币','settings.theme':'主题颜色',
     'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一',
-    'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.logout':'登出',
+    'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.gourmet_blog':'美食博客','settings.logout':'登出',
     'settings.profile':'个人信息','settings.notif.title':'通知','settings.account':'账户','settings.legal':'条款与联系',
     'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试',
     'scan.title':'扫描票据','scan.camera':'相机','scan.gallery':'相册','scan.cancel':'取消',
@@ -28589,7 +28590,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 493;
+window.__APP_BUILD__ = 494;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
