@@ -28603,9 +28603,9 @@ try {
 // ── 공식 SNS 계정 (설정 → SNS 바로가기). https 프로필 URL 이면 앱 설치 시 앱으로 열림 ──
 //   ⚠️ 실제 계정 URL 로 교체하세요. 비워두면 탭 시 '준비중' 토스트.
 var RETWORK_SNS = {
-  x:         '',   // 예: 'https://x.com/retwork_jp'
-  instagram: '',   // 예: 'https://www.instagram.com/retwork.jp'
-  threads:   ''    // 예: 'https://www.threads.net/@retwork.jp'
+  x:         'https://x.com/RetWork2026',
+  instagram: 'https://www.instagram.com/retwork.jp/',
+  threads:   'https://www.threads.net/@retwork.jp'
 };
 function ctOpenSns(key){
   var url = RETWORK_SNS && RETWORK_SNS[key];
@@ -28615,7 +28615,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 495;
+window.__APP_BUILD__ = 496;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
