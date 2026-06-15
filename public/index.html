@@ -315,6 +315,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .ct-cat-chip{padding:7px 13px;border-radius:20px;font-size:12px;font-weight:600;
   border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);cursor:pointer;white-space:nowrap;}
 .ct-cat-chip.active{background:var(--gold-grad);color:#fff;border-color:var(--gold);}
+.cc-src-btn{flex:1;padding:11px;border-radius:11px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);}
+.cc-src-btn.active{border-color:transparent;background:var(--gold-grad);color:#fff;}
 .ct-post-body{overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);}
 .ct-post-body.open{max-height:600px;}
 /* チリつもに公開 — 품목 선택 칩 */
@@ -1778,9 +1780,67 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
   </div>
   <div class="scroll" style="padding:16px;">
-    <div id="cc-subtab-bar" style="display:flex;gap:8px;margin-bottom:12px;"><!-- 내/전체 서브탭 --></div>
-    <div id="cc-filter-bar" style="margin-bottom:12px;"><!-- 가격/카테고리/지역 필터 --></div>
+    <div id="cc-topbar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;"><!-- 소스명 + 필터버튼 --></div>
     <div id="ct-mycard-list"><!-- renderMyCards --></div>
+  </div>
+
+  <!-- 치리카드 필터 바텀시트 (치즈맵 필터 스타일) -->
+  <div id="cc-filter-dim" onclick="_ccCloseFilter()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1200;"></div>
+  <div id="cc-filter-sheet" style="display:none;position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#fff;border-radius:20px 20px 0 0;padding:18px 16px 28px;z-index:1201;box-shadow:0 -4px 30px rgba(0,0,0,.18);max-height:90%;overflow-y:auto;">
+    <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:14px;"><span data-i18n="ct.map.filter">フィルター</span></div>
+
+    <!-- 카드 종류 -->
+    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="cc.source">カード種類</div>
+    <div style="display:flex;gap:8px;margin-bottom:18px;" id="cc-source-seg">
+      <button type="button" class="cc-src-btn active" data-src="mine" onclick="_ccPickSource('mine')" data-i18n="cc.tab_mine">マイカード</button>
+      <button type="button" class="cc-src-btn" data-src="all" onclick="_ccPickSource('all')" data-i18n="cc.tab_all">みんなのカード</button>
+    </div>
+
+    <!-- 가격 -->
+    <div style="background:var(--bg);border-radius:14px;padding:14px 16px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+        <span style="font-size:13px;font-weight:700;color:var(--text-1);" data-i18n="ct.map.price">価格帯</span>
+        <span style="font-size:13px;font-weight:700;color:var(--gold);" id="cc-price-label">¥0 〜 ¥3,000+</span>
+      </div>
+      <input type="range" id="cc-price-slider" min="300" max="3000" step="100" value="3000" oninput="_ccSheetPrice(this.value)" style="width:100%;accent-color:var(--gold);">
+      <div style="display:flex;justify-content:space-between;margin-top:4px;">
+        <span style="font-size:10px;color:var(--text-3);">¥300</span>
+        <span style="font-size:10px;color:var(--text-3);">¥3,000+</span>
+      </div>
+    </div>
+
+    <!-- 카테고리 -->
+    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.3px;" data-i18n="ct.map.category">カテゴリ</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;" id="cc-cat-chips">
+      <div class="ct-cat-chip active" data-cat="all"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.all">🍽️ すべて</div>
+      <div class="ct-cat-chip"       data-cat="teishoku"  onclick="_ccSheetCat(this)" data-i18n="ct.cat.teishoku">🍱 定食・丼</div>
+      <div class="ct-cat-chip"       data-cat="ramen"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.ramen">🍜 ラーメン</div>
+      <div class="ct-cat-chip"       data-cat="soba"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.soba">🍵 うどん・そば</div>
+      <div class="ct-cat-chip"       data-cat="sushi"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.sushi">🍣 スシ</div>
+      <div class="ct-cat-chip"       data-cat="tonkatsu"  onclick="_ccSheetCat(this)" data-i18n="ct.cat.tonkatsu">🥩 とんかつ</div>
+      <div class="ct-cat-chip"       data-cat="chinese"   onclick="_ccSheetCat(this)" data-i18n="ct.cat.chinese">🥡 中華</div>
+      <div class="ct-cat-chip"       data-cat="korean"    onclick="_ccSheetCat(this)" data-i18n="ct.cat.korean">🥘 韓国料理</div>
+      <div class="ct-cat-chip"       data-cat="curry"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.curry">🍛 カレー</div>
+      <div class="ct-cat-chip"       data-cat="thai"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.thai">🌶️ タイ</div>
+      <div class="ct-cat-chip"       data-cat="pizza"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.pizza">🍕 ピザ</div>
+      <div class="ct-cat-chip"       data-cat="fast"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.fast">🍔 バーガー</div>
+      <div class="ct-cat-chip"       data-cat="cafe"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.cafe">☕ カフェ</div>
+      <div class="ct-cat-chip"       data-cat="konbini"   onclick="_ccSheetCat(this)" data-i18n="ct.cat.konbini">🏪 コンビニ</div>
+      <div class="ct-cat-chip"       data-cat="izakaya"   onclick="_ccSheetCat(this)" data-i18n="ct.cat.izakaya">🍶 居酒屋</div>
+    </div>
+
+    <!-- 지역 (都道府県 → 시정촌) -->
+    <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.3px;" data-i18n="cc.region">地域</div>
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <select id="cc-pref-sel" onchange="_ccSheetPref()" style="flex:1;min-width:0;padding:10px 8px;border:1px solid var(--border-mid);border-radius:11px;background:var(--surface);color:var(--text-1);font-size:13px;font-family:var(--font);"></select>
+      <select id="cc-city-sel" onchange="_ccSheetCity()" style="flex:1;min-width:0;padding:10px 8px;border:1px solid var(--border-mid);border-radius:11px;background:var(--surface);color:var(--text-1);font-size:13px;font-family:var(--font);"></select>
+    </div>
+
+    <div style="display:flex;gap:10px;">
+      <button onclick="_ccResetCardFilter()" style="flex:1;padding:13px;border:1.5px solid var(--border-mid);border-radius:12px;font-size:13px;font-weight:700;background:#fff;cursor:pointer;font-family:var(--font);color:var(--text-2);" data-i18n="btn.reset">初期化</button>
+      <button onclick="_ccApplyCardFilter()" style="flex:2;padding:13px;border:none;border-radius:12px;font-size:13px;font-weight:700;background:var(--gold-grad);color:#fff;cursor:pointer;font-family:var(--font);" data-i18n="btn.apply">適用</button>
+    </div>
   </div>
 </div>
 
@@ -5847,16 +5907,21 @@ function ctGoRewardAd() {
 ═══════════════════════════════════════════════════════════════ */
 var _myCardsCache = [];
 // ══════════════════════════════════════════════════════════════════════════
-// 치리카드 — 서브탭(내/전체) · 가격/카테고리/지역(都道府県→시정촌) 필터 · 페이지뷰
-//   페이지당 메뉴카드 10 + 광고카드 2 (4번째·9번째 카드 뒤 삽입). 광고카드=카드 동일 크기
+// 치리카드 — 필터 바텀시트(치즈맵 스타일) · 카드종류(내/전체) · 가격/카테고리/지역 · 페이지뷰
+//   기본 마이카드. 상단 필터버튼 → 바텀시트에서 카드종류·가격·카테고리·지역 선택 후 適用.
+//   페이지당 메뉴카드 10 + 광고카드 2 (4·9번째 카드 뒤 삽입). 광고카드=카드 동일 크기
 // ══════════════════════════════════════════════════════════════════════════
-var CC_PER_PAGE = 10;            // 페이지당 메뉴카드 수
-var CC_AD_AFTER = [4, 9];        // 이 순번(1-base) 카드 뒤에 광고카드 삽입 → 10카드 + 광고 2
-var _ccTab = 'mine';            // 'mine' | 'all'
+var CC_PER_PAGE = 10;
+var CC_AD_AFTER = [4, 9];
+var CC_PRICE_MAX = 3000;        // 슬라이더 최대치(=가격 상한 없음)
+var _ccTab = 'mine';           // 적용된 카드종류 'mine'|'all'
 var _ccPage = 0;
-var _ccRows = [];               // 현재 탭 전체 로드(지역 부착됨)
-var _ccLoadedTab = null;
-var _ccFilters = { price:'', cat:'', pref:'', city:'' };
+var _ccPriceMax = CC_PRICE_MAX; // 적용된 가격 상한
+var _ccCat = 'all';
+var _ccPref = '';              // ''|都道府県|'__other'
+var _ccCity = '';
+var _ccPendSource = 'mine';    // 시트에서 선택중인 카드종류(適用 시 _ccTab 반영)
+var _ccDataCache = { mine:null, all:null };  // 소스별 로드 캐시(지역 부착됨)
 
 // 일본 47 都道府県 (주소 prefix 매칭 + 정렬 순서)
 var _JP_PREFS = ['北海道','青森県','岩手県','宮城県','秋田県','山形県','福島県','茨城県','栃木県','群馬県','埼玉県','千葉県','東京都','神奈川県','新潟県','富山県','石川県','福井県','山梨県','長野県','岐阜県','静岡県','愛知県','三重県','滋賀県','京都府','大阪府','兵庫県','奈良県','和歌山県','鳥取県','島根県','岡山県','広島県','山口県','徳島県','香川県','愛媛県','高知県','福岡県','佐賀県','長崎県','熊本県','大分県','宮崎県','鹿児島県','沖縄県'];
@@ -5873,139 +5938,187 @@ function _ccParseRegion(addr){
   return { pref:pref, city: m ? m[1] : '' };
 }
 
+function _ccActiveRows(){ return _ccDataCache[_ccTab] || []; }
+
+// 소스별 데이터 로드 + 지역 부착 + 캐시
+async function _ccEnsureData(src){
+  if (_ccDataCache[src]) return _ccDataCache[src];
+  if (!_sb || (src==='mine' && !_currentUser)) return [];
+  var rows = [];
+  try {
+    var q = _sb.from('store_menu_cards')
+      .select('id,store_name,menu_name,price,category,image_url,rating_avg,rating_count,view_count,like_count,created_at,created_by')
+      .order('created_at', { ascending:false }).limit(1000);
+    if (src==='mine') q = q.eq('created_by', _currentUser.id);
+    var res = await q;
+    if (res.error) console.warn('[cc load]', res.error.message);
+    rows = res.data || [];
+  } catch(e) { console.warn('[cc load] ex', e); }
+  try {
+    var names = Array.from(new Set(rows.map(function(r){return r.store_name;}).filter(Boolean)));
+    var addrMap = {};
+    for (var k=0; k<names.length; k+=200) {
+      var sr = await _sb.from('stores').select('name,address').in('name', names.slice(k,k+200));
+      (sr.data||[]).forEach(function(s){ addrMap[s.name] = s.address||''; });
+    }
+    rows.forEach(function(r){ var rg=_ccParseRegion(addrMap[r.store_name]); r._pref=rg.pref; r._city=rg.city; });
+  } catch(e) { console.warn('[cc region] ex', e); rows.forEach(function(r){ r._pref=''; r._city=''; }); }
+  _ccDataCache[src] = rows;
+  return rows;
+}
+
+// 치리카드 탭 진입
 async function renderMyCards() {
-  // 서브탭 바
-  var bar = document.getElementById('cc-subtab-bar');
-  if (bar) {
-    var mk = function(tab,label){
-      var on = (_ccTab===tab);
-      return '<button onclick="_ccSwitchSub(\''+tab+'\')" style="flex:1;padding:9px;border-radius:10px;border:1px solid '+(on?'transparent':'var(--border-mid)')+';background:'+(on?'var(--gold-grad)':'var(--surface)')+';color:'+(on?'#fff':'var(--text-2)')+';font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">'+label+'</button>';
-    };
-    bar.innerHTML = mk('mine', t('cc.tab_mine')) + mk('all', t('cc.tab_all'));
-  }
-  _ccLoadedTab = null;   // 탭 (재)진입 시 항상 최신 로드
-  await _ccLoad();
-}
-
-function _ccSwitchSub(tab){
-  if (_ccTab===tab) return;
-  _ccTab = tab; _ccPage = 0;
-  _ccFilters = { price:'', cat:'', pref:'', city:'' };
-  renderMyCards();
-}
-
-async function _ccLoad(){
+  _ccRenderTopbar();
   var listEl = document.getElementById('ct-mycard-list');
-  var filtEl = document.getElementById('cc-filter-bar');
   if (!listEl) return;
   if (!_sb || (_ccTab==='mine' && !_currentUser)) {
-    if (filtEl) filtEl.innerHTML='';
     listEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:13px;">'+t('toast.login_required')+'</div>';
     return;
   }
-  if (_ccLoadedTab !== _ccTab) {
-    if (filtEl) filtEl.innerHTML='';
-    listEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:12px;">'+t('common.loading')+'</div>';
-    var rows = [];
-    try {
-      var q = _sb.from('store_menu_cards')
-        .select('id,store_name,menu_name,price,category,image_url,rating_avg,rating_count,view_count,like_count,created_at,created_by')
-        .order('created_at', { ascending:false }).limit(1000);
-      if (_ccTab==='mine') q = q.eq('created_by', _currentUser.id);
-      var res = await q;
-      if (res.error) console.warn('[cc load]', res.error.message);
-      rows = res.data || [];
-    } catch(e) { console.warn('[cc load] ex', e); }
-    // 지역: 가게 주소 조회 → 카드에 _pref/_city 부착
-    try {
-      var names = Array.from(new Set(rows.map(function(r){return r.store_name;}).filter(Boolean)));
-      var addrMap = {};
-      for (var k=0; k<names.length; k+=200) {
-        var sr = await _sb.from('stores').select('name,address').in('name', names.slice(k,k+200));
-        (sr.data||[]).forEach(function(s){ addrMap[s.name] = s.address||''; });
-      }
-      rows.forEach(function(r){ var rg=_ccParseRegion(addrMap[r.store_name]); r._pref=rg.pref; r._city=rg.city; });
-    } catch(e) { console.warn('[cc region] ex', e); rows.forEach(function(r){ r._pref=''; r._city=''; }); }
-    _ccRows = rows;
-    _ccLoadedTab = _ccTab;
-    _myCardsCache = rows;   // myCardOpen 호환
-  }
-  // 빈 결과(데이터 자체 없음)
-  if (_ccRows.length === 0) {
-    if (filtEl) filtEl.innerHTML='';
-    listEl.innerHTML = '<div style="text-align:center;padding:56px 20px;">'
-      + '<div style="font-size:46px;margin-bottom:12px;opacity:.5;">🎴</div>'
-      + '<div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px;">'+t('ct.mycard.empty_title')+'</div>'
-      + '<div style="font-size:12px;color:var(--text-3);line-height:1.6;">'+(_ccTab==='mine'?t('ct.mycard.empty_sub'):t('cc.all_empty_sub'))+'</div>'
-      + '</div>';
-    return;
-  }
-  _ccRenderFilters();
+  listEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:12px;">'+t('common.loading')+'</div>';
+  _ccDataCache[_ccTab] = null;   // 진입 시 최신 로드
+  await _ccEnsureData(_ccTab);
+  _myCardsCache = _ccActiveRows();   // myCardOpen 호환
   _ccRenderGrid();
 }
 
-// 가격/카테고리/지역 필터 바 렌더 (로드된 데이터 기준 옵션 구성)
-function _ccRenderFilters(){
-  var el = document.getElementById('cc-filter-bar');
+// 상단바 (현재 카드종류명 + 필터버튼)
+function _ccRenderTopbar(){
+  var bar = document.getElementById('cc-topbar');
+  if (!bar) return;
+  var n = _ccActiveFilterCount();
+  var funnel = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>';
+  bar.innerHTML =
+    '<div style="font-size:16px;font-weight:800;color:var(--text-1);">'+t(_ccTab==='mine'?'cc.tab_mine':'cc.tab_all')+'</div>'
+    + '<button onclick="_ccOpenFilter()" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:11px;border:1px solid '+(n>0?'transparent':'var(--border-mid)')+';background:'+(n>0?'var(--gold-grad)':'var(--surface)')+';color:'+(n>0?'#fff':'var(--text-2)')+';font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);">'
+    +   funnel + '<span>'+t('ct.map.filter')+'</span>'+(n>0?'<span style="background:rgba(255,255,255,.28);border-radius:8px;padding:0 6px;font-size:11px;">'+n+'</span>':'')
+    + '</button>';
+}
+function _ccActiveFilterCount(){
+  var n=0;
+  if (_ccPriceMax < CC_PRICE_MAX) n++;
+  if (_ccCat!=='all') n++;
+  if (_ccPref) n++;
+  return n;
+}
+
+// ── 필터 바텀시트 ──
+async function _ccOpenFilter(){
+  _ccPendSource = _ccTab;
+  _ccSyncSourceBtns();
+  var ps = document.getElementById('cc-price-slider'); if (ps) ps.value = _ccPriceMax;
+  _ccUpdatePriceLabel(_ccPriceMax);
+  document.querySelectorAll('#cc-cat-chips .ct-cat-chip').forEach(function(c){ c.classList.toggle('active', c.dataset.cat===_ccCat); });
+  await _ccEnsureData(_ccPendSource);
+  _ccFillRegionSelects();
+  document.getElementById('cc-filter-dim').style.display='';
+  document.getElementById('cc-filter-sheet').style.display='';
+}
+function _ccCloseFilter(){
+  document.getElementById('cc-filter-dim').style.display='none';
+  document.getElementById('cc-filter-sheet').style.display='none';
+}
+function _ccSyncSourceBtns(){
+  document.querySelectorAll('#cc-source-seg .cc-src-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.src===_ccPendSource); });
+}
+async function _ccPickSource(src){
+  _ccPendSource = src; _ccSyncSourceBtns();
+  _ccPref=''; _ccCity='';   // 소스 바뀌면 지역 선택 초기화
+  await _ccEnsureData(src);
+  _ccFillRegionSelects();
+}
+function _ccSheetPrice(val){
+  _ccPriceMax = parseInt(val,10);
+  _ccUpdatePriceLabel(_ccPriceMax);
+}
+function _ccUpdatePriceLabel(v){
+  var el = document.getElementById('cc-price-label');
   if (!el) return;
-  var cats = Array.from(new Set(_ccRows.map(function(r){return r.category;}).filter(Boolean))).sort();
-  var prefsPresent = {}; var hasOther = false;
-  _ccRows.forEach(function(r){ if (r._pref) prefsPresent[r._pref]=1; else hasOther=true; });
-  var prefs = _JP_PREFS.filter(function(p){ return prefsPresent[p]; });
-  var sel = function(id, onchange, opts, cur){
-    var o = opts.map(function(op){ return '<option value="'+_esc(op.v)+'"'+(op.v===cur?' selected':'')+'>'+_esc(op.l)+'</option>'; }).join('');
-    return '<select id="'+id+'" onchange="'+onchange+'" style="flex:1;min-width:0;padding:8px 6px;border:1px solid var(--border-mid);border-radius:9px;background:var(--surface);color:var(--text-1);font-size:12px;font-family:var(--font);">'+o+'</select>';
-  };
-  var priceOpts = [
-    {v:'',l:t('cc.price_all')},{v:'1-500',l:'~¥500'},{v:'500-1000',l:'¥500~1,000'},
-    {v:'1000-2000',l:'¥1,000~2,000'},{v:'2000-3000',l:'¥2,000~3,000'},{v:'3000-',l:'¥3,000~'}
-  ];
-  var catOpts = [{v:'',l:t('cc.cat_all')}].concat(cats.map(function(c){ return {v:c,l:c}; }));
-  var prefOpts = [{v:'',l:t('cc.region_all')}].concat(prefs.map(function(p){ return {v:p,l:p}; }));
-  if (hasOther) prefOpts.push({v:'__other', l:t('cc.region_other')});
-  var cityOpts = [{v:'',l:t('cc.city_all')}];
-  if (_ccFilters.pref && _ccFilters.pref!=='__other') {
-    var cs = {}; _ccRows.forEach(function(r){ if (r._pref===_ccFilters.pref && r._city) cs[r._city]=1; });
-    cityOpts = cityOpts.concat(Object.keys(cs).sort().map(function(c){ return {v:c,l:c}; }));
+  el.textContent = (v>=CC_PRICE_MAX) ? ('¥0 〜 ¥'+CC_PRICE_MAX.toLocaleString()+'+') : ('¥0 〜 ¥'+parseInt(v,10).toLocaleString());
+}
+function _ccSheetCat(el){
+  document.querySelectorAll('#cc-cat-chips .ct-cat-chip').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+  _ccCat = el.dataset.cat;
+}
+function _ccFillRegionSelects(){
+  var prefSel = document.getElementById('cc-pref-sel');
+  if (!prefSel) return;
+  var rows = _ccDataCache[_ccPendSource] || [];
+  var present={}; var hasOther=false;
+  rows.forEach(function(r){ if (r._pref) present[r._pref]=1; else hasOther=true; });
+  var prefs = _JP_PREFS.filter(function(p){return present[p];});
+  prefSel.innerHTML =
+    '<option value="">'+_esc(t('cc.region_all'))+'</option>'
+    + prefs.map(function(p){return '<option value="'+_esc(p)+'"'+(p===_ccPref?' selected':'')+'>'+_esc(p)+'</option>';}).join('')
+    + (hasOther?'<option value="__other"'+(_ccPref==='__other'?' selected':'')+'>'+_esc(t('cc.region_other'))+'</option>':'');
+  if (_ccPref && !present[_ccPref] && _ccPref!=='__other') { _ccPref=''; _ccCity=''; }
+  _ccFillCitySelect();
+}
+function _ccFillCitySelect(){
+  var citySel = document.getElementById('cc-city-sel');
+  if (!citySel) return;
+  var rows = _ccDataCache[_ccPendSource] || [];
+  var opts = '<option value="">'+_esc(t('cc.city_all'))+'</option>';
+  if (_ccPref && _ccPref!=='__other') {
+    var cs={}; rows.forEach(function(r){ if (r._pref===_ccPref && r._city) cs[r._city]=1; });
+    opts += Object.keys(cs).sort().map(function(c){return '<option value="'+_esc(c)+'"'+(c===_ccCity?' selected':'')+'>'+_esc(c)+'</option>';}).join('');
+    citySel.disabled = false;
+  } else {
+    citySel.disabled = true;
   }
-  el.innerHTML =
-    '<div style="display:flex;gap:6px;margin-bottom:6px;">'
-    + sel('cc-f-price','_ccApplyFilter()', priceOpts, _ccFilters.price)
-    + sel('cc-f-cat','_ccApplyFilter()', catOpts, _ccFilters.cat)
-    + '</div>'
-    + '<div style="display:flex;gap:6px;">'
-    + sel('cc-f-pref','_ccOnPrefChange()', prefOpts, _ccFilters.pref)
-    + sel('cc-f-city','_ccApplyFilter()', cityOpts, _ccFilters.city)
-    + '</div>';
+  citySel.innerHTML = opts;
 }
-function _ccOnPrefChange(){
-  var p = document.getElementById('cc-f-pref'); _ccFilters.pref = p ? p.value : '';
-  _ccFilters.city = ''; _ccPage = 0;
-  _ccRenderFilters();   // 시정촌 옵션 갱신
-  _ccRenderGrid();
+function _ccSheetPref(){
+  var p=document.getElementById('cc-pref-sel'); _ccPref = p?p.value:'';
+  _ccCity='';
+  _ccFillCitySelect();
 }
-function _ccApplyFilter(){
-  var g = function(id){ var e=document.getElementById(id); return e?e.value:''; };
-  _ccFilters.price=g('cc-f-price'); _ccFilters.cat=g('cc-f-cat');
-  _ccFilters.pref=g('cc-f-pref'); _ccFilters.city=g('cc-f-city');
+function _ccSheetCity(){
+  var c=document.getElementById('cc-city-sel'); _ccCity = c?c.value:'';
+}
+function _ccResetCardFilter(){
+  _ccPriceMax = CC_PRICE_MAX; _ccCat='all'; _ccPref=''; _ccCity='';
+  var ps=document.getElementById('cc-price-slider'); if(ps) ps.value=CC_PRICE_MAX;
+  _ccUpdatePriceLabel(CC_PRICE_MAX);
+  document.querySelectorAll('#cc-cat-chips .ct-cat-chip').forEach(function(c){ c.classList.toggle('active', c.dataset.cat==='all'); });
+  _ccFillRegionSelects();
+}
+async function _ccApplyCardFilter(){
+  var srcChanged = (_ccTab !== _ccPendSource);
+  _ccTab = _ccPendSource;
   _ccPage = 0;
+  _ccCloseFilter();
+  _ccRenderTopbar();
+  var listEl = document.getElementById('ct-mycard-list');
+  if (srcChanged) {
+    if (!_sb || (_ccTab==='mine' && !_currentUser)) {
+      if (listEl) listEl.innerHTML = '<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:13px;">'+t('toast.login_required')+'</div>';
+      return;
+    }
+    if (!_ccDataCache[_ccTab]) {
+      if (listEl) listEl.innerHTML='<div style="text-align:center;padding:48px 20px;color:var(--text-3);font-size:12px;">'+t('common.loading')+'</div>';
+      await _ccEnsureData(_ccTab);
+    }
+    _myCardsCache = _ccActiveRows();
+  }
   _ccRenderGrid();
 }
+
 function _ccFilteredRows(){
-  return _ccRows.filter(function(r){
-    if (_ccFilters.price) {
+  var cat = _ccCat;
+  return _ccActiveRows().filter(function(r){
+    if (_ccPriceMax < CC_PRICE_MAX) {
       var pr = Number(r.price)||0;
-      if (pr<=0) return false;
-      var pp = _ccFilters.price.split('-');
-      var lo = Number(pp[0]); var hi = (pp[1]==='') ? Infinity : Number(pp[1]);
-      if (!(pr>=lo && pr<hi)) return false;
+      if (pr<=0 || pr>_ccPriceMax) return false;
     }
-    if (_ccFilters.cat && r.category!==_ccFilters.cat) return false;
-    if (_ccFilters.pref) {
-      if (_ccFilters.pref==='__other') { if (r._pref) return false; }
+    if (cat!=='all' && String(r.category||'').toLowerCase()!==cat) return false;
+    if (_ccPref) {
+      if (_ccPref==='__other') { if (r._pref) return false; }
       else {
-        if (r._pref!==_ccFilters.pref) return false;
-        if (_ccFilters.city && r._city!==_ccFilters.city) return false;
+        if (r._pref!==_ccPref) return false;
+        if (_ccCity && r._city!==_ccCity) return false;
       }
     }
     return true;
@@ -6014,20 +6127,27 @@ function _ccFilteredRows(){
 function _ccRenderGrid(){
   var el = document.getElementById('ct-mycard-list');
   if (!el) return;
+  var active = _ccActiveRows();
+  if (active.length===0) {
+    el.innerHTML = '<div style="text-align:center;padding:56px 20px;">'
+      + '<div style="font-size:46px;margin-bottom:12px;opacity:.5;">🎴</div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px;">'+t('ct.mycard.empty_title')+'</div>'
+      + '<div style="font-size:12px;color:var(--text-3);line-height:1.6;">'+(_ccTab==='mine'?t('ct.mycard.empty_sub'):t('cc.all_empty_sub'))+'</div></div>';
+    return;
+  }
   var rows = _ccFilteredRows();
   var total = rows.length;
   var pages = Math.max(1, Math.ceil(total/CC_PER_PAGE));
   if (_ccPage>=pages) _ccPage = pages-1;
   if (_ccPage<0) _ccPage = 0;
 
-  // 요약 (내 카드 탭만 — 전체 합계)
   var head = '';
   if (_ccTab==='mine') {
-    var tv = _ccRows.reduce(function(a,c){ return a+(c.view_count||0); }, 0);
-    var tl = _ccRows.reduce(function(a,c){ return a+(c.like_count||0); }, 0);
+    var tv = active.reduce(function(a,c){ return a+(c.view_count||0); }, 0);
+    var tl = active.reduce(function(a,c){ return a+(c.like_count||0); }, 0);
     var cell = function(v,l,col){ return '<div style="flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:12px 8px;text-align:center;"><div style="font-size:19px;font-weight:900;color:'+col+';">'+v+'</div><div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;">'+l+'</div></div>'; };
     head = '<div style="display:flex;gap:8px;margin-bottom:14px;">'
-      + cell(_ccRows.length, t('ct.mycard.cards'), 'var(--text-1)')
+      + cell(active.length, t('ct.mycard.cards'), 'var(--text-1)')
       + cell(tv.toLocaleString(), t('ct.mycard.total_views'), 'var(--gold-dark)')
       + cell(tl.toLocaleString(), t('ct.mycard.total_likes'), '#E0245E')
       + '</div>';
@@ -12935,7 +13055,7 @@ var I18N = {
     'tab.home':'ホーム','tab.history':'履歴','tab.calendar':'カレンダー','tab.map':'マップ','tab.profile':'プロフィール',
     'ct.tab.map':'チズ','ct.tab.talk':'チリトーク','ct.tab.reward':'チリワード','ct.tab.mycard':'チリカード',
     'ct.mycard.title':'🎴 チリカード','ct.mycard.sub':'登録したメニューカード','ct.mycard.empty_title':'まだ登録したカードがありません','ct.mycard.empty_sub':'お店の詳細からメニューカードを追加すると、ここに集まります。','ct.mycard.cards':'カード','ct.mycard.total_views':'合計確認数','ct.mycard.views':'確認','ct.mycard.no_rating':'評価なし','ct.mycard.likes':'いいね','ct.mycard.total_likes':'合計いいね',
-    'cc.tab_mine':'マイカード','cc.tab_all':'みんなのカード','cc.price_all':'価格すべて','cc.cat_all':'カテゴリすべて','cc.region_all':'全国','cc.region_other':'その他','cc.city_all':'市区町村すべて','cc.no_result':'条件に合うカードがありません','cc.count':'{n}件','cc.all_empty_sub':'まだ登録されたメニューカードがありません。',
+    'cc.tab_mine':'マイカード','cc.tab_all':'みんなのカード','cc.price_all':'価格すべて','cc.cat_all':'カテゴリすべて','cc.region_all':'全国','cc.region_other':'その他','cc.city_all':'市区町村すべて','cc.no_result':'条件に合うカードがありません','cc.count':'{n}件','cc.all_empty_sub':'まだ登録されたメニューカードがありません。','cc.source':'カード種類','cc.region':'地域',
     'mode.receipt':'ReceiptIQ','mode.chiri':'チリつも',
     // 헤더
     'header.subtitle':'AI レシート家計簿',
@@ -13233,7 +13353,7 @@ var I18N = {
     'tab.home':'홈','tab.history':'내역','tab.calendar':'달력','tab.map':'맵','tab.profile':'프로필',
     'ct.tab.map':'치즈','ct.tab.talk':'치리토크','ct.tab.reward':'치리워드','ct.tab.mycard':'치리카드',
     'ct.mycard.title':'🎴 치리카드','ct.mycard.sub':'내가 등록한 메뉴카드','ct.mycard.empty_title':'아직 등록한 카드가 없어요','ct.mycard.empty_sub':'가게 상세에서 메뉴카드를 추가하면 여기에 모여요.','ct.mycard.cards':'카드','ct.mycard.total_views':'총 확인수','ct.mycard.views':'확인','ct.mycard.no_rating':'평가 없음','ct.mycard.likes':'좋아요','ct.mycard.total_likes':'총 좋아요',
-    'cc.tab_mine':'내 카드','cc.tab_all':'전체 카드','cc.price_all':'가격 전체','cc.cat_all':'카테고리 전체','cc.region_all':'전 지역','cc.region_other':'기타','cc.city_all':'시정촌 전체','cc.no_result':'조건에 맞는 카드가 없어요','cc.count':'{n}개','cc.all_empty_sub':'아직 등록된 메뉴카드가 없어요.',
+    'cc.tab_mine':'내 카드','cc.tab_all':'전체 카드','cc.price_all':'가격 전체','cc.cat_all':'카테고리 전체','cc.region_all':'전 지역','cc.region_other':'기타','cc.city_all':'시정촌 전체','cc.no_result':'조건에 맞는 카드가 없어요','cc.count':'{n}개','cc.all_empty_sub':'아직 등록된 메뉴카드가 없어요.','cc.source':'카드 종류','cc.region':'지역',
     'mode.receipt':'ReceiptIQ','mode.chiri':'치리츠모',
     'header.subtitle':'AI 영수증 가계부',
     'greeting.morning':'좋은 아침이에요','greeting.afternoon':'좋은 오후예요','greeting.evening':'좋은 저녁이에요',
@@ -13479,7 +13599,7 @@ var I18N = {
     'tab.home':'Home','tab.history':'History','tab.calendar':'Calendar','tab.map':'Map','tab.profile':'Profile',
     'ct.tab.map':'Map','ct.tab.talk':'Talk','ct.tab.reward':'Reward','ct.tab.mycard':'Cards',
     'ct.mycard.title':'🎴 My Cards','ct.mycard.sub':'Menu cards you created','ct.mycard.empty_title':'No cards yet','ct.mycard.empty_sub':'Add menu cards from store details and they will appear here.','ct.mycard.cards':'Cards','ct.mycard.total_views':'Total views','ct.mycard.views':'views','ct.mycard.no_rating':'No rating','ct.mycard.likes':'likes','ct.mycard.total_likes':'Total likes',
-    'cc.tab_mine':'My Cards','cc.tab_all':'All Cards','cc.price_all':'All prices','cc.cat_all':'All categories','cc.region_all':'All regions','cc.region_other':'Other','cc.city_all':'All cities','cc.no_result':'No cards match the filters','cc.count':'{n} cards','cc.all_empty_sub':'No menu cards have been registered yet.',
+    'cc.tab_mine':'My Cards','cc.tab_all':'All Cards','cc.price_all':'All prices','cc.cat_all':'All categories','cc.region_all':'All regions','cc.region_other':'Other','cc.city_all':'All cities','cc.no_result':'No cards match the filters','cc.count':'{n} cards','cc.all_empty_sub':'No menu cards have been registered yet.','cc.source':'Card type','cc.region':'Region',
     'mode.receipt':'ReceiptIQ','mode.chiri':'Chiri',
     'header.subtitle':'AI Receipt Budget',
     'greeting.morning':'Good morning','greeting.afternoon':'Good afternoon','greeting.evening':'Good evening',
@@ -13725,7 +13845,7 @@ var I18N = {
     'tab.home':'主页','tab.history':'记录','tab.calendar':'日历','tab.map':'地图','tab.profile':'个人',
     'ct.tab.map':'地图','ct.tab.talk':'闲谈','ct.tab.reward':'奖励','ct.tab.mycard':'卡片',
     'ct.mycard.title':'🎴 我的菜单卡','ct.mycard.sub':'我创建的菜单卡','ct.mycard.empty_title':'还没有创建的卡片','ct.mycard.empty_sub':'在店铺详情中添加菜单卡后会显示在这里。','ct.mycard.cards':'卡片','ct.mycard.total_views':'总查看数','ct.mycard.views':'查看','ct.mycard.no_rating':'暂无评价','ct.mycard.likes':'点赞','ct.mycard.total_likes':'总点赞',
-    'cc.tab_mine':'我的卡片','cc.tab_all':'全部卡片','cc.price_all':'全部价格','cc.cat_all':'全部分类','cc.region_all':'全部地区','cc.region_other':'其他','cc.city_all':'全部市区町村','cc.no_result':'没有符合条件的卡片','cc.count':'{n}张','cc.all_empty_sub':'还没有登记的菜单卡。',
+    'cc.tab_mine':'我的卡片','cc.tab_all':'全部卡片','cc.price_all':'全部价格','cc.cat_all':'全部分类','cc.region_all':'全部地区','cc.region_other':'其他','cc.city_all':'全部市区町村','cc.no_result':'没有符合条件的卡片','cc.count':'{n}张','cc.all_empty_sub':'还没有登记的菜单卡。','cc.source':'卡片类型','cc.region':'地区',
     'mode.receipt':'ReceiptIQ','mode.chiri':'Chiri',
     'header.subtitle':'AI 票据账本',
     'greeting.morning':'早上好','greeting.afternoon':'下午好','greeting.evening':'晚上好',
@@ -28299,7 +28419,7 @@ try {
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 484;
+window.__APP_BUILD__ = 485;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
