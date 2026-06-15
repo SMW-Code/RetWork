@@ -2458,6 +2458,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="si" onclick="window.open('./terms.html','_blank')" style="cursor:pointer;"><span class="lico" data-lico="receipt" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.terms">利用規約</span><span class="si-val">›</span></div>
         <div class="si" onclick="authLogout()" style="cursor:pointer;"><span class="lico" data-lico="logout" data-size="18" data-color="var(--red)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.logout" style="color:var(--red);">로그아웃</span></div>
       </div>
+      <!-- SNS 바로가기 (탭 시 해당 앱/프로필로 이동) -->
+      <div style="display:flex;justify-content:center;gap:16px;padding:18px 16px 6px;">
+        <div onclick="ctOpenSns('x')" title="X" style="width:46px;height:46px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-1);">
+          <svg viewBox="0 0 24 24" fill="currentColor" style="width:19px;height:19px;"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+        </div>
+        <div onclick="ctOpenSns('instagram')" title="Instagram" style="width:46px;height:46px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-1);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:21px;height:21px;"><rect x="2" y="2" width="20" height="20" rx="5.5"/><circle cx="12" cy="12" r="4.2"/><circle cx="17.6" cy="6.4" r="1.1" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div onclick="ctOpenSns('threads')" title="Threads" style="width:46px;height:46px;border-radius:50%;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-1);">
+          <svg viewBox="0 0 192 192" fill="currentColor" style="width:21px;height:21px;"><path d="M141.537 88.988c-.726-.348-1.463-.682-2.207-1.002-1.295-23.865-14.336-37.524-36.244-37.664h-.297c-13.097 0-23.992 5.593-30.697 15.773l12.04 8.262c5.006-7.594 12.868-9.215 18.66-9.215h.199c7.21.046 12.652 2.141 16.176 6.227 2.564 2.973 4.279 7.083 5.128 12.269-6.397-1.088-13.315-1.423-20.708-.998-20.834 1.199-34.222 13.354-33.323 30.249.456 8.572 4.737 15.944 12.054 20.761 6.182 4.067 14.142 6.04 22.413 5.598 10.924-.6 19.494-4.755 25.476-12.351 4.541-5.768 7.413-13.246 8.681-22.671 5.207 3.144 9.061 7.279 11.191 12.254 3.622 8.461 3.833 22.349-7.502 33.675-9.927 9.92-21.86 14.217-39.887 14.349-20.001-.148-35.137-6.562-44.988-19.061-9.225-11.708-13.992-28.626-14.169-50.292.177-21.667 4.944-38.585 14.169-50.293 9.851-12.499 24.987-18.913 44.988-19.061 20.151.149 35.55 6.594 45.78 19.158 5.012 6.16 8.789 13.906 11.279 22.926l14.143-3.776c-3.022-11.099-7.78-20.652-14.265-28.617C166.298 14.198 145.282 5.504 105.31 5.319H105.211C65.31 5.503 44.343 14.214 31.7 30.364 20.461 44.788 14.643 64.834 14.443 89.94v.119c.2 25.106 6.018 45.152 17.257 59.576 12.643 16.15 33.61 24.861 73.511 25.046h.099c34.852-.211 53.99-15.014 64.184-32.05 13.314-22.252 12.915-48.516 8.034-65.583Z"/></svg>
+        </div>
+      </div>
       <div style="text-align:center;font-size:11px;color:var(--text-3);padding:12px 16px 24px;line-height:1.8;">
         RetWork <span class="app-version-text"></span> · © 2026<br>
         <a href="/about.html" style="color:var(--text-3);text-decoration:underline;">サイトについて</a> ·
@@ -13399,7 +13411,7 @@ var I18N = {
     'toast.checkin':'✨ +5チリ 獲得！',
     'toast.ad_reward':'🎉 +50チリ 獲得！広告視聴ありがとうございます！',
     'toast.slot_done':'⏰ このスロットは既にチェック済みです',
-    'toast.banned_word':'🚫 不適切な表現が含まれています（禁止語: {word}）',
+    'toast.banned_word':'🚫 不適切な表現が含まれています（禁止語: {word}）','toast.sns_soon':'🔧 SNSアカウントは準備中です',
     'toast.upload_image':'📤 画像をアップロード中...',
     'toast.post_fail':'投稿に失敗しました 😢',
     'toast.post_done':'✅ 投稿しました！ +5pt',
@@ -13645,7 +13657,7 @@ var I18N = {
     'toast.checkin':'✨ +5치리 획득!',
     'toast.ad_reward':'🎉 +50치리 획득! 광고 시청 감사합니다!',
     'toast.slot_done':'⏰ 이 슬롯은 이미 체크 완료됐어요',
-    'toast.banned_word':'🚫 부적절한 표현이 포함되어 있어요 (차단어: {word})',
+    'toast.banned_word':'🚫 부적절한 표현이 포함되어 있어요 (차단어: {word})','toast.sns_soon':'🔧 SNS 계정 준비중',
     'toast.upload_image':'📤 이미지 업로드 중...',
     'toast.post_fail':'게시물 작성에 실패했어요 😢',
     'toast.post_done':'✅ 게시 완료! +5pt',
@@ -13891,7 +13903,7 @@ var I18N = {
     'toast.checkin':'✨ +5 chiri earned!',
     'toast.ad_reward':'🎉 +50 chiri earned! Thanks for watching.',
     'toast.slot_done':'⏰ This slot is already checked',
-    'toast.banned_word':'🚫 Contains blocked words ({word})',
+    'toast.banned_word':'🚫 Contains blocked words ({word})','toast.sns_soon':'🔧 SNS account coming soon',
     'toast.upload_image':'📤 Uploading image...',
     'toast.post_fail':'Failed to post 😢',
     'toast.post_done':'✅ Posted! +5pt',
@@ -14137,7 +14149,7 @@ var I18N = {
     'toast.checkin':'✨ +5 积分获取！',
     'toast.ad_reward':'🎉 +50 积分获取！感谢观看广告',
     'toast.slot_done':'⏰ 此时段已经签到过了',
-    'toast.banned_word':'🚫 包含不当用语（违禁词：{word}）',
+    'toast.banned_word':'🚫 包含不当用语（违禁词：{word}）','toast.sns_soon':'🔧 SNS账号准备中',
     'toast.upload_image':'📤 正在上传图片...',
     'toast.post_fail':'发布失败 😢',
     'toast.post_done':'✅ 已发布！+5pt',
@@ -28588,9 +28600,22 @@ try {
   }
 } catch(e){}
 
+// ── 공식 SNS 계정 (설정 → SNS 바로가기). https 프로필 URL 이면 앱 설치 시 앱으로 열림 ──
+//   ⚠️ 실제 계정 URL 로 교체하세요. 비워두면 탭 시 '준비중' 토스트.
+var RETWORK_SNS = {
+  x:         '',   // 예: 'https://x.com/retwork_jp'
+  instagram: '',   // 예: 'https://www.instagram.com/retwork.jp'
+  threads:   ''    // 예: 'https://www.threads.net/@retwork.jp'
+};
+function ctOpenSns(key){
+  var url = RETWORK_SNS && RETWORK_SNS[key];
+  if (!url) { showToast(t('toast.sns_soon')); return; }
+  window.open(url, '_blank', 'noopener');
+}
+
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 494;
+window.__APP_BUILD__ = 495;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
