@@ -1,9 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 488 시점)
+# RetWork (チリつも) — HANDOFF (build 496 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 488** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 496** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-15** (치리카드 b484~487 · b488 SEO — / 를 rewrite(200)로 서빙 + canonical / 로 환원, GSC 표준충돌 해소)
+> 마지막 작업: **2026-06-15** (b489~496 — 치리맵 영수증등록+사진 · 헤더이모지 제거 · 그루메블로그/SNS 바로가기 · 餃子の福包 블로그)
+> 🔴 **미결정 TODO:** 영수증 홈 「절약찬스 발견」(`ov-saving`)은 **하드코딩 더미**(¥1,320 고정). 실구현/숨기기/데모표기 미정 — 아래 0-H 끝 참조.
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
@@ -12,7 +13,33 @@
 
 ---
 
-## 0-G. 2026-06-15 — SEO 루트 색인 최종 해결 (build 488)
+## 0-H. 2026-06-15 — 치리맵 영수증등록 · UI 정리 · SNS · 블로그 (build 489~496)
+
+### A. 치리맵 「영수증으로 등록」 + 수동핀 사진 (b489~490)
+수동핀 모달(`ov-manual-pin`) 확장:
+- 상단 **「📸 レシートで登録（自動入力）」** 버튼(`ctReceiptRegisterStart`) → 카메라/갤러리(`ct-receipt-input`) → 기존 OCR 파이프라인(`handleImageFile`→preprocess→Vision→GPT→`showOcrResult`) → `window._scanForChiriMap` 플래그로 **기존 치리공개 모달(`ov-chiri-publish`)로 자동 라우팅**(`saveAndPublishChiri`). 사진/메뉴카드/광고는 치리공개 플로우 재사용
+- **위치 자동 추정(b490)**: `window._cpForcedPos`(지도중앙)=초기 fallback일 뿐, `submitChiriPublish`가 **OCR 가게명+주소로 `searchAndPinStore` 지오코딩** → 실제 가게 위치에 핀(b489의 "지도중앙 고정+지오코딩 skip"은 폐기). `openChiriPublish`에서 `_cpForcedPos`→`_cpPos` 소비
+- **수동입력 경로 사진**(b489): 가게 대표사진(`mp-store-photo`/`mpPickStorePhoto`) + 메뉴별 사진(`mpPickItemPhoto`, `_mpItems[i].photoFile`). submit 시 `_mpPersistPhotosAndCards` → `store_community_photos` + `store_menu_cards`(메뉴카드 생성/갱신, 사진 첨부 — chiri-publish 로직 미러). ⚠️ 이제 수동핀도 메뉴카드를 생성함(가격핀만 만들던 기존 동작 변경, 의도적). `_cpUploadPhoto` 재사용(store-photos 버킷)
+
+### B. UI 정리 (b491~493)
+- 치리모드 상단 헤더 4종 **이모지 전체 제거**: 📍チリつも(셰브론 유지)/💬チリトーク/🎴チリカード/🎁チリワード → 텍스트만. (チリカード/チリワード는 `ct.mycard.title`/`ct.reward.title` i18n 값에서도 제거)
+- 수동핀 모달 카메라 아이콘 통일(b493): 📸·📷 이모지 → 가게사진 슬롯과 동일한 **심플 SVG 카메라**(stroke=currentColor)
+
+### C. 설정창 (b494~496)
+- **グルメブログ** 링크 추가(b494): 節約ブログ(`./blog/`=retwork.jp 정적 절약블로그) 아래에 `blog.retwork.jp`(신규 그루메 블로그) 링크. i18n `settings.gourmet_blog`
+- **SNS 바로가기**(b495~496): 로그아웃 아래 X·Instagram·Threads 원형 아이콘(브랜드 SVG). `RETWORK_SNS`(코드 한 곳에서 URL 관리)+`ctOpenSns(key)`, 비면 `toast.sns_soon`. **연결된 계정**: X=`https://x.com/RetWork2026` / IG=`https://www.instagram.com/retwork.jp/` / Threads=`https://www.threads.net/@retwork.jp`
+
+### D. 블로그 (retwork-blog) — 9편째
+- **`gyoza-fukubukuro-toyosu.md`** — 餃子の福包 豊洲店(ららぽーと豊洲3F) 餃子 리뷰 ★4.0. 사진 11장(외관/메뉴스탠드/내부/태블릿/조미료/타레/焼き·揚げ·水 餃子/鶏玉ご飯/레시트). 태블릿주문·薬味 5종·にんにく抜き 선택. 커밋 `157fda3`
+
+### 커밋 (모두 push 완료)
+- receiptiq: `f2c7e67`(b489) → `198d05f`(b490) → `629d370`(b491) → `186bcdc`(b492) → `1ffacfa`(b493) → `834a16f`(b494) → `d450470`(b495) → `c3b0087`(b496)
+- retwork-blog: `157fda3`(餃子の福包 글)
+
+### 🔴 미결정 TODO — 영수증 홈 「節約チャンス発見（절약찬스 발견）」 = 더미
+- `ov-saving` 모달([index.html](public/index.html) ~2713)은 **완전 하드코딩 목업**: 牛乳/食パン, イオン vs 業務スーパー, ¥1,320/月·年¥15,840 전부 고정. DB(`items`/`price_pins`/`products_master`) 안 읽음. 누가 뭘 등록하든 같은 숫자.
+- 홈 배너(`index.html` ~1246, `onclick="openOv('ov-saving')"`) + i18n `home.saving_cta`/`home.saving_cta_sub`도 고정 문구.
+- **방향 미정(사용자 결정 대기)**: A) 실구현(내 영수증 품목→`products_master` 정규화 매칭→타 마트 `price_pins` 최저가 비교→실제 절약액. 데이터 부족 시 "수집중" 표시) / B) 일단 배너 숨김(가짜 금액 노출 방지) / C) "サンプル" 데모 배지. **추천: B→A.**
 
 **문제:** GSC `https://retwork.jp/index.html` → 「중복 페이지, Google이 사용자와 다른 표준 선택」. 사용자 선언 canonical=`/index.html`(b473)을 **Google이 무시하고 루트 `/` 를 표준으로 재선택**. 그런데 `/` 는 `app/page.tsx` 의 307 리다이렉트(비콘텐츠)라 색인 불가 → 둘 다 색인 실패.
 
