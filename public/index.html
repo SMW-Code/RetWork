@@ -8049,10 +8049,10 @@ function _unlockReport(){
       try { renderCatBreakdown(); renderRadar(); } catch(e){}
     }, {
       // build 337 — emoji 제거, ico 명시
-      title: '리포트 상세',
+      title: t('repunlock.title'),
       ico: 'chart',
-      descTitle: '광고 보고 리포트 펼치기',
-      descSub: '카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.'
+      descTitle: t('repunlock.desc_title'),
+      descSub: t('repunlock.desc_sub')
     });
   } else {
     window._isReportUnlocked = true;
@@ -9203,7 +9203,7 @@ function buildCatDetailHtml(cat) {
   filtered.sort(function(a,b){ return b.date.localeCompare(a.date); });
 
   if (filtered.length === 0) {
-    return '<div class="cat-acc-empty">해당 기간 내역이 없어요</div>';
+    return '<div class="cat-acc-empty">'+t('rep.period_empty')+'</div>';
   }
   var html = '';
   filtered.forEach(function(r) {
@@ -13521,6 +13521,15 @@ var I18N = {
     'rep.cat_analysis':'🗂 カテゴリ分析','rep.tap_expand':'· タップで明細を開く',
     'rep.radar':'📊 物価レーダー','rep.radar_sub':'品目別の価格変動を追跡',
     'rep.more_title':'詳しいレポートを見る','rep.more_desc':'カテゴリ別分析 · 支払方法別支出<br>アイテムランキング · 物価レーダー','rep.more_btn':'📺 広告を見て続きを表示',
+    'rep.period_empty':'この期間の記録がありません',
+    'repunlock.title':'レポート詳細','repunlock.desc_title':'広告を見てレポートを展開','repunlock.desc_sub':'カテゴリ別支出・支払方法別・アイテムランキング・物価レーダーを一目で。広告1回ですべて見られます。',
+    'wad.save.t':'領収書を保存','wad.save.dt':'広告を見て家計簿に無料保存','wad.save.ds':'広告を1回視聴すると領収書が家計簿に保存されます。',
+    'wad.chiri.t':'チリに公開','wad.chiri.dt':'広告を見てチリに公開','wad.chiri.ds':'チリに公開すると他のユーザーも店舗情報を確認できます。',
+    'wad.private.t':'プライベートモード','wad.private.dt':'広告を見てプライベートモードに切替','wad.private.ds':'プライベートモードで非公開メモを作成できます。',
+    'wad.menu_photo.t':'メニュー写真の登録','wad.menu_photo.dt':'広告を見てメニュー写真を登録','wad.menu_photo.ds':'メニュー写真を登録すると+10チリの報酬ももらえます。',
+    'wad.monthreport.t':'月別レポート','wad.monthreport.dt':'広告を見て月別レポートを確認','wad.monthreport.ds':'1ヶ月の常連店・物価・節約・習慣を一目で！広告を1回視聴するとご覧いただけます。',
+    'wad.comment_quota.t':'コメント上限の追加','wad.comment_quota.dt':'広告を見てコメント+4回','wad.comment_quota.ds':'広告を1回視聴すると今日コメントをあと4回作成できます。',
+    'wad.default.t':'広告を視聴','wad.default.dt':'広告を見て内容を確認','wad.default.ds':'広告を1回視聴すると内容をご覧いただけます。',
     'rep.up':'🔴 上昇中','rep.down':'🟢 下落中','rep.sort':'並び替え','rep.sort_desc':'変動↑ 大きい順','rep.sort_asc':'変動↓ 小さい順',
     'rep.month_spent':'{n}件の支出','rep.count':'件数','rep.daily_avg':'日平均','rep.top_cat':'最多カテゴリ',
     'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
@@ -13787,6 +13796,15 @@ var I18N = {
     'rep.cat_analysis':'🗂 카테고리 분석','rep.tap_expand':'· 탭해서 내역 펼치기',
     'rep.radar':'📊 물가 레이더','rep.radar_sub':'품목별 가격 변동 추적',
     'rep.more_title':'더 자세한 리포트 보기','rep.more_desc':'카테고리별 분석 · 결제수단별 지출<br>아이템 랭킹 · 물가 레이더','rep.more_btn':'📺 광고 보고 더보기',
+    'rep.period_empty':'해당 기간 내역이 없어요',
+    'repunlock.title':'리포트 상세','repunlock.desc_title':'광고 보고 리포트 펼치기','repunlock.desc_sub':'카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.',
+    'wad.save.t':'영수증 저장','wad.save.dt':'광고 보고 가계부에 무료 저장','wad.save.ds':'광고 1회 시청하시면 영수증이 가계부에 저장돼요.',
+    'wad.chiri.t':'치리에 공개','wad.chiri.dt':'광고 보고 치리에 공개하기','wad.chiri.ds':'치리에 공개하면 다른 사용자도 가게 정보를 확인할 수 있어요.',
+    'wad.private.t':'프라이빗 모드','wad.private.dt':'광고 보고 프라이빗 모드 전환','wad.private.ds':'프라이빗 모드에서 비공개 메모를 작성할 수 있어요.',
+    'wad.menu_photo.t':'메뉴 사진 등록','wad.menu_photo.dt':'광고 보고 메뉴 사진 등록','wad.menu_photo.ds':'메뉴 사진을 등록하시면 +10치리 보상도 받아요.',
+    'wad.monthreport.t':'월별 리포트','wad.monthreport.dt':'광고 보고 월별 리포트 확인','wad.monthreport.ds':'한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.',
+    'wad.comment_quota.t':'댓글 한도 추가','wad.comment_quota.dt':'광고 보고 댓글 +4회','wad.comment_quota.ds':'광고 1회 시청하시면 오늘 댓글을 4회 더 작성할 수 있어요.',
+    'wad.default.t':'광고 시청','wad.default.dt':'광고 보고 내용 확인하기','wad.default.ds':'광고 1회 시청하시면 내용을 보실 수 있어요.',
     'rep.up':'🔴 오르는 중','rep.down':'🟢 내리는 중','rep.sort':'정렬','rep.sort_desc':'변동↑ 큰 순','rep.sort_asc':'변동↓ 작은 순',
     'rep.month_spent':'{n}건 지출','rep.count':'건수','rep.daily_avg':'일평균','rep.top_cat':'최다 카테고리',
     'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
@@ -14035,6 +14053,15 @@ var I18N = {
     'rep.cat_analysis':'🗂 Category Analysis','rep.tap_expand':'· tap to expand',
     'rep.radar':'📊 Price Radar','rep.radar_sub':'Track price changes by item',
     'rep.more_title':'View detailed report','rep.more_desc':'Category breakdown · Spending by payment<br>Item ranking · Price radar','rep.more_btn':'📺 Watch ad to see more',
+    'rep.period_empty':'No records for this period',
+    'repunlock.title':'Report details','repunlock.desc_title':'Watch an ad to unlock the report','repunlock.desc_sub':'Spending by category & payment, item rankings, and the price radar at a glance. One ad unlocks it all.',
+    'wad.save.t':'Save receipt','wad.save.dt':'Watch an ad to save free to your ledger','wad.save.ds':'Watch one ad and your receipt is saved to the ledger.',
+    'wad.chiri.t':'Share to Chiri','wad.chiri.dt':'Watch an ad to share to Chiri','wad.chiri.ds':'Sharing to Chiri lets other users see the store info.',
+    'wad.private.t':'Private mode','wad.private.dt':'Watch an ad to switch to private mode','wad.private.ds':'In private mode you can write private notes.',
+    'wad.menu_photo.t':'Add menu photo','wad.menu_photo.dt':'Watch an ad to add a menu photo','wad.menu_photo.ds':'Add a menu photo and earn a +10 Chiri reward.',
+    'wad.monthreport.t':'Monthly report','wad.monthreport.dt':'Watch an ad to see the monthly report','wad.monthreport.ds':'Your regular stores, prices, savings and habits at a glance! Watch one ad to view.',
+    'wad.comment_quota.t':'Add comment quota','wad.comment_quota.dt':'Watch an ad for +4 comments','wad.comment_quota.ds':'Watch one ad to write 4 more comments today.',
+    'wad.default.t':'Watch ad','wad.default.dt':'Watch an ad to view','wad.default.ds':'Watch one ad to see the content.',
     'rep.up':'🔴 Rising','rep.down':'🟢 Falling','rep.sort':'Sort','rep.sort_desc':'Change↑ desc','rep.sort_asc':'Change↓ asc',
     'rep.month_spent':'{n} expenses','rep.count':'Count','rep.daily_avg':'Daily avg','rep.top_cat':'Top category',
     'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
@@ -14283,6 +14310,15 @@ var I18N = {
     'rep.cat_analysis':'🗂 分类分析','rep.tap_expand':'· 点击展开明细',
     'rep.radar':'📊 物价雷达','rep.radar_sub':'按商品追踪价格变动',
     'rep.more_title':'查看更详细报告','rep.more_desc':'分类分析 · 按支付方式支出<br>商品排名 · 物价雷达','rep.more_btn':'📺 看广告查看更多',
+    'rep.period_empty':'该期间没有记录',
+    'repunlock.title':'报告详情','repunlock.desc_title':'看广告展开报告','repunlock.desc_sub':'一目了然查看分类支出·支付方式·商品排名·物价雷达。看一次广告即可全部解锁。',
+    'wad.save.t':'保存小票','wad.save.dt':'看广告免费存入账本','wad.save.ds':'观看1次广告即可将小票保存到账本。',
+    'wad.chiri.t':'公开到Chiri','wad.chiri.dt':'看广告公开到Chiri','wad.chiri.ds':'公开到Chiri后其他用户也能查看店铺信息。',
+    'wad.private.t':'私密模式','wad.private.dt':'看广告切换私密模式','wad.private.ds':'在私密模式下可撰写私密备注。',
+    'wad.menu_photo.t':'登记菜单照片','wad.menu_photo.dt':'看广告登记菜单照片','wad.menu_photo.ds':'登记菜单照片还可获得+10 Chiri奖励。',
+    'wad.monthreport.t':'月度报告','wad.monthreport.dt':'看广告查看月度报告','wad.monthreport.ds':'一个月的常去店铺·物价·节约·习惯一目了然！观看1次广告即可查看。',
+    'wad.comment_quota.t':'增加评论次数','wad.comment_quota.dt':'看广告评论+4次','wad.comment_quota.ds':'观看1次广告今天可再发4条评论。',
+    'wad.default.t':'观看广告','wad.default.dt':'看广告查看内容','wad.default.ds':'观看1次广告即可查看内容。',
     'rep.up':'🔴 上涨中','rep.down':'🟢 下跌中','rep.sort':'排序','rep.sort_desc':'变动↑ 由大到小','rep.sort_asc':'变动↓ 由小到大',
     'rep.month_spent':'{n}笔支出','rep.count':'笔数','rep.daily_avg':'日均','rep.top_cat':'最多类别',
     'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
@@ -17830,15 +17866,15 @@ var _watchAdSecondaryCb = null;
 function _getWatchAdOptsByContext(ctx){
   // build 336 — emoji → SVG 라인 아이콘. ico 는 라인 아이콘 이름.
   var map = {
-    save:          { title:'영수증 저장',      ico:'receipt',  descTitle:'광고 보고 가계부에 무료 저장', descSub:'광고 1회 시청하시면 영수증이 가계부에 저장돼요.' },
-    chiri:         { title:'치리에 공개',       ico:'send',     descTitle:'광고 보고 치리에 공개하기',     descSub:'치리에 공개하면 다른 사용자도 가게 정보를 확인할 수 있어요.' },
-    private:       { title:'프라이빗 모드',    ico:'lock',     descTitle:'광고 보고 프라이빗 모드 전환',  descSub:'프라이빗 모드에서 비공개 메모를 작성할 수 있어요.' },
-    menu_photo:    { title:'메뉴 사진 등록',   ico:'image',    descTitle:'광고 보고 메뉴 사진 등록',      descSub:'메뉴 사진을 등록하시면 +10치리 보상도 받아요.' },
-    monthreport:   { title:'월별 리포트',      ico:'receipt',  descTitle:'광고 보고 월별 리포트 확인',    descSub:'한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.' },
-    report_unlock: { title:'리포트 상세',      ico:'chart',    descTitle:'광고 보고 리포트 펼치기',      descSub:'카테고리별 지출·결제수단별·아이템 랭킹·물가 레이더를 한눈에. 광고 1회로 모두 볼 수 있어요.' },
-    comment_quota: { title:'댓글 한도 추가',   ico:'comment',  descTitle:'광고 보고 댓글 +4회',          descSub:'광고 1회 시청하시면 오늘 댓글을 4회 더 작성할 수 있어요.' },
+    save:          { title:t('wad.save.t'),         ico:'receipt',  descTitle:t('wad.save.dt'),         descSub:t('wad.save.ds') },
+    chiri:         { title:t('wad.chiri.t'),        ico:'send',     descTitle:t('wad.chiri.dt'),        descSub:t('wad.chiri.ds') },
+    private:       { title:t('wad.private.t'),      ico:'lock',     descTitle:t('wad.private.dt'),      descSub:t('wad.private.ds') },
+    menu_photo:    { title:t('wad.menu_photo.t'),   ico:'image',    descTitle:t('wad.menu_photo.dt'),   descSub:t('wad.menu_photo.ds') },
+    monthreport:   { title:t('wad.monthreport.t'),  ico:'receipt',  descTitle:t('wad.monthreport.dt'),  descSub:t('wad.monthreport.ds') },
+    report_unlock: { title:t('repunlock.title'),    ico:'chart',    descTitle:t('repunlock.desc_title'),descSub:t('repunlock.desc_sub') },
+    comment_quota: { title:t('wad.comment_quota.t'),ico:'comment',  descTitle:t('wad.comment_quota.dt'),descSub:t('wad.comment_quota.ds') },
   };
-  return map[ctx] || { title:'광고 시청', ico:'play', descTitle:'광고 보고 내용 확인하기', descSub:'광고 1회 시청하시면 내용을 보실 수 있어요.' };
+  return map[ctx] || { title:t('wad.default.t'), ico:'play', descTitle:t('wad.default.dt'), descSub:t('wad.default.ds') };
 }
 
 function openWatchAdPage(context, callback, opts){
@@ -17864,7 +17900,7 @@ function openWatchAdPage(context, callback, opts){
   // 메인 버튼 라벨 (재생 아이콘 + 텍스트)
   var primary = document.getElementById('watch-ad-primary-btn');
   if (primary) {
-    primary.innerHTML = (opts.primaryLabel || '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center;">' + icon('play', 18, '#fff') + ' ' + (base.descTitle || '광고 보고 내용 확인하기') + '</span>');
+    primary.innerHTML = (opts.primaryLabel || '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center;">' + icon('play', 18, '#fff') + ' ' + (base.descTitle || t('wad.default.dt')) + '</span>');
   }
   // 보조 버튼 (선택)
   var sec = document.getElementById('watch-ad-secondary-btn');
@@ -28850,7 +28886,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 508;
+window.__APP_BUILD__ = 509;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
