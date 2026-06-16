@@ -4605,7 +4605,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;">品目をタップしてカテゴリを選択 <span style="font-weight:500;">（複数可）</span></div>
       <div id="cp-sel-count" style="font-size:11px;font-weight:800;color:var(--gold);"></div>
     </div>
-    <div id="cp-item-chips" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;"></div>
+    <div id="cp-item-chips" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
+    <div id="cp-all-published-notice" style="display:none;background:var(--green-light);border:1px solid rgba(29,158,117,.25);border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:11.5px;font-weight:600;color:var(--green-dark);line-height:1.45;" data-i18n="chiri.all_published_notice">✓ この店舗のメニューはすべてチリつもに公開済みです。新しいメニューのみ追加できます。</div>
     <!-- 선택 품목 프리뷰 + 카테고리 선택 -->
     <div style="background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);min-height:44px;">
       <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;">公開する品目</div>
@@ -12949,13 +12950,36 @@ function showOcrError(previewSrc, msg) {
 var _cpSelectedItems = [];  // 복수 선택
 var _cpItems = [];
 
+// ── 치리츠모 공개 중복 방지 ──
+//   store_menu_cards(전체공개 RLS) 를 캐시해 "이미 공개된 가게·메뉴" 식별.
+//   가게명/메뉴명 정규화(공백제거·NFKC·소문자) 후 비교.
+function _normChiri(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC').toLowerCase(); }
+window._chiriPubByStore = window._chiriPubByStore || null;  // { normStore: { normMenu:true } }
+async function _loadChiriPublishedCache(force){
+  if (!_sb) return;
+  if (window._chiriPubByStore && !force) return;
+  if (window._chiriPubLoading) return;
+  window._chiriPubLoading = true;
+  try {
+    var res = await _sb.from('store_menu_cards').select('store_name,menu_name');
+    var map = {};
+    (res.data||[]).forEach(function(c){
+      var sk = _normChiri(c.store_name);
+      if (!map[sk]) map[sk] = {};
+      map[sk][_normChiri(c.menu_name)] = true;
+    });
+    window._chiriPubByStore = map;
+  } catch(e){ console.warn('[chiriPub] load', e.message||e); window._chiriPubByStore = window._chiriPubByStore || {}; }
+  window._chiriPubLoading = false;
+}
+
 function saveAndPublishChiri() {
   syncOcrItems();
   if (!window._ocrResult) return;
   openChiriPublish();
 }
 
-function openChiriPublish() {
+async function openChiriPublish() {
   var r = window._ocrResult;
   if (!r) return;
   // 치리맵 영수증등록에서 강제된 좌표(지도중앙) 소비 — 일반 흐름이면 null
@@ -13002,18 +13026,35 @@ function openChiriPublish() {
   var spBox = document.getElementById('cp-store-photo');
   if (spBox) spBox.innerHTML = '<div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">お店の写真を追加（任意）</div></div>';
 
+  // 이미 치리츠모에 공개된 메뉴 조회 → 중복 등록 방지
+  window._cpPublishedSet = {};
+  try {
+    if (_sb) {
+      var _exq = await _sb.from('store_menu_cards').select('menu_name').eq('store_name', store);
+      (_exq.data||[]).forEach(function(c){ window._cpPublishedSet[_normChiri(c.menu_name)] = true; });
+    }
+  } catch(e){ console.warn('[chiri-pub] exist query', e.message||e); }
+  _cpItems.forEach(function(it){ it._published = !!window._cpPublishedSet[_normChiri(it.name)]; });
+
   var chipsEl = document.getElementById('cp-item-chips');
   if (chipsEl) {
     if (_cpItems.length === 0) {
       var fallbackItem = { name: store, price: r.total || 0, qty: 1, category: defaultCat };
+      fallbackItem._published = !!window._cpPublishedSet[_normChiri(store)];
       _cpItems = [fallbackItem];
-      _cpSelectedItems = [fallbackItem];
-      chipsEl.innerHTML = _buildCpChip(fallbackItem, 0, true);
+      _cpSelectedItems = fallbackItem._published ? [] : [fallbackItem];
+      chipsEl.innerHTML = _buildCpChip(fallbackItem, 0, !fallbackItem._published);
     } else {
-      chipsEl.innerHTML = _cpItems.map(function(it, i) { return _buildCpChip(it, i, i === 0); }).join('');
-      _cpSelectedItems = [_cpItems[0]];
+      // 기본 선택: 아직 공개 안 된 첫 항목만 (공개됨 항목은 선택 불가)
+      var firstNew = _cpItems.find(function(x){ return !x._published; });
+      _cpSelectedItems = firstNew ? [firstNew] : [];
+      chipsEl.innerHTML = _cpItems.map(function(it, i) { return _buildCpChip(it, i, it === firstNew); }).join('');
     }
   }
+  // 전부 이미 공개된 경우 안내
+  var _allPub = _cpItems.length > 0 && _cpItems.every(function(x){ return x._published; });
+  var _pubNotice = document.getElementById('cp-all-published-notice');
+  if (_pubNotice) _pubNotice.style.display = _allPub ? 'block' : 'none';
   updateCpPreview();
 
   openOv('ov-chiri-publish');
@@ -13118,6 +13159,14 @@ var _cpCategory = 'other';
 
 function _buildCpChip(it, i, selected) {
   var priceLabel = it.qty > 1 ? '@¥'+it.price.toLocaleString() : '¥'+it.price.toLocaleString();
+  // 이미 치리츠모에 공개된 메뉴 — 선택 불가(중복 등록 방지)
+  if (it._published) {
+    return '<div id="cp-chip-wrap-'+i+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:not-allowed;user-select:none;border:1.5px solid var(--border);background:var(--bg-2);opacity:.65;">'
+      + '<span style="width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;font-weight:900;">✓</span>'
+      + '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(it.name)+'</span>'
+      + '<span style="font-size:10px;font-weight:800;color:var(--green);flex-shrink:0;background:var(--green-light);border-radius:10px;padding:2px 8px;">'+t('chiri.already_pub')+'</span>'
+      + '</div>';
+  }
   return '<div id="cp-chip-wrap-'+i+'" onclick="toggleCpItemChip('+i+')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:pointer;user-select:none;border:1.5px solid '+(selected?'var(--green)':'var(--border-mid)')+';background:'+(selected?'var(--green-light)':'var(--surface)')+';">'
     + '<span id="cp-chip-check-'+i+'" style="width:20px;height:20px;border-radius:50%;border:2px solid '+(selected?'var(--green)':'var(--border-mid)')+';background:'+(selected?'var(--green)':'transparent')+';display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:#fff;font-weight:900;">'+(selected?'✓':'')+'</span>'
     + '<span style="flex:1;font-size:13px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(it.name)+'</span>'
@@ -13128,6 +13177,7 @@ function _buildCpChip(it, i, selected) {
 function toggleCpItemChip(idx) {
   var it = _cpItems[idx];
   if (!it) return;
+  if (it._published) { showToast(t('chiri.already_pub_toast')); return; }
   var pos = _cpSelectedItems.indexOf(it);
   if (pos >= 0) {
     if (_cpSelectedItems.length <= 1) { showToast(t('toast.min_one_item')); return; }
@@ -13201,6 +13251,10 @@ function closeImgViewer() {
 
 
 async function submitChiriPublish() {
+  // 전부 이미 공개된 가게/메뉴 → 중복 등록 차단
+  if (_cpItems.length > 0 && _cpItems.every(function(x){ return x._published; })) {
+    showToast(t('chiri.all_published')); return;
+  }
   if (_cpSelectedItems.length === 0) { showToast(t('toast.pick_item')); return; }
   var r = window._cpReceiptData || window._ocrResult;
   if (!r) return;
@@ -13320,6 +13374,9 @@ async function submitChiriPublish() {
   window._cpSubmitting = false;
 
   closeOv('ov-chiri-publish');
+
+  // 공개 캐시 갱신 → 맵 카드 "공개됨" 버튼 즉시 반영
+  _loadChiriPublishedCache(true).then(function(){ try { if (typeof renderMapPins === 'function' && _map) renderMapPins(); } catch(e){} });
 
   // build 343 — 가계부 저장 보장 (광고 콜백 의존 제거)
   //   기존: 광고 콜백 안에서 _doSaveOcrResult() 호출 → 광고 차단/중단 시 가계부 미저장
@@ -13583,7 +13640,7 @@ var I18N = {
     'pay.credit':'💳 クレジット','pay.debit':'🏦 デビット','pay.ic':'🚃 IC카드',
     'pay.cash2':'💴 現金','pay.qr2':'📱 QR決済',
     // 치리 공개 모달
-    'chiri.publish_title':'📍 チズに公開','chiri.publish_btn':'📍 チズに公開する','chiri.comment_ph':'一言コメント（任意）',
+    'chiri.publish_title':'📍 チズに公開','chiri.publish_btn':'📍 チズに公開する','chiri.comment_ph':'一言コメント（任意）','chiri.already_pub':'公開済み','chiri.already_pub_toast':'このメニューはすでにチリつもに公開されています','chiri.all_published':'この店舗のメニューはすべて公開済みです','chiri.all_published_notice':'✓ この店舗のメニューはすべてチリつもに公開済みです。新しいメニューのみ追加できます。','chiri.map_published':'チリつもに公開済み','chiri.map_publish_btn':'チリつもに公開する',
     // 치리톡 글쓰기 모달
     'ctw.back':'← 戻る','ctw.title':'投稿を書く','ctw.submit':'投稿する',
     'ctw.category':'カテゴリ','ctw.post_title':'タイトル','ctw.title_ph':'タイトルを入力してください',
@@ -13847,7 +13904,7 @@ var I18N = {
     'manual.title':'✏️ 수동 기입','manual.store_placeholder':'예) 주유소, 편의점...','manual.optional':'(선택사항)','manual.save':'💾 저장','manual.ph_name':'품목명','manual.ph_qty':'수량','manual.ph_price':'단가',
     'pay.credit':'💳 신용카드','pay.debit':'🏦 체크카드','pay.ic':'🚃 IC카드',
     'pay.cash2':'💴 현금','pay.qr2':'📱 QR결제',
-    'chiri.publish_title':'📍 치즈에 공개','chiri.publish_btn':'📍 치즈에 공개하기','chiri.comment_ph':'한줄 코멘트 (선택)',
+    'chiri.publish_title':'📍 치즈에 공개','chiri.publish_btn':'📍 치즈에 공개하기','chiri.comment_ph':'한줄 코멘트 (선택)','chiri.already_pub':'공개됨','chiri.already_pub_toast':'이 메뉴는 이미 치리츠모에 공개됐어요','chiri.all_published':'이 가게의 메뉴는 모두 이미 공개됐어요','chiri.all_published_notice':'✓ 이 가게의 메뉴는 모두 치리츠모에 공개됐어요. 새 메뉴만 추가할 수 있어요.','chiri.map_published':'치리츠모에 공개됨','chiri.map_publish_btn':'치리츠모에 공개하기',
     'ctw.back':'← 뒤로','ctw.title':'글쓰기','ctw.submit':'게시',
     'ctw.category':'카테고리','ctw.post_title':'제목','ctw.title_ph':'제목을 입력해주세요',
     'ctw.content':'내용','ctw.content_ph':'절약 팁이나 경험담을 공유해보세요!',
@@ -14104,7 +14161,7 @@ var I18N = {
     'manual.title':'✏️ Manual Entry','manual.store_placeholder':'e.g. Gas station, Konbini...','manual.optional':'(optional)','manual.save':'💾 Save','manual.ph_name':'Item name','manual.ph_qty':'Qty','manual.ph_price':'Unit price',
     'pay.credit':'💳 Credit','pay.debit':'🏦 Debit','pay.ic':'🚃 IC Card',
     'pay.cash2':'💴 Cash','pay.qr2':'📱 QR Pay',
-    'chiri.publish_title':'📍 Publish to Map','chiri.publish_btn':'📍 Publish to Map','chiri.comment_ph':'One-line comment (optional)',
+    'chiri.publish_title':'📍 Publish to Map','chiri.publish_btn':'📍 Publish to Map','chiri.comment_ph':'One-line comment (optional)','chiri.already_pub':'Published','chiri.already_pub_toast':'This menu is already published to Chiritsumo','chiri.all_published':'All menus of this store are already published','chiri.all_published_notice':'✓ All menus of this store are already on Chiritsumo. You can only add new menus.','chiri.map_published':'Published to Chiritsumo','chiri.map_publish_btn':'Publish to Chiritsumo',
     'ctw.back':'← Back','ctw.title':'Write Post','ctw.submit':'Post',
     'ctw.category':'Category','ctw.post_title':'Title','ctw.title_ph':'Enter a title',
     'ctw.content':'Content','ctw.content_ph':'Share savings tips or experiences!',
@@ -14361,7 +14418,7 @@ var I18N = {
     'manual.title':'✏️ 手动录入','manual.store_placeholder':'例) 加油站、便利店...','manual.optional':'(可选)','manual.save':'💾 保存','manual.ph_name':'品名','manual.ph_qty':'数量','manual.ph_price':'单价',
     'pay.credit':'💳 信用卡','pay.debit':'🏦 借记卡','pay.ic':'🚃 IC卡',
     'pay.cash2':'💴 现金','pay.qr2':'📱 扫码支付',
-    'chiri.publish_title':'📍 公开到地图','chiri.publish_btn':'📍 公开到地图','chiri.comment_ph':'一句评论（可选）',
+    'chiri.publish_title':'📍 公开到地图','chiri.publish_btn':'📍 公开到地图','chiri.comment_ph':'一句评论（可选）','chiri.already_pub':'已公开','chiri.already_pub_toast':'该菜单已公开到Chiritsumo','chiri.all_published':'该店铺的菜单已全部公开','chiri.all_published_notice':'✓ 该店铺的菜单已全部公开到Chiritsumo，仅可添加新菜单。','chiri.map_published':'已公开到Chiritsumo','chiri.map_publish_btn':'公开到Chiritsumo',
     'ctw.back':'← 返回','ctw.title':'写帖子','ctw.submit':'发布',
     'ctw.category':'类别','ctw.post_title':'标题','ctw.title_ph':'请输入标题',
     'ctw.content':'内容','ctw.content_ph':'分享省钱技巧或经验吧！',
@@ -15552,6 +15609,10 @@ function scrollToStoreCard(storeName){
 
 function renderMapPins() {
   if (!_map) return;
+  // 치리츠모 공개 캐시 미로드 시 백그라운드 로드 → 완료되면 1회 재렌더 (공개됨 버튼 반영)
+  if (!window._chiriPubByStore && !window._chiriPubLoading && _sb) {
+    _loadChiriPublishedCache().then(function(){ try { renderMapPins(); } catch(e){} });
+  }
   _mapMarkers.forEach(function(m) { m.setMap(null); });
   _mapMarkers = [];
 
@@ -15664,11 +15725,22 @@ function renderMapPins() {
       +sItemsHtml
       // 외식(eat/cafe/drink) 카테고리만 치리 공개 버튼 노출 — 슈퍼/약국/쇼핑 등은 메뉴 가격 공유 의미 없음
       +((typeof _shouldShowChiriPublish === 'function' && _shouldShowChiriPublish(s.cat))
-        ? '<button onclick="event.stopPropagation();openChiriFromMapCard(\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')" '
-          +'style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--gold-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--gold-shadow);">'
-          +'<span>📍 チリつもに公開する</span>'
-          +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10チリ</span>'
-          +'</button>'
+        ? (function(){
+            // 이미 치리츠모에 공개됐는지 — 이 가게가 공개할 메뉴(상위5 또는 가게명 폴백)가 전부 등록됐으면 공개됨 처리
+            var _pub = (window._chiriPubByStore||{})[_normChiri(s.name)] || null;
+            var _menuNames = Object.entries(sItemMap).sort(function(a,b){return b[1].count-a[1].count;}).slice(0,5).map(function(p){return p[0];});
+            if (!_menuNames.length) _menuNames = [s.name];   // 품목 없으면 가게명을 메뉴로 공개
+            var _fullyPub = _pub && _menuNames.every(function(n){ return _pub[_normChiri(n)]; });
+            if (_fullyPub) {
+              return '<div style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid var(--border);background:var(--bg-2);color:var(--text-3);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;cursor:default;">'
+                +'<span style="color:var(--green);font-weight:900;">✓</span><span>'+t('chiri.map_published')+'</span></div>';
+            }
+            return '<button onclick="event.stopPropagation();openChiriFromMapCard(\''+s.name.replace(/'/g,"\\'")+'\',\''+sId+'\')" '
+              +'style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:none;background:var(--gold-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:var(--gold-shadow);">'
+              +'<span>📍 '+t('chiri.map_publish_btn')+'</span>'
+              +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:1px 8px;font-size:10px;">+10チリ</span>'
+              +'</button>';
+          })()
         : '')
       +'<button onclick="event.stopPropagation();reqStoreLocationEdit(\''+s.name.replace(/'/g,"\\'")+'\','+(s.lat?s.lat:'null')+','+(s.lng?s.lng:'null')+')" style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">📍 位置修正をリクエスト</button>'
       +'</div>';
@@ -28881,7 +28953,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 513;
+window.__APP_BUILD__ = 514;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
