@@ -12812,6 +12812,11 @@ function _doSaveOcrResult() {
   }
   // items를 window._ocrItems에서 읽기 (수정 반영)
   var finalItems = (window._ocrItems || r.items || []).filter(function(it){ return it.price > 0; });
+  // 주차요금 — OCR 원문에서 주차시간(분) 추출해 보존 (시간당 단가 비교용)
+  if (window._rawOcrText) {
+    var _pmins = _parseParkingMins(window._rawOcrText);
+    if (_pmins) finalItems.forEach(function(it){ if (_isParkingItem(it.name, r.cat)) it.mins = _pmins; });
+  }
   var finalTotal = window._originalTotal || r.total || finalItems.reduce(function(a,it){ return a + it.price; }, 0);
   // 사용자가 편집한 날짜(연/월/일 직접입력) 값을 최우선으로 사용
   var _ey=document.getElementById('ocr-date-y'), _em=document.getElementById('ocr-date-m'), _ed=document.getElementById('ocr-date-d');
@@ -12876,13 +12881,25 @@ function _doSaveOcrResult() {
     // 품목 저장 (+ Phase 1: 상품 정규화 → product_id 매칭)
     if (receiptId && finalItems.length > 0) {
       // 1) 우선 items INSERT (product_id 없이) — 즉시 저장 우선
+      //    mins(주차시간) 는 컬럼이 있을 때만 — 미존재 시 mins 제거 후 1회 재시도(저장 보장)
       var rows = finalItems.map(function(it) {
-        return { receipt_id: receiptId, name: it.name, quantity: it.qty || 1, price: it.price, category: r.cat };
+        var row = { receipt_id: receiptId, name: it.name, quantity: it.qty || 1, price: it.price, category: r.cat };
+        if (it.mins) row.mins = it.mins;
+        return row;
       });
-      _sb.from('items').insert(rows).select('id,name').then(function(r2) {
-        if (r2.error) { console.warn('품목 저장 실패:', r2.error.message); return; }
+      function _afterItemsInsert(r2) {
+        if (r2.error) {
+          // mins 컬럼 미존재(42703) 등 → mins 빼고 재시도
+          if (rows.some(function(x){ return x.mins != null; })) {
+            var rows2 = rows.map(function(x){ var c = {}; for (var k in x) if (k!=='mins') c[k]=x[k]; return c; });
+            console.warn('[items insert] mins 제거 후 재시도:', r2.error.message);
+            _sb.from('items').insert(rows2).select('id,name').then(_afterItemsInsert);
+            rows = rows2;  // 재귀 시 다시 안 빼도록
+            return;
+          }
+          console.warn('품목 저장 실패:', r2.error.message); return;
+        }
         // 2) 백그라운드로 각 품목의 product_id 매칭 → UPDATE
-        //    영수증 저장 흐름을 막지 않게 비동기 fire-and-forget
         (async function() {
           var insertedItems = r2.data || [];
           for (var i = 0; i < insertedItems.length; i++) {
@@ -12896,7 +12913,8 @@ function _doSaveOcrResult() {
           }
           console.log('[product-match] 완료:', insertedItems.length, '품목 처리');
         })();
-      });
+      }
+      _sb.from('items').insert(rows).select('id,name').then(_afterItemsInsert);
     }
 
     // INSERT 완료 후 위치 검색 → receipt ID로 정확히 UPDATE
@@ -13598,7 +13616,7 @@ var I18N = {
     'cal.day_detail':'{y}/{m}/{d} 支出明細','cal.tap_go':'タップで移動 ›',
     // 가성비 맵 (영수증 모드)
     'rmap.title':'コスパマップ','rmap.sub':'現在地ベース · レシートピン','rmap.stores':'📍 店舗リスト','rmap.compare':'💰 価格比較',
-    'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
+    'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','pc.found_count':'{n}件で価格差を発見','pc.per_unit':'/ 1個','pc.per_hour':'/ 1時間','pc.best':'最安','pc.savings':'最大¥{amt}（{pct}%）節約可能','pc.parking_tag':'時間単価','pc.parking_note':'⏱ 駐車時間が異なるため1時間あたりの単価で比較しています','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
     'rmap.iw_visit':'訪問','rmap.iw_avg':'平均','rmap.view_detail':'📋 詳細を見る →','rmap.per_unit':'/個','rmap.no_items':'品目データなし','rmap.avg_per':'1回平均',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
     // 카테고리 라벨 (영수증 기록)
@@ -13871,7 +13889,7 @@ var I18N = {
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'cal.day_detail':'{y}/{m}/{d} 지출 내역','cal.tap_go':'탭해서 이동 ›',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
-    'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
+    'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','pc.found_count':'{n}개 품목에서 가격 차이 발견','pc.per_unit':'/ 1개','pc.per_hour':'/ 1시간','pc.best':'최저가','pc.savings':'최대 ¥{amt} ({pct}%) 절약 가능','pc.parking_tag':'시간단가','pc.parking_note':'⏱ 주차시간이 달라 시간당 단가로 비교해요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.iw_visit':'방문','rmap.iw_avg':'평균','rmap.view_detail':'📋 내역 보기 →','rmap.per_unit':'/1개','rmap.no_items':'품목 데이터 없음','rmap.avg_per':'방문 평균',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'식사','cat.snack':'군것질·과자','cat.fuel':'주유','cat.park':'주차','cat.cafe':'카페','cat.life':'생활용품',
@@ -14128,7 +14146,7 @@ var I18N = {
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'cal.day_detail':'{y}/{m}/{d} spending','cal.tap_go':'Tap to view ›',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
-    'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
+    'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','pc.found_count':'Price differences found in {n} item(s)','pc.per_unit':'/ each','pc.per_hour':'/ hour','pc.best':'Lowest','pc.savings':'Save up to ¥{amt} ({pct}%)','pc.parking_tag':'hourly','pc.parking_note':'⏱ Compared by hourly rate since parking durations differ','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.iw_visit':'Visits','rmap.iw_avg':'Average','rmap.view_detail':'📋 View detail →','rmap.per_unit':'/ea','rmap.no_items':'No item data','rmap.avg_per':'Avg/visit',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Meal','cat.snack':'Snacks','cat.fuel':'Fuel','cat.park':'Parking','cat.cafe':'Cafe','cat.life':'Daily',
@@ -14385,7 +14403,7 @@ var I18N = {
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'cal.day_detail':'{y}/{m}/{d} 支出明细','cal.tap_go':'点击查看 ›',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
-    'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
+    'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','pc.found_count':'在{n}个品项中发现价格差异','pc.per_unit':'/ 每个','pc.per_hour':'/ 每小时','pc.best':'最低价','pc.savings':'最多可省¥{amt}（{pct}%）','pc.parking_tag':'每小时','pc.parking_note':'⏱ 因停车时长不同，按每小时单价比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.iw_visit':'到访','rmap.iw_avg':'平均','rmap.view_detail':'📋 查看明细 →','rmap.per_unit':'/个','rmap.no_items':'无商品数据','rmap.avg_per':'每次平均',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
     'cat.all':'全部','cat.food':'食品','cat.eat':'用餐','cat.snack':'零食','cat.fuel':'加油','cat.park':'停车','cat.cafe':'咖啡','cat.life':'生活用品',
@@ -15197,6 +15215,44 @@ function normalizeForCompare(name) {
 
 var _pcFilter = '';
 
+// ── 주차요금 등 시간기반 품목: 단순 총액 대신 ¥/시간(시간당 단가)으로 비교 ──
+var _PARKING_RE = /駐車|駐輪|パーキング|コインパーキング|タイムズ|times\s*24|リパーク|repark|parking|時間貸|時間料金/i;
+function _isParkingItem(name, cat){
+  if (cat === 'park') return true;
+  return _PARKING_RE.test(String(name||''));
+}
+// OCR 원문(rawText)에서 주차시간(분) 추출: ① 駐車時間 H:MM/N分 ② 入庫/精算(出庫) 시각 차이
+function _parseParkingMins(rawText){
+  if (!rawText) return null;
+  var txt = String(rawText);
+  var m = txt.match(/駐車時間[^\d]{0,6}(\d{1,3})\s*[:：時]\s*(\d{1,2})/);
+  if (m){ var h=parseInt(m[1],10), mm=parseInt(m[2],10); if(h>=0&&mm>=0&&mm<60&&(h+mm)>0) return h*60+mm; }
+  var m2 = txt.match(/駐車時間[^\d]{0,6}(\d{1,3})\s*分/);
+  if (m2){ var v=parseInt(m2[1],10); if(v>0) return v; }
+  function _findTime(labels){
+    for (var i=0;i<labels.length;i++){
+      var mm2 = txt.match(new RegExp(labels[i]+'[^\\d]{0,12}?(?:(\\d{4})年\\s*(\\d{1,2})月\\s*(\\d{1,2})日)?[^\\d]{0,8}?(\\d{1,2})\\s*[:：]\\s*(\\d{2})'));
+      if (mm2) return { y:mm2[1]?+mm2[1]:null, mo:mm2[2]?+mm2[2]:null, d:mm2[3]?+mm2[3]:null, h:+mm2[4], mi:+mm2[5] };
+    }
+    return null;
+  }
+  var inT = _findTime(['入庫時刻','入庫','入場','入車']);
+  var outT = _findTime(['精算時刻','出庫時刻','出場時刻','精算','出庫','出場']);
+  if (inT && outT){
+    var t1 = new Date(inT.y||2000,(inT.mo||1)-1,inT.d||1,inT.h,inT.mi);
+    var t2 = new Date(outT.y||inT.y||2000,(outT.mo||inT.mo||1)-1,outT.d||inT.d||1,outT.h,outT.mi);
+    var diff = Math.round((t2-t1)/60000);
+    if (diff<=0) diff += 24*60;           // 날짜 누락 시 자정 넘김 보정
+    if (diff>0 && diff < 60*24*7) return diff;
+  }
+  return null;
+}
+function _fmtMins(mins){
+  if (!mins || mins<=0) return '';
+  var h=Math.floor(mins/60), m=mins%60;
+  return h>0 ? (m>0 ? h+'h'+m+'m' : h+'h') : m+'m';
+}
+
 function renderPriceComparison(filter) {
   if (filter !== undefined) _pcFilter = filter;
   var kw = (_pcFilter || '').trim().toLowerCase();
@@ -15207,9 +15263,16 @@ function renderPriceComparison(filter) {
     (receipt.items || []).forEach(function(item) {
       if (!item.name || item.price <= 0) return;
       var key = normalizeForCompare(item.name);
-      if (!itemMap[key]) itemMap[key] = { displayName: item.name, stores: {} };
-      if (!itemMap[key].stores[receipt.store]) itemMap[key].stores[receipt.store] = [];
+      var parking = _isParkingItem(item.name, receipt.cat);
+      if (!itemMap[key]) itemMap[key] = { displayName: item.name, stores: {}, parking: parking };
+      if (parking) itemMap[key].parking = true;
       var unit = Math.round(item.price / (item.qty || 1));
+      if (parking) {
+        // 주차는 시간당 단가(¥/시간)로 비교 — 주차시간(분) 없으면 공정 비교 불가 → 제외
+        if (!item.mins || item.mins <= 0) return;
+        unit = Math.round((item.price / (item.qty || 1)) / (item.mins / 60));
+      }
+      if (!itemMap[key].stores[receipt.store]) itemMap[key].stores[receipt.store] = [];
       itemMap[key].stores[receipt.store].push(unit);
     });
   });
@@ -15246,7 +15309,7 @@ function renderPriceComparison(filter) {
   }
 
   var html = '<div style="font-size:11px;color:var(--text-3);margin-bottom:10px;">'
-    + comparisons.length + '개 품목에서 가격 차이 발견</div>';
+    + t('pc.found_count', {n: comparisons.length}) + '</div>';
 
   comparisons.forEach(function(item) {
     var storeList = Object.entries(item.stores).map(function(pair) {
@@ -15258,20 +15321,24 @@ function renderPriceComparison(filter) {
     var maxPrice = storeList[storeList.length-1].avg;
     var savings  = maxPrice - minPrice;
     var savePct  = Math.round(savings / maxPrice * 100);
+    var unitLbl  = item.parking ? t('pc.per_hour') : t('pc.per_unit');
 
     html += '<div class="pc-card">';
-    html += '<div class="pc-item-name">' + item.displayName + '</div>';
+    html += '<div class="pc-item-name">' + item.displayName
+      + (item.parking ? ' <span style="font-size:9px;font-weight:700;color:var(--gold);background:var(--gold-light);border-radius:8px;padding:1px 6px;margin-left:4px;">'+t('pc.parking_tag')+'</span>' : '')
+      + '</div>';
     storeList.forEach(function(s, i) {
       var isBest = i === 0;
       var diff   = s.avg - minPrice;
       html += '<div class="pc-row">';
       html += '<span class="pc-store">' + s.store + '</span>';
-      html += '<span class="pc-price">¥' + s.avg.toLocaleString() + '<span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:2px;">/ 1개</span></span>';
-      if (isBest) html += '<span class="pc-badge-best">최저가</span>';
+      html += '<span class="pc-price">¥' + s.avg.toLocaleString() + '<span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:2px;">' + unitLbl + '</span></span>';
+      if (isBest) html += '<span class="pc-badge-best">'+t('pc.best')+'</span>';
       else        html += '<span class="pc-badge-pct">+¥' + diff.toLocaleString() + '</span>';
       html += '</div>';
     });
-    html += '<div class="pc-savings">💰 최대 ¥' + savings.toLocaleString() + ' (' + savePct + '%) 절약 가능</div>';
+    html += '<div class="pc-savings">💰 ' + t('pc.savings', {amt: savings.toLocaleString(), pct: savePct}) + '</div>';
+    if (item.parking) html += '<div style="font-size:9.5px;color:var(--text-3);margin-top:4px;">'+t('pc.parking_note')+'</div>';
     html += '</div>';
   });
 
@@ -16655,7 +16722,7 @@ async function loadFromSupabase() {
       cat: (r.items && r.items[0] && r.items[0].category) || 'other',
       pay: r.payment_method || null,
       items: (r.items || []).map(function(it) {
-        return { name: it.name, qty: it.quantity || 1, price: it.price || 0 };
+        return { name: it.name, qty: it.quantity || 1, price: it.price || 0, mins: it.mins || null };
       }),
       total: r.total_amount || 0,
       memo:  r.memo || ''
@@ -28953,7 +29020,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 514;
+window.__APP_BUILD__ = 515;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
