@@ -4579,41 +4579,41 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet" style="max-height:88%;overflow-y:auto;">
     <div class="sheet-handle"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-      <div class="sheet-title">📍 チリつもに公開</div>
+      <div class="sheet-title" data-i18n="chiri.pub_modal_title">📍 チリつもに公開</div>
       <div onclick="closeOv('ov-chiri-publish')" style="font-size:20px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>
     </div>
     <!-- 코인 배지 -->
     <div style="background:var(--gold-light);border:1.5px solid var(--gold);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:16px;">
       <span style="font-size:22px;">✨</span>
       <div>
-        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);">+10チリ獲得！</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">節約情報をチズに公開してコミュニティに貢献</div>
+        <div style="font-size:13px;font-weight:800;color:var(--gold-dark);" data-i18n="chiri.pub_reward">+10チリ獲得！</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="chiri.pub_sub">節約情報をチズに公開してコミュニティに貢献</div>
       </div>
     </div>
     <!-- 공유 사진 첨부용 숨은 파일 입력 (가게/메뉴 공통) -->
     <input type="file" id="cp-photo-input" accept="image/*" style="display:none" onchange="cpOnPhotoPicked(this)">
     <!-- 가게명 + 가게 사진 -->
     <div style="background:var(--bg);border-radius:12px;padding:10px 14px;margin-bottom:14px;border:0.5px solid var(--border);">
-      <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.5px;margin-bottom:3px;">お店</div>
+      <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:.5px;margin-bottom:3px;" data-i18n="chiri.pub_store">お店</div>
       <div style="font-size:15px;font-weight:800;color:var(--text-1);" id="cp-store-name">-</div>
       <div id="cp-store-photo" onclick="cpPickStorePhoto()" style="margin-top:10px;height:88px;border-radius:10px;background:var(--bg-2);border:1.5px dashed var(--border-mid);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;">
-        <div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">お店の写真を追加（任意）</div></div>
+        <div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;" data-i18n="chiri.pub_add_photo">お店の写真を追加（任意）</div></div>
       </div>
     </div>
     <!-- 품목 선택 (카테고리 아코디언 인라인 포함) -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;">品目をタップしてカテゴリを選択 <span style="font-weight:500;">（複数可）</span></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;"><span data-i18n="chiri.pub_pick_items">品目をタップしてカテゴリを選択</span> <span style="font-weight:500;" data-i18n="chiri.pub_multi">（複数可）</span></div>
       <div id="cp-sel-count" style="font-size:11px;font-weight:800;color:var(--gold);"></div>
     </div>
     <div id="cp-item-chips" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;"></div>
     <div id="cp-all-published-notice" style="display:none;background:var(--green-light);border:1px solid rgba(29,158,117,.25);border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:11.5px;font-weight:600;color:var(--green-dark);line-height:1.45;" data-i18n="chiri.all_published_notice">✓ この店舗のメニューはすべてチリつもに公開済みです。新しいメニューのみ追加できます。</div>
     <!-- 선택 품목 프리뷰 + 카테고리 선택 -->
     <div style="background:var(--green-light);border-radius:12px;padding:12px 16px;margin-bottom:14px;border:0.5px solid rgba(29,158,117,.2);min-height:44px;">
-      <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;">公開する品目</div>
+      <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;" data-i18n="chiri.pub_items_label">公開する品目</div>
       <div id="cp-preview-list"></div>
       <!-- 카테고리 (선택된 품목 있을 때만 표시) -->
       <div id="cp-cat-section" style="display:none;border-top:1px solid rgba(29,158,117,.2);margin-top:10px;padding-top:10px;">
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;">カテゴリ</div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-bottom:6px;letter-spacing:.3px;" data-i18n="ct.map.category">カテゴリ</div>
         <div id="cp-cat-display" onclick="toggleCpCatAccordion()" style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.7);border:1.5px solid rgba(29,158,117,.25);border-radius:10px;padding:8px 12px;cursor:pointer;user-select:none;">
           <span id="cp-cat-label" style="font-size:12px;font-weight:700;color:var(--text-1);">🍽️ その他</span>
           <span id="cp-cat-arrow" style="font-size:11px;color:var(--text-3);">▼</span>
@@ -4623,13 +4623,13 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 가게 단위 코멘트 (선택). 메뉴별 평점/사진/코멘트는 위 "公開する品目" 프리뷰에서 입력 -->
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-2);padding:11px 14px 0;">💬 お店についてのコメント（任意）</div>
-      <textarea id="cp-comment" placeholder="お店全体についてコメントを書いてください 例: 接客が丁寧、雰囲気が良い、混雑など" style="width:100%;border:none;padding:8px 14px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:66px;box-sizing:border-box;outline:none;display:block;"></textarea>
+      <div style="font-size:11px;font-weight:700;color:var(--text-2);padding:11px 14px 0;" data-i18n="chiri.pub_comment_label">💬 お店についてのコメント（任意）</div>
+      <textarea id="cp-comment" placeholder="お店全体についてコメントを書いてください 例: 接客が丁寧、雰囲気が良い、混雑など" data-i18n-placeholder="chiri.pub_comment_ph" style="width:100%;border:none;padding:8px 14px 12px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:66px;box-sizing:border-box;outline:none;display:block;"></textarea>
     </div>
     <!-- 공개 버튼 -->
     <button id="cp-submit-btn" onclick="submitChiriPublish()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
       <span data-i18n="chiri.publish_btn">📍 チズに公開する</span>
-      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
+      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;" data-i18n="chiri.pub_reward_chip">+10チリ</span>
     </button>
     <div onclick="closeOv('ov-chiri-publish')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;" data-i18n="btn.cancel">キャンセル</div>
   </div>
@@ -13004,7 +13004,7 @@ async function openChiriPublish() {
   window._cpPos = window._cpForcedPos || null;
   window._cpForcedPos = null;
   var storeEl = document.getElementById('ocr-store');
-  var store = storeEl ? storeEl.textContent.trim() : (r.store || '不明');
+  var store = storeEl ? storeEl.textContent.trim() : (r.store || t('ocr.store_unknown'));
 
   var storeNameEl = document.getElementById('cp-store-name');
   if (storeNameEl) storeNameEl.textContent = store;
@@ -13026,14 +13026,14 @@ async function openChiriPublish() {
   var cpArrowEl = document.getElementById('cp-cat-arrow');
   var cpAccEl   = document.getElementById('cp-cat-accordion');
   var cpCatSec  = document.getElementById('cp-cat-section');
-  if (cpLabelEl) cpLabelEl.innerHTML = initCat.icon + ' ' + _esc(initCat.label);
+  if (cpLabelEl) cpLabelEl.innerHTML = initCat.icon + ' ' + _esc(_cpCatLabel(initCat.key));
   if (cpArrowEl) cpArrowEl.textContent = '▼';
   if (cpCatSec)  cpCatSec.style.display = 'none';
   if (cpAccEl) {
     cpAccEl.style.display = 'none';
     cpAccEl.innerHTML = CT_PUB_CATS.map(function(cat) {
       var active = cat.key === _cpCategory;
-      return '<button data-cat="' + cat.key + '" onclick="selectCpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(active?'var(--gold)':'var(--border-mid)')+';background:'+(active?'var(--gold)':'var(--surface)')+';color:'+(active?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + cat.label + '</button>';
+      return '<button data-cat="' + cat.key + '" onclick="selectCpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(active?'var(--gold)':'var(--border-mid)')+';background:'+(active?'var(--gold)':'var(--surface)')+';color:'+(active?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + _esc(_cpCatLabel(cat.key)) + '</button>';
     }).join('');
   }
   window._cpStore = store;
@@ -13042,7 +13042,7 @@ async function openChiriPublish() {
   // 가게 사진 초기화
   window._cpStorePhotoFile = null; window._cpStorePhotoUrl = null;
   var spBox = document.getElementById('cp-store-photo');
-  if (spBox) spBox.innerHTML = '<div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">お店の写真を追加（任意）</div></div>';
+  if (spBox) spBox.innerHTML = '<div style="text-align:center;color:var(--text-3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="width:24px;height:24px;display:inline-block;margin-bottom:3px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg><div style="font-size:11px;font-weight:600;">'+t('chiri.pub_add_photo')+'</div></div>';
 
   // 이미 치리츠모에 공개된 메뉴 조회 → 중복 등록 방지
   window._cpPublishedSet = {};
@@ -13099,10 +13099,10 @@ function updateCpPreview() {
   var listEl    = document.getElementById('cp-preview-list');
   var countEl   = document.getElementById('cp-sel-count');
   var catSec    = document.getElementById('cp-cat-section');
-  if (countEl) countEl.textContent = _cpSelectedItems.length > 0 ? _cpSelectedItems.length + '品目選択中' : '';
+  if (countEl) countEl.textContent = _cpSelectedItems.length > 0 ? t('chiri.pub_sel_count', {n:_cpSelectedItems.length}) : '';
   if (!listEl) return;
   if (_cpSelectedItems.length === 0) {
-    listEl.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:4px 0;">品目を選んでください</div>';
+    listEl.innerHTML = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:4px 0;">'+t('chiri.pub_pick_prompt')+'</div>';
     if (catSec) catSec.style.display = 'none';
     return;
   }
@@ -13125,7 +13125,7 @@ function updateCpPreview() {
       +   '<div style="display:flex;gap:1px;flex:1;">'+stars+'</div>'
       +   photoBtn
       + '</div>'
-      + '<input type="text" value="'+_esc(it.cpComment||'')+'" oninput="cpSetItemComment('+idx+',this.value)" maxlength="200" placeholder="このメニューについてコメントを書いてください（任意）" style="width:100%;margin-top:7px;border:1px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--surface);outline:none;box-sizing:border-box;">'
+      + '<input type="text" value="'+_esc(it.cpComment||'')+'" oninput="cpSetItemComment('+idx+',this.value)" maxlength="200" placeholder="'+t('chiri.pub_item_comment_ph')+'" style="width:100%;margin-top:7px;border:1px solid var(--border-mid);border-radius:8px;padding:7px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);background:var(--surface);outline:none;box-sizing:border-box;">'
       + '</div>';
   }).join('');
   if (catSec) catSec.style.display = 'block';
@@ -13174,6 +13174,12 @@ async function _cpUploadPhoto(file, subdir){
 
 /* ── 치리츠모 공개 칩 빌더 (선택만, 카테고리 없음) ── */
 var _cpCategory = 'other';
+
+// 치리 공개 카테고리 라벨(i18n) — ct.cat.* 값에서 선두 이모지를 떼고 라벨만 반환
+function _cpCatLabel(key){
+  var s = t('ct.cat.' + key) || '';
+  return s.replace(/^\S+\s+/, '') || s;
+}
 
 function _buildCpChip(it, i, selected) {
   var priceLabel = it.qty > 1 ? '@¥'+it.price.toLocaleString() : '¥'+it.price.toLocaleString();
@@ -13233,7 +13239,7 @@ function selectCpCat(key) {
   _cpCategory = key;
   var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
   var label = document.getElementById('cp-cat-label');
-  if (label) label.innerHTML = cat.icon + ' ' + _esc(cat.label);
+  if (label) label.innerHTML = cat.icon + ' ' + _esc(_cpCatLabel(cat.key));
   var acc = document.getElementById('cp-cat-accordion');
   if (acc) {
     acc.querySelectorAll('button').forEach(function(btn) {
@@ -13282,7 +13288,7 @@ async function submitChiriPublish() {
   function _cpUnlock(){ window._cpSubmitting = false; if(_cpBtn){ _cpBtn.style.opacity=''; _cpBtn.style.pointerEvents=''; } }
   if (_cpBtn){ _cpBtn.style.opacity='.6'; _cpBtn.style.pointerEvents='none'; }
 
-  var store = window._cpStore || '不明';
+  var store = window._cpStore || t('ocr.store_unknown');
   var storeAddress = r.address || null;
   var commentEl = document.getElementById('cp-comment');
   var commentText = commentEl ? commentEl.value.trim() : '';
@@ -13306,7 +13312,7 @@ async function submitChiriPublish() {
       if (_cb) { showToast(t('toast.banned_word', {word:_cb})); _cpUnlock(); return; }
     }
   }
-  if (window._cpStorePhotoFile || _cpSelectedItems.some(function(it){return it.cpPhotoFile;})) showToast('🔄 写真をアップロード中…');
+  if (window._cpStorePhotoFile || _cpSelectedItems.some(function(it){return it.cpPhotoFile;})) showToast(t('chiri.pub_uploading'));
 
   // 선택된 품목마다 핀 생성
   var newPins = _cpSelectedItems.map(function(item) {
@@ -13659,6 +13665,7 @@ var I18N = {
     'pay.cash2':'💴 現金','pay.qr2':'📱 QR決済',
     // 치리 공개 모달
     'chiri.publish_title':'📍 チズに公開','chiri.publish_btn':'📍 チズに公開する','chiri.comment_ph':'一言コメント（任意）','chiri.already_pub':'公開済み','chiri.already_pub_toast':'このメニューはすでにチリつもに公開されています','chiri.all_published':'この店舗のメニューはすべて公開済みです','chiri.all_published_notice':'✓ この店舗のメニューはすべてチリつもに公開済みです。新しいメニューのみ追加できます。','chiri.map_published':'チリつもに公開済み','chiri.map_publish_btn':'チリつもに公開する',
+    'chiri.pub_modal_title':'📍 チリつもに公開','chiri.pub_reward':'+10チリ獲得！','chiri.pub_reward_chip':'+10チリ','chiri.pub_sub':'節約情報をチズに公開してコミュニティに貢献','chiri.pub_store':'お店','chiri.pub_add_photo':'お店の写真を追加（任意）','chiri.pub_pick_items':'品目をタップしてカテゴリを選択','chiri.pub_multi':'（複数可）','chiri.pub_items_label':'公開する品目','chiri.pub_comment_label':'💬 お店についてのコメント（任意）','chiri.pub_comment_ph':'お店全体についてコメントを書いてください 例: 接客が丁寧、雰囲気が良い、混雑など','chiri.pub_sel_count':'{n}品目選択中','chiri.pub_pick_prompt':'品目を選んでください','chiri.pub_item_comment_ph':'このメニューについてコメントを書いてください（任意）','chiri.pub_uploading':'🔄 写真をアップロード中…','ct.cat.other':'🍽️ その他',
     // 치리톡 글쓰기 모달
     'ctw.back':'← 戻る','ctw.title':'投稿を書く','ctw.submit':'投稿する',
     'ctw.category':'カテゴリ','ctw.post_title':'タイトル','ctw.title_ph':'タイトルを入力してください',
@@ -13923,6 +13930,7 @@ var I18N = {
     'pay.credit':'💳 신용카드','pay.debit':'🏦 체크카드','pay.ic':'🚃 IC카드',
     'pay.cash2':'💴 현금','pay.qr2':'📱 QR결제',
     'chiri.publish_title':'📍 치즈에 공개','chiri.publish_btn':'📍 치즈에 공개하기','chiri.comment_ph':'한줄 코멘트 (선택)','chiri.already_pub':'공개됨','chiri.already_pub_toast':'이 메뉴는 이미 치리츠모에 공개됐어요','chiri.all_published':'이 가게의 메뉴는 모두 이미 공개됐어요','chiri.all_published_notice':'✓ 이 가게의 메뉴는 모두 치리츠모에 공개됐어요. 새 메뉴만 추가할 수 있어요.','chiri.map_published':'치리츠모에 공개됨','chiri.map_publish_btn':'치리츠모에 공개하기',
+    'chiri.pub_modal_title':'📍 치리츠모에 공개','chiri.pub_reward':'+10치리 획득!','chiri.pub_reward_chip':'+10치리','chiri.pub_sub':'절약 정보를 치즈에 공개해 커뮤니티에 기여','chiri.pub_store':'가게','chiri.pub_add_photo':'가게 사진 추가 (선택)','chiri.pub_pick_items':'품목을 탭해서 카테고리 선택','chiri.pub_multi':'(여러 개 가능)','chiri.pub_items_label':'공개할 품목','chiri.pub_comment_label':'💬 가게에 대한 코멘트 (선택)','chiri.pub_comment_ph':'가게 전반에 대한 코멘트를 적어주세요. 예: 친절한 접객, 좋은 분위기, 혼잡 등','chiri.pub_sel_count':'{n}품목 선택 중','chiri.pub_pick_prompt':'품목을 선택해주세요','chiri.pub_item_comment_ph':'이 메뉴에 대한 코멘트를 적어주세요 (선택)','chiri.pub_uploading':'🔄 사진 업로드 중…','ct.cat.other':'🍽️ 기타',
     'ctw.back':'← 뒤로','ctw.title':'글쓰기','ctw.submit':'게시',
     'ctw.category':'카테고리','ctw.post_title':'제목','ctw.title_ph':'제목을 입력해주세요',
     'ctw.content':'내용','ctw.content_ph':'절약 팁이나 경험담을 공유해보세요!',
@@ -14180,6 +14188,7 @@ var I18N = {
     'pay.credit':'💳 Credit','pay.debit':'🏦 Debit','pay.ic':'🚃 IC Card',
     'pay.cash2':'💴 Cash','pay.qr2':'📱 QR Pay',
     'chiri.publish_title':'📍 Publish to Map','chiri.publish_btn':'📍 Publish to Map','chiri.comment_ph':'One-line comment (optional)','chiri.already_pub':'Published','chiri.already_pub_toast':'This menu is already published to Chiritsumo','chiri.all_published':'All menus of this store are already published','chiri.all_published_notice':'✓ All menus of this store are already on Chiritsumo. You can only add new menus.','chiri.map_published':'Published to Chiritsumo','chiri.map_publish_btn':'Publish to Chiritsumo',
+    'chiri.pub_modal_title':'📍 Publish to Chiritsumo','chiri.pub_reward':'+10 Chiri earned!','chiri.pub_reward_chip':'+10 Chiri','chiri.pub_sub':'Share savings info on the map and help the community','chiri.pub_store':'Store','chiri.pub_add_photo':'Add store photo (optional)','chiri.pub_pick_items':'Tap items to choose a category','chiri.pub_multi':'(multiple)','chiri.pub_items_label':'Items to publish','chiri.pub_comment_label':'💬 Comment about the store (optional)','chiri.pub_comment_ph':'Write a comment about the whole store, e.g. friendly service, nice atmosphere, crowded','chiri.pub_sel_count':'{n} selected','chiri.pub_pick_prompt':'Please select items','chiri.pub_item_comment_ph':'Write a comment about this menu (optional)','chiri.pub_uploading':'🔄 Uploading photo…','ct.cat.other':'🍽️ Other',
     'ctw.back':'← Back','ctw.title':'Write Post','ctw.submit':'Post',
     'ctw.category':'Category','ctw.post_title':'Title','ctw.title_ph':'Enter a title',
     'ctw.content':'Content','ctw.content_ph':'Share savings tips or experiences!',
@@ -14437,6 +14446,7 @@ var I18N = {
     'pay.credit':'💳 信用卡','pay.debit':'🏦 借记卡','pay.ic':'🚃 IC卡',
     'pay.cash2':'💴 现金','pay.qr2':'📱 扫码支付',
     'chiri.publish_title':'📍 公开到地图','chiri.publish_btn':'📍 公开到地图','chiri.comment_ph':'一句评论（可选）','chiri.already_pub':'已公开','chiri.already_pub_toast':'该菜单已公开到Chiritsumo','chiri.all_published':'该店铺的菜单已全部公开','chiri.all_published_notice':'✓ 该店铺的菜单已全部公开到Chiritsumo，仅可添加新菜单。','chiri.map_published':'已公开到Chiritsumo','chiri.map_publish_btn':'公开到Chiritsumo',
+    'chiri.pub_modal_title':'📍 公开到Chiritsumo','chiri.pub_reward':'+10 Chiri 已获得！','chiri.pub_reward_chip':'+10 Chiri','chiri.pub_sub':'公开省钱信息到地图，为社区做贡献','chiri.pub_store':'店铺','chiri.pub_add_photo':'添加店铺照片（可选）','chiri.pub_pick_items':'点击品项选择分类','chiri.pub_multi':'（可多选）','chiri.pub_items_label':'要公开的品项','chiri.pub_comment_label':'💬 关于店铺的评论（可选）','chiri.pub_comment_ph':'请写下对整间店的评论 例：服务周到、氛围好、拥挤等','chiri.pub_sel_count':'已选{n}项','chiri.pub_pick_prompt':'请选择品项','chiri.pub_item_comment_ph':'写下对这道菜的评论（可选）','chiri.pub_uploading':'🔄 正在上传照片…','ct.cat.other':'🍽️ 其他',
     'ctw.back':'← 返回','ctw.title':'写帖子','ctw.submit':'发布',
     'ctw.category':'类别','ctw.post_title':'标题','ctw.title_ph':'请输入标题',
     'ctw.content':'内容','ctw.content_ph':'分享省钱技巧或经验吧！',
@@ -29020,7 +29030,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 515;
+window.__APP_BUILD__ = 516;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
