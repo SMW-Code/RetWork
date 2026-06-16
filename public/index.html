@@ -2286,7 +2286,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="flex:1;min-width:0;">
         <div style="font-size:16px;font-weight:800;color:#fff;" id="sp-nickname-display">ユーザー</div>
         <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;" data-i18n="sp.free_plan">無料プラン</div>
-        <div style="font-size:13px;font-weight:900;color:#FFD54F;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.18);padding:2px 9px;border-radius:20px;"><span class="lico" data-lico="coin" data-size="13" data-color="#FFD54F"></span> <span id="sp-coin-balance">0</span> チリ</div>
+        <div style="font-size:13px;font-weight:900;color:#FFD54F;text-shadow:0 1px 3px rgba(0,0,0,.4);margin-top:5px;display:inline-flex;align-items:center;gap:4px;background:rgba(0,0,0,.18);padding:2px 9px;border-radius:20px;"><span class="lico" data-lico="coin" data-size="13" data-color="#FFD54F"></span> <span id="sp-coin-balance">0</span> <span data-i18n="unit.chiri">チリ</span></div>
       </div>
       <div class="sp-close" onclick="closeOv('ov-settings')"><span class="lico" data-lico="close" data-size="14" data-color="#fff"></span></div>
     </div>
@@ -2351,10 +2351,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
             <span class="si-lbl" data-i18n="settings.fontsize">文字サイズ</span>
           </div>
           <div id="font-scale-opts" style="display:flex;gap:6px;padding-left:22px;">
-            <button class="fs-opt" data-fs="0.9" onclick="applyFontScale('0.9')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">小</button>
-            <button class="fs-opt" data-fs="1" onclick="applyFontScale('1')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">標準</button>
-            <button class="fs-opt" data-fs="1.1" onclick="applyFontScale('1.1')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);">大</button>
-            <button class="fs-opt" data-fs="1.2" onclick="applyFontScale('1.2')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);">特大</button>
+            <button class="fs-opt" data-fs="0.9" onclick="applyFontScale('0.9')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="settings.fs_s">小</button>
+            <button class="fs-opt" data-fs="1" onclick="applyFontScale('1')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="settings.fs_m">標準</button>
+            <button class="fs-opt" data-fs="1.1" onclick="applyFontScale('1.1')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="settings.fs_l">大</button>
+            <button class="fs-opt" data-fs="1.2" onclick="applyFontScale('1.2')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="settings.fs_xl">特大</button>
           </div>
         </div>
         <!-- 푸시 알림 토글 (build 306) — 운영팀 쪽지 + 공지 알림 -->
@@ -2478,9 +2478,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="text-align:center;font-size:11px;color:var(--text-3);padding:12px 16px 24px;line-height:1.8;">
         RetWork <span class="app-version-text"></span> · © 2026<br>
-        <a href="/about.html" style="color:var(--text-3);text-decoration:underline;">サイトについて</a> ·
-        <a href="/privacy.html" style="color:var(--text-3);text-decoration:underline;">プライバシー</a> ·
-        <a href="/terms.html" style="color:var(--text-3);text-decoration:underline;">利用規約</a>
+        <a href="/about.html" style="color:var(--text-3);text-decoration:underline;" data-i18n="settings.about">サイトについて</a> ·
+        <a href="/privacy.html" style="color:var(--text-3);text-decoration:underline;" data-i18n="settings.privacy">プライバシー</a> ·
+        <a href="/terms.html" style="color:var(--text-3);text-decoration:underline;" data-i18n="settings.terms">利用規約</a>
       </div>
     </div>
   </div>
@@ -13466,6 +13466,7 @@ var I18N = {
     'share.making':'🖼 共有カードを作成中...','share.link_copied':'🔗 リンクをコピーしました！','share.img_saved':'🖼 カード画像を保存・リンクをコピー','share.copied':'📋 コピーしました！','share.menu_not_found':'メニュー情報が見つかりません',
     'draw.insufficient':'チリが不足しています','draw.max_entries':'参加可能回数を使い切りました','draw.closed':'応募期間外です','draw.fail':'応募に失敗しました','draw.complete':'🎫 応募完了！抽選をお楽しみに','toast.process_fail':'処理に失敗しました',
     'ref.done':'🎁 紹介が完了しました！紹介者にも報酬が入ります。','ref.no_reward':'受け取れる紹介報酬がありません','ref.cap':'本日の紹介報酬の上限（{cap}件）に達しました。明日また受け取れます','ref.cap_simple':'本日の紹介報酬の上限に達しました','ref.invite_fail':'招待リンクの作成に失敗しました',
+    'ref.captured':'🎁 紹介コードが適用されました。登録すると自動で報酬が支払われます。','ref.apply_fail':'紹介の適用に失敗しました: {msg}','ref.err_not_found':'紹介コードが見つかりません（{code}）','ref.err_self':'自分の紹介コードでは適用されません','ref.err_already':'すでに紹介が適用済みのアカウントです','ref.push_title':'🎁 紹介報酬が入りました！','ref.push_body':'{name} さんが登録しました · 広告を見て+200チリ受け取る','ref.link_copied':'🔗 招待リンクをコピーしました','common.guest':'ゲスト','settings.fontsize_done':'🔤 文字サイズを変更しました',
     'coin.daily_limit':'🚫 本日の獲得上限に達しました（{limit}回/日）','coin.cooldown':'⏳ {sec}秒後にもう一度お試しください',
     'ser.too_short':'内容をもう少し詳しく入力してください','ser.send_fail':'送信に失敗しました。しばらくして再度お試しください','ser.send_fail2':'送信に失敗しました',
     'prof.img_applied':'✅ 画像を適用しました！保存を押してください。','prof.img_upload_fail':'画像アップロード失敗: {msg}','prof.img_error':'画像処理エラー: {msg}','prof.saved':'✅ プロフィールを保存しました！',
@@ -13476,7 +13477,7 @@ var I18N = {
     'premium.title':'プレミアム アップグレード','premium.sub':'スキャン無制限 · 広告非表示','premium.unit':'/月',
     'plan.free':'無料プラン','plan.premium':'プレミアム',
     // 설정
-    'settings.dark':'ダークモード','settings.fontsize':'文字サイズ','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
+    'settings.dark':'ダークモード','settings.fontsize':'文字サイズ','settings.fs_s':'小','settings.fs_m':'標準','settings.fs_l':'大','settings.fs_xl':'特大','unit.chiri':'チリ','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
     'settings.lang':'言語','settings.currency':'通貨','settings.theme':'テーマカラー',
     'settings.week_start':'週の開始曜日','week.sun':'日曜日','week.mon':'月曜日',
     'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.gourmet_blog':'グルメブログ','settings.logout':'ログアウト',
@@ -13538,7 +13539,7 @@ var I18N = {
     'mp.title':'✏️ 手動でピンを追加','mp.location':'📍 ピン位置','mp.location.text':'🗺️ チズで選択した場所','mp.receipt_btn':'レシートで登録（自動入力）','mp.or_manual':'または手動で入力','mp.store_photo':'お店の写真（任意）','mp.add_photo':'写真を追加','mp.store_name':'お店の名前','mp.store_ph':'例：なか卯 四日市店','mp.menu_price':'メニュー＆価格','mp.add_menu':'＋ メニューを追加','mp.rating':'評価（任意）','mp.menu_name':'メニュー名','mp.menu_photo':'メニュー写真',
     // 온보딩
     'onb.pattern_title':'支出パターンを一目で','onb.pattern_desc':'カテゴリ別分析・カレンダー・レポートで<br>自分の消費習慣を簡単に把握し<br>予算をスマートに管理',
-    'onb.start':'支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。',
+    'onb.start':'支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。','onb.start_free':'無料で始める →','onb.next':'次へ',
     // 치리맵 헤더 / 모드
     'ct.map.sub':'レシートでつながる、街のおトクチズ',
     'ct.map.mode.public':'🌐 公開モード','ct.map.mode.private':'🔒 プライベート',
@@ -13778,6 +13779,7 @@ var I18N = {
     'share.making':'🖼 공유 카드 만드는 중...','share.link_copied':'🔗 링크를 복사했어요!','share.img_saved':'🖼 카드 이미지 저장 · 링크 복사됨','share.copied':'📋 복사했어요!','share.menu_not_found':'메뉴 정보를 찾을 수 없어요',
     'draw.insufficient':'치리가 부족해요','draw.max_entries':'참여 가능 횟수를 모두 사용했어요','draw.closed':'응모 기간이 아니에요','draw.fail':'응모에 실패했어요','draw.complete':'🎫 응모 완료! 추첨을 기대해주세요','toast.process_fail':'처리에 실패했어요',
     'ref.done':'🎁 추천이 완료됐어요! 추천해주신 분께 보상이 적립됩니다.','ref.no_reward':'받을 추천 보상이 없어요','ref.cap':'오늘 추천 보상 한도({cap}건)에 도달했어요. 내일 다시 받을 수 있어요','ref.cap_simple':'오늘 추천 보상 한도에 도달했어요','ref.invite_fail':'초대 링크 생성 실패',
+    'ref.captured':'🎁 추천 코드가 적용되었어요. 가입하면 자동으로 보상이 지급됩니다.','ref.apply_fail':'추천 적용 실패: {msg}','ref.err_not_found':'추천 코드를 찾을 수 없어요 ({code})','ref.err_self':'본인 추천 코드로는 적립되지 않아요','ref.err_already':'이미 추천이 적용된 계정이에요','ref.push_title':'🎁 추천 보상이 적립됐어요!','ref.push_body':'{name} 님이 가입했어요 · 광고 보고 +200 치리 받기','ref.link_copied':'🔗 초대 링크 복사됨','common.guest':'게스트','settings.fontsize_done':'🔤 글자 크기를 변경했어요',
     'coin.daily_limit':'🚫 오늘 적립 한도를 초과했어요 ({limit}회/일)','coin.cooldown':'⏳ {sec}초 후 다시 시도해주세요',
     'ser.too_short':'내용을 조금 더 자세히 적어주세요','ser.send_fail':'전송 실패. 잠시 후 다시 시도해주세요','ser.send_fail2':'전송 실패',
     'prof.img_applied':'✅ 이미지가 적용됐어요! 저장을 눌러주세요.','prof.img_upload_fail':'이미지 업로드 실패: {msg}','prof.img_error':'이미지 처리 에러: {msg}','prof.saved':'✅ 프로필이 저장됐어요!',
@@ -13787,7 +13789,7 @@ var I18N = {
     'pin.tap_set':'📍 지도를 탭해서 "{store}" 위치를 설정하세요','pin.saved':'✅ "{store}" 위치가 저장됐어요!','premium.coming':'🚀 프리미엄 구독 기능은 준비 중이에요!','date.past_warn':'⚠️ 영수증 날짜 {y}년 — 확인해 주세요','date.future_warn':'⚠️ 영수증 날짜 {y}년 (미래). 확인해 주세요',
     'premium.title':'프리미엄 업그레이드','premium.sub':'무제한 스캔 · 광고 제거','premium.unit':'/월',
     'plan.free':'무료 플랜','plan.premium':'프리미엄',
-    'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
+    'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.fs_s':'작게','settings.fs_m':'표준','settings.fs_l':'크게','settings.fs_xl':'아주 크게','unit.chiri':'치리','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
     'settings.lang':'언어','settings.currency':'통화','settings.theme':'테마 색상',
     'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일',
     'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.gourmet_blog':'그루메 블로그','settings.logout':'로그아웃',
@@ -13829,7 +13831,7 @@ var I18N = {
     'avatar.title':'아바타 편집','avatar.hint':'드래그로 위치 조정<br>슬라이더로 크기 조절','avatar.apply':'✅ 적용',
     'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치','mp.receipt_btn':'영수증으로 등록 (자동입력)','mp.or_manual':'또는 수동 입력','mp.store_photo':'가게 사진 (선택)','mp.add_photo':'사진 추가','mp.store_name':'가게 이름','mp.store_ph':'예: 나카우 욧카이치점','mp.menu_price':'메뉴 & 가격','mp.add_menu':'＋ 메뉴 추가','mp.rating':'평가 (선택)','mp.menu_name':'메뉴명','mp.menu_photo':'메뉴 사진',
     'onb.pattern_title':'지출 패턴을 한눈에','onb.pattern_desc':'카테고리별 분석 · 달력 · 리포트로<br>내 소비 습관을 쉽게 파악하고<br>예산을 스마트하게 관리해요.',
-    'onb.start':'지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.',
+    'onb.start':'지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.','onb.start_free':'무료로 시작하기 →','onb.next':'다음',
     'ct.map.sub':'영수증으로 이어지는, 동네의 알찬 지도',
     'ct.map.mode.public':'🌐 공개 모드','ct.map.mode.private':'🔒 프라이빗',
     'ct.map.search.placeholder':'🔍 가게명 · 메뉴 · 주소',
@@ -14040,6 +14042,7 @@ var I18N = {
     'share.making':'🖼 Creating share card...','share.link_copied':'🔗 Link copied!','share.img_saved':'🖼 Image saved · link copied','share.copied':'📋 Copied!','share.menu_not_found':'Menu not found',
     'draw.insufficient':'Not enough Chiri','draw.max_entries':'No entries left','draw.closed':'Entry period closed','draw.fail':'Entry failed','draw.complete':'🎫 Entry complete! Good luck','toast.process_fail':'Action failed',
     'ref.done':'🎁 Referral complete! Your referrer gets a reward too.','ref.no_reward':'No referral rewards to claim','ref.cap':'Daily referral reward limit ({cap}) reached. Try again tomorrow','ref.cap_simple':'Daily referral reward limit reached','ref.invite_fail':'Failed to create invite link',
+    'ref.captured':'🎁 Referral code applied. You will be rewarded automatically when you sign up.','ref.apply_fail':'Failed to apply referral: {msg}','ref.err_not_found':'Referral code not found ({code})','ref.err_self':'You cannot use your own referral code','ref.err_already':'This account already has a referral applied','ref.push_title':'🎁 You earned a referral reward!','ref.push_body':'{name} signed up · Watch an ad to get +200 Chiri','ref.link_copied':'🔗 Invite link copied','common.guest':'Guest','settings.fontsize_done':'🔤 Font size changed',
     'coin.daily_limit':'🚫 Daily earn limit reached ({limit}/day)','coin.cooldown':'⏳ Try again in {sec}s',
     'ser.too_short':'Please add a bit more detail','ser.send_fail':'Send failed. Please try again later','ser.send_fail2':'Send failed',
     'prof.img_applied':'✅ Image applied! Tap Save.','prof.img_upload_fail':'Image upload failed: {msg}','prof.img_error':'Image error: {msg}','prof.saved':'✅ Profile saved!',
@@ -14049,7 +14052,7 @@ var I18N = {
     'pin.tap_set':'📍 Tap the map to set "{store}" location','pin.saved':'✅ "{store}" location saved!','premium.coming':'🚀 Premium subscription is coming soon!','date.past_warn':'⚠️ Receipt date {y} — please check','date.future_warn':'⚠️ Receipt date {y} (future). Please check',
     'premium.title':'Premium Upgrade','premium.sub':'Unlimited scans · Ad-free','premium.unit':'/mo',
     'plan.free':'Free plan','plan.premium':'Premium',
-    'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
+    'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.fs_s':'Small','settings.fs_m':'Normal','settings.fs_l':'Large','settings.fs_xl':'X-Large','unit.chiri':'Chiri','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
     'settings.lang':'Language','settings.currency':'Currency','settings.theme':'Theme Color',
     'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday',
     'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.gourmet_blog':'Gourmet Blog','settings.logout':'Logout',
@@ -14091,7 +14094,7 @@ var I18N = {
     'avatar.title':'Edit Avatar','avatar.hint':'Drag to position<br>Slider to resize','avatar.apply':'✅ Apply',
     'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map','mp.receipt_btn':'Register via receipt (auto-fill)','mp.or_manual':'or enter manually','mp.store_photo':'Store photo (optional)','mp.add_photo':'Add photo','mp.store_name':'Store name','mp.store_ph':'e.g. Nakau Yokkaichi','mp.menu_price':'Menu & price','mp.add_menu':'＋ Add menu','mp.rating':'Rating (optional)','mp.menu_name':'Menu name','mp.menu_photo':'Menu photo',
     'onb.pattern_title':'See your spending at a glance','onb.pattern_desc':'Category analysis · Calendar · Reports<br>understand habits and<br>manage budget smartly.',
-    'onb.start':'Track expenses, understand habits.<br>Today’s receipt becomes tomorrow’s insight.',
+    'onb.start':'Track expenses, understand habits.<br>Today’s receipt becomes tomorrow’s insight.','onb.start_free':'Start free →','onb.next':'Next',
     'ct.map.sub':'A neighborhood map powered by receipts',
     'ct.map.mode.public':'🌐 Public','ct.map.mode.private':'🔒 Private',
     'ct.map.search.placeholder':'🔍 Store · Menu · Address',
@@ -14302,6 +14305,7 @@ var I18N = {
     'share.making':'🖼 正在生成分享卡...','share.link_copied':'🔗 已复制链接！','share.img_saved':'🖼 已保存图片·已复制链接','share.copied':'📋 已复制！','share.menu_not_found':'未找到菜单信息',
     'draw.insufficient':'Chiri不足','draw.max_entries':'参与次数已用完','draw.closed':'不在报名期内','draw.fail':'报名失败','draw.complete':'🎫 报名完成！敬请期待抽奖','toast.process_fail':'处理失败',
     'ref.done':'🎁 推荐完成！推荐人也会获得奖励。','ref.no_reward':'没有可领取的推荐奖励','ref.cap':'今日推荐奖励上限（{cap}）已达。明天可再领取','ref.cap_simple':'今日推荐奖励上限已达','ref.invite_fail':'邀请链接生成失败',
+    'ref.captured':'🎁 推荐码已应用。注册后将自动发放奖励。','ref.apply_fail':'推荐应用失败: {msg}','ref.err_not_found':'找不到推荐码（{code}）','ref.err_self':'不能使用自己的推荐码','ref.err_already':'该账号已应用过推荐','ref.push_title':'🎁 推荐奖励已到账！','ref.push_body':'{name} 已注册 · 看广告领+200 Chiri','ref.link_copied':'🔗 邀请链接已复制','common.guest':'访客','settings.fontsize_done':'🔤 已更改字体大小',
     'coin.daily_limit':'🚫 已达今日获取上限（{limit}次/日）','coin.cooldown':'⏳ 请{sec}秒后重试',
     'ser.too_short':'请再详细填写一些','ser.send_fail':'发送失败。请稍后重试','ser.send_fail2':'发送失败',
     'prof.img_applied':'✅ 已应用图片！请点击保存。','prof.img_upload_fail':'图片上传失败: {msg}','prof.img_error':'图片处理错误: {msg}','prof.saved':'✅ 个人资料已保存！',
@@ -14311,7 +14315,7 @@ var I18N = {
     'pin.tap_set':'📍 点击地图设置「{store}」位置','pin.saved':'✅ 已保存「{store}」位置！','premium.coming':'🚀 高级订阅功能即将推出！','date.past_warn':'⚠️ 收据日期 {y}年 — 请确认','date.future_warn':'⚠️ 收据日期 {y}年（未来）。请确认',
     'premium.title':'升级高级版','premium.sub':'无限扫描 · 无广告','premium.unit':'/月',
     'plan.free':'免费版','plan.premium':'高级版',
-    'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
+    'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.fs_s':'小','settings.fs_m':'标准','settings.fs_l':'大','settings.fs_xl':'特大','unit.chiri':'Chiri','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
     'settings.lang':'语言','settings.currency':'货币','settings.theme':'主题颜色',
     'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一',
     'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.gourmet_blog':'美食博客','settings.logout':'登出',
@@ -14353,7 +14357,7 @@ var I18N = {
     'avatar.title':'头像编辑','avatar.hint':'拖动调整位置<br>滑动调整尺寸','avatar.apply':'✅ 应用',
     'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置','mp.receipt_btn':'用小票登记（自动填充）','mp.or_manual':'或手动输入','mp.store_photo':'店铺照片（可选）','mp.add_photo':'添加照片','mp.store_name':'店铺名称','mp.store_ph':'例：餐厅名 分店','mp.menu_price':'菜单 & 价格','mp.add_menu':'＋ 添加菜单','mp.rating':'评价（可选）','mp.menu_name':'菜单名','mp.menu_photo':'菜单照片',
     'onb.pattern_title':'一眼看清消费习惯','onb.pattern_desc':'分类分析 · 日历 · 报表<br>轻松掌握消费习惯<br>智能管理预算',
-    'onb.start':'记录支出，掌握习惯。<br>今天的票据是明天的洞察。',
+    'onb.start':'记录支出，掌握习惯。<br>今天的票据是明天的洞察。','onb.start_free':'免费开始 →','onb.next':'下一步',
     'ct.map.sub':'用票据连接的，街区实惠地图',
     'ct.map.mode.public':'🌐 公开模式','ct.map.mode.private':'🔒 私密',
     'ct.map.search.placeholder':'🔍 店名 · 菜单 · 地址',
@@ -17990,7 +17994,7 @@ function updateOnbSlide(idx) {
   for (var i = 0; i < dots.length; i++) {
     dots[i].classList.toggle('active', i === idx);
   }
-  document.getElementById('onb-main-btn').textContent = idx === _onbTotal - 1 ? '무료로 시작하기 →' : '다음';
+  document.getElementById('onb-main-btn').textContent = idx === _onbTotal - 1 ? t('onb.start_free') : t('onb.next');
 }
 
 function onbNext() {
@@ -29046,7 +29050,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 521;
+window.__APP_BUILD__ = 522;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -29116,7 +29120,7 @@ if ('serviceWorker' in navigator) {
         _tries++;
         if (typeof showToast === 'function'){
           clearInterval(_toastTimer);
-          showToast('🎁 추천 코드가 적용되었어요. 가입하면 자동으로 보상이 지급됩니다.');
+          showToast(t('ref.captured'));
         } else if (_tries >= 25) {
           clearInterval(_toastTimer);
         }
@@ -29142,7 +29146,7 @@ window._redeemPendingRef = async function _redeemPendingRef(){
     if (res.error) {
       console.warn('[ref redeem] RPC error', res.error);
       // referral_v2.sql 미적용(함수/테이블 없음) 등 → 사용자에게도 표시(진단)
-      if (typeof showToast === 'function') showToast('추천 적용 실패: ' + (res.error.message || res.error.code || 'RPC 오류'));
+      if (typeof showToast === 'function') showToast(t('ref.apply_fail', {msg: (res.error.message || res.error.code || 'RPC')}));
       return;
     }
     var d = res.data || {};
@@ -29152,11 +29156,11 @@ window._redeemPendingRef = async function _redeemPendingRef(){
       if (typeof showToast === 'function') showToast(t('ref.done'));
       // build 316 — 추천자에게 푸시 알림 (친구 가입 알림)
       if (d.referrer) {
-        var myName = (document.getElementById('sp-nickname-display') || {}).textContent || 'ゲスト';
+        var myName = (document.getElementById('sp-nickname-display') || {}).textContent || t('common.guest');
         _sendSocialPush(
           d.referrer,
-          '🎁 추천 보상이 적립됐어요!',
-          myName + ' 님이 가입했어요 · 광고 보고 +200 치리 받기',
+          t('ref.push_title'),
+          t('ref.push_body', {name: myName}),
           { url: '/', tag: 'referral-' + d.referrer, priority: 'normal' }
         );
       }
@@ -29164,13 +29168,13 @@ window._redeemPendingRef = async function _redeemPendingRef(){
       // 재시도 무의미 → 정리 + 진단 토스트
       try{localStorage.removeItem('pending_ref');}catch(e){}
       if (typeof showToast === 'function') {
-        if (d.err === 'code_not_found')      showToast('추천 코드를 찾을 수 없어요 (' + code + ')');
-        else if (d.err === 'self_referral')  showToast('본인 추천 코드로는 적립되지 않아요');
-        else if (d.err === 'already_redeemed') showToast('이미 추천이 적용된 계정이에요');
+        if (d.err === 'code_not_found')      showToast(t('ref.err_not_found', {code: code}));
+        else if (d.err === 'self_referral')  showToast(t('ref.err_self'));
+        else if (d.err === 'already_redeemed') showToast(t('ref.err_already'));
       }
     } else if (d.err) {
       console.warn('[ref redeem] err', d.err);
-      if (typeof showToast === 'function') showToast('추천 적용 실패: ' + d.err);
+      if (typeof showToast === 'function') showToast(t('ref.apply_fail', {msg: d.err}));
     }
   } catch(e){ console.warn('[ref redeem]', e); }
 };
@@ -29286,7 +29290,7 @@ window.ctInviteShare = async function ctInviteShare(){
   if (navigator.share) {
     navigator.share({ text: text }).catch(function(){});
   } else {
-    if (typeof showToast==='function') showToast('🔗 초대 링크 복사됨');
+    if (typeof showToast==='function') showToast(t('ref.link_copied'));
   }
 };
 
@@ -29480,7 +29484,7 @@ function applyFontScale(scale, silent){
     b.style.color       = on ? '#fff' : 'var(--text-2)';
     b.style.borderColor = on ? 'var(--green)' : 'var(--border-mid)';
   });
-  if (!silent && typeof showToast === 'function') showToast('🔤 글자 크기를 변경했어요');
+  if (!silent && typeof showToast === 'function') showToast(t('settings.fontsize_done'));
 }
 // 저장된 글자크기 복원 (앱 시작 시)
 (function(){ try { applyFontScale(localStorage.getItem('riq_font_scale') || '1', true); } catch(e){} })();
