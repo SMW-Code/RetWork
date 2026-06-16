@@ -2794,8 +2794,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 가게명 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">お店の名前 <span style="color:var(--red);">*</span></div>
-      <input id="mp-store" type="text" placeholder="例：なか卯 四日市店" style="width:100%;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;"><span data-i18n="mp.store_name">お店の名前</span> <span style="color:var(--red);">*</span></div>
+      <input id="mp-store" type="text" placeholder="例：なか卯 四日市店" data-i18n-placeholder="mp.store_ph" style="width:100%;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
     </div>
     <!-- 가게 사진 -->
     <div style="margin-bottom:12px;">
@@ -2806,7 +2806,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 카테고리 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">カテゴリ</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;" data-i18n="ct.map.category">カテゴリ</div>
       <div id="mp-cat-display" onclick="toggleMpCat()" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;cursor:pointer;user-select:none;">
         <span id="mp-cat-label" style="font-size:13px;font-weight:700;color:var(--text-1);">🍽️ その他</span>
         <span id="mp-cat-arrow" style="font-size:11px;color:var(--text-3);">▼</span>
@@ -2815,14 +2815,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <!-- 메뉴 + 가격 -->
     <div style="margin-bottom:12px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;">メニュー & 価格 <span style="color:var(--red);">*</span></div>
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.3px;margin-bottom:6px;"><span data-i18n="mp.menu_price">メニュー & 価格</span> <span style="color:var(--red);">*</span></div>
       <div id="mp-items-list"></div>
-      <button onclick="addMpItem()" style="width:100%;padding:9px;border-radius:10px;border:1.5px dashed var(--border-mid);background:transparent;color:var(--text-3);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:6px;">＋ メニューを追加</button>
+      <button onclick="addMpItem()" style="width:100%;padding:9px;border-radius:10px;border:1.5px dashed var(--border-mid);background:transparent;color:var(--text-3);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);margin-top:6px;" data-i18n="mp.add_menu">＋ メニューを追加</button>
     </div>
     <!-- 별점 + 코멘트 -->
     <div style="background:var(--surface);border:1.5px solid var(--border);border-radius:14px;margin-bottom:14px;overflow:hidden;">
       <div style="padding:10px 14px 8px;border-bottom:0.5px solid var(--border);">
-        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;">評価（任意）</div>
+        <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;" data-i18n="mp.rating">評価（任意）</div>
         <div id="mp-star-row" style="display:flex;gap:4px;">
           <span onclick="mpSelectStar(1)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
           <span onclick="mpSelectStar(2)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
@@ -2831,14 +2831,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <span onclick="mpSelectStar(5)" style="font-size:26px;cursor:pointer;color:#ddd;line-height:1;transition:color .1s;">☆</span>
         </div>
       </div>
-      <textarea id="mp-comment" placeholder="一言コメント（任意）" style="width:100%;border:none;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:60px;box-sizing:border-box;outline:none;display:block;"></textarea>
+      <textarea id="mp-comment" placeholder="一言コメント（任意）" data-i18n-placeholder="chiri.comment_ph" style="width:100%;border:none;padding:10px 14px;font-size:13px;font-family:var(--font);color:var(--text-1);background:transparent;resize:none;height:60px;box-sizing:border-box;outline:none;display:block;"></textarea>
     </div>
     <!-- 공개 버튼 -->
     <button onclick="submitManualPin()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">
-      <span>📍 チズに公開する</span>
-      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
+      <span data-i18n="chiri.publish_btn">📍 チズに公開する</span>
+      <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;" data-i18n="chiri.pub_reward_chip">+10チリ</span>
     </button>
-    <div onclick="closeOv('ov-manual-pin')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;">キャンセル</div>
+    <div onclick="closeOv('ov-manual-pin')" style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;padding:8px;" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -13535,7 +13535,7 @@ var I18N = {
     // 아바타
     'avatar.title':'アバター編集','avatar.hint':'ドラッグで位置調整<br>スライダーでサイズ調整','avatar.apply':'✅ 適用',
     // 수동 핀
-    'mp.title':'✏️ 手動でピンを追加','mp.location':'📍 ピン位置','mp.location.text':'🗺️ チズで選択した場所','mp.receipt_btn':'レシートで登録（自動入力）','mp.or_manual':'または手動で入力','mp.store_photo':'お店の写真（任意）','mp.add_photo':'写真を追加',
+    'mp.title':'✏️ 手動でピンを追加','mp.location':'📍 ピン位置','mp.location.text':'🗺️ チズで選択した場所','mp.receipt_btn':'レシートで登録（自動入力）','mp.or_manual':'または手動で入力','mp.store_photo':'お店の写真（任意）','mp.add_photo':'写真を追加','mp.store_name':'お店の名前','mp.store_ph':'例：なか卯 四日市店','mp.menu_price':'メニュー＆価格','mp.add_menu':'＋ メニューを追加','mp.rating':'評価（任意）','mp.menu_name':'メニュー名','mp.menu_photo':'メニュー写真',
     // 온보딩
     'onb.pattern_title':'支出パターンを一目で','onb.pattern_desc':'カテゴリ別分析・カレンダー・レポートで<br>自分の消費習慣を簡単に把握し<br>予算をスマートに管理',
     'onb.start':'支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。',
@@ -13825,7 +13825,7 @@ var I18N = {
     'cal.title':'달력','cal.sub':'날짜별 지출 확인','cal.month_summary':'이달 요약','cal.month_total':'총 지출',
     'edit.title':'영수증 편집','edit.store':'가게명 / 지출처','edit.date':'날짜','edit.amount':'금액','edit.memo':'메모','edit.category':'카테고리',
     'avatar.title':'아바타 편집','avatar.hint':'드래그로 위치 조정<br>슬라이더로 크기 조절','avatar.apply':'✅ 적용',
-    'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치','mp.receipt_btn':'영수증으로 등록 (자동입력)','mp.or_manual':'또는 수동 입력','mp.store_photo':'가게 사진 (선택)','mp.add_photo':'사진 추가',
+    'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치','mp.receipt_btn':'영수증으로 등록 (자동입력)','mp.or_manual':'또는 수동 입력','mp.store_photo':'가게 사진 (선택)','mp.add_photo':'사진 추가','mp.store_name':'가게 이름','mp.store_ph':'예: 나카우 욧카이치점','mp.menu_price':'메뉴 & 가격','mp.add_menu':'＋ 메뉴 추가','mp.rating':'평가 (선택)','mp.menu_name':'메뉴명','mp.menu_photo':'메뉴 사진',
     'onb.pattern_title':'지출 패턴을 한눈에','onb.pattern_desc':'카테고리별 분석 · 달력 · 리포트로<br>내 소비 습관을 쉽게 파악하고<br>예산을 스마트하게 관리해요.',
     'onb.start':'지출을 기록하고, 소비 습관을 파악하세요.<br>오늘의 영수증이 내일의 인사이트가 됩니다.',
     'ct.map.sub':'영수증으로 이어지는, 동네의 알찬 지도',
@@ -14085,7 +14085,7 @@ var I18N = {
     'cal.title':'Calendar','cal.sub':'Spend by date','cal.month_summary':"Month Summary",'cal.month_total':'Total',
     'edit.title':'Edit Receipt','edit.store':'Store / Payee','edit.date':'Date','edit.amount':'Amount','edit.memo':'Memo','edit.category':'Category',
     'avatar.title':'Edit Avatar','avatar.hint':'Drag to position<br>Slider to resize','avatar.apply':'✅ Apply',
-    'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map','mp.receipt_btn':'Register via receipt (auto-fill)','mp.or_manual':'or enter manually','mp.store_photo':'Store photo (optional)','mp.add_photo':'Add photo',
+    'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map','mp.receipt_btn':'Register via receipt (auto-fill)','mp.or_manual':'or enter manually','mp.store_photo':'Store photo (optional)','mp.add_photo':'Add photo','mp.store_name':'Store name','mp.store_ph':'e.g. Nakau Yokkaichi','mp.menu_price':'Menu & price','mp.add_menu':'＋ Add menu','mp.rating':'Rating (optional)','mp.menu_name':'Menu name','mp.menu_photo':'Menu photo',
     'onb.pattern_title':'See your spending at a glance','onb.pattern_desc':'Category analysis · Calendar · Reports<br>understand habits and<br>manage budget smartly.',
     'onb.start':'Track expenses, understand habits.<br>Today’s receipt becomes tomorrow’s insight.',
     'ct.map.sub':'A neighborhood map powered by receipts',
@@ -14345,7 +14345,7 @@ var I18N = {
     'cal.title':'日历','cal.sub':'按日期查看支出','cal.month_summary':'本月总结','cal.month_total':'总支出',
     'edit.title':'编辑票据','edit.store':'店名 / 支出对象','edit.date':'日期','edit.amount':'金额','edit.memo':'备注','edit.category':'类别',
     'avatar.title':'头像编辑','avatar.hint':'拖动调整位置<br>滑动调整尺寸','avatar.apply':'✅ 应用',
-    'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置','mp.receipt_btn':'用小票登记（自动填充）','mp.or_manual':'或手动输入','mp.store_photo':'店铺照片（可选）','mp.add_photo':'添加照片',
+    'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置','mp.receipt_btn':'用小票登记（自动填充）','mp.or_manual':'或手动输入','mp.store_photo':'店铺照片（可选）','mp.add_photo':'添加照片','mp.store_name':'店铺名称','mp.store_ph':'例：餐厅名 分店','mp.menu_price':'菜单 & 价格','mp.add_menu':'＋ 添加菜单','mp.rating':'评价（可选）','mp.menu_name':'菜单名','mp.menu_photo':'菜单照片',
     'onb.pattern_title':'一眼看清消费习惯','onb.pattern_desc':'分类分析 · 日历 · 报表<br>轻松掌握消费习惯<br>智能管理预算',
     'onb.start':'记录支出，掌握习惯。<br>今天的票据是明天的洞察。',
     'ct.map.sub':'用票据连接的，街区实惠地图',
@@ -16070,13 +16070,13 @@ function openManualPinModal() {
   var catLabel = document.getElementById('mp-cat-label');
   var catArrow = document.getElementById('mp-cat-arrow');
   var catAcc   = document.getElementById('mp-cat-accordion');
-  if (catLabel) catLabel.textContent = '🍽️ その他';
+  if (catLabel) catLabel.textContent = t('ct.cat.other');
   if (catArrow) catArrow.textContent = '▼';
   if (catAcc) {
     catAcc.style.display = 'none';
     catAcc.innerHTML = CT_PUB_CATS.map(function(cat) {
       var a = cat.key === _mpCategory;
-      return '<button onclick="selectMpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(a?'var(--gold)':'var(--border-mid)')+';background:'+(a?'var(--gold)':'var(--surface)')+';color:'+(a?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + cat.label + '</button>';
+      return '<button data-cat="' + cat.key + '" onclick="selectMpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(a?'var(--gold)':'var(--border-mid)')+';background:'+(a?'var(--gold)':'var(--surface)')+';color:'+(a?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + _esc(_cpCatLabel(cat.key)) + '</button>';
     }).join('');
   }
 
@@ -16086,7 +16086,7 @@ function openManualPinModal() {
   if (commentEl) commentEl.value = '';
 
   var locEl = document.getElementById('mp-location-text');
-  if (locEl) locEl.textContent = '🗺️ チズで選択した場所';
+  if (locEl) locEl.textContent = t('mp.location.text');
 
   renderMpItems();
   openOv('ov-manual-pin');
@@ -16097,10 +16097,10 @@ function renderMpItems() {
   if (!el) return;
   el.innerHTML = _mpItems.map(function(it, i) {
     var photoBtn = it.photoUrl
-      ? '<div onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border-radius:8px;background:url(\''+String(it.photoUrl).replace(/\x27/g,'%27')+'\') center/cover;cursor:pointer;flex-shrink:0;border:1.5px solid var(--gold);"></div>'
-      : '<button onclick="mpPickItemPhoto('+i+')" title="メニュー写真" style="width:34px;height:34px;border:1.5px dashed var(--border-mid);background:var(--bg);border-radius:8px;color:var(--text-3);cursor:pointer;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></button>';
+      ? '<div onclick="mpPickItemPhoto('+i+')" title="'+t('mp.menu_photo')+'" style="width:34px;height:34px;border-radius:8px;background:url(\''+String(it.photoUrl).replace(/\x27/g,'%27')+'\') center/cover;cursor:pointer;flex-shrink:0;border:1.5px solid var(--gold);"></div>'
+      : '<button onclick="mpPickItemPhoto('+i+')" title="'+t('mp.menu_photo')+'" style="width:34px;height:34px;border:1.5px dashed var(--border-mid);background:var(--bg);border-radius:8px;color:var(--text-3);cursor:pointer;flex-shrink:0;padding:0;display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg></button>';
     return '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">'
-      + '<input value="' + (it.name||'') + '" oninput="_mpItems['+i+'].name=this.value" placeholder="メニュー名" style="flex:1;min-width:0;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
+      + '<input value="' + (it.name||'') + '" oninput="_mpItems['+i+'].name=this.value" placeholder="'+t('mp.menu_name')+'" style="flex:1;min-width:0;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 11px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
       + '<input value="' + (it.price||'') + '" oninput="_mpItems['+i+'].price=this.value" type="number" placeholder="¥" style="width:64px;border:1.5px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:13px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);">'
       + photoBtn
       + (_mpItems.length > 1 ? '<button onclick="removeMpItem('+i+')" style="width:30px;height:30px;border:none;background:var(--bg);border-radius:8px;color:var(--text-3);font-size:15px;cursor:pointer;flex-shrink:0;padding:0;">✕</button>' : '')
@@ -16164,11 +16164,11 @@ function selectMpCat(key) {
   _mpCategory = key;
   var cat = CT_PUB_CATS.find(function(c){ return c.key === key; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
   var label = document.getElementById('mp-cat-label');
-  if (label) label.innerHTML = cat.icon + ' ' + _esc(cat.label);
+  if (label) label.innerHTML = cat.icon + ' ' + _esc(_cpCatLabel(cat.key));
   var acc = document.getElementById('mp-cat-accordion');
   if (acc) {
     acc.querySelectorAll('button').forEach(function(btn) {
-      var a = btn.textContent.trim() === cat.icon + ' ' + cat.label;
+      var a = btn.dataset.cat === key;
       btn.style.background = a ? 'var(--gold)' : 'var(--surface)';
       btn.style.color = a ? '#fff' : 'var(--text-2)';
       btn.style.borderColor = a ? 'var(--gold)' : 'var(--border-mid)';
@@ -29038,7 +29038,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 518;
+window.__APP_BUILD__ = 519;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
