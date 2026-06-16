@@ -8183,53 +8183,90 @@ function renderRadar() {
    홈 렌더링
 ══════════════════════════════ */
 // ══════════════════════════════════════════════════════════════════════════
-// 節約チャンス分析 — 내 영수증 이력(DB)에서 "같은 상품을 여러 마트에서 산 단가 차이"
-//   를 찾아 실제 월 절약 가능액을 계산. 더미 아님. RLS-safe(내 데이터만).
-//   상품키 = 정규화(NFKC+공백제거)한 품목명. 단가 = item.price(라인합계)/qty.
-//   2곳 이상 마트에서 산 상품만, '내 평균단가 − 최저마트 평균단가' × 월구매수량.
-// ══════════════════════════════════════════════════════════════════════════
-function _computeSavings(){
+// 節約チャンス分析 (Phase 2, b499) — 커뮤니티 위치기반 실분석.
+//   ① 내 구매(로컬 DB, 최근3개월) → 상품별 내 평균단가·월구매수량
+//   ② 상품을 products_master(product_id)로 정규화 → 공개 product_prices 조회
+//   ③ 내 위치(_ctUserPos) 반경 5km 내 '같은 상품 최저가'(타 유저 가게 포함) 찾기
+//   ④ 절약 = (내 평균단가 − 근처 최저가) × 월구매수량.  데이터 없으면 내-이력(2+가게) 폴백.
+//   RLS: product_prices 는 전체공개(가격만, 익명집계). 60초 캐시.
+async function _computeSavings(){
+  if (window._savingData && window._savingCacheAt && (Date.now() - window._savingCacheAt < 60000)) return window._savingData;
+  var EMPTY = { items:[], totalMonthly:0, annual:0 };
+  // ① 내 구매 집계
   var prod = {};
-  var cutoff = new Date(); cutoff.setMonth(cutoff.getMonth()-3);  // 최근 3개월
+  var cutoff = new Date(); cutoff.setMonth(cutoff.getMonth()-3);
   (DB||[]).forEach(function(r){
     if (!r || !r.items || !r.store) return;
     if (r.date && new Date(r.date) < cutoff) return;
     var mkey = (r.date||'').slice(0,7);
     r.items.forEach(function(it){
       if (!it || !it.name || !it.price) return;
-      var q = it.qty || 1;
-      var unit = it.price / q;
+      var q = it.qty || 1, unit = it.price / q;
       if (!(unit > 0)) return;
       var key = String(it.name).replace(/\s+/g,'').normalize('NFKC').toLowerCase();
       if (key.length < 2) return;
       var p = prod[key] || (prod[key] = { name: it.name, byStore:{}, totalQty:0, paidSum:0, paidCnt:0, months:{} });
       var s = p.byStore[r.store] || (p.byStore[r.store] = { sum:0, cnt:0 });
-      s.sum += unit; s.cnt += 1;
-      p.totalQty += q; p.paidSum += unit*q; p.paidCnt += q;
+      s.sum += unit; s.cnt += 1; p.totalQty += q; p.paidSum += unit*q; p.paidCnt += q;
       if (mkey) p.months[mkey] = 1;
     });
   });
+  var keys = Object.keys(prod);
+  if (!keys.length) { window._savingData = EMPTY; window._savingCacheAt = Date.now(); return EMPTY; }
+  keys.forEach(function(k){ var p=prod[k]; p.paidAvg = p.paidSum/p.paidCnt; p.monthlyQty = p.totalQty / Math.max(1, Object.keys(p.months).length); });
+  // 잠재 절약 큰 순 상위 20개만 정규화/조회 (쿼리 절약)
+  keys.sort(function(a,b){ return (prod[b].paidAvg*prod[b].monthlyQty) - (prod[a].paidAvg*prod[a].monthlyQty); });
+  var cand = keys.slice(0, 20);
+  // ② product_id 정규화
+  var pidByKey = {};
+  for (var ci=0; ci<cand.length; ci++){
+    var k = cand[ci];
+    try { var pid = await _matchOrCreateProduct(prod[k].name, Object.keys(prod[k].byStore)[0]); if (pid) pidByKey[k] = pid; } catch(e){}
+  }
+  // ③ product_prices 조회 (공개)
+  var rowsByPid = {};
+  var pids = []; for (var kk in pidByKey){ if (pids.indexOf(pidByKey[kk])<0) pids.push(pidByKey[kk]); }
+  if (pids.length && _sb){
+    try {
+      var res = await _sb.from('product_prices').select('product_id,store_name,price,lat,lng').in('product_id', pids);
+      (res.data||[]).forEach(function(row){ (rowsByPid[row.product_id] = rowsByPid[row.product_id]||[]).push(row); });
+    } catch(e){ console.warn('[ppx query]', e.message||e); }
+  }
+  // ④ 절약 계산
+  var myPos = _ctUserPos, RMETER = 5000;
   var results = [];
-  Object.keys(prod).forEach(function(key){
-    var p = prod[key];
-    var stores = Object.keys(p.byStore);
-    if (stores.length < 2) return;                 // 2개 이상 마트에서 산 것만
-    var storeAvgs = stores.map(function(sn){ return { store:sn, price: p.byStore[sn].sum / p.byStore[sn].cnt }; });
-    storeAvgs.sort(function(a,b){ return a.price - b.price; });
-    var minA = storeAvgs[0].price;
-    var paidAvg = p.paidSum / p.paidCnt;
-    var diff = paidAvg - minA;                      // 내 평균 − 최저마트 평균
-    if (diff < 10) return;                          // ¥10 미만 차이는 무시
-    var monthsSpan = Math.max(1, Object.keys(p.months).length);
-    var monthlyQty = p.totalQty / monthsSpan;
-    var monthlySaving = Math.round(diff * monthlyQty);
-    if (monthlySaving < 30) return;                 // 너무 작은 절약 제외(노이즈)
+  cand.forEach(function(k){
+    var p = prod[k], pid = pidByKey[k];
+    var crows = pid ? (rowsByPid[pid]||[]) : [];
+    var near = crows.filter(function(c){
+      if (myPos && c.lat!=null && c.lng!=null) return _calcDistanceM(myPos.lat, myPos.lng, c.lat, c.lng) <= RMETER;
+      return true;   // 내 위치/좌표 없으면 전체 비교
+    });
+    var cheapStore=null, cheapPrice=null;
+    if (near.length){
+      var mn = near.reduce(function(m,c){ return c.price < m.price ? c : m; }, near[0]);
+      cheapStore = mn.store_name; cheapPrice = mn.price;
+    } else {
+      // 폴백: 내 로컬 이력 2+가게 최저 (커뮤니티 데이터 없을 때)
+      var st = Object.keys(p.byStore);
+      if (st.length >= 2){
+        var sa = st.map(function(sn){ return { store:sn, price:p.byStore[sn].sum/p.byStore[sn].cnt }; }).sort(function(a,b){ return a.price-b.price; });
+        cheapStore = sa[0].store; cheapPrice = sa[0].price;
+      }
+    }
+    if (cheapStore == null) return;
+    var diff = p.paidAvg - cheapPrice;
+    if (diff < 10) return;
+    var monthlySaving = Math.round(diff * p.monthlyQty);
+    if (monthlySaving < 30) return;
     results.push({
       name: p.name,
-      stores: storeAvgs.map(function(x,i){ return { store:x.store, price:Math.round(x.price), cheapest:i===0 }; }),
-      paidAvg: Math.round(paidAvg),
+      stores: [
+        { store: t('saving.you'), price: Math.round(p.paidAvg), cheapest:false },
+        { store: cheapStore, price: Math.round(cheapPrice), cheapest:true }
+      ],
       perUnitSaving: Math.round(diff),
-      monthlyQty: Math.round(monthlyQty*10)/10,
+      monthlyQty: Math.round(p.monthlyQty*10)/10,
       monthlySaving: monthlySaving
     });
   });
@@ -8237,28 +8274,32 @@ function _computeSavings(){
   results = results.slice(0, 5);
   var totalMonthly = results.reduce(function(a,r){ return a + r.monthlySaving; }, 0);
   window._savingData = { items: results, totalMonthly: totalMonthly, annual: totalMonthly*12 };
+  window._savingCacheAt = Date.now();
   return window._savingData;
 }
-function _updateSavingBanner(){
+async function _updateSavingBanner(){
   var banner = document.getElementById('home-saving-banner');
   if (!banner) return;
-  var data = _computeSavings();
-  if (data.totalMonthly > 0) {
-    banner.style.display = '';
-    var sub = document.getElementById('home-saving-sub');
-    if (sub) sub.textContent = t('home.saving_sub', { n: data.items.length, amt: data.totalMonthly.toLocaleString() });
-  } else {
-    banner.style.display = 'none';
-  }
+  try {
+    var data = await _computeSavings();
+    if (data.totalMonthly > 0) {
+      banner.style.display = '';
+      var sub = document.getElementById('home-saving-sub');
+      if (sub) sub.textContent = t('home.saving_sub', { n: data.items.length, amt: data.totalMonthly.toLocaleString() });
+    } else { banner.style.display = 'none'; }
+  } catch(e){ banner.style.display = 'none'; }
 }
 function openSavingAnalysis(){
-  renderSavingAnalysis();
+  var _el = document.getElementById('saving-content');
+  if (_el) _el.innerHTML = '<div style="text-align:center;padding:40px 16px;color:var(--text-3);font-size:12px;">'+t('common.loading')+'</div>';
   openOv('ov-saving');
+  renderSavingAnalysis();
 }
-function renderSavingAnalysis(){
+async function renderSavingAnalysis(){
   var el = document.getElementById('saving-content');
   if (!el) return;
-  var data = window._savingData || _computeSavings();
+  var data;
+  try { data = await _computeSavings(); } catch(e){ data = { items:[], totalMonthly:0, annual:0 }; }
   if (!data.items.length) {
     el.innerHTML = '<div style="text-align:center;padding:36px 16px;color:var(--text-3);">'
       + '<div style="font-size:40px;margin-bottom:10px;opacity:.5;">🔍</div>'
@@ -13337,7 +13378,7 @@ var I18N = {
     'multi.next.camera':'次の1枚（カメラ）','multi.next.gallery':'次の1枚（ギャラリー）',
     'multi.analyze':'🔍 AIで結合して分析','multi.hint':'最少 2枚 · 最大 5枚まで対応',
     // 절약 모달
-    'saving.title':'💡 節約チャンス分析','saving.sub':'マイレシート分析','saving.based_on':'{n}商品を分析','saving.per_month':'/月','saving.buy_basis':'月{n}回購入ペース','saving.empty_title':'まだ分析できる十分なデータがありません','saving.empty_sub':'同じ商品を2つ以上のお店で購入すると、最安店との差額を自動で分析します。レシートをためてみましょう。','home.saving_sub':'{n}商品をお店を変えるだけで月¥{amt}節約可能',
+    'saving.title':'💡 節約チャンス分析','saving.sub':'マイレシート分析','saving.based_on':'{n}商品を分析','saving.you':'あなた','saving.per_month':'/月','saving.buy_basis':'月{n}回購入ペース','saving.empty_title':'まだ分析できる十分なデータがありません','saving.empty_sub':'同じ商品を2つ以上のお店で購入すると、最安店との差額を自動で分析します。レシートをためてみましょう。','home.saving_sub':'{n}商品をお店を変えるだけで月¥{amt}節約可能',
     'saving.based':'月12回購入基準','saving.total':'合計節約見込み額','saving.annual':'年間節約見込み額','saving.cheap':'安い',
     // 이달 요약
     'mdet.month_total':'今月の総支出','mdet.count':'件','mdet.title':'月別支出詳細',
@@ -13621,7 +13662,7 @@ var I18N = {
     'multi.title':'📜 긴 영수증 분할 촬영','multi.sub':'위쪽부터 순서대로 찍어주세요',
     'multi.next.camera':'다음 장 촬영 (카메라)','multi.next.gallery':'다음 장 갤러리',
     'multi.analyze':'🔍 AI로 합쳐서 분석하기','multi.hint':'최소 2장 · 최대 5장까지 지원',
-    'saving.title':'💡 절약 기회 분석','saving.sub':'내 영수증 기반','saving.based_on':'{n}개 상품 분석','saving.per_month':'/월','saving.buy_basis':'월 {n}회 구매 페이스','saving.empty_title':'아직 분석할 데이터가 부족해요','saving.empty_sub':'같은 상품을 2곳 이상 마트에서 사면, 최저가 마트와의 차액을 자동 분석해요. 영수증을 모아보세요.','home.saving_sub':'{n}개 상품 마트만 바꿔도 월 ¥{amt} 절약 가능',
+    'saving.title':'💡 절약 기회 분석','saving.sub':'내 영수증 기반','saving.based_on':'{n}개 상품 분석','saving.you':'내 구매','saving.per_month':'/월','saving.buy_basis':'월 {n}회 구매 페이스','saving.empty_title':'아직 분석할 데이터가 부족해요','saving.empty_sub':'같은 상품을 2곳 이상 마트에서 사면, 최저가 마트와의 차액을 자동 분석해요. 영수증을 모아보세요.','home.saving_sub':'{n}개 상품 마트만 바꿔도 월 ¥{amt} 절약 가능',
     'saving.based':'매달 12회 구매 기준','saving.total':'합계 절약 예상액','saving.annual':'연간 절약 가능','saving.cheap':'저렴',
     'mdet.month_total':'이달 총 지출','mdet.count':'건','mdet.title':'월별 지출 상세',
     'budget.title':'🎯 이달 예산 설정','budget.sub':'목표 지출 금액을 입력하세요','budget.amount':'예산 금액 (¥)','budget.clear':'예산 해제',
@@ -13867,7 +13908,7 @@ var I18N = {
     'multi.title':'📜 Long Receipt Multi-shot','multi.sub':'Shoot from top to bottom',
     'multi.next.camera':'Next shot (Camera)','multi.next.gallery':'Next shot (Gallery)',
     'multi.analyze':'🔍 Merge & analyze with AI','multi.hint':'Min 2 · Max 5 shots',
-    'saving.title':'💡 Savings Opportunity','saving.sub':'Based on your receipts','saving.based_on':'{n} items analyzed','saving.per_month':'/mo','saving.buy_basis':'~{n}×/mo pace','saving.empty_title':'Not enough data yet','saving.empty_sub':'Buy the same item at 2+ stores and we’ll auto-analyze the gap vs. the cheapest store. Keep scanning receipts.','home.saving_sub':'Switch stores for {n} items, save ¥{amt}/mo',
+    'saving.title':'💡 Savings Opportunity','saving.sub':'Based on your receipts','saving.based_on':'{n} items analyzed','saving.you':'You','saving.per_month':'/mo','saving.buy_basis':'~{n}×/mo pace','saving.empty_title':'Not enough data yet','saving.empty_sub':'Buy the same item at 2+ stores and we’ll auto-analyze the gap vs. the cheapest store. Keep scanning receipts.','home.saving_sub':'Switch stores for {n} items, save ¥{amt}/mo',
     'saving.based':'Based on 12 purchases/mo','saving.total':'Total Estimated Savings','saving.annual':'Annual savings','saving.cheap':'cheaper',
     'mdet.month_total':"This month's total",'mdet.count':'records','mdet.title':'Monthly Detail',
     'budget.title':'🎯 Monthly Budget','budget.sub':'Enter target amount','budget.amount':'Budget (¥)','budget.clear':'Clear budget',
@@ -14113,7 +14154,7 @@ var I18N = {
     'multi.title':'📜 长票据分段拍摄','multi.sub':'请从上往下依次拍摄',
     'multi.next.camera':'下一张（拍照）','multi.next.gallery':'下一张（相册）',
     'multi.analyze':'🔍 用AI合并分析','multi.hint':'至少2张 · 最多5张',
-    'saving.title':'💡 省钱机会分析','saving.sub':'基于我的票据','saving.based_on':'分析{n}件商品','saving.per_month':'/月','saving.buy_basis':'每月约{n}次','saving.empty_title':'数据还不够','saving.empty_sub':'在2家以上店铺购买相同商品后，自动分析与最低价店的差额。多积累票据试试。','home.saving_sub':'{n}件商品换家超市，每月省¥{amt}',
+    'saving.title':'💡 省钱机会分析','saving.sub':'基于我的票据','saving.based_on':'分析{n}件商品','saving.you':'你','saving.per_month':'/月','saving.buy_basis':'每月约{n}次','saving.empty_title':'数据还不够','saving.empty_sub':'在2家以上店铺购买相同商品后，自动分析与最低价店的差额。多积累票据试试。','home.saving_sub':'{n}件商品换家超市，每月省¥{amt}',
     'saving.based':'每月12次购买基准','saving.total':'合计预计节省','saving.annual':'每年节省','saving.cheap':'便宜',
     'mdet.month_total':'本月总支出','mdet.count':'笔','mdet.title':'月支出明细',
     'budget.title':'🎯 本月预算设置','budget.sub':'请输入目标支出额','budget.amount':'预算 (¥)','budget.clear':'清除预算',
@@ -28740,7 +28781,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 498;
+window.__APP_BUILD__ = 499;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
