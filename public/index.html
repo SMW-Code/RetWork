@@ -4741,7 +4741,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         style="width:120px;border:none;background:transparent;font-size:18px;font-weight:800;color:var(--green);text-align:right;outline:none;font-family:var(--font);">
     </div>
 
-    <button class="save-btn" onclick="saveManualEntry()">💾 저장</button>
+    <button class="save-btn" onclick="saveManualEntry()" data-i18n="manual.save">💾 저장</button>
   </div>
 </div>
 
@@ -4866,7 +4866,7 @@ var _CAT_LABEL_KEYS = {
   cafe:'cat.cafe', shop:'cat.shop', ent:'cat.ent', tra:'cat.tra',
   travel:'cat.travel', fixed:'cat.fixed', hobby:'cat.hobby', other:'cat.other',
   beauty:'cat.beauty', drink:'cat.drink', edu:'cat.edu',
-  fuel:'cat.other', park:'cat.tra', snack:'cat.snack'
+  fuel:'cat.fuel', park:'cat.park', snack:'cat.snack'
 };
 var CAT_LABEL = (typeof Proxy === 'function')
   ? new Proxy(_CAT_LABEL_KEYS, {
@@ -4876,7 +4876,7 @@ var CAT_LABEL = (typeof Proxy === 'function')
       }
     })
   // Proxy 미지원 (legacy 브라우저) — 일본어 기본값 fallback
-  : { food:'食料品', eat:'食事', life:'生活雑貨', med:'医療・健康', cafe:'カフェ', shop:'ショッピング', ent:'娯楽', tra:'交通', travel:'旅行', fixed:'固定費', hobby:'趣味', other:'その他', beauty:'美容', drink:'飲み会', edu:'教育', fuel:'その他', park:'交通', snack:'お菓子' };
+  : { food:'食料品', eat:'食事', life:'生活雑貨', med:'医療・健康', cafe:'カフェ', shop:'ショッピング', ent:'娯楽', tra:'交通', travel:'旅行', fixed:'固定費', hobby:'趣味', other:'その他', beauty:'美容', drink:'飲み会', edu:'教育', fuel:'給油', park:'駐車', snack:'お菓子' };
 function _catLabel(c){ return CAT_LABEL[c] || ''; }
 
 // 지불 방법
@@ -8797,18 +8797,11 @@ function openManualEntry() {
   _manualItems = [];
   _manualCat   = 'other';
 
-  // 카테고리 칩 (수정 모달과 동일하게 단색 SVG 라인 아이콘)
-  var allCats = [
-    {k:'food',l:'식료품'},{k:'eat',l:'식사'},{k:'snack',l:'군것질·과자'},{k:'cafe',l:'카페'},
-    {k:'life',l:'생활'},{k:'med',l:'의약품'},{k:'shop',l:'쇼핑'},
-    {k:'ent',l:'오락'},{k:'tra',l:'교통'},{k:'travel',l:'여행'},
-    {k:'fixed',l:'고정비'},{k:'hobby',l:'취미'},{k:'beauty',l:'미용'},
-    {k:'drink',l:'술·유흥'},{k:'edu',l:'교육'},
-    {k:'fuel',l:'주유'},{k:'park',l:'주차'},{k:'other',l:'기타'}
-  ];
+  // 카테고리 칩 (수정 모달과 동일하게 단색 SVG 라인 아이콘) — 라벨은 CAT_LABEL 로 자동 번역
+  var allCats = ['food','eat','snack','cafe','life','med','shop','ent','tra','travel','fixed','hobby','beauty','drink','edu','fuel','park','other'];
   var html = '';
-  allCats.forEach(function(c){
-    html += '<div class="cat-chip-sel'+(c.k==='other'?' sel':'')+'" onclick="selectManualCat(this,\''+c.k+'\')" style="display:inline-flex;align-items:center;gap:4px;">'+CAT_ICON[c.k]+'<span>'+c.l+'</span></div>';
+  allCats.forEach(function(k){
+    html += '<div class="cat-chip-sel'+(k==='other'?' sel':'')+'" onclick="selectManualCat(this,\''+k+'\')" style="display:inline-flex;align-items:center;gap:4px;">'+CAT_ICON[k]+'<span>'+CAT_LABEL[k]+'</span></div>';
   });
   document.getElementById('manual-cat-select').innerHTML = html;
 
@@ -8834,9 +8827,9 @@ function renderManualItems() {
   var html = '';
   _manualItems.forEach(function(it, i) {
     html += '<div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">'
-      +'<input value="'+it.name.replace(/"/g,'&quot;')+'" onchange="_manualItems['+i+'].name=this.value" style="flex:2;border:1px solid var(--border-mid);border-radius:10px;padding:8px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);" placeholder="품목명">'
-      +'<input type="number" value="'+it.qty+'" onchange="_manualItems['+i+'].qty=Number(this.value)||1;updateManualTotal()" style="width:44px;border:1px solid var(--border-mid);border-radius:10px;padding:8px 6px;font-size:12px;font-family:var(--font);text-align:center;outline:none;background:var(--bg);" placeholder="수량">'
-      +'<input type="number" value="'+(it.price||'')+'" onchange="_manualItems['+i+'].price=Number(this.value)||0;updateManualTotal()" style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:8px 8px;font-size:12px;font-family:var(--font);outline:none;background:var(--bg);" placeholder="단가">'
+      +'<input value="'+it.name.replace(/"/g,'&quot;')+'" onchange="_manualItems['+i+'].name=this.value" style="flex:2;border:1px solid var(--border-mid);border-radius:10px;padding:8px 10px;font-size:12px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);" placeholder="'+t('manual.ph_name')+'">'
+      +'<input type="number" value="'+it.qty+'" onchange="_manualItems['+i+'].qty=Number(this.value)||1;updateManualTotal()" style="width:44px;border:1px solid var(--border-mid);border-radius:10px;padding:8px 6px;font-size:12px;font-family:var(--font);text-align:center;outline:none;background:var(--bg);" placeholder="'+t('manual.ph_qty')+'">'
+      +'<input type="number" value="'+(it.price||'')+'" onchange="_manualItems['+i+'].price=Number(this.value)||0;updateManualTotal()" style="flex:1;border:1px solid var(--border-mid);border-radius:10px;padding:8px 8px;font-size:12px;font-family:var(--font);outline:none;background:var(--bg);" placeholder="'+t('manual.ph_price')+'">'
       +'<div onclick="manualRemoveItem('+i+')" style="font-size:16px;color:var(--text-3);cursor:pointer;padding:4px;">✕</div>'
       +'</div>';
   });
@@ -13550,7 +13543,7 @@ var I18N = {
     'rmap.iw_visit':'訪問','rmap.iw_avg':'平均','rmap.view_detail':'📋 詳細を見る →','rmap.per_unit':'/個','rmap.no_items':'品目データなし','rmap.avg_per':'1回平均',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
     // 카테고리 라벨 (영수증 기록)
-    'cat.all':'すべて','cat.food':'食料品','cat.eat':'食事','cat.snack':'お菓子','cat.cafe':'カフェ','cat.life':'生活雑貨',
+    'cat.all':'すべて','cat.food':'食料品','cat.eat':'食事','cat.snack':'お菓子','cat.fuel':'給油','cat.park':'駐車','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定費','cat.hobby':'趣味','cat.beauty':'美容',
     'cat.drink':'飲み会','cat.edu':'教育','cat.other':'その他',
@@ -13584,7 +13577,7 @@ var I18N = {
     // 편집/수동 모달
     'edit.title2':'✏️ レシート編集','edit.store_name':'店名','edit.date_label':'日付','edit.category_label':'カテゴリ',
     'edit.pay_method':'支払い方法','edit.items_label':'品目','edit.save':'💾 修正を保存',
-    'manual.title':'✏️ 手動入力','manual.store_placeholder':'例) ガソリンスタンド、コンビニ...','manual.optional':'(任意)','manual.save':'💾 保存',
+    'manual.title':'✏️ 手動入力','manual.store_placeholder':'例) ガソリンスタンド、コンビニ...','manual.optional':'(任意)','manual.save':'💾 保存','manual.ph_name':'品目名','manual.ph_qty':'数量','manual.ph_price':'単価',
     'pay.credit':'💳 クレジット','pay.debit':'🏦 デビット','pay.ic':'🚃 IC카드',
     'pay.cash2':'💴 現金','pay.qr2':'📱 QR決済',
     // 치리 공개 모달
@@ -13822,7 +13815,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.iw_visit':'방문','rmap.iw_avg':'평균','rmap.view_detail':'📋 내역 보기 →','rmap.per_unit':'/1개','rmap.no_items':'품목 데이터 없음','rmap.avg_per':'방문 평균',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
-    'cat.all':'전체','cat.food':'식료품','cat.eat':'식사','cat.snack':'군것질·과자','cat.cafe':'카페','cat.life':'생활용품',
+    'cat.all':'전체','cat.food':'식료품','cat.eat':'식사','cat.snack':'군것질·과자','cat.fuel':'주유','cat.park':'주차','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
     'cat.drink':'술/회식','cat.edu':'교육','cat.other':'기타',
@@ -13849,7 +13842,7 @@ var I18N = {
     'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
     'edit.title2':'✏️ 영수증 수정','edit.store_name':'가게명','edit.date_label':'날짜','edit.category_label':'카테고리',
     'edit.pay_method':'결제수단','edit.items_label':'품목','edit.save':'💾 수정 저장',
-    'manual.title':'✏️ 수동 기입','manual.store_placeholder':'예) 주유소, 편의점...','manual.optional':'(선택사항)','manual.save':'💾 저장',
+    'manual.title':'✏️ 수동 기입','manual.store_placeholder':'예) 주유소, 편의점...','manual.optional':'(선택사항)','manual.save':'💾 저장','manual.ph_name':'품목명','manual.ph_qty':'수량','manual.ph_price':'단가',
     'pay.credit':'💳 신용카드','pay.debit':'🏦 체크카드','pay.ic':'🚃 IC카드',
     'pay.cash2':'💴 현금','pay.qr2':'📱 QR결제',
     'chiri.publish_title':'📍 치즈에 공개','chiri.publish_btn':'📍 치즈에 공개하기','chiri.comment_ph':'한줄 코멘트 (선택)',
@@ -14079,7 +14072,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.iw_visit':'Visits','rmap.iw_avg':'Average','rmap.view_detail':'📋 View detail →','rmap.per_unit':'/ea','rmap.no_items':'No item data','rmap.avg_per':'Avg/visit',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
-    'cat.all':'All','cat.food':'Groceries','cat.eat':'Meal','cat.snack':'Snacks','cat.cafe':'Cafe','cat.life':'Daily',
+    'cat.all':'All','cat.food':'Groceries','cat.eat':'Meal','cat.snack':'Snacks','cat.fuel':'Fuel','cat.park':'Parking','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
     'cat.drink':'Drinks','cat.edu':'Education','cat.other':'Other',
@@ -14106,7 +14099,7 @@ var I18N = {
     'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
     'edit.title2':'✏️ Edit Receipt','edit.store_name':'Store','edit.date_label':'Date','edit.category_label':'Category',
     'edit.pay_method':'Payment','edit.items_label':'Items','edit.save':'💾 Save Changes',
-    'manual.title':'✏️ Manual Entry','manual.store_placeholder':'e.g. Gas station, Konbini...','manual.optional':'(optional)','manual.save':'💾 Save',
+    'manual.title':'✏️ Manual Entry','manual.store_placeholder':'e.g. Gas station, Konbini...','manual.optional':'(optional)','manual.save':'💾 Save','manual.ph_name':'Item name','manual.ph_qty':'Qty','manual.ph_price':'Unit price',
     'pay.credit':'💳 Credit','pay.debit':'🏦 Debit','pay.ic':'🚃 IC Card',
     'pay.cash2':'💴 Cash','pay.qr2':'📱 QR Pay',
     'chiri.publish_title':'📍 Publish to Map','chiri.publish_btn':'📍 Publish to Map','chiri.comment_ph':'One-line comment (optional)',
@@ -14336,7 +14329,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.iw_visit':'到访','rmap.iw_avg':'平均','rmap.view_detail':'📋 查看明细 →','rmap.per_unit':'/个','rmap.no_items':'无商品数据','rmap.avg_per':'每次平均',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
-    'cat.all':'全部','cat.food':'食品','cat.eat':'用餐','cat.snack':'零食','cat.cafe':'咖啡','cat.life':'生活用品',
+    'cat.all':'全部','cat.food':'食品','cat.eat':'用餐','cat.snack':'零食','cat.fuel':'加油','cat.park':'停车','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
     'cat.drink':'聚会','cat.edu':'教育','cat.other':'其他',
@@ -14363,7 +14356,7 @@ var I18N = {
     'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
     'edit.title2':'✏️ 编辑票据','edit.store_name':'店名','edit.date_label':'日期','edit.category_label':'类别',
     'edit.pay_method':'付款方式','edit.items_label':'商品','edit.save':'💾 保存修改',
-    'manual.title':'✏️ 手动录入','manual.store_placeholder':'例) 加油站、便利店...','manual.optional':'(可选)','manual.save':'💾 保存',
+    'manual.title':'✏️ 手动录入','manual.store_placeholder':'例) 加油站、便利店...','manual.optional':'(可选)','manual.save':'💾 保存','manual.ph_name':'品名','manual.ph_qty':'数量','manual.ph_price':'单价',
     'pay.credit':'💳 信用卡','pay.debit':'🏦 借记卡','pay.ic':'🚃 IC卡',
     'pay.cash2':'💴 现金','pay.qr2':'📱 扫码支付',
     'chiri.publish_title':'📍 公开到地图','chiri.publish_btn':'📍 公开到地图','chiri.comment_ph':'一句评论（可选）',
@@ -28886,7 +28879,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 510;
+window.__APP_BUILD__ = 511;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
