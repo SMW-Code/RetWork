@@ -12666,6 +12666,30 @@ async function _uploadReceiptImage(receiptId, dataUrl) {
   } catch (e) { console.warn('[receipt img]', e); }
 }
 
+// ── Phase 1 (b498): 커뮤니티 가격 풀 기여 ──
+//   영수증 식료품의 (정규화상품 product_id · 가게명 · 단가 · 좌표)를 공개 product_prices 에 upsert.
+//   유저당 (상품,가게) 1행(최신가). 위치기반 「節約チャンス」 분석의 원천 데이터.
+//   외식/메뉴는 제외(cat==='food' 만). ★ product_prices.sql 실행 필요.
+async function _contributeProductPrices(items, store, lat, lng, cat){
+  if (!_sb || !_currentUser || !store || !Array.isArray(items) || !items.length) return;
+  if (cat && cat !== 'food') return;   // 마트 식료품만 — 외식 메뉴 등 제외
+  try {
+    for (var i=0; i<items.length; i++){
+      var it = items[i];
+      if (!it || !it.name) continue;
+      var unit = Math.round((Number(it.price)||0) / (it.qty||1));
+      if (!(unit > 0)) continue;
+      var pid = null;
+      try { pid = await _matchOrCreateProduct(it.name, store); } catch(e){}
+      if (!pid) continue;
+      var row = { product_id: pid, store_name: store, price: unit, category: cat || null, user_id: _currentUser.id, updated_at: new Date().toISOString() };
+      if (lat != null && lng != null && !isNaN(Number(lat)) && !isNaN(Number(lng))) { row.lat = lat; row.lng = lng; }
+      try { await _sb.from('product_prices').upsert(row, { onConflict: 'product_id,store_name,user_id' }); }
+      catch(e){ console.warn('[ppx upsert]', e.message||e); }
+    }
+  } catch(e){ console.warn('[contributeProductPrices]', e); }
+}
+
 function _doSaveOcrResult() {
   syncOcrItems(); // 저장 전 입력값 최종 동기화
   var r = window._ocrResult;
@@ -12793,6 +12817,8 @@ function _doSaveOcrResult() {
             else console.log('[ReceiptIQ] UPDATE 결과 행 수:', res2.data ? res2.data.length : 0, '| lat저장값:', res2.data && res2.data[0] ? res2.data[0].lat : 'N/A');
             renderMapPins();
           });
+        // ★ Phase 1: 커뮤니티 가격 풀 기여 (식료품만) — product_prices 에 상품·가게·단가·좌표 upsert
+        if (finalItems && finalItems.length) _contributeProductPrices(finalItems, store, lat, lng, r.cat);
         if (_storeAddress) {
           _sb.from('receipts').update({ store_address: _storeAddress })
             .eq('id', receiptId)
@@ -28714,7 +28740,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 497;
+window.__APP_BUILD__ = 498;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
