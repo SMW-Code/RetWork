@@ -1,9 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 515 시점)
+# RetWork (チリつも) — HANDOFF (build 521 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 515** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 521** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-16** (b500~515 — 1日平均 분모 수정, i18n 누락 다수, 스캔시트 리디자인, 치리공개 중복방지, 주차요금 ¥/시간 비교)
+> 마지막 작업: **2026-06-16** (b516~521 — **4개국어 i18n 전면 적용** 진행 중: 치리공개·로그인·커뮤니티·수동핀·가게수정요청·지도 완료 / 출석광고·설정 남음 → **`I18N_TODO.md` 참고**)
 > ⚠️ **SQL 실행 필요(신규/이어받는 PC가 아니라 DB 기준):**
 > - `product_prices.sql`(b498), `product_prices_volume.sql`(b503) — **실행 완료**(사용자 확인).
 > - 🔴 `items_parking_mins.sql`(b515) — `alter table public.items add column if not exists mins integer;` **실행 필요**. 미실행 시 저장은 정상이나(클라가 mins 자동 제외 후 재시도) 주차시간이 DB에 영구 보존 안 됨 → 새로고침 후 주차 ¥/시간 비교가 사라짐.
@@ -12,6 +12,20 @@
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-K. 2026-06-16 — 4개국어 i18n 전면 적용 (build 516~521, 진행 중)
+
+**배경:** 한국어 모드인데도 치리 공개 모달 등이 일본어로 노출. 전수 조사(Explore 3개 병렬) 결과 어드민 제외 **~245곳** i18n 미적용. **상세 목록·진행상황·재현 방법은 `I18N_TODO.md`가 정본.**
+
+**정책(사용자 확정):** 어드민=한국어 고정 / SEO 랜딩·블로그(절약·구르메 검색용, `index.html` 971~1047)=일본어 고정 / **그 외 전부 4개국어**.
+
+**완료 영역(6):** 치리공개(b516)·로그인회원가입(b517)·커뮤니티 가격비교(b518)·수동핀 모달(b519)·가게 수정/위치요청+가게탭 힌트(b520)·지도 화면(b521). 각 영역 신규 키를 `var I18N`(~13448)의 ja/ko/en/zh **4블록 모두**에 추가 + 검증.
+
+**남은 영역(2):** ① 출석/광고/리워드 모달(`ov-attendance` ~59곳, 보상광고, `adShowModal`) ② 설정/온보딩/추천/홈·달력·이력. → `I18N_TODO.md` "남은 작업" 참고.
+
+**핵심 메커니즘:** 정적 `data-i18n`/`data-i18n-placeholder`/`data-i18n-title`(applyLang ~14580), 동적 `t('key',{n})`(~14547, `{n}` 보간). 카테고리 라벨 헬퍼 `_cpCatLabel()`. **자식요소 있는 컨테이너엔 data-i18n 직접 X → 텍스트만 span으로 감싸기.** 커밋 전 문법검사+키 4블록 카운트 검증+빌드번호 2곳.
 
 ---
 
