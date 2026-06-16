@@ -4346,7 +4346,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 헤더 -->
     <div class="att-hdr">
       <div class="att-back" onclick="ctCloseAttendance()">←</div>
-      <div class="att-title">📅 出席チェック</div>
+      <div class="att-title" data-i18n="att.title">📅 出席チェック</div>
     </div>
     <!-- 본문 -->
     <div class="att-body" id="att-body">
@@ -4379,18 +4379,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div style="background:var(--surface);border-radius:14px;overflow:hidden;margin-bottom:12px;border:.5px solid var(--border);box-shadow:var(--shadow-sm);">
         <div style="background:linear-gradient(135deg,#1a1a3a,#3a1a5e);padding:8px 12px;color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:space-between;">
           <span style="display:inline-flex;align-items:center;gap:6px;"><span class="lico" data-lico="video" data-size="14" data-color="#fff"></span> SPONSORED VIDEO AD</span>
-          <span style="color:#5B9BD5;display:inline-flex;align-items:center;gap:4px;">自動再生 <span class="lico" data-lico="play" data-size="12" data-color="#5B9BD5"></span></span>
+          <span style="color:#5B9BD5;display:inline-flex;align-items:center;gap:4px;"><span data-i18n="ad.autoplay_short">自動再生</span> <span class="lico" data-lico="play" data-size="12" data-color="#5B9BD5"></span></span>
         </div>
         <div id="watch-ad-slot" style="min-height:260px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#3a5cdf,#9b3dd6);">
           <div style="text-align:center;color:#fff;padding:30px;">
             <div style="margin-bottom:14px;animation:ct-ad-pulse 1.2s ease-in-out infinite;display:flex;align-items:center;justify-content:center;"><span class="lico" data-lico="play" data-size="56" data-color="#fff"></span></div>
-            <div style="font-size:15px;font-weight:800;margin-bottom:6px;">広告 自動再生中</div>
-            <div style="font-size:11px;opacity:.85;">毎日見て チリ をもっと貯めよう</div>
+            <div style="font-size:15px;font-weight:800;margin-bottom:6px;" data-i18n="ad.autoplay">広告 自動再生中</div>
+            <div style="font-size:11px;opacity:.85;" data-i18n="ad.daily_hint">毎日見て チリ をもっと貯めよう</div>
           </div>
         </div>
         <div style="padding:8px 12px;font-size:10px;color:var(--text-3);display:flex;justify-content:space-between;background:var(--surface);">
-          <span style="display:inline-flex;align-items:center;gap:4px;"><span class="lico" data-lico="ad" data-size="11" data-color="var(--text-3)"></span> 광고</span>
-          <span>AdSense 승인 후 실광고 표시</span>
+          <span style="display:inline-flex;align-items:center;gap:4px;"><span class="lico" data-lico="ad" data-size="11" data-color="var(--text-3)"></span> <span data-i18n="ad.label">광고</span></span>
+          <span data-i18n="ad.adsense_note">AdSense 승인 후 실광고 표시</span>
         </div>
       </div>
     </div>
@@ -4403,10 +4403,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 프리미엄 안내 -->
       <div onclick="openPremium()" style="padding:10px 12px;background:var(--surface);border:1px solid var(--border-mid);border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;opacity:.85;">
         <div>
-          <div style="font-size:12px;font-weight:700;color:var(--text-2);">✨ プレミアムで広告なし</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">¥320/月 · スキャン無制限</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-2);" data-i18n="ad.premium_title">✨ プレミアムで広告なし</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;" data-i18n="ad.premium_sub">¥320/月 · スキャン無制限</div>
         </div>
-        <div style="font-size:11px;font-weight:700;color:var(--green);">詳細 ›</div>
+        <div style="font-size:11px;font-weight:700;color:var(--green);"><span data-i18n="ad.detail">詳細</span> ›</div>
       </div>
     </div>
   </div>
@@ -4420,7 +4420,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="margin:0 16px 12px;padding:10px 14px;border-radius:12px;background:linear-gradient(135deg,var(--gold-light),#fff);border:1px solid var(--gold);display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <div style="display:flex;align-items:center;gap:8px;">
         <span style="font-size:20px;line-height:1;">🎉</span>
-        <span style="font-size:13px;font-weight:800;color:var(--text-1);">出席チェック完了</span>
+        <span style="font-size:13px;font-weight:800;color:var(--text-1);" data-i18n="att.done">出席チェック完了</span>
       </div>
       <span style="font-size:16px;font-weight:900;color:var(--gold-dark);white-space:nowrap;">+<span id="ac-base-coin">5</span>チリ ✨</span>
     </div>
@@ -4439,7 +4439,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
         <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
-        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;" data-i18n="ad.adsense_note">AdSense 승인 후 실광고 표시</span>
       </div>
     </div>
     <!-- 카드3: 버튼 (건너뛰기 / 광고보기 +15) -->
@@ -4477,7 +4477,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
         <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
-        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;" data-i18n="ad.adsense_note">AdSense 승인 후 실광고 표시</span>
       </div>
     </div>
     <!-- 하단 카드: 헤더 + 설명 + 버튼 -->
@@ -4522,7 +4522,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
         <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
-        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;" data-i18n="ad.adsense_note">AdSense 승인 후 실광고 표시</span>
       </div>
     </div>
     <!-- 하단 카드: 헤더 + 설명 + 버튼 -->
@@ -4553,7 +4553,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.16) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>
         <div style="position:relative;z-index:2;text-align:center;color:#fff;">
           <div style="font-size:42px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>
-          <div style="font-size:13px;font-weight:800;letter-spacing:.5px;margin-top:8px;">広告 自動再生中</div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:.5px;margin-top:8px;" data-i18n="ad.autoplay">広告 自動再生中</div>
           <div style="font-size:10px;opacity:.75;margin-top:3px;font-weight:500;">📢 Sponsored Content</div>
         </div>
         <!-- 진행 막대 (시각 효과) -->
@@ -4563,7 +4563,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:var(--bg-2);">
         <span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 광고</span>
-        <span style="font-size:9px;color:var(--text-3);font-weight:500;">AdSense 승인 후 실광고 표시</span>
+        <span style="font-size:9px;color:var(--text-3);font-weight:500;" data-i18n="ad.adsense_note">AdSense 승인 후 실광고 표시</span>
       </div>
     </div>
     <!-- 버튼 -->
@@ -5301,15 +5301,15 @@ function _ctRenderAttendance(){
     // 상단 라벨 바
     + '<div style="background:var(--gold-grad);color:#fff;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">'
       + '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">📢</span><span style="font-size:11px;font-weight:800;letter-spacing:.5px;">SPONSORED VIDEO AD</span></div>'
-      + '<span style="font-size:10px;font-weight:700;opacity:.85;">自動再生 ▶️</span>'
+      + '<span style="font-size:10px;font-weight:700;opacity:.85;">'+t('ad.autoplay_short')+' ▶️</span>'
     + '</div>'
     // 광고 본체 (240px 고정, min-height 보장)
     + '<div style="position:relative;width:100%;height:240px;min-height:240px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;flex-shrink:0;">'
       + '<div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>'
       + '<div style="position:relative;z-index:2;text-align:center;color:#fff;padding:0 16px;">'
         + '<div style="font-size:56px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>'
-        + '<div style="font-size:16px;font-weight:800;letter-spacing:.5px;margin-top:10px;">広告 自動再生中</div>'
-        + '<div style="font-size:11px;opacity:.8;margin-top:4px;font-weight:500;">毎日見て チリ をもっと貯めよう ✨</div>'
+        + '<div style="font-size:16px;font-weight:800;letter-spacing:.5px;margin-top:10px;">'+t('ad.autoplay')+'</div>'
+        + '<div style="font-size:11px;opacity:.8;margin-top:4px;font-weight:500;">'+t('ad.daily_hint')+' ✨</div>'
       + '</div>'
       + '<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,.18);">'
         + '<div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>'
@@ -5347,8 +5347,8 @@ function _ctRenderAttendance(){
   }
   h += '<div class="att-card">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-    +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);">📺 추가 광고 보상</div>'
-    +   '<div style="font-size:13px;font-weight:900;color:var(--gold-dark);">+15 치리</div>'
+    +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);">'+t('att.bonus_ad_title')+'</div>'
+    +   '<div style="font-size:13px;font-weight:900;color:var(--gold-dark);">+15 '+t('unit.chiri')+'</div>'
     + '</div>'
     + '<div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.5;font-weight:600;">' + bonusSubText + '</div>'
     + '<button class="att-go-btn" onclick="ctOpenBonusAd()" '+(bonusCanClaim?'':'disabled')+'>' + bonusBtnLabel + '</button>'
@@ -5362,7 +5362,7 @@ function _ctRenderAttendance(){
   var todayDate = now.getDate();
   var data = _ctAttData();
   var days = data.days || {};
-  var dowLbl = ['日','月','火','水','木','金','土'];
+  var dowLbl = t('att.dow').split(',');
   h += '<div class="att-card">'
     + '<div class="att-card-title">'+t('att.cal_title',{y:year,m:month+1})+'</div>'
     + '<div class="att-cal-grid">';
@@ -13493,7 +13493,7 @@ var I18N = {
     'ad.publish_btn':'広告を見て保存＋チリモード公開','ad.install':'インストール',
     'ad.premium_title':'✨ プレミアムで広告なし','ad.premium_sub':'¥320/月 · スキャン無制限','ad.detail':'詳細',
     'ad.reward_get':'広告を見てチリ獲得','ad.loading':'広告を読み込み中...',
-    'ad.autoplay':'広告 自動再生中','ad.label':'広告','ad.adsense_note':'AdSense承認後に実広告',
+    'ad.autoplay':'広告 自動再生中','ad.label':'広告','ad.adsense_note':'AdSense承認後に実広告','ad.autoplay_short':'自動再生','ad.daily_hint':'毎日見て チリ をもっと貯めよう',
     'plan.user':'{name}さん','sp.free_plan':'無料プラン',
     // 가게/맵
     'map.search':'店舗を検索...','map.filter':'フィルター','map.ranking':'ランキング','map.private':'プライベート','map.public':'公開',
@@ -13709,7 +13709,7 @@ var I18N = {
     'att.today':'📅 今日の出席','att.today_count':'今日の出席','att.streak':'連続出席','att.next_slot':'次のスロット',
     'att.times':'{n} / 3 回','att.days':'🔥 {n} 日','att.tomorrow':'明日 00:00',
     'att.done_today':'✅ 本日完了','att.next_until':'次のスロットまで {t}','att.checkin_n':'{n}回目 出席する → +5チリ',
-    'att.bonus':'🎁 連続出席ボーナス','att.streak_days':'{n}日連続','att.ad':'広告','att.ad_note':'AdSense承認後に実広告を表示',
+    'att.bonus':'🎁 連続出席ボーナス','att.streak_days':'{n}日連続','att.ad':'広告','att.ad_note':'AdSense承認後に実広告を表示','att.title':'📅 出席チェック','att.done':'出席チェック完了','att.bonus_ad_title':'📺 追加広告報酬','att.dow':'日,月,火,水,木,金,土',
     'att.slot1':'00-08 (1回)','att.slot2':'08-16 (2回)','att.slot3':'16-24 (3回)',
     'att.cal_title':'🗓 {y}年 {m}月',
     // 영수증 가게상세(rsd) 모달
@@ -13802,7 +13802,7 @@ var I18N = {
     'ad.publish_btn':'광고 보고 가계부저장 + 치리모드 공개','ad.install':'설치하기',
     'ad.premium_title':'✨ 프리미엄 구독시 광고 없이 사용','ad.premium_sub':'¥320 / 월 · 무제한 스캔','ad.detail':'자세히',
     'ad.reward_get':'광고 보고 치리 받기','ad.loading':'광고 불러오는 중...',
-    'ad.autoplay':'광고 자동 재생 중','ad.label':'광고','ad.adsense_note':'AdSense 승인 후 실광고',
+    'ad.autoplay':'광고 자동 재생 중','ad.label':'광고','ad.adsense_note':'AdSense 승인 후 실광고','ad.autoplay_short':'자동 재생','ad.daily_hint':'매일 보고 치리를 더 모으세요',
     'plan.user':'{name}님','sp.free_plan':'무료 플랜',
     'map.search':'가게 검색...','map.filter':'필터','map.ranking':'랭킹','map.private':'프라이빗','map.public':'공개',
     'map.private.toast':'🔒 프라이빗 모드','map.public.toast':'🌐 공개 모드',
@@ -13974,7 +13974,7 @@ var I18N = {
     'att.today':'📅 오늘의 출석','att.today_count':'오늘의 출석','att.streak':'연속 출석','att.next_slot':'다음 슬롯',
     'att.times':'{n} / 3 회','att.days':'🔥 {n} 일','att.tomorrow':'내일 00:00',
     'att.done_today':'✅ 오늘 완료','att.next_until':'다음 슬롯까지 {t}','att.checkin_n':'{n}회차 출석하기 → +5치리',
-    'att.bonus':'🎁 연속 출석 보너스','att.streak_days':'{n}일 연속','att.ad':'광고','att.ad_note':'AdSense 승인 후 실광고 표시',
+    'att.bonus':'🎁 연속 출석 보너스','att.streak_days':'{n}일 연속','att.ad':'광고','att.ad_note':'AdSense 승인 후 실광고 표시','att.title':'📅 출석 체크','att.done':'출석 체크 완료','att.bonus_ad_title':'📺 추가 광고 보상','att.dow':'일,월,화,수,목,금,토',
     'att.slot1':'00-08 (1회)','att.slot2':'08-16 (2회)','att.slot3':'16-24 (3회)',
     'att.cal_title':'🗓 {y}년 {m}월',
     'rsd.stats':'📊 통계','rsd.visits':'방문 횟수','rsd.total_spend':'총 지출','rsd.avg_spend':'평균 지출','rsd.last_visit':'최근 방문',
@@ -14065,7 +14065,7 @@ var I18N = {
     'ad.publish_btn':'Watch ad: save + publish to Chiri','ad.install':'Install',
     'ad.premium_title':'✨ Go Premium, no ads','ad.premium_sub':'¥320/mo · unlimited scans','ad.detail':'Details',
     'ad.reward_get':'Watch ad & earn chiri','ad.loading':'Loading ad...',
-    'ad.autoplay':'Ad auto-playing','ad.label':'Ad','ad.adsense_note':'Real ads after AdSense approval',
+    'ad.autoplay':'Ad auto-playing','ad.label':'Ad','ad.adsense_note':'Real ads after AdSense approval','ad.autoplay_short':'Auto-play','ad.daily_hint':'Watch daily to earn more Chiri',
     'plan.user':'{name}','sp.free_plan':'Free plan',
     'map.search':'Search store...','map.filter':'Filter','map.ranking':'Ranking','map.private':'Private','map.public':'Public',
     'map.private.toast':'🔒 Private mode','map.public.toast':'🌐 Public mode',
@@ -14237,7 +14237,7 @@ var I18N = {
     'att.today':'📅 Today','att.today_count':"Today's check-ins",'att.streak':'Streak','att.next_slot':'Next slot',
     'att.times':'{n} / 3','att.days':'🔥 {n}d','att.tomorrow':'Tomorrow 00:00',
     'att.done_today':'✅ Done today','att.next_until':'Next slot in {t}','att.checkin_n':'Check-in #{n} → +5 chiri',
-    'att.bonus':'🎁 Streak Bonus','att.streak_days':'{n}-day streak','att.ad':'Ad','att.ad_note':'Real ads after AdSense approval',
+    'att.bonus':'🎁 Streak Bonus','att.streak_days':'{n}-day streak','att.ad':'Ad','att.ad_note':'Real ads after AdSense approval','att.title':'📅 Check-in','att.done':'Check-in complete','att.bonus_ad_title':'📺 Extra ad reward','att.dow':'S,M,T,W,T,F,S',
     'att.slot1':'00-08 (1st)','att.slot2':'08-16 (2nd)','att.slot3':'16-24 (3rd)',
     'att.cal_title':'🗓 {y}/{m}',
     'rsd.stats':'📊 Stats','rsd.visits':'Visits','rsd.total_spend':'Total','rsd.avg_spend':'Average','rsd.last_visit':'Last visit',
@@ -14328,7 +14328,7 @@ var I18N = {
     'ad.publish_btn':'看广告：保存 + 公开到Chiri','ad.install':'安装',
     'ad.premium_title':'✨ 升级高级版免广告','ad.premium_sub':'¥320/月 · 无限扫描','ad.detail':'详情',
     'ad.reward_get':'看广告领积分','ad.loading':'广告加载中...',
-    'ad.autoplay':'广告自动播放中','ad.label':'广告','ad.adsense_note':'AdSense 审核通过后展示真实广告',
+    'ad.autoplay':'广告自动播放中','ad.label':'广告','ad.adsense_note':'AdSense 审核通过后展示真实广告','ad.autoplay_short':'自动播放','ad.daily_hint':'每天观看，积攒更多 Chiri',
     'plan.user':'{name}','sp.free_plan':'免费版',
     'map.search':'搜索店铺...','map.filter':'筛选','map.ranking':'排行','map.private':'私密','map.public':'公开',
     'map.private.toast':'🔒 私密模式','map.public.toast':'🌐 公开模式',
@@ -14500,7 +14500,7 @@ var I18N = {
     'att.today':'📅 今日签到','att.today_count':'今日签到','att.streak':'连续签到','att.next_slot':'下个时段',
     'att.times':'{n} / 3 次','att.days':'🔥 {n} 天','att.tomorrow':'明天 00:00',
     'att.done_today':'✅ 今日完成','att.next_until':'距下个时段 {t}','att.checkin_n':'第{n}次签到 → +5积分',
-    'att.bonus':'🎁 连续签到奖励','att.streak_days':'连续{n}天','att.ad':'广告','att.ad_note':'AdSense审核通过后显示真实广告',
+    'att.bonus':'🎁 连续签到奖励','att.streak_days':'连续{n}天','att.ad':'广告','att.ad_note':'AdSense审核通过后显示真实广告','att.title':'📅 签到','att.done':'签到完成','att.bonus_ad_title':'📺 额外广告奖励','att.dow':'日,一,二,三,四,五,六',
     'att.slot1':'00-08 (第1次)','att.slot2':'08-16 (第2次)','att.slot3':'16-24 (第3次)',
     'att.cal_title':'🗓 {y}年 {m}月',
     'rsd.stats':'📊 统计','rsd.visits':'访问次数','rsd.total_spend':'总支出','rsd.avg_spend':'平均支出','rsd.last_visit':'最近访问',
@@ -29050,7 +29050,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 523;
+window.__APP_BUILD__ = 524;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
