@@ -1350,9 +1350,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <!-- 더보기 (광고 시청 후 펼치기) — 미구독만 노출 -->
       <div id="rep-more-btn" style="display:none;margin:8px 16px 12px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1.5px dashed var(--gold);border-radius:14px;padding:18px 16px;text-align:center;cursor:pointer;" onclick="_unlockReport()">
         <div style="font-size:20px;margin-bottom:6px;">📊</div>
-        <div style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:4px;">더 자세한 리포트 보기</div>
-        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5;">카테고리별 분석 · 결제수단별 지출<br>아이템 랭킹 · 물가 레이더</div>
-        <div style="display:inline-block;padding:8px 18px;background:var(--gold-grad);color:#fff;border-radius:10px;font-size:12px;font-weight:800;">📺 광고 보고 더보기</div>
+        <div style="font-size:13px;font-weight:800;color:var(--text-1);margin-bottom:4px;" data-i18n="rep.more_title">더 자세한 리포트 보기</div>
+        <div style="font-size:11px;color:var(--text-3);margin-bottom:10px;line-height:1.5;" data-i18n="rep.more_desc">카테고리별 분석 · 결제수단별 지출<br>아이템 랭킹 · 물가 레이더</div>
+        <div style="display:inline-block;padding:8px 18px;background:var(--gold-grad);color:#fff;border-radius:10px;font-size:12px;font-weight:800;" data-i18n="rep.more_btn">📺 광고 보고 더보기</div>
       </div>
 
       <!-- 물가 레이더 -->
@@ -13520,6 +13520,7 @@ var I18N = {
     // 리포트 + 물가레이더
     'rep.cat_analysis':'🗂 カテゴリ分析','rep.tap_expand':'· タップで明細を開く',
     'rep.radar':'📊 物価レーダー','rep.radar_sub':'品目別の価格変動を追跡',
+    'rep.more_title':'詳しいレポートを見る','rep.more_desc':'カテゴリ別分析 · 支払方法別支出<br>アイテムランキング · 物価レーダー','rep.more_btn':'📺 広告を見て続きを表示',
     'rep.up':'🔴 上昇中','rep.down':'🟢 下落中','rep.sort':'並び替え','rep.sort_desc':'変動↑ 大きい順','rep.sort_asc':'変動↓ 小さい順',
     'rep.month_spent':'{n}件の支出','rep.count':'件数','rep.daily_avg':'日平均','rep.top_cat':'最多カテゴリ',
     'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
@@ -13785,6 +13786,7 @@ var I18N = {
     'home.budget_this':'이달 예산','home.budget_remain':'남음','home.budget_over':'초과','home.budget_spent':'지출','home.budget_goal':'목표',
     'rep.cat_analysis':'🗂 카테고리 분석','rep.tap_expand':'· 탭해서 내역 펼치기',
     'rep.radar':'📊 물가 레이더','rep.radar_sub':'품목별 가격 변동 추적',
+    'rep.more_title':'더 자세한 리포트 보기','rep.more_desc':'카테고리별 분석 · 결제수단별 지출<br>아이템 랭킹 · 물가 레이더','rep.more_btn':'📺 광고 보고 더보기',
     'rep.up':'🔴 오르는 중','rep.down':'🟢 내리는 중','rep.sort':'정렬','rep.sort_desc':'변동↑ 큰 순','rep.sort_asc':'변동↓ 작은 순',
     'rep.month_spent':'{n}건 지출','rep.count':'건수','rep.daily_avg':'일평균','rep.top_cat':'최다 카테고리',
     'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
@@ -14032,6 +14034,7 @@ var I18N = {
     'home.budget_this':"This month's budget",'home.budget_remain':'left','home.budget_over':'over','home.budget_spent':'spent','home.budget_goal':'Goal',
     'rep.cat_analysis':'🗂 Category Analysis','rep.tap_expand':'· tap to expand',
     'rep.radar':'📊 Price Radar','rep.radar_sub':'Track price changes by item',
+    'rep.more_title':'View detailed report','rep.more_desc':'Category breakdown · Spending by payment<br>Item ranking · Price radar','rep.more_btn':'📺 Watch ad to see more',
     'rep.up':'🔴 Rising','rep.down':'🟢 Falling','rep.sort':'Sort','rep.sort_desc':'Change↑ desc','rep.sort_asc':'Change↓ asc',
     'rep.month_spent':'{n} expenses','rep.count':'Count','rep.daily_avg':'Daily avg','rep.top_cat':'Top category',
     'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
@@ -14279,6 +14282,7 @@ var I18N = {
     'home.budget_this':'本月预算','home.budget_remain':'剩余','home.budget_over':'超出','home.budget_spent':'支出','home.budget_goal':'目标',
     'rep.cat_analysis':'🗂 分类分析','rep.tap_expand':'· 点击展开明细',
     'rep.radar':'📊 物价雷达','rep.radar_sub':'按商品追踪价格变动',
+    'rep.more_title':'查看更详细报告','rep.more_desc':'分类分析 · 按支付方式支出<br>商品排名 · 物价雷达','rep.more_btn':'📺 看广告查看更多',
     'rep.up':'🔴 上涨中','rep.down':'🟢 下跌中','rep.sort':'排序','rep.sort_desc':'变动↑ 由大到小','rep.sort_asc':'变动↓ 由小到大',
     'rep.month_spent':'{n}笔支出','rep.count':'笔数','rep.daily_avg':'日均','rep.top_cat':'最多类别',
     'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
@@ -28846,7 +28850,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 507;
+window.__APP_BUILD__ = 508;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
