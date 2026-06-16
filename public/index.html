@@ -1242,10 +1242,10 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- 절약 배너 -->
-    <div class="alert-banner" onclick="openOv('ov-saving')">
+    <!-- 절약 배너 (내 영수증 이력 기반 실데이터 — 절약액 없으면 renderHome 에서 숨김) -->
+    <div class="alert-banner" id="home-saving-banner" onclick="openSavingAnalysis()" style="display:none;">
       <span style="font-size:18px;flex-shrink:0;">💡</span>
-      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;" data-i18n="home.saving_cta">절약 기회 발견!</div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;" data-i18n="home.saving_cta_sub">3가지 상품을 마트만 바꿔도 월 ¥1,320 절약 가능</div></div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;" data-i18n="home.saving_cta">절약 기회 발견!</div><div id="home-saving-sub" style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;"></div></div>
       <span style="font-size:16px;color:#C8B273;">›</span>
     </div>
 
@@ -2714,20 +2714,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" data-i18n="saving.title">💡 節約チャンス分析</div>
-    <div class="sheet-sub"><span data-i18n="saving.sub">マイレシート分析</span> · イオン vs 業務スーパー</div>
-    <div class="saving-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🥛 牛乳 1L</div><div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
-      <div style="font-size:11px;color:var(--text-2);margin-top:4px;" data-i18n="saving.based">月12回購入基準</div>
-      <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥198</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥158</div><div class="saving-badge">-¥40</div></div></div>
-    </div>
-    <div class="saving-item">
-      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">🍞 食パン</div><div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;">¥480/月</div></div>
-      <div class="saving-stores"><div class="saving-store"><div class="saving-store-name">イオン</div><div class="saving-price">¥168</div></div><div class="saving-store"><div class="saving-store-name">業務スーパー ✓</div><div class="saving-price cheap">¥128</div><div class="saving-badge">-¥40</div></div></div>
-    </div>
-    <div class="saving-total">
-      <div><div style="font-size:12px;font-weight:800;color:var(--text-1);" data-i18n="saving.total">合計節約見込み額</div><div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;"><span data-i18n="saving.annual">年間節約見込み額</span>: ¥15,840</div></div>
-      <div style="font-size:28px;font-weight:900;color:var(--green);">¥1,320<span style="font-size:13px;font-weight:600;">/月</span></div>
-    </div>
+    <div id="saving-content"><!-- renderSavingAnalysis: 내 영수증 이력 기반 실제 분석 --></div>
     <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-2);margin-top:14px;cursor:pointer;" onclick="closeOv('ov-saving')" data-i18n="btn.close">閉じる</div>
   </div>
 </div>
@@ -8195,6 +8182,115 @@ function renderRadar() {
 /* ══════════════════════════════
    홈 렌더링
 ══════════════════════════════ */
+// ══════════════════════════════════════════════════════════════════════════
+// 節約チャンス分析 — 내 영수증 이력(DB)에서 "같은 상품을 여러 마트에서 산 단가 차이"
+//   를 찾아 실제 월 절약 가능액을 계산. 더미 아님. RLS-safe(내 데이터만).
+//   상품키 = 정규화(NFKC+공백제거)한 품목명. 단가 = item.price(라인합계)/qty.
+//   2곳 이상 마트에서 산 상품만, '내 평균단가 − 최저마트 평균단가' × 월구매수량.
+// ══════════════════════════════════════════════════════════════════════════
+function _computeSavings(){
+  var prod = {};
+  var cutoff = new Date(); cutoff.setMonth(cutoff.getMonth()-3);  // 최근 3개월
+  (DB||[]).forEach(function(r){
+    if (!r || !r.items || !r.store) return;
+    if (r.date && new Date(r.date) < cutoff) return;
+    var mkey = (r.date||'').slice(0,7);
+    r.items.forEach(function(it){
+      if (!it || !it.name || !it.price) return;
+      var q = it.qty || 1;
+      var unit = it.price / q;
+      if (!(unit > 0)) return;
+      var key = String(it.name).replace(/\s+/g,'').normalize('NFKC').toLowerCase();
+      if (key.length < 2) return;
+      var p = prod[key] || (prod[key] = { name: it.name, byStore:{}, totalQty:0, paidSum:0, paidCnt:0, months:{} });
+      var s = p.byStore[r.store] || (p.byStore[r.store] = { sum:0, cnt:0 });
+      s.sum += unit; s.cnt += 1;
+      p.totalQty += q; p.paidSum += unit*q; p.paidCnt += q;
+      if (mkey) p.months[mkey] = 1;
+    });
+  });
+  var results = [];
+  Object.keys(prod).forEach(function(key){
+    var p = prod[key];
+    var stores = Object.keys(p.byStore);
+    if (stores.length < 2) return;                 // 2개 이상 마트에서 산 것만
+    var storeAvgs = stores.map(function(sn){ return { store:sn, price: p.byStore[sn].sum / p.byStore[sn].cnt }; });
+    storeAvgs.sort(function(a,b){ return a.price - b.price; });
+    var minA = storeAvgs[0].price;
+    var paidAvg = p.paidSum / p.paidCnt;
+    var diff = paidAvg - minA;                      // 내 평균 − 최저마트 평균
+    if (diff < 10) return;                          // ¥10 미만 차이는 무시
+    var monthsSpan = Math.max(1, Object.keys(p.months).length);
+    var monthlyQty = p.totalQty / monthsSpan;
+    var monthlySaving = Math.round(diff * monthlyQty);
+    if (monthlySaving < 30) return;                 // 너무 작은 절약 제외(노이즈)
+    results.push({
+      name: p.name,
+      stores: storeAvgs.map(function(x,i){ return { store:x.store, price:Math.round(x.price), cheapest:i===0 }; }),
+      paidAvg: Math.round(paidAvg),
+      perUnitSaving: Math.round(diff),
+      monthlyQty: Math.round(monthlyQty*10)/10,
+      monthlySaving: monthlySaving
+    });
+  });
+  results.sort(function(a,b){ return b.monthlySaving - a.monthlySaving; });
+  results = results.slice(0, 5);
+  var totalMonthly = results.reduce(function(a,r){ return a + r.monthlySaving; }, 0);
+  window._savingData = { items: results, totalMonthly: totalMonthly, annual: totalMonthly*12 };
+  return window._savingData;
+}
+function _updateSavingBanner(){
+  var banner = document.getElementById('home-saving-banner');
+  if (!banner) return;
+  var data = _computeSavings();
+  if (data.totalMonthly > 0) {
+    banner.style.display = '';
+    var sub = document.getElementById('home-saving-sub');
+    if (sub) sub.textContent = t('home.saving_sub', { n: data.items.length, amt: data.totalMonthly.toLocaleString() });
+  } else {
+    banner.style.display = 'none';
+  }
+}
+function openSavingAnalysis(){
+  renderSavingAnalysis();
+  openOv('ov-saving');
+}
+function renderSavingAnalysis(){
+  var el = document.getElementById('saving-content');
+  if (!el) return;
+  var data = window._savingData || _computeSavings();
+  if (!data.items.length) {
+    el.innerHTML = '<div style="text-align:center;padding:36px 16px;color:var(--text-3);">'
+      + '<div style="font-size:40px;margin-bottom:10px;opacity:.5;">🔍</div>'
+      + '<div style="font-size:14px;font-weight:700;color:var(--text-2);margin-bottom:6px;">'+t('saving.empty_title')+'</div>'
+      + '<div style="font-size:12px;line-height:1.6;">'+t('saving.empty_sub')+'</div></div>';
+    return;
+  }
+  var h = '<div class="sheet-sub"><span data-i18n="saving.sub">'+t('saving.sub')+'</span> · '+t('saving.based_on',{n:data.items.length})+'</div>';
+  data.items.forEach(function(it){
+    h += '<div class="saving-item">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
+      +   '<div style="font-size:14px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(it.name)+'</div>'
+      +   '<div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0;">¥'+it.monthlySaving.toLocaleString()+t('saving.per_month')+'</div>'
+      + '</div>'
+      + '<div style="font-size:11px;color:var(--text-2);margin-top:4px;">'+t('saving.buy_basis',{n:it.monthlyQty})+'</div>'
+      + '<div class="saving-stores">'
+      + it.stores.map(function(s){
+          return '<div class="saving-store"><div class="saving-store-name">'+_esc(s.store)+(s.cheapest?' ✓':'')+'</div>'
+            + '<div class="saving-price'+(s.cheapest?' cheap':'')+'">¥'+s.price.toLocaleString()+'</div>'
+            + (s.cheapest ? '<div class="saving-badge">-¥'+it.perUnitSaving.toLocaleString()+'</div>' : '')
+            + '</div>';
+        }).join('')
+      + '</div></div>';
+  });
+  h += '<div class="saving-total">'
+    + '<div><div style="font-size:12px;font-weight:800;color:var(--text-1);">'+t('saving.total')+'</div>'
+    +   '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">'+t('saving.annual')+': ¥'+data.annual.toLocaleString()+'</div></div>'
+    + '<div style="font-size:28px;font-weight:900;color:var(--green);">¥'+data.totalMonthly.toLocaleString()+'<span style="font-size:13px;font-weight:600;">'+t('saving.per_month')+'</span></div>'
+    + '</div>';
+  el.innerHTML = h;
+}
+
 function renderHome() {
   // build 322 — 새 달 진입 시 예산 자동 리셋 (체크만, 클라우드 fetch 는 로그인 hook 에서)
   if (typeof _budgetCheckMonthReset === 'function') { try { _budgetCheckMonthReset(); } catch(e){} }
@@ -8218,6 +8314,9 @@ function renderHome() {
   var todayAmt = todayReceipts.reduce(function(a,r){return a+r.total;},0);
   var foodAmt  = monthReceipts.filter(function(r){return r.cat==='food';}).reduce(function(a,r){return a+r.total;},0);
   var eatAmt   = monthReceipts.filter(function(r){return r.cat==='eat'; }).reduce(function(a,r){return a+r.total;},0);
+
+  // 절약 배너 갱신 (내 영수증 이력 기반 실데이터)
+  if (typeof _updateSavingBanner === 'function') { try { _updateSavingBanner(); } catch(e){} }
 
   // ── 1. 절약 명언 + 오늘 지출 (언어별 세트) ──
   // DB(quotes) 의 활성 명언 우선, 없으면 정적 폴백
@@ -13212,7 +13311,7 @@ var I18N = {
     'multi.next.camera':'次の1枚（カメラ）','multi.next.gallery':'次の1枚（ギャラリー）',
     'multi.analyze':'🔍 AIで結合して分析','multi.hint':'最少 2枚 · 最大 5枚まで対応',
     // 절약 모달
-    'saving.title':'💡 節約チャンス分析','saving.sub':'マイレシート分析',
+    'saving.title':'💡 節約チャンス分析','saving.sub':'マイレシート分析','saving.based_on':'{n}商品を分析','saving.per_month':'/月','saving.buy_basis':'月{n}回購入ペース','saving.empty_title':'まだ分析できる十分なデータがありません','saving.empty_sub':'同じ商品を2つ以上のお店で購入すると、最安店との差額を自動で分析します。レシートをためてみましょう。','home.saving_sub':'{n}商品をお店を変えるだけで月¥{amt}節約可能',
     'saving.based':'月12回購入基準','saving.total':'合計節約見込み額','saving.annual':'年間節約見込み額','saving.cheap':'安い',
     // 이달 요약
     'mdet.month_total':'今月の総支出','mdet.count':'件','mdet.title':'月別支出詳細',
@@ -13496,7 +13595,7 @@ var I18N = {
     'multi.title':'📜 긴 영수증 분할 촬영','multi.sub':'위쪽부터 순서대로 찍어주세요',
     'multi.next.camera':'다음 장 촬영 (카메라)','multi.next.gallery':'다음 장 갤러리',
     'multi.analyze':'🔍 AI로 합쳐서 분석하기','multi.hint':'최소 2장 · 최대 5장까지 지원',
-    'saving.title':'💡 절약 기회 분석','saving.sub':'내 영수증 기반',
+    'saving.title':'💡 절약 기회 분석','saving.sub':'내 영수증 기반','saving.based_on':'{n}개 상품 분석','saving.per_month':'/월','saving.buy_basis':'월 {n}회 구매 페이스','saving.empty_title':'아직 분석할 데이터가 부족해요','saving.empty_sub':'같은 상품을 2곳 이상 마트에서 사면, 최저가 마트와의 차액을 자동 분석해요. 영수증을 모아보세요.','home.saving_sub':'{n}개 상품 마트만 바꿔도 월 ¥{amt} 절약 가능',
     'saving.based':'매달 12회 구매 기준','saving.total':'합계 절약 예상액','saving.annual':'연간 절약 가능','saving.cheap':'저렴',
     'mdet.month_total':'이달 총 지출','mdet.count':'건','mdet.title':'월별 지출 상세',
     'budget.title':'🎯 이달 예산 설정','budget.sub':'목표 지출 금액을 입력하세요','budget.amount':'예산 금액 (¥)','budget.clear':'예산 해제',
@@ -13742,7 +13841,7 @@ var I18N = {
     'multi.title':'📜 Long Receipt Multi-shot','multi.sub':'Shoot from top to bottom',
     'multi.next.camera':'Next shot (Camera)','multi.next.gallery':'Next shot (Gallery)',
     'multi.analyze':'🔍 Merge & analyze with AI','multi.hint':'Min 2 · Max 5 shots',
-    'saving.title':'💡 Savings Opportunity','saving.sub':'Based on your receipts',
+    'saving.title':'💡 Savings Opportunity','saving.sub':'Based on your receipts','saving.based_on':'{n} items analyzed','saving.per_month':'/mo','saving.buy_basis':'~{n}×/mo pace','saving.empty_title':'Not enough data yet','saving.empty_sub':'Buy the same item at 2+ stores and we’ll auto-analyze the gap vs. the cheapest store. Keep scanning receipts.','home.saving_sub':'Switch stores for {n} items, save ¥{amt}/mo',
     'saving.based':'Based on 12 purchases/mo','saving.total':'Total Estimated Savings','saving.annual':'Annual savings','saving.cheap':'cheaper',
     'mdet.month_total':"This month's total",'mdet.count':'records','mdet.title':'Monthly Detail',
     'budget.title':'🎯 Monthly Budget','budget.sub':'Enter target amount','budget.amount':'Budget (¥)','budget.clear':'Clear budget',
@@ -13988,7 +14087,7 @@ var I18N = {
     'multi.title':'📜 长票据分段拍摄','multi.sub':'请从上往下依次拍摄',
     'multi.next.camera':'下一张（拍照）','multi.next.gallery':'下一张（相册）',
     'multi.analyze':'🔍 用AI合并分析','multi.hint':'至少2张 · 最多5张',
-    'saving.title':'💡 省钱机会分析','saving.sub':'基于我的票据',
+    'saving.title':'💡 省钱机会分析','saving.sub':'基于我的票据','saving.based_on':'分析{n}件商品','saving.per_month':'/月','saving.buy_basis':'每月约{n}次','saving.empty_title':'数据还不够','saving.empty_sub':'在2家以上店铺购买相同商品后，自动分析与最低价店的差额。多积累票据试试。','home.saving_sub':'{n}件商品换家超市，每月省¥{amt}',
     'saving.based':'每月12次购买基准','saving.total':'合计预计节省','saving.annual':'每年节省','saving.cheap':'便宜',
     'mdet.month_total':'本月总支出','mdet.count':'笔','mdet.title':'月支出明细',
     'budget.title':'🎯 本月预算设置','budget.sub':'请输入目标支出额','budget.amount':'预算 (¥)','budget.clear':'清除预算',
@@ -28615,7 +28714,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 496;
+window.__APP_BUILD__ = 497;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
