@@ -9686,7 +9686,7 @@ function renderCalendar(y,m) {
   Object.values(monthData).forEach(function(arr){ arr.forEach(function(r){ monthTotal+=r.total; monthCnt++; }); });
   document.getElementById('cal-month-total').textContent='¥ '+monthTotal.toLocaleString();
   document.getElementById('cal-month-cnt').textContent=monthCnt+t('rep.unit_cnt');
-  document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/total).toLocaleString():0);
+  document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/_avgDivDays(y,m)).toLocaleString():0);   // 진행중인 달은 경과일 기준
   var html=''; var today=new Date();
   for(var i=0;i<firstCol;i++) html+='<div class="cal-day empty">0</div>';
   for(var d=1;d<=total;d++){
@@ -28842,7 +28842,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 505;
+window.__APP_BUILD__ = 506;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
