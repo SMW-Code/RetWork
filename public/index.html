@@ -7336,8 +7336,8 @@ async function ctAddCommentDetail() {
     try {
       var penRes = await _sb.rpc('get_active_comment_penalty');
       if (penRes.data && penRes.data.blocked) {
-        var endsTxt = penRes.data.ends_at ? ' (' + new Date(penRes.data.ends_at).toLocaleString() + ' 까지)' : ' (영구)';
-        showToast('🚫 댓글 작성 제한 중' + endsTxt + (penRes.data.reason ? ' · ' + penRes.data.reason : '')); return;
+        var endsTxt = penRes.data.ends_at ? ' (' + new Date(penRes.data.ends_at).toLocaleString() + ' ' + t('comment.until') + ')' : ' (' + t('comment.permanent') + ')';
+        showToast(t('comment.penalty') + endsTxt + (penRes.data.reason ? ' · ' + penRes.data.reason : '')); return;
       }
     } catch(e) {}
   }
@@ -7432,7 +7432,7 @@ async function openCommentQuotaAdModal(retryFn) {
   // 자동재생 광고 노출 → 즉시 +1 부여 (자동재생은 노출만으로 광고 매출 발생)
   var ok = await _grantCommentQuota(1);
   if (ok) {
-    showToast('🎁 광고 노출 보너스! +1회 댓글 작성 가능');
+    showToast(t('comment.quota_bonus'));
   }
 }
 
@@ -11142,7 +11142,7 @@ async function sdSavePrivateNote() {
   // 검증: 별점을 보냈는데 DB 가 null 로 돌려주면 rating 컬럼 누락 가능성
   if (sentRating != null && res.data && res.data.rating == null) {
     console.warn('[private note] rating not persisted — DB rating column may be missing', res.data);
-    showToast('⚠ 별점 저장 실패 (DB rating 컬럼 확인 필요)');
+    showToast(t('note.rating_fail'));
   } else {
     showToast(t('toast.private_saved'));
   }
@@ -11154,14 +11154,14 @@ async function sdSavePrivateNote() {
 async function sdDeletePrivateNote() {
   if (!_sb || !_currentUser || !_sdName) return;
   // confirm 대체: 토스트로 한 번에 처리 (모달 흐름 깨지지 않게)
-  if (!confirm('이 가게의 비공개 메모를 삭제하시겠습니까? (마커 링도 제거됩니다)')) return;
+  if (!confirm(t('note.delete_confirm'))) return;
   var delStoreName = _sdMatchedNoteStoreName || _sdName;
   var res = await _sb.from('private_store_notes')
     .delete()
     .eq('user_id', _currentUser.id)
     .eq('store_name', delStoreName);
   if (res.error) { showToast(t('toast.save_fail', {msg: res.error.message})); return; }
-  showToast('🗑 비공개 메모 삭제됨');
+  showToast(t('note.deleted'));
   delete _privateNoteStores[_sdName];
   delete _privateNoteStores[delStoreName];
   _sdMatchedNoteStoreName = null;
@@ -12871,7 +12871,7 @@ function _doSaveOcrResult() {
     // b463 — receiptId 를 못 받으면 품목/이미지가 통째로 누락됨 → 명시적 경고 + 진단 로그
     if (!receiptId) {
       console.warn('[save] receiptId 미수신 — 품목/이미지 저장 스킵됨. user_id=', _uid, 'res=', res.data);
-      showToast('⚠️ 영수증 헤더만 저장됐어요(품목 누락). 다시 시도해 주세요');
+      showToast(t('save.header_only'));
     }
     if (receiptId) newEntry.id = receiptId; // 정수 임시 ID → Supabase UUID로 교체
     // 원본 영수증 이미지 보관 (비동기, 저장 흐름 막지 않음)
@@ -13430,6 +13430,7 @@ var I18N = {
     'empty.history':'まだレシートがありません','empty.calendar':'この日には記録がありません','empty.search':'結果が見つかりません',
     // 토스트 공통
     'toast.saved':'✓ 保存しました','toast.deleted':'✓ 削除しました','toast.copied':'コピーしました','toast.login_required':'ログインが必要です','toast.error':'エラーが発生しました',
+    'comment.penalty':'🚫 コメント作成が制限されています','comment.until':'まで','comment.permanent':'無期限','comment.quota_bonus':'🎁 広告ボーナス！コメント+1回作成できます','note.rating_fail':'⚠ 評価の保存に失敗しました','note.delete_confirm':'このお店のプライベートメモを削除しますか？（マーカーリングも消えます）','note.deleted':'🗑 プライベートメモを削除しました','ref.loading':'コードを読み込み中です。少々お待ちください！','ref.copied':'📋 紹介コードをコピー: {code}','ref.copy_fail':'コピーに失敗 — コードを選択してコピーしてください','ref.copied_btn':'✅ コピー済み','ref.login_needed':'ログインが必要','darkmode.on':'🌙 ダークモードに切り替えました','darkmode.off':'☀️ ライトモードに切り替えました','apple.coming':'🍎 Appleログインは準備中です。お楽しみに！','banned.cant_post':'🚫 不適切な表現が含まれるため投稿できません','banned.no_permission':'🚫 投稿権限がありません（アカウント制限中）','report.select_reason':'通報理由を選択してください','report.fail':'通報に失敗しました: {msg}','report.submitted':'🚨 通報を受け付けました。運営が確認します','save.header_only':'⚠️ ヘッダーのみ保存されました（明細が抜けています）。もう一度お試しください',
     // 스캔 모달
     'scan.subtitle':'スキャン方法を選択','scan.camera.title':'カメラで撮影','scan.camera.sub':'リアルタイム OCR · Google Vision API',
     'scan.gallery.title':'ギャラリーから選択','scan.gallery.sub':'保存済みのレシート写真',
@@ -13717,6 +13718,7 @@ var I18N = {
     'talk.write':'글쓰기','talk.placeholder':'오늘의 절약 정보를 공유해보세요...','talk.post':'게시',
     'empty.history':'아직 영수증이 없습니다','empty.calendar':'이 날에는 기록이 없습니다','empty.search':'결과가 없습니다',
     'toast.saved':'✓ 저장됐어요','toast.deleted':'✓ 삭제됐어요','toast.copied':'복사됐어요','toast.login_required':'로그인이 필요합니다','toast.error':'오류가 발생했습니다',
+    'comment.penalty':'🚫 댓글 작성 제한 중','comment.until':'까지','comment.permanent':'영구','comment.quota_bonus':'🎁 광고 노출 보너스! +1회 댓글 작성 가능','note.rating_fail':'⚠ 별점 저장 실패','note.delete_confirm':'이 가게의 비공개 메모를 삭제하시겠습니까? (마커 링도 제거됩니다)','note.deleted':'🗑 비공개 메모 삭제됨','ref.loading':'코드 로드 중이에요. 잠시만요!','ref.copied':'📋 추천 코드 복사됨: {code}','ref.copy_fail':'복사 실패 — 코드를 직접 선택해 복사해주세요','ref.copied_btn':'✅ 복사됨','ref.login_needed':'로그인 필요','darkmode.on':'🌙 다크모드로 전환했어요','darkmode.off':'☀️ 라이트모드로 전환했어요','apple.coming':'🍎 Apple 로그인은 준비 중이에요. 곧 만나요!','banned.cant_post':'🚫 부적절한 표현이 포함되어 등록할 수 없어요','banned.no_permission':'🚫 작성 권한이 없어요 (계정 제한 중)','report.select_reason':'신고 사유를 선택해주세요','report.fail':'신고 실패: {msg}','report.submitted':'🚨 신고가 접수됐어요. 운영자가 검토합니다','save.header_only':'⚠️ 영수증 헤더만 저장됐어요(품목 누락). 다시 시도해 주세요',
     'scan.subtitle':'스캔 방식을 선택하세요','scan.camera.title':'카메라로 촬영','scan.camera.sub':'실시간 OCR · Google Vision API',
     'scan.gallery.title':'갤러리에서 선택','scan.gallery.sub':'저장된 영수증 사진',
     'scan.multi.title':'긴 영수증 · 여러 장 찍기','scan.multi.sub':'나눠서 촬영 후 AI가 하나로 합쳐서 분석',
@@ -13963,6 +13965,7 @@ var I18N = {
     'talk.write':'Write post','talk.placeholder':'Share today’s savings tips...','talk.post':'Post',
     'empty.history':'No receipts yet','empty.calendar':'No records on this day','empty.search':'No results',
     'toast.saved':'✓ Saved','toast.deleted':'✓ Deleted','toast.copied':'Copied','toast.login_required':'Login required','toast.error':'An error occurred',
+    'comment.penalty':'🚫 Commenting is restricted','comment.until':'until','comment.permanent':'permanent','comment.quota_bonus':'🎁 Ad bonus! +1 comment available','note.rating_fail':'⚠ Failed to save rating','note.delete_confirm':'Delete this private note? (the marker ring is removed too)','note.deleted':'🗑 Private note deleted','ref.loading':'Loading code, just a moment!','ref.copied':'📋 Referral code copied: {code}','ref.copy_fail':'Copy failed — please select and copy manually','ref.copied_btn':'✅ Copied','ref.login_needed':'Login required','darkmode.on':'🌙 Switched to dark mode','darkmode.off':'☀️ Switched to light mode','apple.coming':'🍎 Apple sign-in is coming soon!','banned.cant_post':'🚫 Contains inappropriate words; cannot post','banned.no_permission':'🚫 No posting permission (account restricted)','report.select_reason':'Please select a report reason','report.fail':'Report failed: {msg}','report.submitted':'🚨 Report received. Our team will review it','save.header_only':'⚠️ Only the header was saved (items missing). Please try again',
     'scan.subtitle':'Choose scan method','scan.camera.title':'Take Photo','scan.camera.sub':'Live OCR · Google Vision API',
     'scan.gallery.title':'Pick from Gallery','scan.gallery.sub':'Saved receipt photos',
     'scan.multi.title':'Long Receipt · Multi-shot','scan.multi.sub':'Split shots → AI merges & analyzes',
@@ -14209,6 +14212,7 @@ var I18N = {
     'talk.write':'写帖子','talk.placeholder':'分享今天的省钱情报...','talk.post':'发布',
     'empty.history':'还没有票据','empty.calendar':'这天没有记录','empty.search':'未找到结果',
     'toast.saved':'✓ 已保存','toast.deleted':'✓ 已删除','toast.copied':'已复制','toast.login_required':'需要登录','toast.error':'发生错误',
+    'comment.penalty':'🚫 评论功能受限中','comment.until':'之前','comment.permanent':'永久','comment.quota_bonus':'🎁 广告奖励！可+1条评论','note.rating_fail':'⚠ 评分保存失败','note.delete_confirm':'删除该店铺的私密备注吗？（标记环也会移除）','note.deleted':'🗑 已删除私密备注','ref.loading':'代码加载中，请稍候！','ref.copied':'📋 已复制推荐码: {code}','ref.copy_fail':'复制失败 — 请手动选择复制','ref.copied_btn':'✅ 已复制','ref.login_needed':'需要登录','darkmode.on':'🌙 已切换到深色模式','darkmode.off':'☀️ 已切换到浅色模式','apple.coming':'🍎 Apple登录敬请期待！','banned.cant_post':'🚫 含不当用语，无法发布','banned.no_permission':'🚫 无发布权限（账号受限）','report.select_reason':'请选择举报理由','report.fail':'举报失败: {msg}','report.submitted':'🚨 已收到举报，运营将审核','save.header_only':'⚠️ 仅保存了头部（缺少明细），请重试',
     'scan.subtitle':'选择扫描方式','scan.camera.title':'拍照','scan.camera.sub':'实时 OCR · Google Vision API',
     'scan.gallery.title':'从相册选择','scan.gallery.sub':'已保存的票据照片',
     'scan.multi.title':'长票据 · 多张拍摄','scan.multi.sub':'分张拍摄 → AI合并分析',
@@ -16365,7 +16369,7 @@ async function loadReferralCodeToSettings() {
   var disp = document.getElementById('sp-ref-code-display');
   if (!disp) return;
   if (!_sb || !_currentUser) {
-    disp.textContent = '로그인 필요';
+    disp.textContent = t('ref.login_needed');
     return;
   }
   disp.textContent = '...';
@@ -16391,8 +16395,8 @@ async function loadReferralCodeToSettings() {
 function copyReferralCode() {
   var disp = document.getElementById('sp-ref-code-display');
   var code = disp ? (disp.dataset.code || disp.textContent || '').trim() : '';
-  if (!code || code === '— — — —' || code === '...' || code === '로그인 필요') {
-    if (typeof showToast === 'function') showToast('코드 로드 중이에요. 잠시만요!');
+  if (!code || code === '— — — —' || code === '...' || code === t('ref.login_needed')) {
+    if (typeof showToast === 'function') showToast(t('ref.loading'));
     return;
   }
   // 클립보드 복사 시도
@@ -16420,12 +16424,12 @@ function copyReferralCode() {
   var btn = document.getElementById('sp-ref-copy-btn');
   if (btn) {
     var orig = btn.innerHTML;
-    btn.innerHTML = '✅ 복사됨';
+    btn.innerHTML = t('ref.copied_btn');
     btn.style.background = 'var(--green)';
     setTimeout(function(){ btn.innerHTML = orig; btn.style.background = 'var(--gold)'; }, 1500);
   }
   if (typeof showToast === 'function') {
-    showToast(copied ? '📋 추천 코드 복사됨: ' + code : '복사 실패 — 코드를 직접 선택해 복사해주세요');
+    showToast(copied ? t('ref.copied', {code: code}) : t('ref.copy_fail'));
   }
 }
 function closeOv(id){
@@ -16812,7 +16816,7 @@ function applyDarkMode(isDark, silent) {
   }
   // status bar 색상도 다크/라이트에 맞춰 갱신
   if (typeof _updateMobileBarColor === 'function') _updateMobileBarColor();
-  if (!silent) showToast(_isDark ? '🌙 다크모드로 전환했어요' : '☀️ 라이트모드로 전환했어요');
+  if (!silent) showToast(_isDark ? t('darkmode.on') : t('darkmode.off'));
 }
 
 function toggleDarkMode() {
@@ -18454,7 +18458,7 @@ async function authGoogle() {
 
 async function authApple() {
   // Apple Developer Program 가입 후 활성화 예정
-  showToast('🍎 Apple 로그인은 준비 중이에요. 곧 만나요!');
+  showToast(t('apple.coming'));
 }
 
 async function authLine() {
@@ -20164,11 +20168,11 @@ function _extractBannedWord(err) {
 function _handleCommentInsertError(err) {
   if (_isBannedWordError(err)) {
     var w = _extractBannedWord(err);
-    showToast('🚫 부적절한 표현이 포함되어 등록할 수 없어요' + (w ? ' (차단어: ' + w + ')' : ''));
+    showToast(w ? t('toast.banned_word', {word: w}) : t('banned.cant_post'));
     return true;
   }
   if (_isUserBannedError(err)) {
-    showToast('🚫 작성 권한이 없어요 (사용자 차단됨)');
+    showToast(t('banned.no_permission'));
     return true;
   }
   return false;
@@ -20182,7 +20186,7 @@ var _userReportTarget = null;  // { table, id, snapshot, reportedUserId }
 
 // ── 사용자: 댓글에서 ⋮ → 신고 클릭 ──
 function userOpenReportModal(commentTable, commentId, snapshot, reportedUserId) {
-  if (!_currentUser) { showToast('로그인 후 이용해주세요'); return; }
+  if (!_currentUser) { showToast(t('toast.login_required')); return; }
   _userReportTarget = { table: commentTable, id: commentId, snapshot: snapshot || '', reportedUserId: reportedUserId || null };
   // 폼 초기화
   document.querySelectorAll('input[name="rep-reason"]').forEach(function(r){ r.checked = false; });
@@ -20195,7 +20199,7 @@ async function userSubmitReport() {
   var reasonInput = document.querySelector('input[name="rep-reason"]:checked');
   var reason = reasonInput ? reasonInput.value : null;
   var detail = (document.getElementById('report-detail').value || '').trim();
-  if (!reason) { showToast('신고 사유를 선택해주세요'); return; }
+  if (!reason) { showToast(t('report.select_reason')); return; }
   var payload = {
     comment_table: _userReportTarget.table,
     comment_id: _userReportTarget.id,
@@ -20208,10 +20212,10 @@ async function userSubmitReport() {
   };
   var res = await _sb.from('comment_reports').insert(payload);
   if (res.error) {
-    showToast('신고 실패: ' + res.error.message);
+    showToast(t('report.fail', {msg: res.error.message}));
     return;
   }
-  showToast('🚨 신고가 접수됐어요. 운영자가 검토합니다');
+  showToast(t('report.submitted'));
   _userReportTarget = null;
   closeOv('ov-report-comment');
 }
@@ -20508,7 +20512,7 @@ function _isUserBannedError(err) {
 }
 function _handleUserBannedError(err) {
   if (_isUserBannedError(err)) {
-    showToast('🚫 작성 권한이 없어요 (사용자 차단)');
+    showToast(t('banned.no_permission'));
     return true;
   }
   return false;
@@ -28842,7 +28846,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 506;
+window.__APP_BUILD__ = 507;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
