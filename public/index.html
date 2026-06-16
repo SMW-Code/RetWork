@@ -1242,16 +1242,16 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       </div>
     </div>
 
-    <!-- 절약 배너 (내 영수증 이력 기반 실데이터 — 절약액 없으면 renderHome 에서 숨김) -->
+    <!-- 광고 (월간리포트 ↔ 절약 배너 사이) — 좌우 16px 마진으로 다른 카드와 폭 일치 -->
+    <div id="ad-slot-home-list" style="margin:12px 16px 0;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:64px;display:flex;align-items:center;justify-content:center;">
+      <div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div>
+    </div>
+
+    <!-- 절약 배너 (광고 아래로 이동) — 내 영수증 이력 기반 실데이터, 절약액 없으면 '수집중' -->
     <div class="alert-banner" id="home-saving-banner" onclick="openSavingAnalysis()" style="display:none;">
       <span style="font-size:18px;flex-shrink:0;">💡</span>
       <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;" data-i18n="home.saving_cta">절약 기회 발견!</div><div id="home-saving-sub" style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;"></div></div>
       <span style="font-size:16px;color:#C8B273;">›</span>
-    </div>
-
-    <!-- 광고 (절약 배너 바로 아래로 이동됨) — 좌우 16px 마진으로 다른 카드와 폭 일치 -->
-    <div id="ad-slot-home-list" style="margin:12px 16px 0;background:var(--surface);border-radius:14px;border:0.5px solid var(--border);overflow:hidden;min-height:64px;display:flex;align-items:center;justify-content:center;">
-      <div style="color:var(--text-3);font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;"><span style="font-size:16px;">📢</span><span>広告</span></div>
     </div>
 
     <!-- 날짜별 그룹 영수증 -->
@@ -28834,7 +28834,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 503;
+window.__APP_BUILD__ = 504;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
