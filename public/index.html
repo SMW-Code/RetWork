@@ -1212,7 +1212,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 추천 대기 보상 배너 (청구 가능할 때만 표시) → 탭하면 광고 보고 200치리 받기 -->
     <div id="home-ref-reward-banner" onclick="claimReferralRewardViaAd()" style="display:none;margin:12px 16px 0;background:linear-gradient(135deg,#06C755,#04a045);border-radius:14px;padding:12px 16px;align-items:center;gap:10px;cursor:pointer;box-shadow:var(--shadow-sm);">
       <span style="font-size:20px;">🎁</span>
-      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;">추천 보상 <span id="home-ref-reward-count">0</span>건 대기 중!</div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;">광고 보고 200チリ씩 받기</div></div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:800;color:#fff;"><span data-i18n="home.ref_reward_pre">추천 보상 </span><span id="home-ref-reward-count">0</span><span data-i18n="home.ref_reward_post">건 대기 중!</span></div><div style="font-size:11px;color:rgba(255,255,255,.85);margin-top:2px;" data-i18n="home.ref_reward_sub">광고 보고 200チリ씩 받기</div></div>
       <span style="font-size:16px;color:rgba(255,255,255,.9);">›</span>
     </div>
 
@@ -8710,7 +8710,7 @@ function renderHistory(cat) {
   });
   // 카드 없음: 빈 메시지 + 광고 / 1~3개: 끝에 광고
   if (!html) {
-    html = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:28px;margin-bottom:10px;">📭</div><div style="font-size:13px;color:var(--text-3);font-weight:600;">'+histYear+'年 '+histMonth+'月 내역이 없어요</div></div>' + _histAdHtml;
+    html = '<div style="padding:40px 20px;text-align:center;"><div style="font-size:28px;margin-bottom:10px;">📭</div><div style="font-size:13px;color:var(--text-3);font-weight:600;">'+t('hist.month',{y:histYear,m:histMonth,mon:_monName(histMonth)})+t('hist.no_records')+'</div></div>' + _histAdHtml;
   } else if (!histAdDone) {
     html += _histAdHtml;
   }
@@ -9906,7 +9906,7 @@ function _mrBuildCardCanvas(){
     // 월 라벨
     x.fillStyle = 'rgba(255,255,255,.85)';
     x.font = '500 40px '+FONT;
-    x.fillText(y + '年 ' + m + '月 리포트', PX, cy);
+    x.fillText(t('rep.share_title',{y:y,m:m,mon:_monName(m)}), PX, cy);
     cy += 100;
 
     // 총 지출 (큰 숫자)
@@ -13615,7 +13615,7 @@ var I18N = {
     'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
     'rep.week_daily_title':'{y}年 {m}月 今週の日別支出','home.week_daily':'今週の日別支出','home.item_count':'{n}品目','home.date':'{y}年 {m}月 {d}日 ({dow})','home.weekdays_sun':'日,月,火,水,木,金,土',
     'rep.pay_breakdown':'💳 支払い方法別支出','rep.unit_cnt':'件','rep.book_title':'{y}年 {m}月 家計簿','rep.week_n':'第{n}週',
-    'hist.title':'履歴','hist.month':'{y}年 {m}月','hist.total':'合計 ¥{amt} ({n}件)','rep.mon_short':'{m}月','cat.cnt_unit':'件','mdet.count_n':'{n}件','mdet.detail_title':'{y}年 {m}月 支出詳細',
+    'hist.title':'履歴','hist.month':'{y}年 {m}月','hist.total':'合計 ¥{amt} ({n}件)','hist.no_records':'の履歴がありません','rep.share_title':'{y}年 {m}月 レポート','rep.mon_short':'{m}月','cat.cnt_unit':'件','mdet.count_n':'{n}件','mdet.detail_title':'{y}年 {m}月 支出詳細',
     'mdet.by_category':'カテゴリ別','mdet.top_stores':'よく行く店 TOP 3','mdet.visits':'{n}回訪問','mdet.top_day':'最高支出日','mdet.spend_days':'支出あり','mdet.no_spend_days':'支出なし','mdet.daily_avg':'1日平均','mdet.days_n':'{n}日',
     'pay.label.cash':'現金','pay.label.credit':'クレジットカード','pay.label.ic':'交通系IC','pay.label.qr':'QR決済','pay.label.debit':'デビットカード',
     'rank.nth':'{n}位','rep.weekdays':'月,火,水,木,金,土,日','rep.no_data':'データがありません','rep.detail_view':'詳細を見る ›',
@@ -13647,7 +13647,7 @@ var I18N = {
     'confirm.delete_private_note':'この店の非公開メモを削除しますか？<br>(マーカーリングも消えます)',
     'toast.private_deleted':'🗑 非公開メモを削除しました',
     // 홈 메인 라벨 (월 합계 지출 · N건)
-    'home.month_total':'{m}月 合計支出 · {n}件',
+    'home.month_total':'{m}月 合計支出 · {n}件','home.ref_reward_pre':'紹介報酬 ','home.ref_reward_post':'件 受け取り待ち！','home.ref_reward_sub':'広告を見て200チリずつ受け取る',
     'home.vs_prev_save':'前月比 ▼ ¥{amt} 節約中 🎉','home.vs_prev_up':'前月比 ▲ ¥{amt} 増加',
     // OCR 결과 저장 화면
     'ocr.result.title':'✅ 認識結果の確認','ocr.result.multipage':'📜 分割撮影',
@@ -13896,7 +13896,7 @@ var I18N = {
     'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
     'rep.week_daily_title':'{y}年 {m}月 이번 주 일별 지출','home.week_daily':'이번 주 일별 지출','home.item_count':'{n}품목','home.date':'{y}年 {m}月 {d}日 ({dow})','home.weekdays_sun':'일,월,화,수,목,금,토',
     'rep.pay_breakdown':'💳 결제수단별 지출','rep.unit_cnt':'건','rep.book_title':'{y}年 {m}月 가계부','rep.week_n':'{n}주',
-    'hist.title':'내역','hist.month':'{y}年 {m}月','hist.total':'총 ¥{amt} ({n}건)','rep.mon_short':'{m}月','cat.cnt_unit':'건','mdet.count_n':'{n}건','mdet.detail_title':'{y}年 {m}月 지출 상세',
+    'hist.title':'내역','hist.month':'{y}年 {m}月','hist.total':'총 ¥{amt} ({n}건)','hist.no_records':' 내역이 없어요','rep.share_title':'{y}年 {m}月 리포트','rep.mon_short':'{m}月','cat.cnt_unit':'건','mdet.count_n':'{n}건','mdet.detail_title':'{y}年 {m}月 지출 상세',
     'mdet.by_category':'카테고리별','mdet.top_stores':'자주 간 가게 TOP 3','mdet.visits':'{n}회 방문','mdet.top_day':'최고 지출일','mdet.spend_days':'지출 있는 날','mdet.no_spend_days':'지출 없는 날','mdet.daily_avg':'일 평균','mdet.days_n':'{n}일',
     'pay.label.cash':'현금','pay.label.credit':'신용카드','pay.label.ic':'IC카드','pay.label.qr':'QR결제','pay.label.debit':'체크카드',
     'rank.nth':'{n}위','rep.weekdays':'월,화,수,목,금,토,일','rep.no_data':'데이터가 없어요','rep.detail_view':'상세 보기 ›',
@@ -13921,7 +13921,7 @@ var I18N = {
     'confirm.delete':'정말 삭제하시겠습니까?','confirm.yes':'네','confirm.no':'아니오',
     'confirm.delete_private_note':'이 가게의 비공개 메모를 삭제하시겠습니까?<br>(마커 링도 제거됩니다)',
     'toast.private_deleted':'🗑 비공개 메모 삭제됨',
-    'home.month_total':'{m}月 합계 지출 · {n}건',
+    'home.month_total':'{m}月 합계 지출 · {n}건','home.ref_reward_pre':'추천 보상 ','home.ref_reward_post':'건 대기 중!','home.ref_reward_sub':'광고 보고 200치리씩 받기',
     'home.vs_prev_save':'전월 대비 ▼ ¥{amt} 절약 중 🎉','home.vs_prev_up':'전월 대비 ▲ ¥{amt} 증가',
     'ocr.result.title':'✅ 인식 결과 확인','ocr.result.multipage':'📜 분할촬영',
     'ocr.store_name':'가게 이름','ocr.date':'날짜','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
@@ -14159,7 +14159,7 @@ var I18N = {
     'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
     'rep.week_daily_title':'{mon} {y} · This week','home.week_daily':'This week by day','home.item_count':'{n} items','home.date':'{dow}, {mon} {d}, {y}','home.weekdays_sun':'Sun,Mon,Tue,Wed,Thu,Fri,Sat',
     'rep.pay_breakdown':'💳 Spend by payment','rep.unit_cnt':'','rep.book_title':'{y}/{m} Budget','rep.week_n':'W{n}',
-    'hist.title':'History','hist.month':'{mon} {y}','hist.total':'Total ¥{amt} ({n})','rep.mon_short':'{mon}','cat.cnt_unit':'','mdet.count_n':'{n} items','mdet.detail_title':'{mon} {y} Spending',
+    'hist.title':'History','hist.month':'{mon} {y}','hist.total':'Total ¥{amt} ({n})','hist.no_records':' has no records','rep.share_title':'{mon} {y} Report','rep.mon_short':'{mon}','cat.cnt_unit':'','mdet.count_n':'{n} items','mdet.detail_title':'{mon} {y} Spending',
     'mdet.by_category':'By category','mdet.top_stores':'Top 3 stores','mdet.visits':'{n} visits','mdet.top_day':'Top spending day','mdet.spend_days':'Days with spending','mdet.no_spend_days':'No-spend days','mdet.daily_avg':'Daily avg','mdet.days_n':'{n} days',
     'pay.label.cash':'Cash','pay.label.credit':'Credit','pay.label.ic':'IC Card','pay.label.qr':'QR Pay','pay.label.debit':'Debit',
     'rank.nth':'#{n}','rep.weekdays':'Mon,Tue,Wed,Thu,Fri,Sat,Sun','rep.no_data':'No data','rep.detail_view':'View detail ›',
@@ -14184,7 +14184,7 @@ var I18N = {
     'confirm.delete':'Are you sure to delete?','confirm.yes':'Yes','confirm.no':'No',
     'confirm.delete_private_note':'Delete the private note for this store?<br>(Marker ring will be removed)',
     'toast.private_deleted':'🗑 Private note deleted',
-    'home.month_total':'{m}/ Total spend · {n}',
+    'home.month_total':'{m}/ Total spend · {n}','home.ref_reward_pre':'Referral reward: ','home.ref_reward_post':' pending!','home.ref_reward_sub':'Watch an ad to get 200 Chiri each',
     'home.vs_prev_save':'▼ ¥{amt} saved vs last month 🎉','home.vs_prev_up':'▲ ¥{amt} more than last month',
     'ocr.result.title':'✅ Confirm Recognition','ocr.result.multipage':'📜 Multi-shot',
     'ocr.store_name':'Store Name','ocr.date':'Date','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
@@ -14422,7 +14422,7 @@ var I18N = {
     'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
     'rep.week_daily_title':'{y}年 {m}月 本周每日支出','home.week_daily':'本周每日支出','home.item_count':'{n}件','home.date':'{y}年{m}月{d}日 ({dow})','home.weekdays_sun':'日,一,二,三,四,五,六',
     'rep.pay_breakdown':'💳 按付款方式支出','rep.unit_cnt':'笔','rep.book_title':'{y}年 {m}月 账本','rep.week_n':'第{n}周',
-    'hist.title':'记录','hist.month':'{y}年 {m}月','hist.total':'共 ¥{amt} ({n}笔)','rep.mon_short':'{m}月','cat.cnt_unit':'笔','mdet.count_n':'{n}笔','mdet.detail_title':'{y}年 {m}月 支出明细',
+    'hist.title':'记录','hist.month':'{y}年 {m}月','hist.total':'共 ¥{amt} ({n}笔)','hist.no_records':' 没有记录','rep.share_title':'{y}年 {m}月 报告','rep.mon_short':'{m}月','cat.cnt_unit':'笔','mdet.count_n':'{n}笔','mdet.detail_title':'{y}年 {m}月 支出明细',
     'mdet.by_category':'按分类','mdet.top_stores':'常去店铺 TOP 3','mdet.visits':'{n}次到访','mdet.top_day':'最高支出日','mdet.spend_days':'有支出天数','mdet.no_spend_days':'无支出天数','mdet.daily_avg':'日均','mdet.days_n':'{n}天',
     'pay.label.cash':'现金','pay.label.credit':'信用卡','pay.label.ic':'交通卡','pay.label.qr':'QR支付','pay.label.debit':'借记卡',
     'rank.nth':'第{n}名','rep.weekdays':'一,二,三,四,五,六,日','rep.no_data':'暂无数据','rep.detail_view':'查看详情 ›',
@@ -14447,7 +14447,7 @@ var I18N = {
     'confirm.delete':'确定要删除吗？','confirm.yes':'是','confirm.no':'否',
     'confirm.delete_private_note':'删除该店的私密备注吗？<br>(图钉环也会消失)',
     'toast.private_deleted':'🗑 私密备注已删除',
-    'home.month_total':'{m}月 总支出 · {n}笔',
+    'home.month_total':'{m}月 总支出 · {n}笔','home.ref_reward_pre':'推荐奖励 ','home.ref_reward_post':'项待领取！','home.ref_reward_sub':'看广告每次领200 Chiri',
     'home.vs_prev_save':'较上月 ▼ ¥{amt} 节省中 🎉','home.vs_prev_up':'较上月 ▲ ¥{amt} 增加',
     'ocr.result.title':'✅ 确认识别结果','ocr.result.multipage':'📜 分段拍摄',
     'ocr.store_name':'店名','ocr.date':'日期','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
@@ -29050,7 +29050,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 522;
+window.__APP_BUILD__ = 523;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
