@@ -784,8 +784,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sheet-sub{font-size:12px;color:var(--text-3);margin-bottom:16px;font-weight:500;}
 
 /* ── OCR 스캔 모달 ── */
-.scan-opt{display:flex;align-items:center;gap:14px;padding:15px 16px;background:var(--bg);border-radius:14px;cursor:pointer;margin-bottom:10px;border:0.5px solid var(--border);}
-.scan-opt:active{opacity:.8;}
+.scan-opt{display:flex;align-items:center;gap:14px;padding:14px;background:var(--surface);border-radius:18px;cursor:pointer;margin-bottom:10px;border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:transform .14s cubic-bezier(.4,0,.2,1),border-color .14s,box-shadow .14s;}
+.scan-opt:active{transform:scale(.975);}
+@media(hover:hover){.scan-opt:hover{border-color:var(--green);box-shadow:0 4px 16px rgba(0,0,0,.08);}}
+.scan-ic{width:52px;height:52px;border-radius:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.scan-ti{flex:1;min-width:0;}
+.scan-ti b{display:block;font-size:15px;font-weight:800;color:var(--text-1);letter-spacing:-.2px;line-height:1.25;}
+.scan-ti span{display:block;font-size:11.5px;color:var(--text-3);margin-top:3px;line-height:1.35;}
+.scan-arrow{color:var(--text-3);flex-shrink:0;display:flex;align-items:center;opacity:.55;}
 
 /* API 키 설정 카드 */
 .api-setup-card{margin:0 16px 12px;background:var(--surface);border-radius:18px;border:1.5px dashed var(--green-mid);padding:16px;box-shadow:var(--shadow-xs);}
@@ -2605,35 +2611,33 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   <div class="sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-title" data-i18n="scan.title">レシートをスキャン</div>
-    <div class="sheet-sub" data-i18n="scan.subtitle">スキャン方法を選択</div>
+    <div class="sheet-sub" style="margin-bottom:14px;" data-i18n="scan.subtitle">スキャン方法を選択</div>
     <!-- 1. 카메라 (한 장 / 긴 영수증 sub 선택) -->
-    <div class="scan-opt" style="display:flex;cursor:pointer;" onclick="_openScanCameraChoice()">
-      <span style="font-size:26px;">📷</span>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.camera.title">カメラで撮影</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">1枚 또는 緊いレシート 多枚 옵션</div>
+    <div class="scan-opt" onclick="_openScanCameraChoice()">
+      <div class="scan-ic" style="background:linear-gradient(135deg,var(--green-light),rgba(29,158,117,.18));">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </div>
-      <span style="margin-left:auto;font-size:14px;color:var(--text-3);align-self:center;">›</span>
+      <div class="scan-ti"><b data-i18n="scan.camera.title">カメラで撮影</b><span data-i18n="scan.camera.sub">1枚または長いレシートを複数枚で</span></div>
+      <span class="scan-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>
     <!-- 2. 갤러리 1장 -->
-    <label class="scan-opt" style="display:flex;cursor:pointer;">
-      <span style="font-size:26px;">🖼️</span>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="scan.gallery.title">ギャラリーから選択</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;" data-i18n="scan.gallery.sub">保存済みのレシート写真</div>
+    <label class="scan-opt">
+      <div class="scan-ic" style="background:linear-gradient(135deg,#EEF1FE,rgba(99,102,241,.18));">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>
       </div>
+      <div class="scan-ti"><b data-i18n="scan.gallery.title">ギャラリーから選択</b><span data-i18n="scan.gallery.sub">保存済みのレシート写真</span></div>
+      <span class="scan-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
       <input type="file" accept="image/*" style="display:none;" onchange="handleImageFile(this)">
     </label>
     <!-- 3. 수동 기입 (build 332 신규) -->
-    <div class="scan-opt" style="display:flex;cursor:pointer;" onclick="closeOv('ov-scan');setTimeout(openManualEntry,150);">
-      <span style="font-size:26px;">✏️</span>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);">手動入力</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">레시트 없이 직접 입력</div>
+    <div class="scan-opt" onclick="closeOv('ov-scan');setTimeout(openManualEntry,150);">
+      <div class="scan-ic" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,160,23,.18));">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
       </div>
-      <span style="margin-left:auto;font-size:14px;color:var(--text-3);align-self:center;">›</span>
+      <div class="scan-ti"><b data-i18n="scan.manual.title">手動入力</b><span data-i18n="scan.manual.sub">レシートなしで直接入力</span></div>
+      <span class="scan-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan')" data-i18n="btn.cancel">キャンセル</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:8px;cursor:pointer;padding:10px;" onclick="closeOv('ov-scan')" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -2641,27 +2645,25 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 <div class="overlay bottom-sheet-overlay" id="ov-scan-camera" onclick="closeOvOutside(event,'ov-scan-camera')">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title">📷 カメラで撮影</div>
-    <div class="sheet-sub">1枚 또는 緊いレシート 複数枚を選択</div>
+    <div class="sheet-title" data-i18n="scan.cam.title">カメラで撮影</div>
+    <div class="sheet-sub" style="margin-bottom:14px;" data-i18n="scan.cam.subtitle">1枚または長いレシートを複数枚で</div>
     <!-- 한 장 -->
-    <label class="scan-opt" style="display:flex;cursor:pointer;">
-      <span style="font-size:26px;">📸</span>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);">1枚 撮影</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">普通のレシート · 1枚で完了</div>
+    <label class="scan-opt">
+      <div class="scan-ic" style="background:linear-gradient(135deg,var(--green-light),rgba(29,158,117,.18));">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </div>
+      <div class="scan-ti"><b data-i18n="scan.cam.single">1枚撮影</b><span data-i18n="scan.cam.single_sub">普通のレシート · 1枚で完了</span></div>
       <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="_scanCameraSingleDone(this)">
     </label>
     <!-- 긴 영수증 여러 장 -->
-    <div class="scan-opt" style="display:flex;cursor:pointer;" onclick="closeOv('ov-scan-camera');setTimeout(startMultiScan,150);">
-      <span style="font-size:26px;">📜</span>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:var(--text-1);">長いレシート · 複数枚撮影</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">分けて撮影 → AI が合体して分析</div>
+    <div class="scan-opt" onclick="closeOv('ov-scan-camera');setTimeout(startMultiScan,150);">
+      <div class="scan-ic" style="background:linear-gradient(135deg,#EEF1FE,rgba(99,102,241,.18));">
+        <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2zM8 7h8M8 11h8M8 15h5"/></svg>
       </div>
-      <span style="margin-left:auto;font-size:11px;font-weight:700;color:var(--green);background:rgba(29,158,117,0.12);padding:3px 8px;border-radius:10px;align-self:center;">NEW</span>
+      <div class="scan-ti"><b data-i18n="scan.cam.multi">長いレシート · 複数枚撮影</b><span data-i18n="scan.cam.multi_sub">分けて撮影 → AI が合体して分析</span></div>
+      <span style="font-size:10px;font-weight:800;color:#fff;background:var(--green-grad);padding:3px 9px;border-radius:20px;align-self:center;flex-shrink:0;letter-spacing:.5px;">NEW</span>
     </div>
-    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:12px;cursor:pointer;padding:8px;" onclick="closeOv('ov-scan-camera')" data-i18n="btn.cancel">キャンセル</div>
+    <div style="text-align:center;font-size:13px;font-weight:600;color:var(--text-3);margin-top:8px;cursor:pointer;padding:10px;" onclick="closeOv('ov-scan-camera')" data-i18n="btn.cancel">キャンセル</div>
   </div>
 </div>
 
@@ -13426,7 +13428,7 @@ var I18N = {
     'comment.penalty':'🚫 コメント作成が制限されています','comment.until':'まで','comment.permanent':'無期限','comment.quota_bonus':'🎁 広告ボーナス！コメント+1回作成できます','note.rating_fail':'⚠ 評価の保存に失敗しました','note.delete_confirm':'このお店のプライベートメモを削除しますか？（マーカーリングも消えます）','note.deleted':'🗑 プライベートメモを削除しました','ref.loading':'コードを読み込み中です。少々お待ちください！','ref.copied':'📋 紹介コードをコピー: {code}','ref.copy_fail':'コピーに失敗 — コードを選択してコピーしてください','ref.copied_btn':'✅ コピー済み','ref.login_needed':'ログインが必要','darkmode.on':'🌙 ダークモードに切り替えました','darkmode.off':'☀️ ライトモードに切り替えました','apple.coming':'🍎 Appleログインは準備中です。お楽しみに！','banned.cant_post':'🚫 不適切な表現が含まれるため投稿できません','banned.no_permission':'🚫 投稿権限がありません（アカウント制限中）','report.select_reason':'通報理由を選択してください','report.fail':'通報に失敗しました: {msg}','report.submitted':'🚨 通報を受け付けました。運営が確認します','save.header_only':'⚠️ ヘッダーのみ保存されました（明細が抜けています）。もう一度お試しください',
     // 스캔 모달
     'scan.subtitle':'スキャン方法を選択','scan.camera.title':'カメラで撮影','scan.camera.sub':'リアルタイム OCR · Google Vision API',
-    'scan.gallery.title':'ギャラリーから選択','scan.gallery.sub':'保存済みのレシート写真',
+    'scan.gallery.title':'ギャラリーから選択','scan.gallery.sub':'保存済みのレシート写真','scan.camera.sub':'1枚または長いレシートを複数枚で','scan.manual.title':'手動入力','scan.manual.sub':'レシートなしで直接入力','scan.cam.title':'カメラで撮影','scan.cam.subtitle':'1枚または長いレシートを複数枚で','scan.cam.single':'1枚撮影','scan.cam.single_sub':'普通のレシート · 1枚で完了','scan.cam.multi':'長いレシート · 複数枚撮影','scan.cam.multi_sub':'分けて撮影 → AIが合体して分析',
     'scan.multi.title':'長いレシート · 複数枚撮影','scan.multi.sub':'分けて撮影 → AI が合体して分析',
     // 분할 촬영
     'multi.title':'📜 長いレシート分割撮影','multi.sub':'上から順番に撮影してください',
@@ -13723,7 +13725,7 @@ var I18N = {
     'toast.saved':'✓ 저장됐어요','toast.deleted':'✓ 삭제됐어요','toast.copied':'복사됐어요','toast.login_required':'로그인이 필요합니다','toast.error':'오류가 발생했습니다',
     'comment.penalty':'🚫 댓글 작성 제한 중','comment.until':'까지','comment.permanent':'영구','comment.quota_bonus':'🎁 광고 노출 보너스! +1회 댓글 작성 가능','note.rating_fail':'⚠ 별점 저장 실패','note.delete_confirm':'이 가게의 비공개 메모를 삭제하시겠습니까? (마커 링도 제거됩니다)','note.deleted':'🗑 비공개 메모 삭제됨','ref.loading':'코드 로드 중이에요. 잠시만요!','ref.copied':'📋 추천 코드 복사됨: {code}','ref.copy_fail':'복사 실패 — 코드를 직접 선택해 복사해주세요','ref.copied_btn':'✅ 복사됨','ref.login_needed':'로그인 필요','darkmode.on':'🌙 다크모드로 전환했어요','darkmode.off':'☀️ 라이트모드로 전환했어요','apple.coming':'🍎 Apple 로그인은 준비 중이에요. 곧 만나요!','banned.cant_post':'🚫 부적절한 표현이 포함되어 등록할 수 없어요','banned.no_permission':'🚫 작성 권한이 없어요 (계정 제한 중)','report.select_reason':'신고 사유를 선택해주세요','report.fail':'신고 실패: {msg}','report.submitted':'🚨 신고가 접수됐어요. 운영자가 검토합니다','save.header_only':'⚠️ 영수증 헤더만 저장됐어요(품목 누락). 다시 시도해 주세요',
     'scan.subtitle':'스캔 방식을 선택하세요','scan.camera.title':'카메라로 촬영','scan.camera.sub':'실시간 OCR · Google Vision API',
-    'scan.gallery.title':'갤러리에서 선택','scan.gallery.sub':'저장된 영수증 사진',
+    'scan.gallery.title':'갤러리에서 선택','scan.gallery.sub':'저장된 영수증 사진','scan.camera.sub':'한 장 또는 긴 영수증 여러 장','scan.manual.title':'직접 입력','scan.manual.sub':'영수증 없이 직접 입력','scan.cam.title':'카메라로 촬영','scan.cam.subtitle':'한 장 또는 긴 영수증 여러 장','scan.cam.single':'한 장 촬영','scan.cam.single_sub':'일반 영수증 · 한 장으로 완료','scan.cam.multi':'긴 영수증 · 여러 장 촬영','scan.cam.multi_sub':'나눠 촬영 → AI가 합쳐서 분석',
     'scan.multi.title':'긴 영수증 · 여러 장 찍기','scan.multi.sub':'나눠서 촬영 후 AI가 하나로 합쳐서 분석',
     'multi.title':'📜 긴 영수증 분할 촬영','multi.sub':'위쪽부터 순서대로 찍어주세요',
     'multi.next.camera':'다음 장 촬영 (카메라)','multi.next.gallery':'다음 장 갤러리',
@@ -13980,7 +13982,7 @@ var I18N = {
     'toast.saved':'✓ Saved','toast.deleted':'✓ Deleted','toast.copied':'Copied','toast.login_required':'Login required','toast.error':'An error occurred',
     'comment.penalty':'🚫 Commenting is restricted','comment.until':'until','comment.permanent':'permanent','comment.quota_bonus':'🎁 Ad bonus! +1 comment available','note.rating_fail':'⚠ Failed to save rating','note.delete_confirm':'Delete this private note? (the marker ring is removed too)','note.deleted':'🗑 Private note deleted','ref.loading':'Loading code, just a moment!','ref.copied':'📋 Referral code copied: {code}','ref.copy_fail':'Copy failed — please select and copy manually','ref.copied_btn':'✅ Copied','ref.login_needed':'Login required','darkmode.on':'🌙 Switched to dark mode','darkmode.off':'☀️ Switched to light mode','apple.coming':'🍎 Apple sign-in is coming soon!','banned.cant_post':'🚫 Contains inappropriate words; cannot post','banned.no_permission':'🚫 No posting permission (account restricted)','report.select_reason':'Please select a report reason','report.fail':'Report failed: {msg}','report.submitted':'🚨 Report received. Our team will review it','save.header_only':'⚠️ Only the header was saved (items missing). Please try again',
     'scan.subtitle':'Choose scan method','scan.camera.title':'Take Photo','scan.camera.sub':'Live OCR · Google Vision API',
-    'scan.gallery.title':'Pick from Gallery','scan.gallery.sub':'Saved receipt photos',
+    'scan.gallery.title':'Pick from Gallery','scan.gallery.sub':'Saved receipt photos','scan.camera.sub':'One photo or a long receipt in parts','scan.manual.title':'Manual entry','scan.manual.sub':'Enter directly without a receipt','scan.cam.title':'Take a photo','scan.cam.subtitle':'One photo or a long receipt in parts','scan.cam.single':'Single shot','scan.cam.single_sub':'Regular receipt · done in one shot','scan.cam.multi':'Long receipt · multi-shot','scan.cam.multi_sub':'Shoot in parts → AI merges & analyzes',
     'scan.multi.title':'Long Receipt · Multi-shot','scan.multi.sub':'Split shots → AI merges & analyzes',
     'multi.title':'📜 Long Receipt Multi-shot','multi.sub':'Shoot from top to bottom',
     'multi.next.camera':'Next shot (Camera)','multi.next.gallery':'Next shot (Gallery)',
@@ -14237,7 +14239,7 @@ var I18N = {
     'toast.saved':'✓ 已保存','toast.deleted':'✓ 已删除','toast.copied':'已复制','toast.login_required':'需要登录','toast.error':'发生错误',
     'comment.penalty':'🚫 评论功能受限中','comment.until':'之前','comment.permanent':'永久','comment.quota_bonus':'🎁 广告奖励！可+1条评论','note.rating_fail':'⚠ 评分保存失败','note.delete_confirm':'删除该店铺的私密备注吗？（标记环也会移除）','note.deleted':'🗑 已删除私密备注','ref.loading':'代码加载中，请稍候！','ref.copied':'📋 已复制推荐码: {code}','ref.copy_fail':'复制失败 — 请手动选择复制','ref.copied_btn':'✅ 已复制','ref.login_needed':'需要登录','darkmode.on':'🌙 已切换到深色模式','darkmode.off':'☀️ 已切换到浅色模式','apple.coming':'🍎 Apple登录敬请期待！','banned.cant_post':'🚫 含不当用语，无法发布','banned.no_permission':'🚫 无发布权限（账号受限）','report.select_reason':'请选择举报理由','report.fail':'举报失败: {msg}','report.submitted':'🚨 已收到举报，运营将审核','save.header_only':'⚠️ 仅保存了头部（缺少明细），请重试',
     'scan.subtitle':'选择扫描方式','scan.camera.title':'拍照','scan.camera.sub':'实时 OCR · Google Vision API',
-    'scan.gallery.title':'从相册选择','scan.gallery.sub':'已保存的票据照片',
+    'scan.gallery.title':'从相册选择','scan.gallery.sub':'已保存的票据照片','scan.camera.sub':'单张或长票据分多张','scan.manual.title':'手动录入','scan.manual.sub':'无票据直接录入','scan.cam.title':'拍照','scan.cam.subtitle':'单张或长票据分多张','scan.cam.single':'拍一张','scan.cam.single_sub':'普通票据 · 一张完成','scan.cam.multi':'长票据 · 多张拍摄','scan.cam.multi_sub':'分开拍摄 → AI合并分析',
     'scan.multi.title':'长票据 · 多张拍摄','scan.multi.sub':'分张拍摄 → AI合并分析',
     'multi.title':'📜 长票据分段拍摄','multi.sub':'请从上往下依次拍摄',
     'multi.next.camera':'下一张（拍照）','multi.next.gallery':'下一张（相册）',
@@ -28879,7 +28881,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 512;
+window.__APP_BUILD__ = 513;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
