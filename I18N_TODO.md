@@ -1,6 +1,7 @@
 # i18n(4개국어) 미적용 추적 — RetWork `public/index.html`
 
-> 작성: 2026-06-16 (build 515 조사) / 갱신: build 521 (6개 영역 완료)
+> ✅ **2026-06-16 기준 주요 사용자 대면 영역 전부 완료 (build 516~525).** 남은 건 잔여 그룹(아래) 뿐.
+> 작성: 2026-06-16 (build 515 조사) / 갱신: build 525 (8개 영역 완료)
 > 목적: 일본어 기본값이라 **`data-i18n`/`t()` 누락 시 한·영·중 모드에서도 일본어(또는 하드코딩 한국어)가 그대로 노출**됨. 전수 목록 + 진행상황 추적.
 >
 > **정책(사용자 확정 2026-06-16):**
@@ -32,27 +33,20 @@
 - [x] **수동 핀 추가 모달** `ov-manual-pin`/`mp*` — **b519**. 키 `mp.store_name`/`mp.store_ph`/`mp.menu_price`/`mp.add_menu`/`mp.rating`/`mp.menu_name`/`mp.menu_photo`. `chiri.comment_ph`/`publish_btn`/`pub_reward_chip`/`ct.map.category`/`btn.cancel`/`ct.cat.other` 재사용. 카테고리 활성표시 data-cat 기반으로 수정.
 - [x] **가게 수정/위치 요청** `ov-store-edit-req`+`reqStoreEdit`/`reqStoreLocationEdit`/`submitStoreEditReq` + 가게탭 힌트(`storeDetailShow`/place-embed-sub) — **b520**. 키 `ser.*`(12) + `sd.tap_hint`. `sd.req_edit_done` 재사용.
 - [x] **지도 화면** `screen-map`(치즈/치리토크/리워드) — **b521**. 전체화면·현재위치 title, 잔액(`残高`/`pt`), `チリトーク` 헤더, 출석/광고 카드, 💬 코멘트. 키 `map.*`(8). `coin.balance`/`coin.unit`/`ct.tab.talk`/`rw.attendance`/`sd.write_comment`/`ct.map.pin.hint` 재사용.
+- [x] **설정 + 추천(레퍼럴) + 온보딩** — **b522**. 폰트크기(小/標準/大/特大)·`チリ` 단위·푸터 링크 / 추천 코드적용·실패·코드없음·본인·이미적용 토스트·친구가입 푸시·초대링크복사 / 온보딩 버튼·폰트 토스트. 키 `ref.*`(9)+`common.guest`+`settings.fs_*`(4)+`unit.chiri`+`onb.start_free`/`next`+`settings.fontsize_done`.
+- [x] **홈/이력** — **b523**. 홈 추천보상 배너, 이력 빈 월 메시지, 리포트 공유 캔버스 제목. 키 `home.ref_reward_*`(3)+`hist.no_records`+`rep.share_title`. (today-label/home-label/hist-month-label·ov-multi·ov-memo는 기존 t()/data-i18n로 이미 완비 확인.)
+- [x] **출석/광고시청 페이지 정적 + 출석 렌더** — **b524**. ov-attendance 제목·광고시청 페이지(자동재생/데일리힌트/광고/AdSense/프리미엄/詳細)·완료시트·출석 렌더(요일헤더 등). 키 `att.title/done/bonus_ad_title/dow`+`ad.autoplay_short/daily_hint`, 기존 ad.*/unit.chiri 재사용.
+- [x] **광고 시청 완료 화면·토스트** — **b525**. 보상/출석/보너스/추천/댓글한도/프라이빗/치리공개/메뉴사진/월별리포트/리포트펼침/저장 11분기 타이틀·토스트. 키 `adc.*`(18), `+Nチリ獲得`=`adc.earned{n}`.
 
 ---
 
-## ⬜ 남은 작업 (2개 영역)
+## ⬜ 남은 잔여 그룹 (저빈도/판단 필요 — 주요 화면은 전부 완료)
 
-### [ ] Task 5 — 출석/광고/리워드 모달 (가장 큼)
-- **`ov-attendance` 풀스크린**(~4349~4632, 정적 ~59곳): 출석 체크 화면, 자동재생 광고 미리보기, 댓글 한도, 추가보상 — JP+KR 혼용 대량. 대표: `📅 出席チェック`(→`rw.attendance` 재사용 가능), `광고 시청`, `自動再生`, `毎日見て…`, `+15 チリ`, `등록` 등.
-- **보상광고** `ov-reward-ad`(정적 2233~2255): `広告`, `✕ 閉じる`, `広告を読み込み中...`(→`ad.loading` 재사용), `+50チリ獲得！`(동적, `rv-complete-title`), `自動で閉じます…`. + 동적 `adStartRewardedVideo`(18250/18340 `広告を読み込み中...`)·완료 분기(~18292~18304 `+{n}チリ獲得！`/토스트들, 출석+광고 합산 등).
-- **광고 모달** `adShowModal`(~18139~18147): `광고 보고 메뉴 사진 등록`, `광고 보고 내용 확인하기`, `📊 광고 보고 리포트 펼치기`.
-- **가짜 광고 미리보기**(`ov-saveconfirm` 2155~2230 시뮬레이션 장식 `広告` 등): 실제 광고를 흉내낸 chrome라 **보류 가능**(판단 필요).
-
-### [ ] Task 7 — 설정/온보딩/추천/홈·달력·이력
-- **설정** `ov-settings`(2287~2483, ~11곳): `ユーザー`, `チリ`, 폰트 `小/標準/大/特大`, `サイトについて`/`プライバシー`/`利用規約`(SEO 링크 — 페이지 자체는 일본어지만 링크 라벨은 4개국어 대상), 추천보상 라벨.
-- **온보딩** `onbShowWizard`(~17967): `무료로 시작하기 →`/`다음`.
-- **추천(레퍼럴)** 토스트/푸시(~29093/29119/29141~29147 redeem, 29263 `🔗 초대 링크 복사됨`, 29457 `🔤 글자 크기를 변경했어요`, 29129 `ゲスト` 닉네임 폴백, 29132/29133 추천 푸시 텍스트).
-- **홈/달력/이력**: `screen-home`(~5곳: 헤더 날짜/추천보상/지출합계), `screen-calendar`(2: 연월·요일 `日`), `screen-history`(4: 월별 라벨·정렬), `ov-multi`(1: 최소2·최대5), `ov-memo`(1: placeholder).
-- **GPT설정** `_authRenderGptConfig`(~16536 `✅ OpenAI 키 저장됨…` — 사용자 노출 여부 확인, 개발용이면 스킵).
-
-### 보류/별도 그룹 (확인 필요)
-- **코인 내역 라벨**: `ctAddCoin(n, '📌 手動ピン登録'/'🧾 チリつも共有'/'📅 出席チェック' 등, ...)` — 여러 호출에 흩어진 일본어 라벨. 치리 내역 화면에 표시됨. 일괄 처리 권장(키 `coinlog.*` 신설).
-- **`renderPriceComparison`(가격 비교 탭)**: 커뮤니티와 별개 기능. 한국어 가능성 — 미조사.
+- **코인 내역 라벨**: `ctAddCoin(n, '📌 手動ピン登録'/'🧾 チリつも共有'/'📅 出席チェック'/'📺 広告視聴' 등, type)` — 여러 호출에 흩어진 일본어 라벨. **치리 내역(coin history) 화면에만** 표시됨. 일괄 처리 권장(키 `coinlog.*` 신설 후 ctAddCoin 호출부 일괄 치환). 저빈도.
+- **`renderPriceComparison`(가격 비교 탭)**: 커뮤니티와 별개 기능(지도 패널 compare 탭). 한국어 가능성 — 미조사. 필요 시 별도 확인.
+- **업로드 확인 모달 등 엣지**: `ov-upload-confirm`(~4316 `광고 시청 후 업로드 · 보상 +10チリ` 등) 일부 정적 — 미세 잔여. 저빈도.
+- **GPT설정** `_authRenderGptConfig`(`✅ OpenAI 키 저장됨…`): 개발/디버그용 추정 — 사용자 노출 여부 확인 후 결정(개발용이면 스킵).
+- **가짜 광고 미리보기**(`ov-saveconfirm` 시뮬레이션 장식 `広告` 등): 실제 광고를 흉내낸 chrome → **보류**(실광고로 대체됨).
 - **SEO 랜딩/블로그**(971~1047): 정책상 **일본어 고정**(대상 아님).
 
 ---
