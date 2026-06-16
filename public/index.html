@@ -2261,16 +2261,16 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="sheet-handle" style="margin:10px auto 6px;"></div>
     <div style="padding:8px 20px 28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <div id="ser-title" style="font-size:16px;font-weight:900;color:var(--text-1);">✏️ 修正リクエスト</div>
+        <div id="ser-title" style="font-size:16px;font-weight:900;color:var(--text-1);" data-i18n="ser.title_edit">✏️ 修正リクエスト</div>
         <div onclick="closeOv('ov-store-edit-req')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
       <div id="ser-store-name" style="font-size:12px;color:var(--text-3);margin-bottom:12px;"></div>
       <textarea id="ser-content" maxlength="500" oninput="var c=document.getElementById('ser-charcount');if(c)c.textContent=this.value.length;"
-        placeholder="修正してほしい内容を具体的に入力してください&#10;（例: 店名が違う / 閉店した / 場所がずれている / カテゴリが違う など）"
+        placeholder="修正してほしい内容を具体的に入力してください&#10;（例: 店名が違う / 閉店した / 場所がずれている / カテゴリが違う など）" data-i18n-placeholder="ser.ph_edit"
         style="width:100%;height:130px;border:1px solid var(--border-mid);border-radius:12px;padding:12px;font-size:14px;font-family:var(--font);resize:none;box-sizing:border-box;outline:none;background:var(--bg);color:var(--text-1);"></textarea>
       <div style="font-size:10px;color:var(--text-3);text-align:right;margin-top:4px;"><span id="ser-charcount">0</span>/500</div>
       <button onclick="submitStoreEditReq()" id="ser-submit-btn"
-        style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;">送信する</button>
+        style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;" data-i18n="ser.submit">送信する</button>
     </div>
   </div>
 </div>
@@ -3800,7 +3800,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:.5px solid var(--border);flex-shrink:0;">
       <div>
         <div style="font-size:14px;font-weight:800;color:var(--text-1);">🗺️ Google 지도</div>
-        <div id="place-embed-sub" style="font-size:10px;color:var(--text-3);margin-top:2px;">가게를 탭하면 혼잡도·리뷰가 표시됩니다</div>
+        <div id="place-embed-sub" style="font-size:10px;color:var(--text-3);margin-top:2px;" data-i18n="sd.tap_hint">가게를 탭하면 혼잡도·리뷰가 표시됩니다</div>
       </div>
       <div onclick="closePlaceEmbed()" style="cursor:pointer;width:32px;height:32px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text-2);">✕</div>
     </div>
@@ -13570,6 +13570,7 @@ var I18N = {
     'sd.reviews':'💬 訪問者レビュー ({n})','sd.receipt_verified':'🧾 レシート認証',
     'sd.private_title':'🔒 マイ非公開メモ','sd.rating_title':'評価 (1~10)','sd.rating_prompt':'評価を選んでください','sd.memo_ph':'個人メモ（任意・最大500文字）','sd.memo_save':'🔒 非公開で保存','sd.memo_update':'✏️ 修正を保存',
     'sd.req_edit':'修正リクエスト','sd.share':'共有','sd.close':'閉じる','sd.req_edit_done':'修正リクエストを受け付けました。確認後に反映されます。',
+    'ser.title_edit':'✏️ 修正リクエスト','ser.title_loc':'📍 位置修正リクエスト','ser.ph_edit':'修正してほしい内容を具体的に入力してください\n（例: 店名が違う / 閉店した / 場所がずれている / カテゴリが違う など）','ser.ph_loc':'位置がどう間違っているか教えてください\n（例: ピンが実際の場所とずれている / 別の場所だ / 未登録なので設定してほしい）','ser.loc_unregistered':' ・ 位置未登録','ser.no_detail':'（位置の修正リクエスト・詳細なし）','ser.loc_done':'📍 位置修正リクエストを受け付けました。確認後に反映されます。','ser.submit':'送信する','ser.sending':'送信中...','ser.loc_req_btn':'📍 位置修正をリクエスト','sd.tap_hint':'お店をタップすると混雑度・レビューが表示されます',
     'sd.weekdays_full':'日曜日,月曜日,火曜日,水曜日,木曜日,金曜日,土曜日','sd.closed':'定休日','sd.open_24':'24時間営業','sd.open_now':'🟢 営業中','sd.closed_now':'🔴 営業終了',
     // 온보딩 슬라이드 1~4
     'onb1.title':'ReceiptIQへようこそ！','onb1.desc':'レシート1枚から始まる<br>日本生活のスマート家計簿。<br>AIが自動で入力します。',
@@ -13852,6 +13853,7 @@ var I18N = {
     'sd.reviews':'💬 방문자 리뷰 ({n})','sd.receipt_verified':'🧾 영수증 인증',
     'sd.private_title':'🔒 내 비공개 메모','sd.rating_title':'평가 (1~10)','sd.rating_prompt':'평가를 선택하세요','sd.memo_ph':'개인 메모 (선택, 최대 500자)','sd.memo_save':'🔒 비공개 저장','sd.memo_update':'✏️ 수정 저장',
     'sd.req_edit':'수정 요청','sd.share':'공유하기','sd.close':'닫기','sd.req_edit_done':'수정 요청이 접수됐어요. 검토 후 반영됩니다.',
+    'ser.title_edit':'✏️ 수정 요청','ser.title_loc':'📍 위치 수정 요청','ser.ph_edit':'수정이 필요한 내용을 구체적으로 적어주세요\n(예: 가게명이 다름 / 폐점함 / 위치가 어긋남 / 카테고리가 다름 등)','ser.ph_loc':'위치가 어떻게 잘못됐는지 알려주세요\n(예: 핀이 실제 위치와 어긋남 / 다른 장소임 / 미등록이라 설정 필요)','ser.loc_unregistered':' · 위치 미등록','ser.no_detail':'(위치 수정 요청 · 상세 없음)','ser.loc_done':'📍 위치 수정 요청이 접수됐어요. 검토 후 반영됩니다.','ser.submit':'보내기','ser.sending':'보내는 중...','ser.loc_req_btn':'📍 위치 수정 요청','sd.tap_hint':'가게를 탭하면 혼잡도·리뷰가 표시됩니다',
     'sd.weekdays_full':'일요일,월요일,화요일,수요일,목요일,금요일,토요일','sd.closed':'정기휴일','sd.open_24':'24시간 영업','sd.open_now':'🟢 영업 중','sd.closed_now':'🔴 영업 종료',
     'onb1.title':'ReceiptIQ에 오신 걸 환영해요!','onb1.desc':'영수증 한 장으로 시작하는<br>일본 생활 스마트 가계부예요.<br>AI가 다 알아서 입력해줘요.',
     'onb2.title':'찍으면 바로 자동 입력!','onb2.desc':'영수증 사진을 찍으면<br>AI가 가게명 · 품목 · 금액을<br>자동으로 인식해서 기록해줘요.',
@@ -14112,6 +14114,7 @@ var I18N = {
     'sd.reviews':'💬 Visitor reviews ({n})','sd.receipt_verified':'🧾 Receipt verified',
     'sd.private_title':'🔒 My private memo','sd.rating_title':'Rating (1-10)','sd.rating_prompt':'Pick a rating','sd.memo_ph':'Personal memo (optional, max 500)','sd.memo_save':'🔒 Save privately','sd.memo_update':'✏️ Update',
     'sd.req_edit':'Request edit','sd.share':'Share','sd.close':'Close','sd.req_edit_done':'Edit request received. It will be applied after review.',
+    'ser.title_edit':'✏️ Request edit','ser.title_loc':'📍 Request location fix','ser.ph_edit':'Describe what needs fixing in detail\n(e.g. wrong name / closed / location off / wrong category)','ser.ph_loc':'Tell us how the location is wrong\n(e.g. pin is off / wrong place / not registered, please set it)','ser.loc_unregistered':' · location not set','ser.no_detail':'(Location fix request · no details)','ser.loc_done':'📍 Location fix request received. It will be applied after review.','ser.submit':'Submit','ser.sending':'Sending...','ser.loc_req_btn':'📍 Request location fix','sd.tap_hint':'Tap the store to see crowd level and reviews',
     'sd.weekdays_full':'Sunday,Monday,Tuesday,Wednesday,Thursday,Friday,Saturday','sd.closed':'Closed','sd.open_24':'Open 24 hours','sd.open_now':'🟢 Open','sd.closed_now':'🔴 Closed',
     'onb1.title':'Welcome to ReceiptIQ!','onb1.desc':'A smart budget app for life in Japan,<br>starting from a single receipt.<br>AI handles the entry for you.',
     'onb2.title':'Snap & auto-entry!','onb2.desc':'Take a photo of a receipt and<br>AI recognizes store · items · total<br>then records it automatically.',
@@ -14372,6 +14375,7 @@ var I18N = {
     'sd.reviews':'💬 访客评价 ({n})','sd.receipt_verified':'🧾 票据认证',
     'sd.private_title':'🔒 我的私密备注','sd.rating_title':'评价 (1~10)','sd.rating_prompt':'请选择评分','sd.memo_ph':'个人备注（可选，最多500字）','sd.memo_save':'🔒 私密保存','sd.memo_update':'✏️ 保存修改',
     'sd.req_edit':'请求修改','sd.share':'分享','sd.close':'关闭','sd.req_edit_done':'修改请求已收到，审核后将反映。',
+    'ser.title_edit':'✏️ 请求修改','ser.title_loc':'📍 请求修正位置','ser.ph_edit':'请具体描述需要修改的内容\n(例如：店名不对 / 已停业 / 位置偏移 / 分类不对 等)','ser.ph_loc':'请告诉我们位置哪里不对\n(例如：图钉与实际位置不符 / 是别的地方 / 未登记请设置)','ser.loc_unregistered':' · 位置未登记','ser.no_detail':'(位置修正请求 · 无详情)','ser.loc_done':'📍 位置修正请求已收到，审核后将反映。','ser.submit':'提交','ser.sending':'提交中...','ser.loc_req_btn':'📍 请求修正位置','sd.tap_hint':'点击店铺可查看拥挤度和评价',
     'sd.weekdays_full':'星期日,星期一,星期二,星期三,星期四,星期五,星期六','sd.closed':'休息日','sd.open_24':'24小时营业','sd.open_now':'🟢 营业中','sd.closed_now':'🔴 已打烊',
     'onb1.title':'欢迎使用 ReceiptIQ！','onb1.desc':'从一张票据开始的<br>日本生活智能记账本。<br>AI 自动帮你记录。',
     'onb2.title':'拍照即自动录入！','onb2.desc':'拍下票据，<br>AI 自动识别店名·商品·金额<br>并记录下来。',
@@ -15827,7 +15831,7 @@ function renderMapPins() {
               +'</button>';
           })()
         : '')
-      +'<button onclick="event.stopPropagation();reqStoreLocationEdit(\''+s.name.replace(/'/g,"\\'")+'\','+(s.lat?s.lat:'null')+','+(s.lng?s.lng:'null')+')" style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">📍 位置修正をリクエスト</button>'
+      +'<button onclick="event.stopPropagation();reqStoreLocationEdit(\''+s.name.replace(/'/g,"\\'")+'\','+(s.lat?s.lat:'null')+','+(s.lng?s.lng:'null')+')" style="margin-top:10px;width:100%;padding:9px;border-radius:10px;border:1px solid var(--blue);background:var(--blue-bg);color:var(--blue);font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">'+t('ser.loc_req_btn')+'</button>'
       +'</div>';
 
     var cardOnclick = hasPin
@@ -19001,7 +19005,7 @@ function openPlaceEmbed(query, displayName) {
   var wrap = document.getElementById('place-embed-frame-wrap');
   var subEl = document.getElementById('place-embed-sub');
   if (!wrap) return;
-  if (subEl) subEl.textContent = displayName ? (_esc(displayName) + ' — 가게를 탭하면 혼잡도·리뷰 표시') : '가게를 탭하면 혼잡도·리뷰 표시';
+  if (subEl) subEl.textContent = displayName ? (_esc(displayName) + ' — ' + t('sd.tap_hint')) : t('sd.tap_hint');
   // Maps Javascript API와 같은 키 사용 (Embed API 활성화 필요)
   var apiKey = (typeof apiKey !== 'undefined' && apiKey) || 'AIzaSyDPt8HONIu2SKsQBSIcFD5f6tir3g2GWXI';
   var src = 'https://www.google.com/maps/embed/v1/place?key=' + apiKey + '&q=' + encodeURIComponent(query) + '&zoom=17';
@@ -19080,9 +19084,9 @@ function sdReqEdit(){
   window._serReq = { kind:'general', store_name:(_sdName||sd.name||''),
     store_id:(sd.id!=null?String(sd.id):null),
     lat:(typeof sd.lat==='number'?sd.lat:null), lng:(typeof sd.lng==='number'?sd.lng:null) };
-  var ti=document.getElementById('ser-title'); if(ti) ti.textContent='✏️ 修正リクエスト';
+  var ti=document.getElementById('ser-title'); if(ti) ti.textContent=t('ser.title_edit');
   var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(_sdName||sd.name||'');
-  var ta=document.getElementById('ser-content'); if(ta) ta.placeholder='修正してほしい内容を具体的に入力してください\n（例: 店名が違う / 閉店した / 場所がずれている / カテゴリが違う など）';
+  var ta=document.getElementById('ser-content'); if(ta) ta.placeholder=t('ser.ph_edit');
   _openEditReqModal();
 }
 // 가성비맵 가게목록 → 위치 수정 요청
@@ -19091,9 +19095,9 @@ window.reqStoreLocationEdit = function reqStoreLocationEdit(name, lat, lng){
   var la=(typeof lat==='number'&&!isNaN(lat))?lat:null;
   var lo=(typeof lng==='number'&&!isNaN(lng))?lng:null;
   window._serReq = { kind:'location', store_name:(name||''), store_id:null, lat:la, lng:lo };
-  var ti=document.getElementById('ser-title'); if(ti) ti.textContent='📍 位置修正リクエスト';
-  var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(name||'')+(la?'':' ・ 位置未登録');
-  var ta=document.getElementById('ser-content'); if(ta) ta.placeholder='位置がどう間違っているか教えてください\n（例: ピンが実際の場所とずれている / 別の場所だ / 未登録なので設定してほしい）';
+  var ti=document.getElementById('ser-title'); if(ti) ti.textContent=t('ser.title_loc');
+  var nm=document.getElementById('ser-store-name'); if(nm) nm.textContent='🏪 '+(name||'')+(la?'':t('ser.loc_unregistered'));
+  var ta=document.getElementById('ser-content'); if(ta) ta.placeholder=t('ser.ph_loc');
   _openEditReqModal();
 };
 async function submitStoreEditReq(){
@@ -19101,11 +19105,11 @@ async function submitStoreEditReq(){
   var ta=document.getElementById('ser-content');
   var content=ta?ta.value.trim():'';
   if(req.kind==='location'){
-    if(!content) content='（位置の修正リクエスト・詳細なし）';
+    if(!content) content=t('ser.no_detail');
   } else if(content.length<3){ showToast(t('ser.too_short')); return; }
   if(!_sb||!_currentUser){ showToast(t('toast.login_required')); return; }
   var btn=document.getElementById('ser-submit-btn');
-  if(btn){ btn.disabled=true; btn.textContent='送信中...'; }
+  if(btn){ btn.disabled=true; btn.textContent=t('ser.sending'); }
   try {
     var payload={
       store_name: req.store_name||'',
@@ -19123,9 +19127,9 @@ async function submitStoreEditReq(){
       res=await _sb.from('store_edit_requests').insert(payload);
     }
     if(res.error){ console.warn('[edit req]', res.error); showToast(t('ser.send_fail')); }
-    else { closeOv('ov-store-edit-req'); showToast(req.kind==='location'?'📍 位置修正リクエストを受け付けました。確認後に反映されます。':t('sd.req_edit_done')); }
+    else { closeOv('ov-store-edit-req'); showToast(req.kind==='location'?t('ser.loc_done'):t('sd.req_edit_done')); }
   } catch(e){ console.warn('[edit req]', e); showToast(t('ser.send_fail2')); }
-  if(btn){ btn.disabled=false; btn.textContent='送信する'; }
+  if(btn){ btn.disabled=false; btn.textContent=t('ser.submit'); }
 }
 /* build 439 — 가게 공유 v2: 공유 카드 이미지(캔버스) + チリつも 링크
    카드 구성: 대표사진 히어로 + 가게명/평점 → 営業時間·電話 → 代表メニュー(사진·가격·★)
@@ -29038,7 +29042,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 519;
+window.__APP_BUILD__ = 520;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
