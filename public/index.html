@@ -8183,6 +8183,13 @@ function renderRadar() {
    홈 렌더링
 ══════════════════════════════ */
 // ══════════════════════════════════════════════════════════════════════════
+// 절약 분석 대상 = 슈퍼(食料品 cat==='food') + 편의점(가게명으로 식별).
+//   편의점 영수증은 OCR이 'eat'로 분류하지만 맥주·음료·과자 등 슈퍼와 겹치는 상품이 많아 포함.
+//   (식당까지 들어가는 'eat' 통째 포함은 피하고, 가게명 기반으로 편의점만 선별)
+var _SAVING_KONBINI_RE = /コンビニ|セブン[\-\s]?イレブン|セブン|ファミリーマート|ファミマ|ローソン|ミニストップ|デイリーヤマザキ|セイコーマート|ニューデイズ|newdays|ポプラ|7[\-\s]?(eleven|11)|family\s*mart|lawson|ministop/i;
+function _isSavingGrocery(cat, store){
+  return cat === 'food' || _SAVING_KONBINI_RE.test(store || '');
+}
 // 節約チャンス分析 (Phase 2, b499) — 커뮤니티 위치기반 실분석.
 //   ① 내 구매(로컬 DB, 최근3개월) → 상품별 내 평균단가·월구매수량
 //   ② 상품을 products_master(product_id)로 정규화 → 공개 product_prices 조회
@@ -8197,7 +8204,7 @@ async function _computeSavings(){
   var cutoff = new Date(); cutoff.setMonth(cutoff.getMonth()-3);
   (DB||[]).forEach(function(r){
     if (!r || !r.items || !r.store) return;
-    if (r.cat !== 'food') return;   // 슈퍼(食料品) 영수증만 — 외식/카페 등은 상품 비교 불가
+    if (!_isSavingGrocery(r.cat, r.store)) return;   // 슈퍼(食料品) + 편의점만 — 외식/카페 등 제외
     if (r.date && new Date(r.date) < cutoff) return;
     var mkey = (r.date||'').slice(0,7);
     r.items.forEach(function(it){
@@ -12714,7 +12721,7 @@ async function _uploadReceiptImage(receiptId, dataUrl) {
 //   외식/메뉴는 제외(cat==='food' 만). ★ product_prices.sql 실행 필요.
 async function _contributeProductPrices(items, store, lat, lng, cat){
   if (!_sb || !_currentUser || !store || !Array.isArray(items) || !items.length) return;
-  if (cat && cat !== 'food') return;   // 마트 식료품만 — 외식 메뉴 등 제외
+  if (!(typeof _isSavingGrocery==='function' ? _isSavingGrocery(cat, store) : cat==='food')) return;   // 슈퍼+편의점만
   try {
     for (var i=0; i<items.length; i++){
       var it = items[i];
@@ -28782,7 +28789,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 501;
+window.__APP_BUILD__ = 502;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
