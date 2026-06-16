@@ -1,15 +1,37 @@
-# RetWork (チリつも) — HANDOFF (build 496 시점)
+# RetWork (チリつも) — HANDOFF (build 499 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 496** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 499** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-15** (b489~496 — 치리맵 영수증등록+사진 · 헤더이모지 제거 · 그루메블로그/SNS 바로가기 · 餃子の福包 블로그)
-> 🔴 **미결정 TODO:** 영수증 홈 「절약찬스 발견」(`ov-saving`)은 **하드코딩 더미**(¥1,320 고정). 실구현/숨기기/데모표기 미정 — 아래 0-H 끝 참조.
+> 마지막 작업: **2026-06-16** (b497~499 — 「절약찬스」 더미→실구현. b499 위치기반 커뮤니티 가격비교 완성)
+> ⚠️ **SQL 실행 필요:** `product_prices.sql` (b498) — **실행 완료**(사용자 확인). 신규 PC에선 이미 적용된 DB라 재실행 불필요.
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-I. 2026-06-16 — 「節約チャンス」 더미 → 위치기반 커뮤니티 실구현 (build 497~499)
+
+영수증 홈 「節約チャンス発見」(`ov-saving` + 홈 `home-saving-banner`)이 **하드코딩 더미**(牛乳/食パン·¥1,320 고정)였던 것을 **실데이터**로 단계적 교체. ✅ 0-H의 미결정 TODO 해결.
+
+**b497 — 1차(내 영수증 이력):** `_computeSavings()` 가 로컬 `DB`(내 영수증)에서 "같은 상품(정규화명)을 2곳 이상 마트에서 산 단가 차이"를 계산. 홈 배너는 절약액 있을 때만 표시(없으면 숨김 — 가짜 금액 제거), 모달은 상품별 마트비교+합계. 빈 상태='수집중'. **한계: 내가 가본 마트끼리만 비교**(타 유저 미반영).
+
+**b498 — Phase 1(커뮤니티 가격 풀 기반):** ★`product_prices.sql` (공개 테이블: `product_id·store_name·price·lat/lng·user_id`, 유저당(상품,가게) 1행 upsert / RLS=전체읽기·본인쓰기). 실행완료. 영수증 저장(`_doSaveOcrResult` 의 `searchAndPinStore` 콜백)에서 `_contributeProductPrices(finalItems, store, lat, lng, r.cat)` 호출 → **식료품(cat==='food')** 품목의 정규화 product_id(`_matchOrCreateProduct`) + 가게 + 단가 + 좌표를 upsert. → 데이터 축적 시작.
+
+**b499 — Phase 2(위치기반 비교, 현행):** `_computeSavings()` **async 전환**:
+1. 내 구매(로컬 DB, 최근3개월) → 상품별 내 평균단가·월구매수량
+2. 잠재절약 상위 20개만 `_matchOrCreateProduct`로 product_id 정규화
+3. 공개 `product_prices` 조회(`.in('product_id', pids)`)
+4. **내 위치 `_ctUserPos` 반경 5km**(`_calcDistanceM` Haversine) 내 같은 상품 최저가(**타 유저 가게 포함**) 탐색
+5. 절약 = (내 평균단가 − 근처 최저가) × 월구매수량. 커뮤니티 데이터 없으면 **내-이력(2+가게) 폴백**. 60초 캐시
+- 배너/모달 async(로딩 표시). 모달 = "내 구매 ¥X vs 근처 최저가게 ¥Y(-¥차액)".
+- 핵심 함수: `_computeSavings`(async)/`_updateSavingBanner`(async)/`openSavingAnalysis`/`renderSavingAnalysis`(async)/`_contributeProductPrices`. i18n `home.saving_sub`·`saving.based_on/per_month/buy_basis/you/empty_*`.
+
+**커밋:** `bad2647`(b497) → `b06a9dd`(b498 +product_prices.sql) → `05f15f9`(b499). 모두 push.
+**⚠️ 현실 의존:** product_prices 는 b498 이후 식료품 영수증이 쌓여야 의미. 초기엔 대부분 폴백/'수집중'. **다음 후보:** 수동입력 식료품도 기여(현재 OCR 저장 경로만), 반경 km 튜닝, 같은 상품 다른 브랜드 과병합 방지(현재 정규화명 기준), product_prices 오래된 가격 만료/가중평균.
 
 ---
 
@@ -36,7 +58,10 @@
 - receiptiq: `f2c7e67`(b489) → `198d05f`(b490) → `629d370`(b491) → `186bcdc`(b492) → `1ffacfa`(b493) → `834a16f`(b494) → `d450470`(b495) → `c3b0087`(b496)
 - retwork-blog: `157fda3`(餃子の福包 글)
 
-### 🔴 미결정 TODO — 영수증 홈 「節約チャンス発見（절약찬스 발견）」 = 더미
+### ✅ (해결됨 — b497~499, 위 0-I 참조) 영수증 홈 「節約チャンス発見」 더미 → 실구현 완료
+> 아래는 당시 더미 진단 기록(히스토리). 실제 구현은 **0-I** 참조.
+
+#### (히스토리) 당시 더미 진단
 - `ov-saving` 모달([index.html](public/index.html) ~2713)은 **완전 하드코딩 목업**: 牛乳/食パン, イオン vs 業務スーパー, ¥1,320/月·年¥15,840 전부 고정. DB(`items`/`price_pins`/`products_master`) 안 읽음. 누가 뭘 등록하든 같은 숫자.
 - 홈 배너(`index.html` ~1246, `onclick="openOv('ov-saving')"`) + i18n `home.saving_cta`/`home.saving_cta_sub`도 고정 문구.
 - **방향 미정(사용자 결정 대기)**: A) 실구현(내 영수증 품목→`products_master` 정규화 매칭→타 마트 `price_pins` 최저가 비교→실제 절약액. 데이터 부족 시 "수집중" 표시) / B) 일단 배너 숨김(가짜 금액 노출 방지) / C) "サンプル" 데모 배지. **추천: B→A.**
