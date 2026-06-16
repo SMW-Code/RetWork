@@ -9807,10 +9807,10 @@ function openMonthReport(){
   if (!_isPremium && typeof openWatchAdPage === 'function') {
     // build 337 — emoji 제거, ico 명시 (헤더에 SVG 라인 아이콘 자동 표시)
     openWatchAdPage('monthreport', function(){ _openMonthReportInner(); }, {
-      title: '월별 리포트',
+      title: t('wad.monthreport.t'),
       ico: 'receipt',
-      descTitle: '광고 보고 월별 리포트 확인하기',
-      descSub: '한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.'
+      descTitle: t('wad.monthreport.dt'),
+      descSub: t('wad.monthreport.ds')
     });
     return;
   }
@@ -13522,7 +13522,7 @@ var I18N = {
     'wad.menu_photo.t':'メニュー写真の登録','wad.menu_photo.dt':'広告を見てメニュー写真を登録','wad.menu_photo.ds':'メニュー写真を登録すると+10チリの報酬ももらえます。',
     'wad.monthreport.t':'月別レポート','wad.monthreport.dt':'広告を見て月別レポートを確認','wad.monthreport.ds':'1ヶ月の常連店・物価・節約・習慣を一目で！広告を1回視聴するとご覧いただけます。',
     'wad.comment_quota.t':'コメント上限の追加','wad.comment_quota.dt':'広告を見てコメント+4回','wad.comment_quota.ds':'広告を1回視聴すると今日コメントをあと4回作成できます。',
-    'wad.default.t':'広告を視聴','wad.default.dt':'広告を見て内容を確認','wad.default.ds':'広告を1回視聴すると内容をご覧いただけます。',
+    'wad.default.t':'広告を視聴','wad.default.dt':'広告を見て内容を確認','wad.default.ds':'広告を1回視聴すると内容をご覧いただけます。','wad.secondary_chiri':'広告を見て+チリ公開',
     'rep.up':'🔴 上昇中','rep.down':'🟢 下落中','rep.sort':'並び替え','rep.sort_desc':'変動↑ 大きい順','rep.sort_asc':'変動↓ 小さい順',
     'rep.month_spent':'{n}件の支出','rep.count':'件数','rep.daily_avg':'日平均','rep.top_cat':'最多カテゴリ',
     'rep.weekly_title':'{y}年 {m}月 週別支出','rep.quarter_title':'直近3ヶ月比較','rep.monthly_title':'{y}年 月別支出',
@@ -13797,7 +13797,7 @@ var I18N = {
     'wad.menu_photo.t':'메뉴 사진 등록','wad.menu_photo.dt':'광고 보고 메뉴 사진 등록','wad.menu_photo.ds':'메뉴 사진을 등록하시면 +10치리 보상도 받아요.',
     'wad.monthreport.t':'월별 리포트','wad.monthreport.dt':'광고 보고 월별 리포트 확인','wad.monthreport.ds':'한 달의 단골 가게·물가·절약·습관을 한눈에! 광고 1회 시청하시면 보실 수 있어요.',
     'wad.comment_quota.t':'댓글 한도 추가','wad.comment_quota.dt':'광고 보고 댓글 +4회','wad.comment_quota.ds':'광고 1회 시청하시면 오늘 댓글을 4회 더 작성할 수 있어요.',
-    'wad.default.t':'광고 시청','wad.default.dt':'광고 보고 내용 확인하기','wad.default.ds':'광고 1회 시청하시면 내용을 보실 수 있어요.',
+    'wad.default.t':'광고 시청','wad.default.dt':'광고 보고 내용 확인하기','wad.default.ds':'광고 1회 시청하시면 내용을 보실 수 있어요.','wad.secondary_chiri':'광고 보고 +치리 공개',
     'rep.up':'🔴 오르는 중','rep.down':'🟢 내리는 중','rep.sort':'정렬','rep.sort_desc':'변동↑ 큰 순','rep.sort_asc':'변동↓ 작은 순',
     'rep.month_spent':'{n}건 지출','rep.count':'건수','rep.daily_avg':'일평균','rep.top_cat':'최다 카테고리',
     'rep.weekly_title':'{y}年 {m}月 주별 지출','rep.quarter_title':'최근 3개월 비교','rep.monthly_title':'{y}年 월별 지출',
@@ -14054,7 +14054,7 @@ var I18N = {
     'wad.menu_photo.t':'Add menu photo','wad.menu_photo.dt':'Watch an ad to add a menu photo','wad.menu_photo.ds':'Add a menu photo and earn a +10 Chiri reward.',
     'wad.monthreport.t':'Monthly report','wad.monthreport.dt':'Watch an ad to see the monthly report','wad.monthreport.ds':'Your regular stores, prices, savings and habits at a glance! Watch one ad to view.',
     'wad.comment_quota.t':'Add comment quota','wad.comment_quota.dt':'Watch an ad for +4 comments','wad.comment_quota.ds':'Watch one ad to write 4 more comments today.',
-    'wad.default.t':'Watch ad','wad.default.dt':'Watch an ad to view','wad.default.ds':'Watch one ad to see the content.',
+    'wad.default.t':'Watch ad','wad.default.dt':'Watch an ad to view','wad.default.ds':'Watch one ad to see the content.','wad.secondary_chiri':'Watch ad to share to Chiri',
     'rep.up':'🔴 Rising','rep.down':'🟢 Falling','rep.sort':'Sort','rep.sort_desc':'Change↑ desc','rep.sort_asc':'Change↓ asc',
     'rep.month_spent':'{n} expenses','rep.count':'Count','rep.daily_avg':'Daily avg','rep.top_cat':'Top category',
     'rep.weekly_title':'{y}/{m} Weekly','rep.quarter_title':'Last 3 months','rep.monthly_title':'{y} Monthly',
@@ -14311,7 +14311,7 @@ var I18N = {
     'wad.menu_photo.t':'登记菜单照片','wad.menu_photo.dt':'看广告登记菜单照片','wad.menu_photo.ds':'登记菜单照片还可获得+10 Chiri奖励。',
     'wad.monthreport.t':'月度报告','wad.monthreport.dt':'看广告查看月度报告','wad.monthreport.ds':'一个月的常去店铺·物价·节约·习惯一目了然！观看1次广告即可查看。',
     'wad.comment_quota.t':'增加评论次数','wad.comment_quota.dt':'看广告评论+4次','wad.comment_quota.ds':'观看1次广告今天可再发4条评论。',
-    'wad.default.t':'观看广告','wad.default.dt':'看广告查看内容','wad.default.ds':'观看1次广告即可查看内容。',
+    'wad.default.t':'观看广告','wad.default.dt':'看广告查看内容','wad.default.ds':'观看1次广告即可查看内容。','wad.secondary_chiri':'看广告+公开到Chiri',
     'rep.up':'🔴 上涨中','rep.down':'🟢 下跌中','rep.sort':'排序','rep.sort_desc':'变动↑ 由大到小','rep.sort_asc':'变动↓ 由小到大',
     'rep.month_spent':'{n}笔支出','rep.count':'笔数','rep.daily_avg':'日均','rep.top_cat':'最多类别',
     'rep.weekly_title':'{y}年 {m}月 周支出','rep.quarter_title':'近3个月对比','rep.monthly_title':'{y}年 月支出',
@@ -17968,7 +17968,7 @@ function showAdModal(callback, context) {
   if (ctx === 'save') {
     var cat = window._ocrResult && window._ocrResult.cat;
     if (typeof _shouldShowChiriPublish === 'function' && _shouldShowChiriPublish(cat)) {
-      opts.secondaryLabel = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center;">' + icon('send', 16, '#fff') + ' 광고 보고 +치리 공개 <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;margin-left:6px;">+10チリ</span></span>';
+      opts.secondaryLabel = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center;">' + icon('send', 16, '#fff') + ' ' + t('wad.secondary_chiri') + ' <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;margin-left:6px;">+10チリ</span></span>';
       opts.secondaryCallback = function(){
         // 치리 공개 + 저장 함께 — saveAndPublishChiri 가 모든 흐름 처리
         if (typeof saveAndPublishChiri === 'function') saveAndPublishChiri();
@@ -28879,7 +28879,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 511;
+window.__APP_BUILD__ = 512;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
