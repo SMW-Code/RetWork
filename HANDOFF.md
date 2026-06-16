@@ -1,15 +1,55 @@
-# RetWork (チリつも) — HANDOFF (build 499 시점)
+# RetWork (チリつも) — HANDOFF (build 515 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 499** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 515** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-16** (b497~499 — 「절약찬스」 더미→실구현. b499 위치기반 커뮤니티 가격비교 완성)
-> ⚠️ **SQL 실행 필요:** `product_prices.sql` (b498) — **실행 완료**(사용자 확인). 신규 PC에선 이미 적용된 DB라 재실행 불필요.
+> 마지막 작업: **2026-06-16** (b500~515 — 1日平均 분모 수정, i18n 누락 다수, 스캔시트 리디자인, 치리공개 중복방지, 주차요금 ¥/시간 비교)
+> ⚠️ **SQL 실행 필요(신규/이어받는 PC가 아니라 DB 기준):**
+> - `product_prices.sql`(b498), `product_prices_volume.sql`(b503) — **실행 완료**(사용자 확인).
+> - 🔴 `items_parking_mins.sql`(b515) — `alter table public.items add column if not exists mins integer;` **실행 필요**. 미실행 시 저장은 정상이나(클라가 mins 자동 제외 후 재시도) 주차시간이 DB에 영구 보존 안 됨 → 새로고침 후 주차 ¥/시간 비교가 사라짐.
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-J. 2026-06-16 — 홈 지표 수정 · i18n 누락 보강 · 스캔 UI · 치리 중복방지 · 주차 단가비교 (build 500~515)
+
+순서대로 진행한 작업 묶음. 모두 `main`에 push 완료.
+
+### A. 1日平均(일평균) 분모 수정 (b505~506)
+달력/리포트의 「1日平均」이 `월총액 ÷ 그달전체일수`라 진행중인 달에서 남은 날(¥0)까지 포함돼 과소 표시됨(예 6/16에 77,485엔인데 ¥2,583). → `_avgDivDays(y,m)` 헬퍼: **진행중인 달=경과일(오늘 날짜), 지난 달=전체일수**. 적용 3곳: `renderReportSummary`(~9253), 월간리포트 `mr`(~10063 `renderMonthReport`), 달력(~9689). (홈 카드 순서도 b504에서 월간리포트→광고→절약찬스로 변경됨)
+
+### B. i18n 잔여 한국어 노출 보강 (b507~512) — 일본어 모드인데 한글 노출되던 곳들
+- **b507** 토스트/확인창 19종: 댓글제한/별점실패/비공개메모삭제/추천코드복사/다크모드전환/Apple로그인/금지어·차단/신고 등 → ja/ko/en/zh. (어드민 `_adm*` 토스트는 운영자전용이라 한국어 유지)
+- **b508** 이력-리포트 하단 미구독 「더보기」 카드(제목/설명/광고버튼) → `rep.more_*` data-i18n
+- **b509** ★`_getWatchAdOptsByContext()` 컨텍스트 매트릭스 **전체가 하드코딩 한국어**였음(save/chiri/private/menu_photo/monthreport/report_unlock/comment_quota/default). → `wad.*`/`repunlock.*` 키. 모든 광고시청 풀스크린 페이지 영향
+- **b510** 월별리포트 공유텍스트(`mrShare`) `RetWork 리포트` → `mr.share_text/title`
+- **b512** ★ `openMonthReport()`가 한국어 `opts`로 base를 override해서 b509 후에도 월별리포트 광고페이지가 한국어였음 → `t('wad.monthreport.*')`. + `showAdModal` 외식저장 보조버튼 「+치리공개」 → `wad.secondary_chiri`
+  - ⚠️ 교훈: `openWatchAdPage`는 카드 제목/설명=`opts||base`, 메인버튼라벨=`base`. opts 넘기는 호출부가 한국어면 카드만 한국어로 보임.
+
+### C. 수동기입 모달 i18n + 스캔시트 리디자인 (b511, b513)
+- **b511** 영수증모드 + 수동기입 모달: 카테고리 칩 하드코딩 한글 라벨 → `CAT_LABEL[k]`(Proxy 자동번역) 사용. `cat.fuel`/`cat.park` 키 신설 + `_CAT_LABEL_KEYS` 매핑 보정(주유→기타·주차→교통으로 뭉개지던 것 분리). 저장버튼 `manual.save`(기존키), 품목 placeholder `manual.ph_*`
+- **b513** 스캔 선택 시트(`ov-scan`+`ov-scan-camera`) 한일혼용 텍스트 i18n(`scan.camera.sub`/`scan.manual.*`/`scan.cam.*`) + **디자인 현대화**: 이모지→SVG 라인아이콘+컬러틴트 타일(카메라 그린/갤러리 인디고/수동 골드), surface카드+그림자+라운드18px, `.scan-opt` CSS 갱신, NEW 배지 pill
+
+### D. 치리츠모 공개 중복방지 (b514)
+치리맵 가게 리스트 펼침 → 「チリつもに公開する」. `store_menu_cards`(전체공개 RLS) 캐시(`window._chiriPubByStore`, `_normChiri`정규화)로 이미 공개된 가게/메뉴 식별:
+- **공개 모달**(`openChiriPublish` async화): 이미 공개된 메뉴 칩=`公開済み` 비활성(선택불가), 기본선택=미공개만, 전부 공개시 제출차단(`submitChiriPublish` 가드)+안내배너(`cp-all-published-notice`)
+- **맵 카드**: 공개대상 메뉴(상위5/가게명) 전부 등록되면 골드버튼→`✓ チリつもに公開済み` 비활성
+- 공개 성공 후 `_loadChiriPublishedCache(true)`→`renderMapPins()` 즉시 반영. 키: `chiri.already_pub/all_published/map_published/map_publish_btn` 등
+
+### E. 주차요금 시간당 단가(¥/시간) 비교 (b515) — 🔴 SQL 필요
+주차요금은 주차시간 따라 총액이 달라 단순 비교 왜곡(¥300 vs ¥2,800 → 잘못된 89% 절약). → 시간기반 품목은 **¥/시간**으로 비교.
+- `_isParkingItem(name,cat)`(cat==='park' or `_PARKING_RE`), `_parseParkingMins(rawText)`(`駐車時間 H:MM`/`N分` 또는 入庫·精算/出庫 시각차이, 자정넘김 보정), `_fmtMins`
+- `_doSaveOcrResult`: OCR 원문(`window._rawOcrText`)에서 주차시간 파싱→주차 품목에 `.mins` 보존. items insert에 `mins` 포함하되 **컬럼 미존재 시 자동 제외 후 재시도**(저장 무손실). 로드(`items(*)` 매핑 ~16658)에 `mins` 추가
+- `renderPriceComparison`: 주차 품목은 `총액÷(mins/60)`=¥/시간 비교, **mins 없는 관측은 비교 제외**(오해방지), `時間単価` 태그+안내문. 가격비교 한국어 노출도 `pc.*` 키로 i18n화
+- 🔴 **`items_parking_mins.sql` 실행 필요**(헤더 참조). 파서 단위테스트 통과
+- **미완(후속 후보):** 영수증 편집/수동입력 모달에 「주차시간」 입력칸 추가(과거/누락 데이터 직접 채우기). 사용자에게 진행여부 물어본 상태.
+
+### 커밋 (모두 push)
+`b505/b506`(1日平均) → `b507`~`b513`(i18n/스캔) → `b514`(치리 중복방지) → `b515`(주차 ¥/시간). HEAD=`1902841`(b515).
 
 ---
 
