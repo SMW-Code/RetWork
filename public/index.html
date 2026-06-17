@@ -1655,22 +1655,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 
     <!-- 카테고리 칩 -->
     <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.3px;" data-i18n="ct.map.category">カテゴリ</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="ct-cat-chips">
-      <div class="ct-cat-chip active" data-cat="all"      onclick="ctSelectCat(this)" data-i18n="ct.cat.all">🍽️ すべて</div>
-      <div class="ct-cat-chip"       data-cat="teishoku"  onclick="ctSelectCat(this)" data-i18n="ct.cat.teishoku">🍱 定食・丼</div>
-      <div class="ct-cat-chip"       data-cat="ramen"     onclick="ctSelectCat(this)" data-i18n="ct.cat.ramen">🍜 ラーメン</div>
-      <div class="ct-cat-chip"       data-cat="soba"      onclick="ctSelectCat(this)" data-i18n="ct.cat.soba">🍵 うどん・そば</div>
-      <div class="ct-cat-chip"       data-cat="sushi"     onclick="ctSelectCat(this)" data-i18n="ct.cat.sushi">🍣 スシ</div>
-      <div class="ct-cat-chip"       data-cat="tonkatsu"  onclick="ctSelectCat(this)" data-i18n="ct.cat.tonkatsu">🥩 とんかつ</div>
-      <div class="ct-cat-chip"       data-cat="chinese"   onclick="ctSelectCat(this)" data-i18n="ct.cat.chinese">🥡 中華</div>
-      <div class="ct-cat-chip"       data-cat="korean"    onclick="ctSelectCat(this)" data-i18n="ct.cat.korean">🥘 韓国料理</div>
-      <div class="ct-cat-chip"       data-cat="curry"     onclick="ctSelectCat(this)" data-i18n="ct.cat.curry">🍛 カレー</div>
-      <div class="ct-cat-chip"       data-cat="thai"      onclick="ctSelectCat(this)" data-i18n="ct.cat.thai">🌶️ タイ</div>
-      <div class="ct-cat-chip"       data-cat="pizza"     onclick="ctSelectCat(this)" data-i18n="ct.cat.pizza">🍕 ピザ</div>
-      <div class="ct-cat-chip"       data-cat="fast"      onclick="ctSelectCat(this)" data-i18n="ct.cat.fast">🍔 バーガー</div>
-      <div class="ct-cat-chip"       data-cat="cafe"      onclick="ctSelectCat(this)" data-i18n="ct.cat.cafe">☕ カフェ</div>
-      <div class="ct-cat-chip"       data-cat="konbini"   onclick="ctSelectCat(this)" data-i18n="ct.cat.konbini">🏪 コンビニ</div>
-      <div class="ct-cat-chip"       data-cat="izakaya"   onclick="ctSelectCat(this)" data-i18n="ct.cat.izakaya">🍶 居酒屋</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;" id="ct-cat-chips"><!-- 大분류 칩 JS 생성: _renderCtCatFilterChips() -->
     </div>
     <div style="display:flex;gap:10px;">
       <button onclick="ctResetFilter()" style="flex:1;padding:12px;border:1.5px solid var(--border-mid);
@@ -1819,21 +1804,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 카테고리 -->
     <div style="font-size:12px;font-weight:700;color:var(--text-3);margin-bottom:10px;letter-spacing:.3px;" data-i18n="ct.map.category">カテゴリ</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;" id="cc-cat-chips">
-      <div class="ct-cat-chip active" data-cat="all"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.all">🍽️ すべて</div>
-      <div class="ct-cat-chip"       data-cat="teishoku"  onclick="_ccSheetCat(this)" data-i18n="ct.cat.teishoku">🍱 定食・丼</div>
-      <div class="ct-cat-chip"       data-cat="ramen"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.ramen">🍜 ラーメン</div>
-      <div class="ct-cat-chip"       data-cat="soba"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.soba">🍵 うどん・そば</div>
-      <div class="ct-cat-chip"       data-cat="sushi"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.sushi">🍣 スシ</div>
-      <div class="ct-cat-chip"       data-cat="tonkatsu"  onclick="_ccSheetCat(this)" data-i18n="ct.cat.tonkatsu">🥩 とんかつ</div>
-      <div class="ct-cat-chip"       data-cat="chinese"   onclick="_ccSheetCat(this)" data-i18n="ct.cat.chinese">🥡 中華</div>
-      <div class="ct-cat-chip"       data-cat="korean"    onclick="_ccSheetCat(this)" data-i18n="ct.cat.korean">🥘 韓国料理</div>
-      <div class="ct-cat-chip"       data-cat="curry"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.curry">🍛 カレー</div>
-      <div class="ct-cat-chip"       data-cat="thai"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.thai">🌶️ タイ</div>
-      <div class="ct-cat-chip"       data-cat="pizza"     onclick="_ccSheetCat(this)" data-i18n="ct.cat.pizza">🍕 ピザ</div>
-      <div class="ct-cat-chip"       data-cat="fast"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.fast">🍔 バーガー</div>
-      <div class="ct-cat-chip"       data-cat="cafe"      onclick="_ccSheetCat(this)" data-i18n="ct.cat.cafe">☕ カフェ</div>
-      <div class="ct-cat-chip"       data-cat="konbini"   onclick="_ccSheetCat(this)" data-i18n="ct.cat.konbini">🏪 コンビニ</div>
-      <div class="ct-cat-chip"       data-cat="izakaya"   onclick="_ccSheetCat(this)" data-i18n="ct.cat.izakaya">🍶 居酒屋</div>
+      <!-- 大분류 칩 JS 생성: _renderCtCatFilterChips() -->
     </div>
 
     <!-- 지역 (都道府県 → 시정촌) -->
@@ -6227,7 +6198,7 @@ function _ccFilteredRows(){
       var pr = Number(r.price)||0;
       if (pr<=0 || pr>_ccPriceMax) return false;
     }
-    if (cat!=='all' && String(r.category||'').toLowerCase()!==cat) return false;
+    if (cat!=='all' && _genreGroup(String(r.category||''))!==cat) return false;
     if (_ccPref) {
       if (_ccPref==='__other') { if (r._pref) return false; }
       else {
@@ -6664,6 +6635,21 @@ function _genrePickerFilter(inp){
     grp.style.display = any ? '' : 'none';
   });
 }
+// 카테고리 key → 大분류(group) key. 지도/가격비교 필터를 大분류 단위로 매칭.
+function _genreGroup(catKey){ var g = _CT_GENRE_BY_KEY[catKey]; return g ? g.g : ''; }
+// 지도/가격비교 필터 칩을 大분류(13) 로 렌더 — 하드코딩 칩 대체(신규 카테고리도 그룹 단위 필터 가능)
+function _renderCtCatFilterChips(){
+  [['ct-cat-chips','ctSelectCat', (typeof _ctCatFilter!=='undefined'?_ctCatFilter:'all')],
+   ['cc-cat-chips','_ccSheetCat', (typeof _ccCat!=='undefined'?_ccCat:'all')]].forEach(function(spec){
+    var el = document.getElementById(spec[0]); if (!el) return;
+    var cur = spec[2]||'all', fn = spec[1];
+    var html = '<div class="ct-cat-chip'+(cur==='all'?' active':'')+'" data-cat="all" onclick="'+fn+'(this)">'+_esc(t('ct.cat.all'))+'</div>';
+    CT_GROUPS.forEach(function(gr){
+      html += '<div class="ct-cat-chip'+(cur===gr.k?' active':'')+'" data-cat="'+gr.k+'" onclick="'+fn+'(this)">'+_esc(_ctGrpLabel(gr.k))+'</div>';
+    });
+    el.innerHTML = html;
+  });
+}
 
 function ctInitMap() {
   if (_ctMapInit) return;
@@ -6827,7 +6813,7 @@ function ctRenderPricePins() {
   _ctPins.forEach(function(p) {
     if (!p.stores || p.stores.lat == null || p.stores.lng == null) return;
     var _pend = _ctPendingPins.indexOf(p) >= 0;
-    if (!_pend && _ctCatFilter !== 'all' && p.stores.category !== _ctCatFilter) return;
+    if (!_pend && _ctCatFilter !== 'all' && _genreGroup(p.stores.category) !== _ctCatFilter) return;
     var sid = p.stores.name;
     if (!_allGroups[sid]) _allGroups[sid] = { store: p.stores, items: [], pending: false };
     _allGroups[sid].items.push({ name: p.item_name || '', price: p.price, comment: p.comment || '' });
@@ -14814,6 +14800,8 @@ function applyLang(lang){
   // CT_GENRES/CT_GROUPS 카테고리 라벨을 I18N 에 1회 주입 (어드민 언어시트 자동 노출)
   if (!window._genreI18nDone) { window._genreI18nDone = 1; try { _injectGenreI18n(); } catch(e){} }
   _currentLang = lang;
+  // 지도/가격비교 大분류 필터 칩 (현재 언어로 재렌더)
+  try { _renderCtCatFilterChips(); } catch(e){}
   document.documentElement.setAttribute('lang', lang);
   // data-i18n 속성 가진 모든 요소 번역
   // 번역값에 HTML 태그(<br> 등)가 들어있으면 innerHTML 사용, 아니면 textContent (XSS 회피)
@@ -29277,7 +29265,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 526;
+window.__APP_BUILD__ = 527;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
