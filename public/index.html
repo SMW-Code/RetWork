@@ -4662,6 +4662,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="cat-select" id="edit-cat-select" style="gap:6px;padding:0;"></div>
     </div>
 
+    <!-- 주차시간 (카테고리=주차일 때만) -->
+    <div id="edit-park-row" style="display:none;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="park.time_label">駐車時間</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input id="edit-park-h" type="number" min="0" inputmode="numeric" placeholder="0" style="width:60px;border:1px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:14px;font-family:var(--font);text-align:center;color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+        <span style="font-size:13px;color:var(--text-2);" data-i18n="park.hours">時間</span>
+        <input id="edit-park-m" type="number" min="0" max="59" inputmode="numeric" placeholder="0" style="width:60px;border:1px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:14px;font-family:var(--font);text-align:center;color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+        <span style="font-size:13px;color:var(--text-2);" data-i18n="park.minutes">分</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-3);margin-top:5px;" data-i18n="park.hint">⏱ 駐車料金は1時間あたりの単価で比較されます</div>
+    </div>
+
     <!-- 결제수단 -->
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:8px;letter-spacing:.3px;" data-i18n="edit.pay_method">支払い方法</div>
@@ -4716,6 +4728,18 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="edit.category_label">カテゴリ</div>
       <div class="cat-select" id="manual-cat-select" style="gap:6px;padding:0;"></div>
+    </div>
+
+    <!-- 주차시간 (카테고리=주차일 때만) -->
+    <div id="manual-park-row" style="display:none;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:5px;letter-spacing:.3px;" data-i18n="park.time_label">駐車時間</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input id="manual-park-h" type="number" min="0" inputmode="numeric" placeholder="0" style="width:60px;border:1px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:14px;font-family:var(--font);text-align:center;color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+        <span style="font-size:13px;color:var(--text-2);" data-i18n="park.hours">時間</span>
+        <input id="manual-park-m" type="number" min="0" max="59" inputmode="numeric" placeholder="0" style="width:60px;border:1px solid var(--border-mid);border-radius:10px;padding:9px 8px;font-size:14px;font-family:var(--font);text-align:center;color:var(--text-1);outline:none;background:var(--bg);box-sizing:border-box;">
+        <span style="font-size:13px;color:var(--text-2);" data-i18n="park.minutes">分</span>
+      </div>
+      <div style="font-size:10px;color:var(--text-3);margin-top:5px;" data-i18n="park.hint">⏱ 駐車料金は1時間あたりの単価で比較されます</div>
     </div>
 
     <!-- 결제수단 -->
@@ -8810,6 +8834,8 @@ function openManualEntry() {
 
   // 결제수단 초기화
   document.querySelectorAll('#manual-pay-select .pay-chip-sel').forEach(function(c){ c.classList.remove('sel'); });
+  // 주차시간 행 초기화 (기본 카테고리=other → 숨김)
+  _setParkRow('manual', _manualCat === 'park', 0);
 
   renderManualItems();
   openOv('ov-manual');
@@ -8819,6 +8845,7 @@ function selectManualCat(el, k) {
   document.querySelectorAll('#manual-cat-select .cat-chip-sel').forEach(function(c){ c.classList.remove('sel'); });
   el.classList.add('sel');
   _manualCat = k;
+  _setParkRow('manual', k === 'park', 0);
 }
 
 function selectManualPay(el) {
@@ -8867,8 +8894,14 @@ function saveManualEntry() {
   if (!date) { alert(t('manual.date_req')); return; }
   if (total <= 0) { alert(t('manual.amount_req')); return; }
 
+  // 주차 카테고리면 주차시간(분) → 시간당 단가 비교용으로 품목에 보존
+  var parkMins = (_manualCat === 'park') ? _readParkMins('manual') : 0;
   var items = _manualItems.filter(function(it){ return it.name || it.price > 0; })
-    .map(function(it){ return { name: it.name||'품목', qty: it.qty||1, price: it.price * (it.qty||1) }; });
+    .map(function(it){ var o = { name: it.name||'품목', qty: it.qty||1, price: it.price * (it.qty||1) }; if (parkMins>0) o.mins = parkMins; return o; });
+  // 주차인데 품목이 없으면 駐車料金 단일 품목 합성 (비교에 참여하도록)
+  if (_manualCat === 'park' && parkMins > 0 && items.length === 0) {
+    items = [{ name: '駐車料金', qty: 1, price: total, mins: parkMins }];
+  }
 
   var newEntry = {
     id: nextId++,
@@ -8895,9 +8928,11 @@ function saveManualEntry() {
       var rid = res.data[0].id;
       newEntry.id = rid;
       if (items.length > 0) {
-        _sb.from('items').insert(items.map(function(it){
-          return { receipt_id: rid, name: it.name, quantity: it.qty, price: it.price, category: _manualCat };
-        })).then(function(){});
+        _insertItemRowsResilient(items.map(function(it){
+          var row = { receipt_id: rid, name: it.name, quantity: it.qty, price: it.price, category: _manualCat };
+          if (it.mins) row.mins = it.mins;
+          return row;
+        }));
       }
     });
   }
@@ -8920,7 +8955,7 @@ function openEditReceipt(id) {
   _editItems = (r.items || []).map(function(it){
     var q = it.qty || 1;
     // price는 행 합계(단가×수량)로 저장되므로, 편집 시 단가로 변환
-    return { name: it.name, qty: q, price: Math.round((it.price || 0) / q) };
+    return { name: it.name, qty: q, price: Math.round((it.price || 0) / q), mins: it.mins || null };
   });
   // offset 은 단가 변환 *후* 의 합산 기준으로 계산 → 반올림 손실(¥1~2)까지
   //  offset 에 흡수돼 원본 합계가 그대로 유지됨 (세금 + 반올림 손실 동시 보존)
@@ -8931,18 +8966,11 @@ function openEditReceipt(id) {
   document.getElementById('edit-store').value = r.store || '';
   document.getElementById('edit-date').value = r.date || '';
 
-  // 카테고리 선택
-  var cats = [
-    {k:'food',l:'식료품'},{k:'eat',l:'식사'},{k:'snack',l:'군것질·과자'},{k:'cafe',l:'카페'},
-    {k:'life',l:'생활'},{k:'med',l:'의약품'},{k:'shop',l:'쇼핑'},
-    {k:'ent',l:'오락'},{k:'tra',l:'교통'},{k:'travel',l:'여행'},
-    {k:'fixed',l:'고정비'},{k:'hobby',l:'취미'},{k:'beauty',l:'미용'},
-    {k:'drink',l:'술·유흥'},{k:'edu',l:'교육'},
-    {k:'fuel',l:'주유'},{k:'park',l:'주차'},{k:'other',l:'기타'}
-  ];
+  // 카테고리 선택 (라벨은 CAT_LABEL 로 자동 번역)
+  var cats = ['food','eat','snack','cafe','life','med','shop','ent','tra','travel','fixed','hobby','beauty','drink','edu','fuel','park','other'];
   var catHtml = '';
-  cats.forEach(function(c){
-    catHtml += '<div class="cat-chip-sel'+(r.cat===c.k?' sel':'')+'" onclick="selectEditCat(this,\''+c.k+'\')" style="display:inline-flex;align-items:center;gap:4px;">'+CAT_ICON[c.k]+'<span>'+c.l+'</span></div>';
+  cats.forEach(function(k){
+    catHtml += '<div class="cat-chip-sel'+(r.cat===k?' sel':'')+'" onclick="selectEditCat(this,\''+k+'\')" style="display:inline-flex;align-items:center;gap:4px;">'+CAT_ICON[k]+'<span>'+CAT_LABEL[k]+'</span></div>';
   });
   document.getElementById('edit-cat-select').innerHTML = catHtml;
 
@@ -8951,6 +8979,10 @@ function openEditReceipt(id) {
     c.classList.toggle('sel', c.getAttribute('data-pay') === (r.pay || ''));
   });
 
+  // 주차시간 행 — 주차 카테고리면 표시 + 기존 mins 채우기
+  var _existMins = (r.items || []).reduce(function(mx, it){ return (it.mins && it.mins > mx) ? it.mins : mx; }, 0);
+  _setParkRow('edit', r.cat === 'park', _existMins);
+
   renderEditItems();
   openOv('ov-edit');
 }
@@ -8958,6 +8990,7 @@ function openEditReceipt(id) {
 function selectEditCat(el, cat) {
   document.querySelectorAll('#edit-cat-select .cat-chip-sel').forEach(function(c){ c.classList.remove('sel'); });
   el.classList.add('sel');
+  _setParkRow('edit', cat === 'park', 0);
 }
 function selectEditPay(el) {
   document.querySelectorAll('#edit-pay-select .pay-chip-sel').forEach(function(c){ c.classList.remove('sel'); });
@@ -9010,11 +9043,20 @@ function saveEditReceipt() {
   var newSubtotal = editedItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
   // 세금 offset 유지 — 영수증 원본의 세금/할인 등이 보존됨
   var newTotal = newSubtotal + (_editTaxOffset || 0);
+  // 주차 카테고리면 주차시간(분) → 시간당 단가 비교용으로 품목에 보존
+  var parkMins = (newCat === 'park') ? _readParkMins('edit') : 0;
   // DB/메모리 일관성: items.price는 행 합계(단가×수량)로 저장 — OCR 저장과 동일 형식
   var newItems = editedItems.map(function(it){
     var q = it.qty || 1;
-    return { name: it.name, qty: q, price: (it.price * q) };
+    var o = { name: it.name, qty: q, price: (it.price * q) };
+    if (parkMins > 0) o.mins = parkMins;          // 주차면 입력값으로 갱신
+    else if (it.mins) o.mins = it.mins;           // 비주차로 바뀌었어도 기존값 보존
+    return o;
   });
+  // 주차인데 품목이 없으면 駐車料金 단일 품목 합성
+  if (newCat === 'park' && parkMins > 0 && newItems.length === 0) {
+    newItems = [{ name: '駐車料金', qty: 1, price: newTotal, mins: parkMins }];
+  }
 
   // 메모리 업데이트
   r.store = newStore;
@@ -9033,10 +9075,11 @@ function saveEditReceipt() {
   // 품목: 기존 삭제 후 재삽입
   _sb.from('items').delete().eq('receipt_id', _editId).then(function() {
     if (newItems.length > 0) {
-      var rows = newItems.map(function(it){
-        return { receipt_id: _editId, name: it.name, quantity: it.qty || 1, price: it.price, category: newCat };
-      });
-      _sb.from('items').insert(rows).then(function(){});
+      _insertItemRowsResilient(newItems.map(function(it){
+        var row = { receipt_id: _editId, name: it.name, quantity: it.qty || 1, price: it.price, category: newCat };
+        if (it.mins) row.mins = it.mins;
+        return row;
+      }));
     }
   });
 
@@ -13626,7 +13669,7 @@ var I18N = {
     'cal.day_detail':'{y}/{m}/{d} 支出明細','cal.tap_go':'タップで移動 ›',
     // 가성비 맵 (영수증 모드)
     'rmap.title':'コスパマップ','rmap.sub':'現在地ベース · レシートピン','rmap.stores':'📍 店舗リスト','rmap.compare':'💰 価格比較',
-    'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','pc.found_count':'{n}件で価格差を発見','pc.per_unit':'/ 1個','pc.per_hour':'/ 1時間','pc.best':'最安','pc.savings':'最大¥{amt}（{pct}%）節約可能','pc.parking_tag':'時間単価','pc.parking_note':'⏱ 駐車時間が異なるため1時間あたりの単価で比較しています','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
+    'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','pc.found_count':'{n}件で価格差を発見','pc.per_unit':'/ 1個','pc.per_hour':'/ 1時間','pc.best':'最安','pc.savings':'最大¥{amt}（{pct}%）節約可能','pc.parking_tag':'時間単価','pc.parking_note':'⏱ 駐車時間が異なるため1時間あたりの単価で比較しています','park.time_label':'駐車時間','park.hours':'時間','park.minutes':'分','park.hint':'⏱ 駐車料金は1時間あたりの単価で比較されます','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
     'rmap.iw_visit':'訪問','rmap.iw_avg':'平均','rmap.view_detail':'📋 詳細を見る →','rmap.per_unit':'/個','rmap.no_items':'品目データなし','rmap.avg_per':'1回平均',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
     'comm.need_location':'まず自分の店舗位置を登録してください 📍','comm.aggregating':'周辺店舗を集計中...','comm.no_nearby':'半径5km以内に他ユーザーのデータがありません。<br>ユーザーが増えるほど比較データが貯まります 🌱','comm.nearby_unvisited':'📍 半径5km・未訪問 {n}件','comm.visited_stats':'🟢 訪問した店舗・ユーザー統計','comm.visited_badge':'訪問済み','comm.unvisited_badge':'未訪問','comm.date_unknown':'日付不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人訪問','comm.receipts_n':'{n}件','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最終訪問: {d}','comm.popular_items':'📋 人気品目','comm.collapse':'閉じる','comm.my_vs_avg':'📊 自分の支出 vs 全ユーザー平均','comm.items_n':'{n}個','comm.cheaper':'平均より安い','comm.pricier':'平均より高い','comm.mine_label':'自分','comm.load_failed':'データを取得できませんでした 😢','comm.map_btn':'🗺 地図',
@@ -13906,7 +13949,7 @@ var I18N = {
     'cal.see_detail':'자세히 보기','cal.receipt_count':'영수증 수','cal.daily_avg':'하루 평균','common.total':'합계',
     'cal.day_detail':'{y}/{m}/{d} 지출 내역','cal.tap_go':'탭해서 이동 ›',
     'rmap.title':'가성비 맵','rmap.sub':'내 위치 기반 · 영수증 핀','rmap.stores':'📍 가게 목록','rmap.compare':'💰 가격 비교',
-    'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','pc.found_count':'{n}개 품목에서 가격 차이 발견','pc.per_unit':'/ 1개','pc.per_hour':'/ 1시간','pc.best':'최저가','pc.savings':'최대 ¥{amt} ({pct}%) 절약 가능','pc.parking_tag':'시간단가','pc.parking_note':'⏱ 주차시간이 달라 시간당 단가로 비교해요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
+    'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','pc.found_count':'{n}개 품목에서 가격 차이 발견','pc.per_unit':'/ 1개','pc.per_hour':'/ 1시간','pc.best':'최저가','pc.savings':'최대 ¥{amt} ({pct}%) 절약 가능','pc.parking_tag':'시간단가','pc.parking_note':'⏱ 주차시간이 달라 시간당 단가로 비교해요','park.time_label':'주차시간','park.hours':'시간','park.minutes':'분','park.hint':'⏱ 주차요금은 시간당 단가로 비교돼요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.iw_visit':'방문','rmap.iw_avg':'평균','rmap.view_detail':'📋 내역 보기 →','rmap.per_unit':'/1개','rmap.no_items':'품목 데이터 없음','rmap.avg_per':'방문 평균',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
     'comm.need_location':'내 가게 위치를 먼저 등록해주세요 📍','comm.aggregating':'주변 가게 집계 중...','comm.no_nearby':'반경 5km 내 다른 유저 데이터가 없어요.<br>유저가 늘수록 비교 데이터가 쌓여요 🌱','comm.nearby_unvisited':'📍 반경 5km · 미방문 {n}곳','comm.visited_stats':'🟢 내가 방문한 가게 · 유저 통계','comm.visited_badge':'방문함','comm.unvisited_badge':'미방문','comm.date_unknown':'날짜 미상','comm.date_md':'{m}월 {d}일','comm.visitors':'{n}명 방문','comm.receipts_n':'{n}건','comm.avg_yen':'평균 ¥{v}','comm.last_visit':'최근 방문: {d}','comm.popular_items':'📋 인기 품목','comm.collapse':'접기','comm.my_vs_avg':'📊 내 지출 vs 전체 유저 평균','comm.items_n':'{n}개','comm.cheaper':'평균보다 저렴','comm.pricier':'평균보다 비쌈','comm.mine_label':'내','comm.load_failed':'데이터를 불러오지 못했어요 😢','comm.map_btn':'🗺 지도',
@@ -14170,7 +14213,7 @@ var I18N = {
     'cal.see_detail':'See detail','cal.receipt_count':'Receipts','cal.daily_avg':'Daily avg','common.total':'Total',
     'cal.day_detail':'{y}/{m}/{d} spending','cal.tap_go':'Tap to view ›',
     'rmap.title':'Value Map','rmap.sub':'Near you · receipt pins','rmap.stores':'📍 Stores','rmap.compare':'💰 Compare',
-    'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','pc.found_count':'Price differences found in {n} item(s)','pc.per_unit':'/ each','pc.per_hour':'/ hour','pc.best':'Lowest','pc.savings':'Save up to ¥{amt} ({pct}%)','pc.parking_tag':'hourly','pc.parking_note':'⏱ Compared by hourly rate since parking durations differ','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
+    'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','pc.found_count':'Price differences found in {n} item(s)','pc.per_unit':'/ each','pc.per_hour':'/ hour','pc.best':'Lowest','pc.savings':'Save up to ¥{amt} ({pct}%)','pc.parking_tag':'hourly','pc.parking_note':'⏱ Compared by hourly rate since parking durations differ','park.time_label':'Parking time','park.hours':'h','park.minutes':'min','park.hint':'⏱ Parking fees are compared by hourly rate','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.iw_visit':'Visits','rmap.iw_avg':'Average','rmap.view_detail':'📋 View detail →','rmap.per_unit':'/ea','rmap.no_items':'No item data','rmap.avg_per':'Avg/visit',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
     'comm.need_location':'Please register your store location first 📍','comm.aggregating':'Aggregating nearby stores...','comm.no_nearby':'No data from other users within 5km.<br>Comparison data grows as more users join 🌱','comm.nearby_unvisited':'📍 Within 5km · {n} unvisited','comm.visited_stats':'🟢 Stores you visited · user stats','comm.visited_badge':'Visited','comm.unvisited_badge':'Unvisited','comm.date_unknown':'Date unknown','comm.date_md':'{m}/{d}','comm.visitors':'{n} visitors','comm.receipts_n':'{n}','comm.avg_yen':'Avg ¥{v}','comm.last_visit':'Last visit: {d}','comm.popular_items':'📋 Popular items','comm.collapse':'Collapse','comm.my_vs_avg':'📊 My spending vs all-user avg','comm.items_n':'{n}','comm.cheaper':'Below average','comm.pricier':'Above average','comm.mine_label':'Mine','comm.load_failed':'Could not load data 😢','comm.map_btn':'🗺 Map',
@@ -14434,7 +14477,7 @@ var I18N = {
     'cal.see_detail':'查看详情','cal.receipt_count':'票据数','cal.daily_avg':'日均','common.total':'合计',
     'cal.day_detail':'{y}/{m}/{d} 支出明细','cal.tap_go':'点击查看 ›',
     'rmap.title':'性价比地图','rmap.sub':'基于当前位置 · 票据图钉','rmap.stores':'📍 店铺列表','rmap.compare':'💰 价格比较',
-    'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','pc.found_count':'在{n}个品项中发现价格差异','pc.per_unit':'/ 每个','pc.per_hour':'/ 每小时','pc.best':'最低价','pc.savings':'最多可省¥{amt}（{pct}%）','pc.parking_tag':'每小时','pc.parking_note':'⏱ 因停车时长不同，按每小时单价比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
+    'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','pc.found_count':'在{n}个品项中发现价格差异','pc.per_unit':'/ 每个','pc.per_hour':'/ 每小时','pc.best':'最低价','pc.savings':'最多可省¥{amt}（{pct}%）','pc.parking_tag':'每小时','pc.parking_note':'⏱ 因停车时长不同，按每小时单价比较','park.time_label':'停车时间','park.hours':'小时','park.minutes':'分钟','park.hint':'⏱ 停车费按每小时单价比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.iw_visit':'到访','rmap.iw_avg':'平均','rmap.view_detail':'📋 查看明细 →','rmap.per_unit':'/个','rmap.no_items':'无商品数据','rmap.avg_per':'每次平均',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
     'comm.need_location':'请先登记你的店铺位置 📍','comm.aggregating':'正在统计周边店铺...','comm.no_nearby':'5km内暂无其他用户数据。<br>用户越多，比较数据越丰富 🌱','comm.nearby_unvisited':'📍 5km内·未访问 {n}家','comm.visited_stats':'🟢 你访问过的店铺·用户统计','comm.visited_badge':'已访问','comm.unvisited_badge':'未访问','comm.date_unknown':'日期不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人访问','comm.receipts_n':'{n}','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最近访问: {d}','comm.popular_items':'📋 热门品项','comm.collapse':'收起','comm.my_vs_avg':'📊 我的支出 vs 全体用户平均','comm.items_n':'{n}','comm.cheaper':'低于平均','comm.pricier':'高于平均','comm.mine_label':'我','comm.load_failed':'数据加载失败 😢','comm.map_btn':'🗺 地图',
@@ -15285,6 +15328,32 @@ function _fmtMins(mins){
   if (!mins || mins<=0) return '';
   var h=Math.floor(mins/60), m=mins%60;
   return h>0 ? (m>0 ? h+'h'+m+'m' : h+'h') : m+'m';
+}
+// 수동/편집 모달 — 주차시간 입력행 표시/숨김 + 값 채우기 (prefix: 'manual' | 'edit')
+function _setParkRow(prefix, show, mins){
+  var row = document.getElementById(prefix+'-park-row');
+  if (row) row.style.display = show ? 'block' : 'none';
+  var h = document.getElementById(prefix+'-park-h');
+  var m = document.getElementById(prefix+'-park-m');
+  if (!show){ if(h) h.value=''; if(m) m.value=''; return; }
+  if (mins>0){ if(h) h.value = Math.floor(mins/60) || ''; if(m) m.value = (mins%60) || ''; }
+}
+function _readParkMins(prefix){
+  var hEl=document.getElementById(prefix+'-park-h'), mEl=document.getElementById(prefix+'-park-m');
+  var h = hEl ? (parseInt(hEl.value,10)||0) : 0;
+  var m = mEl ? (parseInt(mEl.value,10)||0) : 0;
+  return h*60 + m;
+}
+// items INSERT (mins 포함) — mins 컬럼 미존재 시 제거 후 1회 재시도 (저장 무손실)
+function _insertItemRowsResilient(rows){
+  if (!_sb || !rows || !rows.length) return;
+  _sb.from('items').insert(rows).then(function(res){
+    if (res && res.error && rows.some(function(x){ return x.mins != null; })){
+      var rows2 = rows.map(function(x){ var c={}; for(var k in x) if(k!=='mins') c[k]=x[k]; return c; });
+      console.warn('[items insert] mins 제거 후 재시도:', res.error.message);
+      _sb.from('items').insert(rows2).then(function(){});
+    }
+  });
 }
 
 function renderPriceComparison(filter) {
@@ -29054,7 +29123,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 525;
+window.__APP_BUILD__ = 526;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
