@@ -1,18 +1,46 @@
-# RetWork (チリつも) — HANDOFF (build 525 시점)
+# RetWork (チリつも) — HANDOFF (build 527 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 525** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 527** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-16** (b516~525 — **4개국어 i18n 전면 적용 완료**: 주요 사용자 대면 영역 8개 전부. + **`I18N_GUIDE.md` 신설**(새 UI 4개국어 강제 규칙, AGENTS.md 연결). 잔여는 저빈도 그룹뿐 → **`I18N_TODO.md` 참고**)
+> 마지막 작업: **2026-06-17** (b526~527 — **치리 공개 카테고리 대확장**: 食べログ급 大분류13/中분류84 2단계 그룹+검색+메뉴명 자동추천, 지도/가격비교 필터도 大분류 통합. + 주차시간 수동입력칸). 상세 **§0-L**.
 > 🌐 **i18n 규칙(앞으로 필수):** 새 페이지/카드/모달/토스트 등 **모든 사용자 대면 UI는 처음부터 4개국어**. 작업 전 **`I18N_GUIDE.md`** 읽을 것. AGENTS.md에 연결돼 세션마다 자동 적용됨.
-> ⚠️ **SQL 실행 필요(신규/이어받는 PC가 아니라 DB 기준):**
-> - `product_prices.sql`(b498), `product_prices_volume.sql`(b503) — **실행 완료**(사용자 확인).
-> - 🔴 `items_parking_mins.sql`(b515) — `alter table public.items add column if not exists mins integer;` **실행 필요**. 미실행 시 저장은 정상이나(클라가 mins 자동 제외 후 재시도) 주차시간이 DB에 영구 보존 안 됨 → 새로고침 후 주차 ¥/시간 비교가 사라짐.
+> ✅ **SQL — 전부 실행 완료(DB 기준, 사용자 3-true 확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515, `items.mins`). 추가 대기 SQL 없음.
+> ⚠️ **빌드번호 라벨 메모:** b526이 두 커밋(주차입력 `d08fee0` + 카테고리확장 `2e1f08c`)에 중복 라벨됨(둘 다 `__APP_BUILD__=526`). 최종 코드·SW는 **527**로 일치 — 기능 영향 없음.
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-L. 2026-06-17 — 치리 카테고리 대확장 + 주차시간 입력 (build 526~527)
+
+### A. 주차시간 수동 입력칸 (b526, 커밋 `d08fee0`)
+b515의 주차요금 ¥/시간 비교를 보완 — OCR 자동파싱이 못 잡거나 과거/수동분을 직접 채우게.
+- 수동기입(`ov-manual`)·편집(`ov-edit`) 모달에 **「駐車時間」 입력행**(시간/분, `#manual-park-row`/`#edit-park-row`). 카테고리=`park` 선택 시만 표시(`_setParkRow`/`_readParkMins`). `selectManualCat`/`selectEditCat`/open* 에서 토글·프리필.
+- 저장 시 주차 품목에 `mins` 부여(`saveManualEntry`/`saveEditReceipt`), 품목 없으면 `駐車料金` 합성. items insert는 `_insertItemRowsResilient`(mins 컬럼 미존재 시 제거 후 재시도 — 무손실).
+- (덤) 편집모달 카테고리 칩 하드코딩 한글 → `CAT_LABEL` 자동번역. i18n `park.time_label/hours/minutes/hint`.
+
+### B. 치리 공개 카테고리 大확장 — 食べログ급 2단계 (b526, 커밋 `2e1f08c`) ★핵심
+구 15개 평면 카테고리 → **大분류 13 / 中분류 84개** 2단계.
+- **단일 소스 `CT_GENRES`**(`{k,g,e,ja,ko,en,zh,kw}`) + `CT_GROUPS`(13). **`CT_CAT_EMOJI`·`CT_CAT_ICON`·`CT_PUB_CATS`·`_CT_GENRE_BY_KEY` 전부 여기서 파생** → 카테고리 추가는 이 배열 1줄만. (index.html ~6487)
+- **기존 15키 전부 유지**(teishoku/ramen/soba/sushi/tonkatsu/chinese/korean/curry/thai/pizza/fast/cafe/izakaya/konbini/other) → 데이터 마이그레이션 0.
+- **공통 picker `_renderGenrePicker(selKey, selectFn)`** — 大분류 헤더 → 中분류 칩 + **상단 검색창**(`_genrePickerFilter`, 라벨+kw 매칭). 공개모달(`cp-cat-accordion`/`selectCpCat`)·수동핀(`mp-cat-accordion`/`selectMpCat`) 둘 다 사용. 아코디언 토글 `flex→block`.
+- **자동추천 `_guessCtCategory(name)`** — kw 키워드 매칭(GPT 호출 X). `openChiriPublish`에서 영수증 cat→메뉴명→가게명 순으로 기본 카테고리 자동 세팅.
+- **i18n 주입 `_injectGenreI18n()`** — CT_GENRES/CT_GROUPS 라벨을 `I18N`의 `ct.cat.*`/`ct.grp.*`(ja/ko/en/zh)에 주입(어드민 언어시트 자동 노출). `applyLang` 첫 호출 때 1회(`window._genreI18nDone`). `_cpCatLabel`은 `ct.cat.*` 값(이모지+라벨)에서 선두 이모지 strip.
+- 신규 키 i18n: `ct.cat.search_ph`(검색 placeholder) 4언어.
+
+### C. 지도/가격비교 장르필터 大분류 통합 (b527, 커밋 `fb4d637`)
+하드코딩 칩 2곳(`#ct-cat-chips` 지도핀필터, `#cc-cat-chips` 가격비교) 구 15칩 → **`_renderCtCatFilterChips()`가 `CT_GROUPS` 13칩 JS 생성**(`applyLang`서 언어별 재렌더). 필터 매칭을 **`_genreGroup(category)` 그룹 단위**로 전환(`_ctCatFilter`=핀, `_ccCat`=가격비교) → 신규 84개 中분류 가게도 大분류 칩으로 필터 가능.
+
+### 미완(후속 후보)
+- 자동추천 키워드 보강(현재 best-effort: `うな重`·`ラテ` 등 미스). teishoku가 specific보다 우선 매칭되는 순서 이슈도 미세 존재.
+- (구조 단순화) 구 `_CT_CAT_PATHS`/`_ctCatSvgStr` 라인SVG는 신규 키엔 generic만 — picker는 이모지 사용하므로 영향 적음.
+
+### 커밋
+`d08fee0`(주차입력 b526) → `2e1f08c`(카테고리확장 b526) → `fb4d637`(필터통합 b527). 모두 push. HEAD=`fb4d637`.
 
 ---
 
