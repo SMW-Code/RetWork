@@ -6480,7 +6480,7 @@ var CT_GENRES = [
   {k:'teishoku',g:'washoku',e:'🍱',ja:'定食・食堂',ko:'정식·식당',en:'Set Meal',zh:'定食·食堂',kw:['定食','食堂','ご飯']},
   {k:'sushi',   g:'washoku',e:'🍣',ja:'寿司',ko:'스시',en:'Sushi',zh:'寿司',kw:['寿司','鮨','回転寿司','握り','いなり']},
   {k:'kaisen',  g:'washoku',e:'🐟',ja:'海鮮・刺身',ko:'해산물·회',en:'Seafood / Sashimi',zh:'海鲜·刺身',kw:['海鮮','刺身','ふぐ','かに','牡蠣','海鮮丼']},
-  {k:'unagi',   g:'washoku',e:'🍱',ja:'うなぎ・あなご',ko:'장어',en:'Eel',zh:'鳗鱼',kw:['うなぎ','鰻','あなご','穴子','どじょう']},
+  {k:'unagi',   g:'washoku',e:'🍱',ja:'うなぎ・あなご',ko:'장어',en:'Eel',zh:'鳗鱼',kw:['うなぎ','うな重','うな丼','鰻','あなご','穴子','どじょう']},
   {k:'tempura', g:'washoku',e:'🍤',ja:'天ぷら・天丼',ko:'덴푸라·텐동',en:'Tempura',zh:'天妇罗',kw:['天ぷら','天丼','天婦羅','かき揚げ']},
   {k:'tonkatsu',g:'washoku',e:'🍖',ja:'とんかつ・揚げ物',ko:'돈가스·튀김',en:'Tonkatsu / Fried',zh:'炸物',kw:['とんかつ','カツ','串カツ','串揚げ','からあげ','唐揚げ','フライ']},
   {k:'yakitori',g:'washoku',e:'🍢',ja:'焼き鳥・串焼',ko:'야키토리·꼬치',en:'Yakitori',zh:'烤串',kw:['焼き鳥','焼鳥','串焼','もつ焼','手羽']},
@@ -6539,7 +6539,7 @@ var CT_GENRES = [
   {k:'tantanmen',g:'ramen',e:'🌶️',ja:'担々麺',ko:'탄탄멘',en:'Tantanmen',zh:'担担面',kw:['担々麺','坦々','担担','汁なし担々']},
   {k:'tosakumen',g:'ramen',e:'🍜',ja:'刀削麺',ko:'도삭면',en:'Knife-cut Noodles',zh:'刀削面',kw:['刀削麺']},
   // カフェ・喫茶店
-  {k:'cafe',    g:'cafe',e:'☕',ja:'カフェ',ko:'카페',en:'Cafe',zh:'咖啡馆',kw:['カフェ','コーヒー','cafe']},
+  {k:'cafe',    g:'cafe',e:'☕',ja:'カフェ',ko:'카페',en:'Cafe',zh:'咖啡馆',kw:['カフェ','コーヒー','珈琲','ラテ','cafe']},
   {k:'kissaten',g:'cafe',e:'☕',ja:'喫茶店',ko:'전통 찻집',en:'Kissaten',zh:'老式咖啡馆',kw:['喫茶','純喫茶']},
   {k:'kanmi',   g:'cafe',e:'🍡',ja:'甘味処',ko:'단팥집',en:'Japanese Sweets Cafe',zh:'甘味处',kw:['甘味','あんみつ','みつまめ','ぜんざい']},
   {k:'pancake', g:'cafe',e:'🥞',ja:'パンケーキ',ko:'팬케이크',en:'Pancake',zh:'松饼',kw:['パンケーキ','ホットケーキ']},
@@ -6592,14 +6592,19 @@ function _injectGenreI18n(){
 function _ctGrpLabel(gk){ return t('ct.grp.'+gk) || gk; }
 
 // 메뉴명 → 카테고리 자동 추천 (키워드 매칭, GPT 호출 X)
+//   가장 "긴(=구체적)" 키워드가 매칭된 카테고리를 선택 → 「とんかつ定食」=とんかつ(4) > 定食(2) 처럼
+//   구체 장르가 일반 장르보다 우선. 동률이면 CT_GENRES 등장 순서(앞=구체).
 function _guessCtCategory(name){
-  var s = String(name||'');
-  if (!s) return null;
+  var s = String(name||''); if (!s) return null;
+  var best=null, bestLen=0;
   for (var i=0;i<CT_GENRES.length;i++){
     var c = CT_GENRES[i], kw = c.kw||[];
-    for (var j=0;j<kw.length;j++){ if (kw[j] && s.indexOf(kw[j])>=0) return c.k; }
+    for (var j=0;j<kw.length;j++){
+      var w = kw[j];
+      if (w && s.indexOf(w)>=0 && w.length>bestLen){ best=c.k; bestLen=w.length; }
+    }
   }
-  return null;
+  return best;
 }
 
 // 2단계 그룹 + 검색 카테고리 picker (공개모달·수동핀 공용). selectFn = 'selectCpCat' | 'selectMpCat'
@@ -29265,7 +29270,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 527;
+window.__APP_BUILD__ = 528;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
