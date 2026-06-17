@@ -6483,34 +6483,187 @@ function _ctCatSvgStr(cat){
   var d = _CT_CAT_PATHS[cat] || _CT_CAT_PATHS.other;
   return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="width:1.1em;height:1.1em;vertical-align:-0.18em;display:inline-block;">'+d+'</svg>';
 }
-// 지도 마커 핀(data-URI <text>)용 이모지 — 검증 체크에도 사용
-var CT_CAT_EMOJI = {
-  teishoku:'🍱', ramen:'🍜', soba:'🍵', tonkatsu:'🥩',
-  sushi:'🍣', chinese:'🥡', curry:'🍛', thai:'🌶️', pizza:'🍕',
-  cafe:'☕', fast:'🍔', konbini:'🏪', izakaya:'🍶', korean:'🥘', other:'🍽️'
-};
-var CT_CAT_ICON = {}; Object.keys(CT_CAT_EMOJI).forEach(function(k){ CT_CAT_ICON[k] = _ctCatSvgStr(k); });
-
-/* 치리츠모 공개 시 카테고리 목록 */
-var CT_PUB_CATS = [
-  { key:'teishoku', icon:'🍱', label:'定食・丼' },
-  { key:'ramen',    icon:'🍜', label:'ラーメン' },
-  { key:'soba',     icon:'🍵', label:'うどん・そば' },
-  { key:'sushi',    icon:'🍣', label:'スシ・刺身' },
-  { key:'tonkatsu', icon:'🥩', label:'とんかつ' },
-  { key:'chinese',  icon:'🥡', label:'中華料理' },
-  { key:'korean',   icon:'🥘', label:'韓国料理' },
-  { key:'curry',    icon:'🍛', label:'カレー' },
-  { key:'thai',     icon:'🌶️', label:'タイ料理' },
-  { key:'pizza',    icon:'🍕', label:'ピザ' },
-  { key:'fast',     icon:'🍔', label:'ハンバーガー' },
-  { key:'cafe',     icon:'☕', label:'カフェ' },
-  { key:'izakaya',  icon:'🍶', label:'居酒屋' },
-  { key:'konbini',  icon:'🏪', label:'コンビニ' },
-  { key:'other',    icon:'🍽️', label:'その他' },
+// ════════════════════════════════════════════════════════════════════════════
+// 치리츠모 음식 카테고리 — 단일 소스(食べログ 장르 참고, 2단계: 大분류→中분류)
+//   · 저장값 = key(中분류). 大분류(g)는 UI 그룹·지도필터용. 기존 15키 전부 유지(마이그레이션 0).
+//   · 라벨은 여기서 ja/ko/en/zh 보유 → _injectGenreI18n() 가 I18N(ct.cat.*/ct.grp.*)에 주입(어드민 언어시트 자동 노출).
+//   · kw = 메뉴명 자동분류(_guessCtCategory)용 일본어 키워드.
+// ════════════════════════════════════════════════════════════════════════════
+var CT_GROUPS = [
+  { k:'washoku', ja:'和食',           ko:'일식',          en:'Japanese',     zh:'日本料理' },
+  { k:'western', ja:'洋食・西洋料理', ko:'양식',          en:'Western',      zh:'西餐' },
+  { k:'chinese', ja:'中華',           ko:'중화',          en:'Chinese',      zh:'中餐' },
+  { k:'asian',   ja:'アジア・エスニック', ko:'아시아·에스닉', en:'Asian / Ethnic', zh:'亚洲·民族料理' },
+  { k:'curry',   ja:'カレー',         ko:'카레',          en:'Curry',        zh:'咖喱' },
+  { k:'yakiniku',ja:'焼肉・ホルモン', ko:'야키니쿠·곱창', en:'Yakiniku / BBQ', zh:'烤肉·内脏' },
+  { k:'nabe',    ja:'鍋',             ko:'전골·나베',     en:'Hot Pot',      zh:'火锅·锅物' },
+  { k:'ramen',   ja:'ラーメン・つけ麺', ko:'라멘·츠케멘',   en:'Ramen',        zh:'拉面·蘸面' },
+  { k:'cafe',    ja:'カフェ・喫茶店', ko:'카페·찻집',     en:'Cafe',         zh:'咖啡·茶馆' },
+  { k:'sweets',  ja:'スイーツ',       ko:'디저트',        en:'Sweets',       zh:'甜点' },
+  { k:'bread',   ja:'パン・サンドイッチ', ko:'빵·샌드위치', en:'Bread / Sandwich', zh:'面包·三明治' },
+  { k:'izabar',  ja:'居酒屋・バー',   ko:'이자카야·바',   en:'Izakaya / Bar', zh:'居酒屋·酒吧' },
+  { k:'etc',     ja:'その他・中食',   ko:'기타·중식',     en:'Other / Takeout', zh:'其他·中食' },
 ];
-// 공개 카테고리 칩 아이콘도 단색 라인 SVG로 (HTML 렌더 — currentColor 상속)
-CT_PUB_CATS.forEach(function(c){ c.icon = _ctCatSvgStr(c.key); });
+var CT_GENRES = [
+  // 和食
+  {k:'teishoku',g:'washoku',e:'🍱',ja:'定食・食堂',ko:'정식·식당',en:'Set Meal',zh:'定食·食堂',kw:['定食','食堂','ご飯']},
+  {k:'sushi',   g:'washoku',e:'🍣',ja:'寿司',ko:'스시',en:'Sushi',zh:'寿司',kw:['寿司','鮨','回転寿司','握り','いなり']},
+  {k:'kaisen',  g:'washoku',e:'🐟',ja:'海鮮・刺身',ko:'해산물·회',en:'Seafood / Sashimi',zh:'海鲜·刺身',kw:['海鮮','刺身','ふぐ','かに','牡蠣','海鮮丼']},
+  {k:'unagi',   g:'washoku',e:'🍱',ja:'うなぎ・あなご',ko:'장어',en:'Eel',zh:'鳗鱼',kw:['うなぎ','鰻','あなご','穴子','どじょう']},
+  {k:'tempura', g:'washoku',e:'🍤',ja:'天ぷら・天丼',ko:'덴푸라·텐동',en:'Tempura',zh:'天妇罗',kw:['天ぷら','天丼','天婦羅','かき揚げ']},
+  {k:'tonkatsu',g:'washoku',e:'🍖',ja:'とんかつ・揚げ物',ko:'돈가스·튀김',en:'Tonkatsu / Fried',zh:'炸物',kw:['とんかつ','カツ','串カツ','串揚げ','からあげ','唐揚げ','フライ']},
+  {k:'yakitori',g:'washoku',e:'🍢',ja:'焼き鳥・串焼',ko:'야키토리·꼬치',en:'Yakitori',zh:'烤串',kw:['焼き鳥','焼鳥','串焼','もつ焼','手羽']},
+  {k:'sukiyaki',g:'washoku',e:'🥘',ja:'すき焼き',ko:'스키야키',en:'Sukiyaki',zh:'寿喜烧',kw:['すき焼き','すきやき']},
+  {k:'shabu',   g:'washoku',e:'🍲',ja:'しゃぶしゃぶ',ko:'샤브샤브',en:'Shabu-shabu',zh:'涮涮锅',kw:['しゃぶしゃぶ','しゃぶ']},
+  {k:'udon',    g:'washoku',e:'🍜',ja:'うどん',ko:'우동',en:'Udon',zh:'乌冬面',kw:['うどん','カレーうどん']},
+  {k:'soba',    g:'washoku',e:'🍵',ja:'そば',ko:'소바',en:'Soba',zh:'荞麦面',kw:['そば','蕎麦','立ち食いそば']},
+  {k:'men',     g:'washoku',e:'🍜',ja:'麺類',ko:'면류',en:'Noodles',zh:'面类',kw:['焼きそば','沖縄そば','ほうとう','ちゃんぽん']},
+  {k:'okonomi', g:'washoku',e:'🥞',ja:'お好み焼き・たこ焼き',ko:'오코노미야키·타코야키',en:'Okonomiyaki',zh:'御好烧·章鱼烧',kw:['お好み焼き','たこ焼き','もんじゃ','明石焼き']},
+  {k:'donburi', g:'washoku',e:'🍚',ja:'丼',ko:'덮밥',en:'Donburi',zh:'盖饭',kw:['丼','牛丼','親子丼','かつ丼','豚丼']},
+  {k:'oden',    g:'washoku',e:'🍢',ja:'おでん',ko:'오뎅',en:'Oden',zh:'关东煮',kw:['おでん']},
+  {k:'waother', g:'washoku',e:'🍱',ja:'和食その他',ko:'일식 기타',en:'Other Japanese',zh:'其他日料',kw:['郷土料理','沖縄','牛タン','釜飯','お茶漬け','豆腐','ろばた']},
+  // 洋食・西洋
+  {k:'yoshoku', g:'western',e:'🍳',ja:'洋食・ハンバーグ',ko:'양식·함박',en:'Yoshoku',zh:'洋食·汉堡扒',kw:['洋食','ハンバーグ','オムライス','コロッケ','シチュー']},
+  {k:'steak',   g:'western',e:'🥩',ja:'ステーキ・鉄板焼',ko:'스테이크·철판구이',en:'Steak / Teppanyaki',zh:'牛排·铁板烧',kw:['ステーキ','鉄板']},
+  {k:'french',  g:'western',e:'🍷',ja:'フレンチ・ビストロ',ko:'프렌치·비스트로',en:'French',zh:'法餐',kw:['フレンチ','ビストロ','フランス']},
+  {k:'italian', g:'western',e:'🍝',ja:'イタリアン・パスタ',ko:'이탈리안·파스타',en:'Italian / Pasta',zh:'意餐·意面',kw:['イタリアン','パスタ','スパゲ','リゾット']},
+  {k:'pizza',   g:'western',e:'🍕',ja:'ピザ',ko:'피자',en:'Pizza',zh:'披萨',kw:['ピザ','ピッツァ']},
+  {k:'spain',   g:'western',e:'🥘',ja:'スペイン料理',ko:'스페인요리',en:'Spanish',zh:'西班牙菜',kw:['スペイン','アヒージョ','パエリア','タパス']},
+  {k:'europe',  g:'western',e:'🍽️',ja:'ヨーロッパ料理',ko:'유럽요리',en:'European',zh:'欧洲菜',kw:['ヨーロッパ','ドイツ','ロシア','ギリシャ','ポルトガル']},
+  {k:'america', g:'western',e:'🌭',ja:'アメリカ料理',ko:'미국요리',en:'American',zh:'美式',kw:['アメリカ','ハワイ','ホットドッグ','ダイナー']},
+  {k:'fast',    g:'western',e:'🍔',ja:'ハンバーガー・ファスト',ko:'햄버거·패스트푸드',en:'Burger / Fast Food',zh:'汉堡·快餐',kw:['ハンバーガー','バーガー','ファスト','ポテト']},
+  // 中華
+  {k:'chinese', g:'chinese',e:'🥡',ja:'中華料理',ko:'중화요리',en:'Chinese',zh:'中餐',kw:['中華','中国料理','町中華','チャーハン','八宝菜']},
+  {k:'sichuan', g:'chinese',e:'🌶️',ja:'四川料理',ko:'사천요리',en:'Sichuan',zh:'川菜',kw:['四川','麻婆']},
+  {k:'taiwan',  g:'chinese',e:'🥟',ja:'台湾料理',ko:'대만요리',en:'Taiwanese',zh:'台湾菜',kw:['台湾','魯肉','ルーロー']},
+  {k:'yumcha',  g:'chinese',e:'🥟',ja:'飲茶・点心',ko:'딤섬',en:'Dim Sum',zh:'饮茶·点心',kw:['飲茶','点心','焼売','シュウマイ']},
+  {k:'gyoza',   g:'chinese',e:'🥟',ja:'餃子',ko:'교자(만두)',en:'Gyoza',zh:'饺子',kw:['餃子','ぎょうざ']},
+  {k:'nikuman', g:'chinese',e:'🥟',ja:'肉まん・中華まん',ko:'호빵',en:'Steamed Bun',zh:'肉包',kw:['肉まん','中華まん','豚まん']},
+  {k:'xlb',     g:'chinese',e:'🥟',ja:'小籠包',ko:'샤오롱바오',en:'Xiaolongbao',zh:'小笼包',kw:['小籠包']},
+  // アジア・エスニック
+  {k:'korean',  g:'asian',e:'🥘',ja:'韓国料理',ko:'한국요리',en:'Korean',zh:'韩餐',kw:['韓国','キムチ','ビビンバ','冷麺','チゲ','サムギョプ']},
+  {k:'thai',    g:'asian',e:'🌶️',ja:'タイ料理',ko:'태국요리',en:'Thai',zh:'泰餐',kw:['タイ料理','トムヤム','ガパオ','グリーンカレー']},
+  {k:'sea',     g:'asian',e:'🍲',ja:'東南アジア料理',ko:'동남아요리',en:'SE Asian',zh:'东南亚',kw:['ベトナム','フォー','バインミー','インドネシア','シンガポール']},
+  {k:'southasia',g:'asian',e:'🍛',ja:'南アジア料理',ko:'남아시아요리',en:'South Asian',zh:'南亚',kw:['ネパール','パキスタン','スリランカ']},
+  {k:'mideast', g:'asian',e:'🧆',ja:'中東料理',ko:'중동요리',en:'Middle Eastern',zh:'中东',kw:['中東','トルコ','ケバブ','モロッコ','ファラフェル']},
+  {k:'latin',   g:'asian',e:'🌮',ja:'中南米料理',ko:'중남미요리',en:'Latin American',zh:'中南美',kw:['メキシコ','タコス','ブラジル','シュラスコ','ペルー']},
+  // カレー
+  {k:'curry',   g:'curry',e:'🍛',ja:'カレー',ko:'카레',en:'Curry',zh:'咖喱',kw:['カレー','カレーライス']},
+  {k:'indiacurry',g:'curry',e:'🍛',ja:'インドカレー',ko:'인도카레',en:'Indian Curry',zh:'印度咖喱',kw:['インドカレー','ナン','バターチキン','インド料理']},
+  {k:'soupcurry',g:'curry',e:'🍛',ja:'スープカレー',ko:'수프카레',en:'Soup Curry',zh:'汤咖喱',kw:['スープカレー']},
+  // 焼肉・ホルモン
+  {k:'yakiniku',g:'yakiniku',e:'🥩',ja:'焼肉',ko:'야키니쿠(고기구이)',en:'Yakiniku',zh:'烤肉',kw:['焼肉','カルビ','ハラミ','タン']},
+  {k:'hormone', g:'yakiniku',e:'🥩',ja:'ホルモン',ko:'곱창',en:'Offal BBQ',zh:'内脏烤肉',kw:['ホルモン','もつ','内臓']},
+  {k:'jingisukan',g:'yakiniku',e:'🐑',ja:'ジンギスカン',ko:'징기스칸',en:'Jingisukan',zh:'成吉思汗烤肉',kw:['ジンギスカン','ラム']},
+  // 鍋
+  {k:'nabe',    g:'nabe',e:'🍲',ja:'鍋',ko:'나베(전골)',en:'Hot Pot',zh:'锅物',kw:['鍋','寄せ鍋']},
+  {k:'motsunabe',g:'nabe',e:'🍲',ja:'もつ鍋',ko:'곱창전골',en:'Motsunabe',zh:'内脏火锅',kw:['もつ鍋']},
+  {k:'mizutaki',g:'nabe',e:'🍲',ja:'水炊き',ko:'미즈타키',en:'Mizutaki',zh:'水炊',kw:['水炊き']},
+  {k:'chanko',  g:'nabe',e:'🍲',ja:'ちゃんこ鍋',ko:'창코나베',en:'Chanko',zh:'相扑火锅',kw:['ちゃんこ']},
+  {k:'hinabe',  g:'nabe',e:'🌶️',ja:'火鍋',ko:'훠궈',en:'Spicy Hot Pot',zh:'火锅',kw:['火鍋','麻辣']},
+  // ラーメン・つけ麺
+  {k:'ramen',   g:'ramen',e:'🍜',ja:'ラーメン',ko:'라멘',en:'Ramen',zh:'拉面',kw:['ラーメン','中華そば','らーめん']},
+  {k:'tsukemen',g:'ramen',e:'🍜',ja:'つけ麺',ko:'츠케멘',en:'Tsukemen',zh:'蘸面',kw:['つけ麺','つけめん']},
+  {k:'aburasoba',g:'ramen',e:'🍜',ja:'油そば・まぜそば',ko:'아부라소바·마제소바',en:'Abura Soba',zh:'油拌面',kw:['油そば','まぜそば','台湾まぜそば']},
+  {k:'tantanmen',g:'ramen',e:'🌶️',ja:'担々麺',ko:'탄탄멘',en:'Tantanmen',zh:'担担面',kw:['担々麺','坦々','担担','汁なし担々']},
+  {k:'tosakumen',g:'ramen',e:'🍜',ja:'刀削麺',ko:'도삭면',en:'Knife-cut Noodles',zh:'刀削面',kw:['刀削麺']},
+  // カフェ・喫茶店
+  {k:'cafe',    g:'cafe',e:'☕',ja:'カフェ',ko:'카페',en:'Cafe',zh:'咖啡馆',kw:['カフェ','コーヒー','cafe']},
+  {k:'kissaten',g:'cafe',e:'☕',ja:'喫茶店',ko:'전통 찻집',en:'Kissaten',zh:'老式咖啡馆',kw:['喫茶','純喫茶']},
+  {k:'kanmi',   g:'cafe',e:'🍡',ja:'甘味処',ko:'단팥집',en:'Japanese Sweets Cafe',zh:'甘味处',kw:['甘味','あんみつ','みつまめ','ぜんざい']},
+  {k:'pancake', g:'cafe',e:'🥞',ja:'パンケーキ',ko:'팬케이크',en:'Pancake',zh:'松饼',kw:['パンケーキ','ホットケーキ']},
+  {k:'tapioca', g:'cafe',e:'🧋',ja:'タピオカ・ティースタンド',ko:'버블티·티스탠드',en:'Bubble Tea',zh:'珍珠奶茶',kw:['タピオカ','ミルクティー','ティースタンド','スムージー','ジュース']},
+  // スイーツ
+  {k:'sweets',  g:'sweets',e:'🍰',ja:'スイーツ・洋菓子',ko:'디저트·양과자',en:'Sweets',zh:'甜点·西点',kw:['スイーツ','デザート','洋菓子']},
+  {k:'cake',    g:'sweets',e:'🍰',ja:'ケーキ',ko:'케이크',en:'Cake',zh:'蛋糕',kw:['ケーキ','ショートケーキ']},
+  {k:'choco',   g:'sweets',e:'🍫',ja:'チョコレート',ko:'초콜릿',en:'Chocolate',zh:'巧克力',kw:['チョコ']},
+  {k:'donut',   g:'sweets',e:'🍩',ja:'ドーナツ',ko:'도넛',en:'Donut',zh:'甜甜圈',kw:['ドーナツ','ドーナッツ']},
+  {k:'pudding', g:'sweets',e:'🍮',ja:'プリン',ko:'푸딩',en:'Pudding',zh:'布丁',kw:['プリン']},
+  {k:'crepe',   g:'sweets',e:'🥞',ja:'クレープ',ko:'크레페',en:'Crepe',zh:'可丽饼',kw:['クレープ','ガレット']},
+  {k:'wagashi', g:'sweets',e:'🍡',ja:'和菓子・大福',ko:'화과자·다이후쿠',en:'Wagashi',zh:'和果子',kw:['和菓子','大福','団子','最中','羊羹','どら焼き','たい焼き']},
+  {k:'gelato',  g:'sweets',e:'🍨',ja:'アイス・ジェラート',ko:'아이스크림·젤라토',en:'Ice Cream',zh:'冰淇淋',kw:['アイス','ジェラート','ソフトクリーム','かき氷']},
+  // パン・サンドイッチ
+  {k:'bread',   g:'bread',e:'🥐',ja:'パン・ベーカリー',ko:'빵·베이커리',en:'Bakery',zh:'面包',kw:['パン','ベーカリー','食パン','クロワッサン']},
+  {k:'sandwich',g:'bread',e:'🥪',ja:'サンドイッチ',ko:'샌드위치',en:'Sandwich',zh:'三明治',kw:['サンドイッチ','サンド','ベーグル']},
+  // 居酒屋・バー
+  {k:'izakaya', g:'izabar',e:'🍶',ja:'居酒屋',ko:'이자카야',en:'Izakaya',zh:'居酒屋',kw:['居酒屋','飲み屋','立ち飲み','角打ち','ダイニングバー']},
+  {k:'bar',     g:'izabar',e:'🍸',ja:'バー・パブ',ko:'바·펍',en:'Bar / Pub',zh:'酒吧',kw:['バー','パブ','カクテル','bar']},
+  {k:'winebar', g:'izabar',e:'🍷',ja:'ワインバー',ko:'와인바',en:'Wine Bar',zh:'红酒吧',kw:['ワインバー','ワイン']},
+  {k:'beerbar', g:'izabar',e:'🍺',ja:'ビアバー・クラフトビール',ko:'비어바·크래프트맥주',en:'Beer Bar',zh:'啤酒吧',kw:['ビアバー','クラフトビール','ビール']},
+  {k:'sakebar', g:'izabar',e:'🍶',ja:'日本酒・焼酎バー',ko:'사케·소주바',en:'Sake / Shochu Bar',zh:'清酒·烧酒吧',kw:['日本酒','焼酎']},
+  // その他・中食
+  {k:'shokudo', g:'etc',e:'🍴',ja:'レストラン・食堂',ko:'레스토랑·식당',en:'Restaurant / Diner',zh:'餐厅·食堂',kw:['レストラン','ファミレス','食堂','学食','社員食堂']},
+  {k:'sosaku',  g:'etc',e:'🍽️',ja:'創作料理',ko:'창작요리',en:'Creative',zh:'创作料理',kw:['創作','イノベーティブ','無国籍']},
+  {k:'bento',   g:'etc',e:'🍱',ja:'弁当・惣菜',ko:'도시락·반찬',en:'Bento / Deli',zh:'便当·熟食',kw:['弁当','おにぎり','惣菜','デリ','テイクアウト']},
+  {k:'nikuryori',g:'etc',e:'🍖',ja:'肉料理',ko:'고기요리',en:'Meat Dishes',zh:'肉类料理',kw:['肉料理','牛料理','馬肉','ジビエ','熟成肉']},
+  {k:'seafood', g:'etc',e:'🦐',ja:'シーフード',ko:'해산물요리',en:'Seafood',zh:'海鲜料理',kw:['シーフード','オイスター','牡蠣']},
+  {k:'salad',   g:'etc',e:'🥗',ja:'サラダ・野菜・オーガニック',ko:'샐러드·채소·오가닉',en:'Salad / Veggie',zh:'沙拉·蔬菜',kw:['サラダ','野菜','ベジタリアン','ヴィーガン','オーガニック','薬膳']},
+  {k:'buffet',  g:'etc',e:'🍽️',ja:'ビュッフェ・食べ放題',ko:'뷔페·무한리필',en:'Buffet',zh:'自助餐',kw:['ビュッフェ','バイキング','食べ放題']},
+  {k:'bbq',     g:'etc',e:'🍖',ja:'バーベキュー',ko:'바비큐',en:'BBQ',zh:'烧烤',kw:['バーベキュー','BBQ']},
+  {k:'konbini', g:'etc',e:'🏪',ja:'コンビニ',ko:'편의점',en:'Convenience Store',zh:'便利店',kw:['コンビニ','セブン','ローソン','ファミマ','ミニストップ']},
+  {k:'other',   g:'etc',e:'🍽️',ja:'その他',ko:'기타',en:'Other',zh:'其他',kw:[]},
+];
+// 지도 마커 이모지 + 칩 라인SVG(아이콘) + 공개목록 — CT_GENRES 에서 자동 파생
+var CT_CAT_EMOJI = {}; CT_GENRES.forEach(function(c){ CT_CAT_EMOJI[c.k] = c.e; });
+var CT_CAT_ICON  = {}; CT_GENRES.forEach(function(c){ CT_CAT_ICON[c.k]  = _ctCatSvgStr(c.k); });
+var CT_PUB_CATS  = CT_GENRES.map(function(c){ return { key:c.k, group:c.g, icon:c.e, label:c.ja }; });
+var _CT_GENRE_BY_KEY = {}; CT_GENRES.forEach(function(c){ _CT_GENRE_BY_KEY[c.k] = c; });
+
+// CT_GENRES/CT_GROUPS 라벨 → I18N(ct.cat.*/ct.grp.*) 주입 (어드민 언어시트 자동 노출). I18N 정의 후 1회 호출.
+function _injectGenreI18n(){
+  if (typeof I18N === 'undefined') return;
+  ['ja','ko','en','zh'].forEach(function(l){
+    if (!I18N[l]) return;
+    CT_GENRES.forEach(function(c){ I18N[l]['ct.cat.'+c.k] = c.e + ' ' + (c[l]||c.ja); });
+    CT_GROUPS.forEach(function(g){ I18N[l]['ct.grp.'+g.k] = (g[l]||g.ja); });
+  });
+}
+function _ctGrpLabel(gk){ return t('ct.grp.'+gk) || gk; }
+
+// 메뉴명 → 카테고리 자동 추천 (키워드 매칭, GPT 호출 X)
+function _guessCtCategory(name){
+  var s = String(name||'');
+  if (!s) return null;
+  for (var i=0;i<CT_GENRES.length;i++){
+    var c = CT_GENRES[i], kw = c.kw||[];
+    for (var j=0;j<kw.length;j++){ if (kw[j] && s.indexOf(kw[j])>=0) return c.k; }
+  }
+  return null;
+}
+
+// 2단계 그룹 + 검색 카테고리 picker (공개모달·수동핀 공용). selectFn = 'selectCpCat' | 'selectMpCat'
+function _renderGenrePicker(selKey, selectFn){
+  var html = '<input type="text" oninput="_genrePickerFilter(this)" data-i18n-placeholder="ct.cat.search_ph" placeholder="'+_esc(t('ct.cat.search_ph'))+'" '
+    + 'style="width:100%;box-sizing:border-box;border:1px solid var(--border-mid);border-radius:10px;padding:8px 12px;font-size:12px;font-family:var(--font);margin-bottom:8px;outline:none;background:var(--surface);color:var(--text-1);">';
+  html += '<div class="genre-scroll" style="max-height:240px;overflow-y:auto;-webkit-overflow-scrolling:touch;">';
+  CT_GROUPS.forEach(function(gr){
+    var cats = CT_GENRES.filter(function(c){ return c.g===gr.k; });
+    if (!cats.length) return;
+    html += '<div class="genre-grp"><div class="genre-grp-h" style="font-size:10px;font-weight:800;color:var(--text-3);letter-spacing:.3px;margin:8px 2px 5px;">'+_esc(_ctGrpLabel(gr.k))+'</div>'
+      + '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px;">';
+    cats.forEach(function(c){
+      var active = c.k===selKey;
+      html += '<button class="genre-chip" data-cat="'+c.k+'" data-kw="'+_esc((c.kw||[]).join(' ')+' '+_cpCatLabel(c.k))+'" onclick="'+selectFn+'(\''+c.k+'\')" '
+        + 'style="padding:6px 10px;border-radius:14px;font-size:11px;font-weight:700;border:1.5px solid '+(active?'var(--gold)':'var(--border-mid)')+';background:'+(active?'var(--gold)':'var(--surface)')+';color:'+(active?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">'+c.e+' '+_esc(_cpCatLabel(c.k))+'</button>';
+    });
+    html += '</div></div>';
+  });
+  html += '</div>';
+  return html;
+}
+function _genrePickerFilter(inp){
+  var q = (inp.value||'').trim().toLowerCase();
+  var root = inp.parentElement; if (!root) return;
+  root.querySelectorAll('.genre-grp').forEach(function(grp){
+    var any=false;
+    grp.querySelectorAll('.genre-chip').forEach(function(ch){
+      var hit = !q || (ch.dataset.kw||'').toLowerCase().indexOf(q)>=0;
+      ch.style.display = hit ? '' : 'none';
+      if (hit) any=true;
+    });
+    grp.style.display = any ? '' : 'none';
+  });
+}
 
 function ctInitMap() {
   if (_ctMapInit) return;
@@ -13057,13 +13210,18 @@ async function openChiriPublish() {
 
   var items = (window._ocrItems || r.items || []).filter(function(it){ return it.price > 0; });
   // 단가 기준으로 변환 (합계 ÷ 수량)
-  var defaultCat = (r.cat && CT_CAT_ICON[r.cat]) ? r.cat : 'other';
+  // 카테고리 자동 추천: 영수증 cat 우선, 없으면 메뉴명 키워드로 추정, 그래도 없으면 other
+  var defaultCat = (r.cat && _CT_GENRE_BY_KEY[r.cat]) ? r.cat : null;
+  if (!defaultCat) {
+    for (var _gi=0; _gi<items.length && !defaultCat; _gi++) defaultCat = _guessCtCategory(items[_gi] && items[_gi].name);
+  }
+  if (!defaultCat) defaultCat = _guessCtCategory(store) || 'other';
   _cpCategory = defaultCat;
   _cpItems = items.map(function(it) {
     return { name: it.name, price: Math.round(it.price / (it.qty || 1)), qty: it.qty || 1 };
   });
 
-  // 카테고리 아코디언 초기화 (프리뷰 카드 내부)
+  // 카테고리 아코디언 초기화 (프리뷰 카드 내부) — 2단계 그룹 + 검색
   var initCat = CT_PUB_CATS.find(function(c){ return c.key === _cpCategory; }) || CT_PUB_CATS[CT_PUB_CATS.length-1];
   var cpLabelEl = document.getElementById('cp-cat-label');
   var cpArrowEl = document.getElementById('cp-cat-arrow');
@@ -13074,10 +13232,7 @@ async function openChiriPublish() {
   if (cpCatSec)  cpCatSec.style.display = 'none';
   if (cpAccEl) {
     cpAccEl.style.display = 'none';
-    cpAccEl.innerHTML = CT_PUB_CATS.map(function(cat) {
-      var active = cat.key === _cpCategory;
-      return '<button data-cat="' + cat.key + '" onclick="selectCpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(active?'var(--gold)':'var(--border-mid)')+';background:'+(active?'var(--gold)':'var(--surface)')+';color:'+(active?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + _esc(_cpCatLabel(cat.key)) + '</button>';
-    }).join('');
+    cpAccEl.innerHTML = _renderGenrePicker(_cpCategory, 'selectCpCat');
   }
   window._cpStore = store;
   window._cpReceiptData = r;
@@ -13274,7 +13429,7 @@ function toggleCpCatAccordion() {
   var arrow = document.getElementById('cp-cat-arrow');
   if (!acc) return;
   var open = acc.style.display !== 'none';
-  acc.style.display = open ? 'none' : 'flex';
+  acc.style.display = open ? 'none' : 'block';
   if (arrow) arrow.textContent = open ? '▼' : '▲';
 }
 
@@ -13597,7 +13752,7 @@ var I18N = {
     'ct.map.ranking':'ランキング','ct.map.rank.value':'✓ コスパ','ct.map.rank.contrib':'貢献',
     'btn.reset':'初期化','btn.apply':'適用',
     // 카테고리 칩
-    'ct.cat.all':'🍽️ すべて','ct.cat.teishoku':'🍱 定食・丼','ct.cat.ramen':'🍜 ラーメン','ct.cat.soba':'🍵 うどん・そば',
+    'ct.cat.all':'🍽️ すべて','ct.cat.search_ph':'🔍 ジャンルを検索（焼肉・パスタ…）','ct.cat.teishoku':'🍱 定食・丼','ct.cat.ramen':'🍜 ラーメン','ct.cat.soba':'🍵 うどん・そば',
     'ct.cat.sushi':'🍣 スシ','ct.cat.tonkatsu':'🥩 とんかつ','ct.cat.chinese':'🥡 中華','ct.cat.korean':'🥘 韓国料理',
     'ct.cat.curry':'🍛 カレー','ct.cat.thai':'🌶️ タイ','ct.cat.pizza':'🍕 ピザ','ct.cat.fast':'🍔 バーガー',
     'ct.cat.cafe':'☕ カフェ','ct.cat.konbini':'🏪 コンビニ','ct.cat.izakaya':'🍶 居酒屋',
@@ -13887,7 +14042,7 @@ var I18N = {
     'ct.map.pin.confirm':'여기 등록 →','ct.map.pin.add_tooltip':'핀 추가',
     'ct.map.ranking':'랭킹','ct.map.rank.value':'✓ 가성비','ct.map.rank.contrib':'기여',
     'btn.reset':'초기화','btn.apply':'적용',
-    'ct.cat.all':'🍽️ 전체','ct.cat.teishoku':'🍱 정식·덮밥','ct.cat.ramen':'🍜 라멘','ct.cat.soba':'🍵 우동·소바',
+    'ct.cat.all':'🍽️ 전체','ct.cat.search_ph':'🔍 장르 검색 (야키니쿠·파스타…)','ct.cat.teishoku':'🍱 정식·덮밥','ct.cat.ramen':'🍜 라멘','ct.cat.soba':'🍵 우동·소바',
     'ct.cat.sushi':'🍣 초밥','ct.cat.tonkatsu':'🥩 돈카츠','ct.cat.chinese':'🥡 중식','ct.cat.korean':'🥘 한식',
     'ct.cat.curry':'🍛 카레','ct.cat.thai':'🌶️ 태국','ct.cat.pizza':'🍕 피자','ct.cat.fast':'🍔 버거',
     'ct.cat.cafe':'☕ 카페','ct.cat.konbini':'🏪 편의점','ct.cat.izakaya':'🍶 이자카야',
@@ -14151,7 +14306,7 @@ var I18N = {
     'ct.map.pin.confirm':'Place here →','ct.map.pin.add_tooltip':'Add pin',
     'ct.map.ranking':'Ranking','ct.map.rank.value':'✓ Value','ct.map.rank.contrib':'Contribution',
     'btn.reset':'Reset','btn.apply':'Apply',
-    'ct.cat.all':'🍽️ All','ct.cat.teishoku':'🍱 Set Meal','ct.cat.ramen':'🍜 Ramen','ct.cat.soba':'🍵 Udon/Soba',
+    'ct.cat.all':'🍽️ All','ct.cat.search_ph':'🔍 Search genre (yakiniku, pasta…)','ct.cat.teishoku':'🍱 Set Meal','ct.cat.ramen':'🍜 Ramen','ct.cat.soba':'🍵 Udon/Soba',
     'ct.cat.sushi':'🍣 Sushi','ct.cat.tonkatsu':'🥩 Tonkatsu','ct.cat.chinese':'🥡 Chinese','ct.cat.korean':'🥘 Korean',
     'ct.cat.curry':'🍛 Curry','ct.cat.thai':'🌶️ Thai','ct.cat.pizza':'🍕 Pizza','ct.cat.fast':'🍔 Burger',
     'ct.cat.cafe':'☕ Cafe','ct.cat.konbini':'🏪 Konbini','ct.cat.izakaya':'🍶 Izakaya',
@@ -14415,7 +14570,7 @@ var I18N = {
     'ct.map.pin.confirm':'在此注册 →','ct.map.pin.add_tooltip':'添加图钉',
     'ct.map.ranking':'排行','ct.map.rank.value':'✓ 性价比','ct.map.rank.contrib':'贡献',
     'btn.reset':'重置','btn.apply':'应用',
-    'ct.cat.all':'🍽️ 全部','ct.cat.teishoku':'🍱 套餐·盖饭','ct.cat.ramen':'🍜 拉面','ct.cat.soba':'🍵 乌冬·荞麦',
+    'ct.cat.all':'🍽️ 全部','ct.cat.search_ph':'🔍 搜索类别（烤肉·意面…）','ct.cat.teishoku':'🍱 套餐·盖饭','ct.cat.ramen':'🍜 拉面','ct.cat.soba':'🍵 乌冬·荞麦',
     'ct.cat.sushi':'🍣 寿司','ct.cat.tonkatsu':'🥩 炸猪排','ct.cat.chinese':'🥡 中餐','ct.cat.korean':'🥘 韩餐',
     'ct.cat.curry':'🍛 咖喱','ct.cat.thai':'🌶️ 泰餐','ct.cat.pizza':'🍕 比萨','ct.cat.fast':'🍔 汉堡',
     'ct.cat.cafe':'☕ 咖啡','ct.cat.konbini':'🏪 便利店','ct.cat.izakaya':'🍶 居酒屋',
@@ -14656,6 +14811,8 @@ function _paintCtCatChips(){
 }
 function applyLang(lang){
   if (!I18N[lang]) lang = 'ja';
+  // CT_GENRES/CT_GROUPS 카테고리 라벨을 I18N 에 1회 주입 (어드민 언어시트 자동 노출)
+  if (!window._genreI18nDone) { window._genreI18nDone = 1; try { _injectGenreI18n(); } catch(e){} }
   _currentLang = lang;
   document.documentElement.setAttribute('lang', lang);
   // data-i18n 속성 가진 모든 요소 번역
@@ -16155,14 +16312,11 @@ function openManualPinModal() {
   var catLabel = document.getElementById('mp-cat-label');
   var catArrow = document.getElementById('mp-cat-arrow');
   var catAcc   = document.getElementById('mp-cat-accordion');
-  if (catLabel) catLabel.textContent = t('ct.cat.other');
+  if (catLabel) catLabel.innerHTML = (CT_CAT_EMOJI[_mpCategory]||'🍽️') + ' ' + _esc(_cpCatLabel(_mpCategory||'other'));
   if (catArrow) catArrow.textContent = '▼';
   if (catAcc) {
     catAcc.style.display = 'none';
-    catAcc.innerHTML = CT_PUB_CATS.map(function(cat) {
-      var a = cat.key === _mpCategory;
-      return '<button data-cat="' + cat.key + '" onclick="selectMpCat(\'' + cat.key + '\')" style="padding:6px 11px;border-radius:16px;font-size:11px;font-weight:700;border:1.5px solid '+(a?'var(--gold)':'var(--border-mid)')+';background:'+(a?'var(--gold)':'var(--surface)')+';color:'+(a?'#fff':'var(--text-2)')+';cursor:pointer;font-family:var(--font);white-space:nowrap;">' + cat.icon + ' ' + _esc(_cpCatLabel(cat.key)) + '</button>';
-    }).join('');
+    catAcc.innerHTML = _renderGenrePicker(_mpCategory, 'selectMpCat');
   }
 
   var storeEl = document.getElementById('mp-store');
@@ -16241,7 +16395,7 @@ function toggleMpCat() {
   var arrow = document.getElementById('mp-cat-arrow');
   if (!acc) return;
   var open = acc.style.display !== 'none';
-  acc.style.display = open ? 'none' : 'flex';
+  acc.style.display = open ? 'none' : 'block';
   if (arrow) arrow.textContent = open ? '▼' : '▲';
 }
 
