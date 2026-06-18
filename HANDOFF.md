@@ -1,17 +1,33 @@
-# RetWork (チリつも) — HANDOFF (build 534 시점)
+# RetWork (チリつも) — HANDOFF (build 537 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 534** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 537** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-18** (b531~534 — **가격 변동 백그라운드 푸시(price watch)**: 서버 크론이 product_prices 스캔→앱 꺼져도 더 싼 곳 push. 인앱 알림벨(홈/내역/달력/맵)+절약찬스 NEW. 적응형 빈도캡(참여/무시 분기)). 상세 **§0-M**. 이전(카테고리 대확장)은 **§0-L**.
+> 마지막 작업: **2026-06-18** (b536 물가레이더 실데이터화 + b537 가격알림 push **live화 완료**). b531~534 price watch는 **§0-M**, 카테고리 대확장은 **§0-L**.
 > 🌐 **i18n 규칙(앞으로 필수):** 새 페이지/카드/모달/토스트 등 **모든 사용자 대면 UI는 처음부터 4개국어**. 작업 전 **`I18N_GUIDE.md`** 읽을 것. AGENTS.md에 연결돼 세션마다 자동 적용됨.
 > ✅ **SQL 전부 실행 완료(사용자 확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515), **`pricewatch.sql`(b531~534, 2026-06-18 실행)** — `pricewatch_optin`·`price_alerts_sent`(body)·`pricewatch_state`. 추가 대기 SQL 없음.
-> 🟡 **가격알림 live 화 남은 배포 액션(코드는 완료):** Vercel env `VAPID_*`·`SUPABASE_SERVICE_ROLE_KEY`·`CRON_SECRET`(attendance가 쓰면 이미 있음) + GitHub Secrets `CRON_SECRET`·`PRODUCTION_URL` + Actions 활성화(`.github/workflows/price-watch.yml` 첫 push 후 자동 등록, 수동 Run 으로 테스트).
+> 🟥 **Vercel 프로젝트 2개 함정(반드시 숙지):** `ret-work-s-projects`에 프로젝트가 둘 — **실서비스 retwork.jp = `ret-work` 프로젝트** (env·배포는 여기!). `receiptiq`(receiptiq-two.vercel.app)는 **옛/미사용**. env 작업은 항상 `ret-work`에서. `vercel link --project ret-work`. ⚠️ **Vercel CLI `env add`(stdin/pipe)는 값을 잘라먹음**(CRON_SECRET 48→44자 사고) → env 값 입력은 **반드시 대시보드**로.
+> ✅ **가격알림 live화 완료(2026-06-18 b537):** `ret-work` Vercel env에 `VAPID_*`(15일 전부터 존재)·`SUPABASE_SERVICE_ROLE_KEY`·`NEXT_PUBLIC_SUPABASE_URL`·`CRON_SECRET`(48자 수정) 정상. GitHub Secrets `CRON_SECRET`(동일 값)·`PRODUCTION_URL` 설정. `.github/workflows/price-watch.yml` 1일1회 JST09:00 자동. **크론 인증 검증: `curl -X POST -H "Authorization: Bearer <CRON_SECRET>" https://retwork.jp/api/cron/price-watch` → `{"ok":true,"sent":0,"note":"no opt-in subscribers"}`.** 클라 VAPID 공개키는 서버 기존 키페어(`BLbeE-...`)에 맞춰 b537 복구(b535의 새 키 폐기). **남은 건 실단말 검증뿐**: 설정에서 "💰 가격 변동 알림" 토글 ON(구독 생성) + 3km 내 ≥10%↓ 딜 있어야 실제 push 발생.
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-N. 2026-06-18 — 물가 레이더 실데이터화 + 가격알림 푸시 live화 (build 536~537)
+
+### A. 물가 레이더 실데이터 (b536)
+- `_buildRadarData()`(~line 8286): 로컬 DB 영수증 이력 기반 — 품목별 **최신 단가 vs 직전 구매 단가** 등락. shape `{name, old, now, months, icon, store}`. 필터: 관측 2회+·\|Δ\|≥2 노이즈컷·절대%순 top25. `renderRadar()`(~8317)에서 사용. 기존 빈 더미 `_radarDummyData` 대체.
+
+### B. 가격알림 푸시 live화 (b537) — env 정리·검증
+- **근본원인**: Vercel에 프로젝트 2개(`ret-work`=실서비스 / `receiptiq`=미사용). 그간 env를 엉뚱한 `receiptiq`에 넣고 있었음. 실서비스 `ret-work`엔 VAPID·SUPABASE가 **15~27일 전부터 이미 존재**, 문제는 **CRON_SECRET 값이 44자(CLI 잘림)** 하나뿐.
+- **조치**: `ret-work` 대시보드에서 CRON_SECRET → 48자 수정. 클라 VAPID 공개키를 서버 기존 키(`BLbeE-...`)에 맞춰 복구(b535 새 키 폐기 — 서버 무변경=기존 구독 보존). 검증 `{"ok":true}`.
+- 자세한 함정·검증 커맨드는 **상단 헤더 🟥/✅ 박스** 참조.
+
+### 커밋 (모두 push)
+`b536`(레이더 실데이터) → `9cfd011`(b537 VAPID 복구) → `63bc2a2`(크론 _dbg 진단 제거).
 
 ---
 
