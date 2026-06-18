@@ -21,9 +21,12 @@ create table if not exists public.price_alerts_sent (
   product_id  uuid not null,
   store_name  text not null,
   price       integer,
+  body        text,                                 -- 인앱 알림함 표시용 메시지(푸시 본문과 동일)
   sent_at     timestamptz not null default now(),
   unique (user_id, product_id, store_name)
 );
+-- 기존 테이블이 이미 있던 경우 대비
+alter table public.price_alerts_sent add column if not exists body text;
 
 create index if not exists pas_user_sent_idx on public.price_alerts_sent(user_id, sent_at);
 

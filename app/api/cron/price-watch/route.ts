@@ -187,9 +187,10 @@ export async function POST(request: Request) {
     const name = nameById.get(a.product_id) || '商品';
     const diff = a.myPrice - a.candPrice;
     const diffTxt = diff > 0 ? `（¥${a.candPrice} / あなた¥${a.myPrice}）` : `（約${a.pct}%お得）`;
+    const msgBody = `${name} — ${a.store} が「${a.myStore}」より約${a.pct}%安い ${diffTxt}｜${fmtDist(a.distM)}`;
     const payload = JSON.stringify({
       title: '💰 もっと安いお店が見つかりました',
-      body: `${name} — ${a.store} が「${a.myStore}」より約${a.pct}%安い ${diffTxt}｜${fmtDist(a.distM)}`,
+      body: msgBody,
       url: '/',
       tag: 'pricewatch-' + a.product_id,   // 같은 상품 알림 그룹화
       priority: 'normal',
@@ -213,7 +214,7 @@ export async function POST(request: Request) {
       sent++;
       // 쿨다운 기록 (upsert: 같은 유저·상품·가게면 sent_at 갱신)
       await sb.from('price_alerts_sent').upsert(
-        { user_id: a.user_id, product_id: a.product_id, store_name: a.store, price: a.candPrice, sent_at: new Date().toISOString() },
+        { user_id: a.user_id, product_id: a.product_id, store_name: a.store, price: a.candPrice, body: msgBody, sent_at: new Date().toISOString() },
         { onConflict: 'user_id,product_id,store_name' }
       );
     } else {
