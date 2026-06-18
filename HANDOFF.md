@@ -1,17 +1,52 @@
-# RetWork (チリつも) — HANDOFF (build 530 시점)
+# RetWork (チリつも) — HANDOFF (build 534 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 530** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 534** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-17** (b526~530 — **치리 공개 카테고리 대확장**: 食べログ급 大분류13/中분류84 2단계 그룹+검색+메뉴명 자동추천, 지도/가격비교 필터 大분류 통합. + 주차시간 수동입력칸. + 자동추천 정확도 개선·코드점검/찌꺼기 정리). 상세 **§0-L**.
+> 마지막 작업: **2026-06-18** (b531~534 — **가격 변동 백그라운드 푸시(price watch)**: 서버 크론이 product_prices 스캔→앱 꺼져도 더 싼 곳 push. 인앱 알림벨(홈/내역/달력/맵)+절약찬스 NEW. 적응형 빈도캡(참여/무시 분기)). 상세 **§0-M**. 이전(카테고리 대확장)은 **§0-L**.
 > 🌐 **i18n 규칙(앞으로 필수):** 새 페이지/카드/모달/토스트 등 **모든 사용자 대면 UI는 처음부터 4개국어**. 작업 전 **`I18N_GUIDE.md`** 읽을 것. AGENTS.md에 연결돼 세션마다 자동 적용됨.
-> ✅ **SQL — 전부 실행 완료(DB 기준, 사용자 3-true 확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515, `items.mins`). 추가 대기 SQL 없음.
-> ⚠️ **빌드번호 라벨 메모:** b526이 두 커밋(주차입력 `d08fee0` + 카테고리확장 `2e1f08c`)에 중복 라벨됨(둘 다 `__APP_BUILD__=526`). 최종 코드·SW는 **527**로 일치 — 기능 영향 없음.
+> 🔴 **SQL 실행 필요:** `pricewatch.sql`(b531~534) — `push_subscriptions.pricewatch_optin` + `price_alerts_sent`(body 포함) + `pricewatch_state` 테이블·RLS. **Supabase에서 실행해야** 가격알림 작동. (`if not exists`라 재실행 안전)
+> ✅ **이미 실행 완료(확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515).
+> 🟡 **배포 의존(가격알림):** Vercel env `VAPID_*`·`SUPABASE_SERVICE_ROLE_KEY`·`CRON_SECRET`(attendance가 쓰면 이미 있음) + GitHub Secrets `CRON_SECRET`·`PRODUCTION_URL` + Actions 활성화(`.github/workflows/price-watch.yml`).
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-M. 2026-06-18 — 가격 변동 백그라운드 푸시 (price watch) (build 531~534)
+
+**아이디어:** 자주 사는 상품이 **내 동네에서 더 싸지면 앱이 꺼져 있어도** Web Push. PWA는 백그라운드 GPS/상주 불가(지오펜스는 네이티브 필요) → **서버 크론이 계산·push** 하는 구조가 정답. "지나가다 띵동"은 Capacitor/네이티브 래핑 마일스톤(미정).
+
+### A. 서버 크론 + 푸시 (b531)
+- **`app/api/cron/price-watch/route.ts`** (attendance 라우트 미러): `CRON_SECRET` 인증→service_role. 옵트인 유저별 **앵커=내 `product_prices` 좌표 중심** 반경 3km 내 같은 product_id 더 싼 가게(**용량 단가 `qty_base` 비교**) → **단가 ≥10%↓** 유저당 best 1건. 410 만료 구독 자동삭제.
+- **`.github/workflows/price-watch.yml`**: 1일 1회(JST 09:00) 크론.
+- **`pricewatch.sql`**: `push_subscriptions.pricewatch_optin` + `price_alerts_sent`(dedup).
+- **클라**: 설정 "💰 가격 변동 알림" opt-in 토글(`togglePriceWatchPush`/`_syncPriceWatchPushUI`, 푸시 ON일 때만 노출). i18n `settings.pw_push`·`pw.*`.
+
+### B. 알림 피로도 방지 — 인앱 재확인 + NEW (b532~533)
+푸시는 1회만, **인앱에서 7일간 재확인**:
+- **헤더 알림 벨**(class `js-alert-dot` 공유) — **홈·내역·달력·맵** 4개 헤더. 탭→**알림함**(`ov-alert-inbox`)에 최근 7일 알림(`price_alerts_sent`, RLS 본인읽기, `body` 컬럼=메시지).
+- **절약찬스 카드 NEW 뱃지**(`home-saving-new`).
+- NEW = 최근 7일 내 알림 존재(`_refreshPriceAlertState`, renderHome서 갱신). 7일 지나면 사라짐, 새 알림 시 재발동. i18n `alertinbox.*`.
+
+### C. 적응형 빈도캡 — 참여/무시 분기 (b534) ★
+피로 원인은 푸시뿐 → **기록(인앱)과 발송(푸시) 분리**:
+- 크론: 딜은 **항상 `price_alerts_sent` 기록**(벨/NEW 유지), **푸시는 적응형 캡 통과시만**.
+- 캡(`pricewatch_state` 유저별): 최근14일 푸시 **탭(관심)→3일** / 무시 누적 `ignored_streak` 3~5→7일, 6+→14일. 발송 시 streak++.
+- **탭 감지**: 푸시 `url='/?from=pricewatch'` → 앱이 `showApp`서 `_checkPriceEngagementFlag()` → `last_engaged_at=now·streak=0` 기록 + 알림함 자동오픈 + URL 정리. (SW 수정 불필요)
+- `pricewatch.sql`에 **`pricewatch_state`** 테이블·RLS(본인 rw, 크론 service_role 우회) 추가.
+- 예상: 관심유저 월~10회 / 무시유저 점진 백오프(월~2~4회) / 인앱은 무관히 풍부.
+- 상수(라우트): `RADIUS_M=3000`·`MIN_PCT=10`·`ENGAGED_WINDOW_DAYS=14`·`CAP_ENGAGED=3`·`CAP_IGNORE_MID=7`·`CAP_IGNORE_HIGH=14`.
+
+### 한계/후속
+- iOS는 **홈화면 추가 PWA**만 푸시 수신. `product_prices` 데이터 쌓여야 알림 발생(초기 조용). 메시지 일본어 고정(서버측). 좌표 없는 유저 스킵.
+- 푸시 메시지 유저별 언어, "지나가다 띵동" 네이티브(Capacitor) = 후속 마일스톤.
+
+### 커밋 (모두 push)
+`b531`(크론+토글) → `b532`(인앱 벨/NEW) → `b533`(벨 4헤더) → `b534`(적응형 캡). + 카테고리 자동추천 `b528`, 정리 `b529·b530`.
 
 ---
 
