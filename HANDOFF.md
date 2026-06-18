@@ -5,9 +5,8 @@
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
 > 마지막 작업: **2026-06-18** (b531~534 — **가격 변동 백그라운드 푸시(price watch)**: 서버 크론이 product_prices 스캔→앱 꺼져도 더 싼 곳 push. 인앱 알림벨(홈/내역/달력/맵)+절약찬스 NEW. 적응형 빈도캡(참여/무시 분기)). 상세 **§0-M**. 이전(카테고리 대확장)은 **§0-L**.
 > 🌐 **i18n 규칙(앞으로 필수):** 새 페이지/카드/모달/토스트 등 **모든 사용자 대면 UI는 처음부터 4개국어**. 작업 전 **`I18N_GUIDE.md`** 읽을 것. AGENTS.md에 연결돼 세션마다 자동 적용됨.
-> 🔴 **SQL 실행 필요:** `pricewatch.sql`(b531~534) — `push_subscriptions.pricewatch_optin` + `price_alerts_sent`(body 포함) + `pricewatch_state` 테이블·RLS. **Supabase에서 실행해야** 가격알림 작동. (`if not exists`라 재실행 안전)
-> ✅ **이미 실행 완료(확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515).
-> 🟡 **배포 의존(가격알림):** Vercel env `VAPID_*`·`SUPABASE_SERVICE_ROLE_KEY`·`CRON_SECRET`(attendance가 쓰면 이미 있음) + GitHub Secrets `CRON_SECRET`·`PRODUCTION_URL` + Actions 활성화(`.github/workflows/price-watch.yml`).
+> ✅ **SQL 전부 실행 완료(사용자 확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515), **`pricewatch.sql`(b531~534, 2026-06-18 실행)** — `pricewatch_optin`·`price_alerts_sent`(body)·`pricewatch_state`. 추가 대기 SQL 없음.
+> 🟡 **가격알림 live 화 남은 배포 액션(코드는 완료):** Vercel env `VAPID_*`·`SUPABASE_SERVICE_ROLE_KEY`·`CRON_SECRET`(attendance가 쓰면 이미 있음) + GitHub Secrets `CRON_SECRET`·`PRODUCTION_URL` + Actions 활성화(`.github/workflows/price-watch.yml` 첫 push 후 자동 등록, 수동 Run 으로 테스트).
 
 > ⚠️ **작업 규칙(중요):** 개발 단계 동안 변경은 **`main`(production)에 직접 커밋·push**(dev 건드리지 말 것, gh CLI 없음 → PR 클릭생성 불가). 변경 시 **빌드번호 2곳**(`index.html`의 `window.__APP_BUILD__`, `sw.js`의 `CACHE_NAME='...-bNNN'`) 같이 올리기. 커밋 전 아래 문법검사 필수.
 > ```bash
