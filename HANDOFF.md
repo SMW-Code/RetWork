@@ -1,5 +1,9 @@
 # RetWork (チリつも) — HANDOFF (build 538 시점)
 
+> # 🔜 다음 작업 (먼저!): 몰/빌딩 「층(階)」 구분
+> **다른 PC에서 이어서 시작하면 → [`NEXT_TASK_mall_floor.md`](NEXT_TASK_mall_floor.md) 부터 읽고 진행.**
+> 쇼핑몰처럼 같은 좌표에 여러 가게가 층층이 있는 경우 `stores.floor`/`building` 추가해 "○○モール 3F" 구분 표시. 상태: **미착수(설계 확정)**. (Google 인도어맵은 제공 불가 — 사유는 해당 MD 참조.)
+
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
 > 최신 빌드: **build 538** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
