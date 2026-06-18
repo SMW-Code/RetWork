@@ -1,0 +1,30 @@
+# 가격 변동 알림 — 1일 1회 (JST 09:00) / build 531
+# GitHub Actions cron → /api/cron/price-watch
+#
+# JST(UTC+9) ↔ UTC:
+#   JST 09:00 → UTC 00:00
+#
+# 환경변수 (Repo Settings → Secrets and variables → Actions):
+#   CRON_SECRET    — Vercel 환경변수와 동일한 토큰
+#   PRODUCTION_URL — https://retwork.jp
+
+name: Price Watch Push
+
+on:
+  schedule:
+    # JST 09:00 (아침, 장보기 전) = UTC 00:00
+    - cron: '0 0 * * *'
+  workflow_dispatch:  # 수동 테스트
+
+jobs:
+  send-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send price-watch push
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            --fail-with-body \
+            "${{ secrets.PRODUCTION_URL }}/api/cron/price-watch"

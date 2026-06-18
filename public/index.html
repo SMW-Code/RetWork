@@ -2343,6 +2343,15 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
           <span class="si-lbl" data-i18n="settings.att_push">출석 알림</span>
           <div id="settings-att-push-toggle" class="toggle off" onclick="toggleAttendancePush()" style="margin-left:auto;"></div>
         </div>
+        <!-- 가격 변동 알림 토글 (build 531) — 푸시 ON 일 때만 표시 -->
+        <div id="settings-pw-push-row" class="si" style="display:none;align-items:flex-start;width:100%;">
+          <span class="lico" data-lico="alert" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;margin-top:1px;"></span>
+          <div style="flex:1;min-width:0;">
+            <div class="si-lbl" data-i18n="settings.pw_push">가격 변동 알림</div>
+            <div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;line-height:1.4;" data-i18n="settings.pw_push_hint">자주 사는 상품이 내 동네에서 더 싸지면 알려드려요</div>
+          </div>
+          <div id="settings-pw-push-toggle" class="toggle off" onclick="togglePriceWatchPush()" style="margin-left:auto;align-self:center;"></div>
+        </div>
       </div>
       <div class="sg">
         <div class="si"><span class="lico" data-lico="globe" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
@@ -13817,7 +13826,7 @@ var I18N = {
     'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
     // 受信ボックス (build 304)
     'settings.inbox':'受信ボックス','inbox.empty':'まだメッセージはありません','inbox.from_admin':'運営から','inbox.read_all':'✅ すべて既読にする',
-    'settings.push':'プッシュ通知','settings.att_push':'⏰ 出席リマインダー',
+    'settings.push':'プッシュ通知','settings.att_push':'⏰ 出席リマインダー','settings.pw_push':'💰 価格変動アラート','settings.pw_push_hint':'よく買う商品が近所で安くなったらお知らせします','pw.on':'💰 価格アラート ON','pw.off':'💰 価格アラート OFF',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
     'rw.exchange':'交換する','rw.sold_out':'品切れ','rw.stock_left':'残り{n}','rw.see_more':'もっと見る','rw.store_title':'🛍 チリストア','rw.no_items':'登録された商品がありません','rw.ad':'広告',
     'common.loading':'読み込み中...','common.share':'共有',
@@ -14083,7 +14092,7 @@ var I18N = {
     'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
     // 받은 쪽지함 (build 304)
     'settings.inbox':'받은 쪽지함','inbox.empty':'아직 메시지가 없어요','inbox.from_admin':'운영진으로부터','inbox.read_all':'✅ 모두 읽음 처리',
-    'settings.push':'푸시 알림','settings.att_push':'⏰ 출석 알림',
+    'settings.push':'푸시 알림','settings.att_push':'⏰ 출석 알림','settings.pw_push':'💰 가격 변동 알림','settings.pw_push_hint':'자주 사는 상품이 내 동네에서 더 싸지면 알려드려요','pw.on':'💰 가격 알림 ON','pw.off':'💰 가격 알림 OFF',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
     'rw.exchange':'교환하기','rw.sold_out':'품절','rw.stock_left':'{n}개 남음','rw.see_more':'더보기','rw.store_title':'🛍 치리스토어','rw.no_items':'등록된 상품이 없어요','rw.ad':'광고',
     'common.loading':'로딩 중...','common.share':'공유',
@@ -14344,7 +14353,7 @@ var I18N = {
     'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
     // Inbox (build 304)
     'settings.inbox':'Inbox','inbox.empty':'No messages yet','inbox.from_admin':'From admin','inbox.read_all':'✅ Mark all read',
-    'settings.push':'Push notifications','settings.att_push':'⏰ Attendance reminders',
+    'settings.push':'Push notifications','settings.att_push':'⏰ Attendance reminders','settings.pw_push':'💰 Price drop alerts','settings.pw_push_hint':'Get notified when items you buy get cheaper nearby','pw.on':'💰 Price alerts ON','pw.off':'💰 Price alerts OFF',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
     'rw.exchange':'Exchange','rw.sold_out':'Sold out','rw.stock_left':'{n} left','rw.see_more':'See more','rw.store_title':'🛍 Chiri Store','rw.no_items':'No items yet','rw.ad':'Ad',
     'common.loading':'Loading...','common.share':'Share',
@@ -14605,7 +14614,7 @@ var I18N = {
     'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
     // 收件箱 (build 304)
     'settings.inbox':'收件箱','inbox.empty':'还没有消息','inbox.from_admin':'来自管理员','inbox.read_all':'✅ 全部标为已读',
-    'settings.push':'推送通知','settings.att_push':'⏰ 签到提醒',
+    'settings.push':'推送通知','settings.att_push':'⏰ 签到提醒','settings.pw_push':'💰 降价提醒','settings.pw_push_hint':'常买的商品在附近变便宜时通知您','pw.on':'💰 降价提醒 ON','pw.off':'💰 降价提醒 OFF',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
     'rw.exchange':'兑换','rw.sold_out':'售罄','rw.stock_left':'剩{n}','rw.see_more':'查看更多','rw.store_title':'🛍 Chiri 商店','rw.no_items':'暂无商品','rw.ad':'广告',
     'common.loading':'加载中...','common.share':'分享',
@@ -16707,6 +16716,8 @@ function openOv(id){
     if (typeof _syncPushToggleUI === 'function') { try { _syncPushToggleUI(); } catch(e){} }
     // 출석 알림 토글 상태 동기화 (build 317)
     if (typeof _syncAttendancePushUI === 'function') { try { _syncAttendancePushUI(); } catch(e){} }
+    // 가격 변동 알림 토글 상태 동기화 (build 531)
+    if (typeof _syncPriceWatchPushUI === 'function') { try { _syncPriceWatchPushUI(); } catch(e){} }
     // 저장된 GPT 키 상태 표시
     var inp = document.getElementById('gpt-key-input');
     var st  = document.getElementById('gpt-status');
@@ -25955,6 +25966,54 @@ async function toggleAttendancePush() {
   showToast(newVal ? '⏰ 출석 알림 ON' : '⏰ 출석 알림 OFF');
 }
 
+/** build 531 — 가격 변동 알림 옵트인 토글 (출석 패턴 미러) */
+async function _syncPriceWatchPushUI() {
+  var row = document.getElementById('settings-pw-push-row');
+  var tg  = document.getElementById('settings-pw-push-toggle');
+  if (!row || !tg || !_currentUser) return;
+  // 캐시로 즉시 반영 (깜빡임 방지)
+  try {
+    if (localStorage.getItem('pw_push_row_visible') === '1') row.style.display = 'flex';
+    var co = localStorage.getItem('pw_push_optin');
+    if (co === '1') tg.classList.remove('off'); else if (co === '0') tg.classList.add('off');
+  } catch(_){}
+  var st = await _pushStatus();
+  if (st !== 'granted-subscribed') {
+    row.style.display = 'none';
+    try { localStorage.setItem('pw_push_row_visible', '0'); } catch(_){}
+    return;
+  }
+  row.style.display = 'flex';
+  try { localStorage.setItem('pw_push_row_visible', '1'); } catch(_){}
+  var res = await _sb.from('push_subscriptions')
+    .select('pricewatch_optin')
+    .eq('user_id', _currentUser.id)
+    .eq('enabled', true)
+    .limit(1)
+    .maybeSingle();
+  var on = !!(res && res.data && res.data.pricewatch_optin === true);
+  if (on) tg.classList.remove('off'); else tg.classList.add('off');
+  try { localStorage.setItem('pw_push_optin', on ? '1' : '0'); } catch(_){}
+}
+
+async function togglePriceWatchPush() {
+  var tg = document.getElementById('settings-pw-push-toggle');
+  if (!tg || !_currentUser) return;
+  var isOff = tg.classList.contains('off');
+  tg.classList.toggle('off');
+  var newVal = isOff;  // OFF였으면 → ON
+  var res = await _sb.from('push_subscriptions')
+    .update({ pricewatch_optin: newVal })
+    .eq('user_id', _currentUser.id);
+  if (res.error) {
+    tg.classList.toggle('off');  // 실패 시 원복
+    showToast(t('toast.save_fail', {msg: res.error.message}));
+    return;
+  }
+  try { localStorage.setItem('pw_push_optin', newVal ? '1' : '0'); } catch(_){}
+  showToast(newVal ? t('pw.on') : t('pw.off'));
+}
+
 /** 토글 클릭 핸들러 */
 async function togglePushNotifications() {
   var toggleEl = document.getElementById('settings-push-toggle');
@@ -29199,7 +29258,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 530;
+window.__APP_BUILD__ = 531;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
