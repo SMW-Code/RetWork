@@ -8283,7 +8283,40 @@ function _unlockReport(){
 ══════════════════════════════ */
 var _radarFilter = 'up';
 var _radarSort   = 'desc'; // 'desc' = 변동 큰 순, 'asc' = 변동 작은 순
-var _radarDummyData = [];
+var _radarDummyData = [];  // (레거시) — 실데이터는 _buildRadarData() 사용
+
+// 물가 레이더 실데이터 (build 536) — 내 영수증 이력(날짜별 단가)에서 품목별 최신가 vs 직전구매가 추이
+//   ※ product_prices 는 upsert(최신가만)라 시계열 없음 → 내 구매이력이 유일한 시계열 원천
+function _buildRadarData(){
+  var byItem = {};
+  (DB||[]).forEach(function(r){
+    if (!r || !r.items || !r.date) return;
+    r.items.forEach(function(it){
+      if (!it || !it.name || !it.price) return;
+      var q = it.qty || 1, unit = Math.round((it.price||0)/q);
+      if (!(unit > 0)) return;
+      var key = String(it.name).replace(/\s+/g,'').normalize('NFKC').toLowerCase();
+      if (key.length < 2) return;
+      var e = byItem[key] || (byItem[key] = { name: it.name, cat: r.cat || 'other', obs: [] });
+      e.obs.push({ date: r.date, unit: unit, store: r.store || '' });
+    });
+  });
+  var out = [];
+  Object.keys(byItem).forEach(function(k){
+    var e = byItem[k];
+    if (e.obs.length < 2) return;                                   // 시계열 비교엔 2회+ 구매 필요
+    e.obs.sort(function(a,b){ return a.date < b.date ? -1 : 1; });  // 오래된→최신
+    var latest = e.obs[e.obs.length-1], prev = null;
+    for (var i=e.obs.length-2; i>=0; i--){ if (e.obs[i].date !== latest.date){ prev = e.obs[i]; break; } }
+    if (!prev) return;                                              // 같은 날 구매뿐이면 추이 없음
+    if (Math.abs(latest.unit - prev.unit) < 2) return;             // 미세 변동 노이즈 제외
+    var months = Math.max(1, Math.round((new Date(latest.date) - new Date(prev.date)) / (86400000*30)));
+    out.push({ name: e.name, old: prev.unit, now: latest.unit, months: months, icon: (CAT_EMOJI[e.cat] || '🛒'), store: latest.store });
+  });
+  // 변동률 큰 순 상위 25개
+  out.sort(function(a,b){ return Math.abs((b.now-b.old)/b.old) - Math.abs((a.now-a.old)/a.old); });
+  return out.slice(0, 25);
+}
 
 function switchRadar(type) {
   _radarFilter = type;
@@ -8318,8 +8351,8 @@ function renderRadar() {
   var el = document.getElementById('radar-list');
   if (!el) return;
 
-  // 실제 데이터가 쌓이면 DB에서 집계 — 지금은 더미
-  var data = _radarDummyData.filter(function(d) {
+  // 내 영수증 이력 기반 실데이터 (build 536). 2회+ 구매·변동 있는 품목만 → 없으면 빈 상태
+  var data = _buildRadarData().filter(function(d) {
     var diff = d.now - d.old;
     if (_radarFilter === 'up')   return diff > 0;
     if (_radarFilter === 'down') return diff < 0;
@@ -29363,7 +29396,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 535;
+window.__APP_BUILD__ = 536;
 // Web Push VAPID Public Key (build 309) — Vercel 환경변수 VAPID_PRIVATE_KEY 와 짝
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
