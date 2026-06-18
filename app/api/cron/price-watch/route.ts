@@ -35,9 +35,13 @@ if (VAPID_PUBLIC && VAPID_PRIVATE) {
 }
 
 // ── 튜닝 파라미터 (조정 가능) ──
-const RADIUS_M      = 3000;   // 앵커 반경 (m)
-const MIN_PCT       = 10;     // 최소 절약율 (%) — 단가 기준
-const COOLDOWN_DAYS = 7;      // 같은 (유저·상품·가게) 알림 쿨다운
+const RADIUS_M            = 3000;  // 앵커 반경 (m)
+const MIN_PCT             = 10;    // 최소 절약율 (%) — 단가 기준
+// 적응형 푸시 빈도 캡 (참여=관심 / 무시=백오프). 딜 "기록(인앱)"은 캡과 무관하게 항상.
+const ENGAGED_WINDOW_DAYS = 14;    // 최근 N일 내 푸시 탭 → '관심' → 캡 3일
+const CAP_ENGAGED         = 3;     // 관심/신규/중립 기본 캡(일)
+const CAP_IGNORE_MID      = 7;     // 무시 누적(streak 3~5) → 7일
+const CAP_IGNORE_HIGH     = 14;    // 무시 누적(streak 6+) → 14일
 
 function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000, toRad = (d: number) => d * Math.PI / 180;
@@ -161,38 +165,60 @@ export async function POST(request: Request) {
   }
   if (alerts.length === 0) return Response.json({ ok: true, sent: 0, note: 'no cheaper-nearby found' });
 
-  // 5) 쿨다운 dedup
-  const cutoff = new Date(Date.now() - COOLDOWN_DAYS * 86400000).toISOString();
-  const { data: sentRows } = await sb
-    .from('price_alerts_sent')
-    .select('user_id, product_id, store_name, sent_at')
-    .in('user_id', userIds)
-    .gte('sent_at', cutoff);
-  const sentKey = new Set((sentRows || []).map((r: any) => r.user_id + '|' + r.product_id + '|' + r.store_name));
-  const fresh = alerts.filter(a => !sentKey.has(a.user_id + '|' + a.product_id + '|' + a.store));
-  if (fresh.length === 0) return Response.json({ ok: true, sent: 0, note: 'all on cooldown' });
+  // 5) 적응형 푸시 상태 + 상품명
+  const { data: stRows } = await sb
+    .from('pricewatch_state')
+    .select('user_id, last_pushed_at, last_engaged_at, ignored_streak')
+    .in('user_id', userIds);
+  const stateByUser = new Map<string, any>();
+  for (const r of (stRows || [])) stateByUser.set(r.user_id, r);
 
-  // 상품명 (products_master.canonical)
-  const namePids = Array.from(new Set(fresh.map(a => a.product_id)));
+  const namePids = Array.from(new Set(alerts.map(a => a.product_id)));
   const { data: names } = await sb.from('products_master').select('id, canonical').in('id', namePids);
   const nameById = new Map<string, string>();
   for (const n of (names || [])) nameById.set(n.id, n.canonical || '商品');
 
-  // 6) 발송 (유저당 1건 → 유저의 모든 디바이스로)
+  const DAY = 86400000, now = Date.now();
+  // 적응형 캡(일): 최근 14일 내 푸시 탭 = 관심 → 3일. 무시 누적 → 점진 백오프.
+  function capDaysFor(st: any): number {
+    if (st && st.last_engaged_at && (now - new Date(st.last_engaged_at).getTime()) <= ENGAGED_WINDOW_DAYS * DAY) return CAP_ENGAGED;
+    const s = (st && st.ignored_streak) || 0;
+    if (s >= 6) return CAP_IGNORE_HIGH;
+    if (s >= 3) return CAP_IGNORE_MID;
+    return CAP_ENGAGED;
+  }
+
+  // 6) 딜은 항상 기록(인앱 벨/NEW), 푸시는 적응형 캡 통과시만
   const pushOptions = { TTL: 86400, urgency: 'normal' } as any;
   const expiredIds: string[] = [];
-  let sent = 0, failed = 0;
+  const stateUpserts: any[] = [];
+  let recorded = 0, sent = 0, throttled = 0, failed = 0;
 
-  await Promise.all(fresh.map(async (a) => {
+  await Promise.all(alerts.map(async (a) => {
     const name = nameById.get(a.product_id) || '商品';
     const diff = a.myPrice - a.candPrice;
     const diffTxt = diff > 0 ? `（¥${a.candPrice} / あなた¥${a.myPrice}）` : `（約${a.pct}%お得）`;
     const msgBody = `${name} — ${a.store} が「${a.myStore}」より約${a.pct}%安い ${diffTxt}｜${fmtDist(a.distM)}`;
+
+    // (a) 항상 기록 → 인앱 벨/NEW/알림함 (캡과 무관)
+    await sb.from('price_alerts_sent').upsert(
+      { user_id: a.user_id, product_id: a.product_id, store_name: a.store, price: a.candPrice, body: msgBody, sent_at: new Date().toISOString() },
+      { onConflict: 'user_id,product_id,store_name' }
+    );
+    recorded++;
+
+    // (b) 적응형 캡 — 무시형은 백오프, 관심형은 자주
+    const st = stateByUser.get(a.user_id);
+    const lastPushed = st && st.last_pushed_at ? new Date(st.last_pushed_at).getTime() : 0;
+    const eligible = !lastPushed || (now - lastPushed) >= capDaysFor(st) * DAY;
+    if (!eligible) { throttled++; return; }
+
+    // (c) 푸시 (유저의 모든 디바이스). url 플래그로 '탭=engagement' 추적
     const payload = JSON.stringify({
       title: '💰 もっと安いお店が見つかりました',
       body: msgBody,
-      url: '/',
-      tag: 'pricewatch-' + a.product_id,   // 같은 상품 알림 그룹화
+      url: '/?from=pricewatch',
+      tag: 'pricewatch-' + a.product_id,
       priority: 'normal',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-192.png'
@@ -212,17 +238,16 @@ export async function POST(request: Request) {
     }));
     if (anyOk) {
       sent++;
-      // 쿨다운 기록 (upsert: 같은 유저·상품·가게면 sent_at 갱신)
-      await sb.from('price_alerts_sent').upsert(
-        { user_id: a.user_id, product_id: a.product_id, store_name: a.store, price: a.candPrice, body: msgBody, sent_at: new Date().toISOString() },
-        { onConflict: 'user_id,product_id,store_name' }
-      );
+      // 푸시 보냄 → last_pushed_at 갱신 + 무시 streak +1 (탭하면 앱이 0으로 리셋)
+      stateUpserts.push({ user_id: a.user_id, last_pushed_at: new Date().toISOString(), ignored_streak: (((st && st.ignored_streak) || 0) + 1), updated_at: new Date().toISOString() });
     } else {
       failed++;
     }
   }));
 
-  if (expiredIds.length > 0) await sb.from('push_subscriptions').delete().in('id', expiredIds);
+  // engagement(last_engaged_at)은 앱이 갱신하므로 여기선 미포함 → upsert 시 기존값 보존
+  if (stateUpserts.length > 0) await sb.from('pricewatch_state').upsert(stateUpserts, { onConflict: 'user_id' });
+  if (expiredIds.length > 0)   await sb.from('push_subscriptions').delete().in('id', expiredIds);
 
-  return Response.json({ ok: true, candidates: alerts.length, fresh: fresh.length, sent, failed, expired_deleted: expiredIds.length });
+  return Response.json({ ok: true, candidates: alerts.length, recorded, sent, throttled, failed, expired_deleted: expiredIds.length });
 }

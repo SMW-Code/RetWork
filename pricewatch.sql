@@ -36,6 +36,26 @@ drop policy if exists "pas_read_own" on public.price_alerts_sent;
 create policy "pas_read_own" on public.price_alerts_sent
   for select using (auth.uid() = user_id);
 
+-- ── 적응형 푸시 빈도 상태 (유저별) ──
+--   last_pushed_at  : 마지막으로 "푸시"를 보낸 시각 (인앱 기록과 별개 — 푸시 throttle 용)
+--   last_engaged_at : 마지막으로 푸시를 "탭해서 연" 시각 (앱이 기록)
+--   ignored_streak  : 탭 없이 연속으로 보낸 푸시 수 → 점진 백오프(3→7→14일)
+create table if not exists public.pricewatch_state (
+  user_id         uuid primary key references auth.users(id) on delete cascade,
+  last_pushed_at  timestamptz,
+  last_engaged_at timestamptz,
+  ignored_streak  int not null default 0,
+  updated_at      timestamptz not null default now()
+);
+alter table public.pricewatch_state enable row level security;
+-- 본인 읽기/쓰기(앱에서 engagement 기록). 크론은 service_role 로 RLS 우회.
+drop policy if exists "pws_read_own"   on public.pricewatch_state;
+create policy "pws_read_own"   on public.pricewatch_state for select using (auth.uid() = user_id);
+drop policy if exists "pws_insert_own" on public.pricewatch_state;
+create policy "pws_insert_own" on public.pricewatch_state for insert with check (auth.uid() = user_id);
+drop policy if exists "pws_update_own" on public.pricewatch_state;
+create policy "pws_update_own" on public.pricewatch_state for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- 검증:
 --   select column_name from information_schema.columns where table_name='push_subscriptions' and column_name='pricewatch_optin';
 --   select count(*) from public.price_alerts_sent;
