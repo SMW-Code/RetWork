@@ -64,7 +64,11 @@ export async function POST(request: Request) {
   const auth = request.headers.get('authorization') || '';
   const token = auth.replace(/^Bearer\s+/i, '').trim();
   if (!CRON_SECRET || token !== CRON_SECRET) {
-    return Response.json({ ok: false, err: 'unauthorized' }, { status: 401 });
+    // 임시 진단(비밀값 미노출 — 설정여부·길이만). 해결 후 제거.
+    return Response.json({ ok: false, err: 'unauthorized', _dbg: {
+      cronSet: !!CRON_SECRET, cronLen: (CRON_SECRET || '').length, tokenLen: token.length, match: token === CRON_SECRET,
+      vapidSet: !!(VAPID_PUBLIC && VAPID_PRIVATE), supaUrlSet: !!SUPABASE_URL, supaRoleSet: !!SUPABASE_SERVICE_ROLE
+    } }, { status: 401 });
   }
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE || !VAPID_PUBLIC || !VAPID_PRIVATE) {
     return Response.json({ ok: false, err: 'server env not configured' }, { status: 500 });
