@@ -1,9 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 537 시점)
+# RetWork (チリつも) — HANDOFF (build 538 시점)
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
-> 최신 빌드: **build 537** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
+> 최신 빌드: **build 538** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
 > 블로그(SEO/AdSense): **blog.retwork.jp** (별도 레포 `SMW-Code/retwork-blog`, 로컬 경로 `C:\Users\minus\Desktop\retwork-blog`)
-> 마지막 작업: **2026-06-18** (b536 물가레이더 실데이터화 + b537 가격알림 push **live화 완료**). b531~534 price watch는 **§0-M**, 카테고리 대확장은 **§0-L**.
+> 마지막 작업: **2026-06-18** (b538 월별리포트 **동네 알뜰지수** 실구현 — community_soon placeholder 대체). b536 물가레이더 실데이터·b537 가격알림 push live화는 **§0-N**, b531~534 price watch는 **§0-M**.
 > 🌐 **i18n 규칙(앞으로 필수):** 새 페이지/카드/모달/토스트 등 **모든 사용자 대면 UI는 처음부터 4개국어**. 작업 전 **`I18N_GUIDE.md`** 읽을 것. AGENTS.md에 연결돼 세션마다 자동 적용됨.
 > ✅ **SQL 전부 실행 완료(사용자 확인):** `product_prices.sql`(b498), `product_prices_volume.sql`(b503), `items_parking_mins.sql`(b515), **`pricewatch.sql`(b531~534, 2026-06-18 실행)** — `pricewatch_optin`·`price_alerts_sent`(body)·`pricewatch_state`. 추가 대기 SQL 없음.
 > 🟥 **Vercel 프로젝트 2개 함정(반드시 숙지):** `ret-work-s-projects`에 프로젝트가 둘 — **실서비스 retwork.jp = `ret-work` 프로젝트** (env·배포는 여기!). `receiptiq`(receiptiq-two.vercel.app)는 **옛/미사용**. env 작업은 항상 `ret-work`에서. `vercel link --project ret-work`. ⚠️ **Vercel CLI `env add`(stdin/pipe)는 값을 잘라먹음**(CRON_SECRET 48→44자 사고) → env 값 입력은 **반드시 대시보드**로.
@@ -13,6 +13,25 @@
 > ```bash
 > node -e "const fs=require('fs');const h=fs.readFileSync('public/index.html','utf8');const m=h.match(/<script>([\s\S]*?)<\/script>/g)||[];let bad=0;m.forEach((s,i)=>{const b=s.replace(/^<script>/,'').replace(/<\/script>$/,'');try{new Function(b)}catch(e){bad++;console.log('SCRIPT#'+i,e.message.split('\n')[0])}});console.log(bad?'ERR '+bad:'OK '+m.length)"
 > ```
+
+---
+
+## 0-O. 2026-06-18 — 월별리포트 「동네 알뜰지수」 실구현 (build 538)
+
+**아이디어:** 월별리포트 `mr.community_soon`(준비중 placeholder) → **가격 벤치마크(B안)** 실구현. "당신이 산 품목, **동네 평균보다 N% 싸게** 샀어요". (지출 비교 A안은 기록 완성도·세대 편향 때문에 보류 — 데모그래픽은 유저 증가 후.)
+
+**왜 가격(단가) 기반?** 총지출 비교는 ① 영수증 스캔 완성도 편향 ② 세대인원 편향이 치명적. **단가 비교는 둘 다 무관**(몇 개 샀든 무관) + RetWork 코어밸류(가성비)와 일치 + 추가 데이터 불필요.
+
+**구현 (전부 클라, 새 서버/SQL 없음):**
+- **`_computeSavings()`** (~line 8493) 안에서 **같은 데이터로 함께 계산** → `window._savingData.valueIndex`. 節約찬스(=최저가)와 달리 **커뮤니티 중앙값** 비교. GPT 정규화·`product_prices` 쿼리 **중복 0**.
+- 로직: 내 품목별 단가(용량 `qty_base` 정규화) vs 같은 product_id의 **동네 반경 5km(`_ctUserPos`) 커뮤니티 중앙값**. `pct=(median−mine)/median×100` (+면 쌈). **지출액 가중 평균.**
+- **안전장치:** 자기 행 제외(쿼리에 `user_id` 추가, 8493행), **품목당 최소 3관측(`VI_MIN_PEERS`)**, 비교 품목 **2개 미만이면 `valueIndex=null`** → "데이터 모이는 중" 폴백, 극단치 90%+ 컷, 좌표 없으면 전국 비교.
+- **렌더:** `renderMonthReport`가 placeholder(`#mr-value-index`) 그린 뒤 **async `_mrRenderValueIndex()`** (~line 10477)로 채움 — 헤드라인(🏆/⚖️/💸 + N% 문구) + 잘 산 품목 TOP3.
+- **i18n:** `mr.vi_title`·`mr.vi_cheaper`·`mr.vi_pricier`·`mr.vi_similar`·`mr.vi_basis`·`mr.vi_collecting`·`mr.vi_item_cheaper` (7키 × 4언어). `mr.community_soon`은 미사용(잔존 무해).
+
+**현황/한계:** 유저·데이터 적어 **초기엔 대부분 "모이는 중" 폴백**(정직한 설계, 데이터 쌓이면 자동 점등). "최근 3개월 구매" 기준(절약찬스와 동일 — 엄밀히 "이번 달" 아님). **유저 증가 시 확장:** 데모그래픽(가족수·연령대) 옵트인 얹으면 *"30대·4인가구 중 상위 20%"* — 현 구조가 그대로 수용. (데모그래픽 수집은 개인정보로 취급: 이용목적+동의+프라이버시정책, 재식별 막게 축 최소+k익명.)
+
+**커밋:** `3ce9613`(b538) push 완료.
 
 ---
 
