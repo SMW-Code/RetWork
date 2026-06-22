@@ -1,11 +1,13 @@
-# RetWork (チリつも) — HANDOFF (build 539 시점)
+# RetWork (チリつも) — HANDOFF (build 547 시점)
 
-> # ✅ 애드센스 대응 Phase 1 완료 (b539) — 다음: AdSense 재심사 요청
-> 숨긴 `#seo-landing`(클로킹) → **보이는 랜딩으로 공개** 완료·배포·검증(라이브 HTML에 aria-hidden/숨김요소 0). 부팅 라우팅: 세션有→앱 / standalone→로그인 / 비로그인 브라우저→랜딩→「無料で始める」→로그인. **게스트 모드(Phase 2)는 사용자 결정으로 미채택(drop).**
-> **남은 액션(사용자):** AdSense 대시보드에서 "검토 요청" 클릭(숨김텍스트 제거 확인됨). 안정적 통과엔 **블로그 콘텐츠 보강(15~25편)** 권장. 상세 [`NEXT_TASK_landing_guest.md`](NEXT_TASK_landing_guest.md).
+> # ⏳ AdSense 심사 중 (retwork.jp, 2026-06-19 08:27 요청)
+> 랜딩 공개·블로그 14편·구르메 13편·상호링크 완료 후 **검토 요청 제출**. 결과 며칠~2-4주. **승인 후: 자동광고 OFF + 블로그 글에만 수동 유닛**(앱·랜딩엔 AdSense X).
+> 💰 **수익모델 핵심 결정** → [`MONETIZATION_REALITY.md`](MONETIZATION_REALITY.md) **반드시 읽기**: 웹=AdSense/자체광고, **앱 리워드=AdMob(Capacitor 네이티브 래핑 필요, TWA 아님)**. 리워드는 합법이나 "리워드 인벤토리"에서만. 치리→商品券 환금성은 정책+자금결제법 리스크.
 >
-> # 🔜 다음 작업: 몰/빌딩 「층(階)」 구분
+> # 🔜 다음 작업(미착수): 몰/빌딩 「층(階)」 구분
 > [`NEXT_TASK_mall_floor.md`](NEXT_TASK_mall_floor.md) — 같은 좌표 다수 가게 `stores.floor`/`building`.
+>
+> ℹ️ b540~547 변경: b540 レットワーク표기 / b541 랜딩 플래시fix / b543 인기기사14 / b544 블로그상호링크 / b545 맵공개 영수증중복fix / b546 설정 랜딩미리보기 / **b547 어드민 가게핀 '핀 수정'+'메뉴카드' 분리**.
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
 > 최신 빌드: **build 538** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
