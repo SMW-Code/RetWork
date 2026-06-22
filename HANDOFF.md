@@ -1,11 +1,11 @@
-# RetWork (チリつも) — HANDOFF (build 538 시점)
+# RetWork (チリつも) — HANDOFF (build 539 시점)
 
-> # 🔴 최우선 작업: 애드센스 대응 — 보이는 랜딩 + 게스트 모드
-> **다른 PC에서 이어서 시작하면 → [`NEXT_TASK_landing_guest.md`](NEXT_TASK_landing_guest.md) 부터 읽고 진행.**
-> AdSense 거절(retwork.jp, 클로킹+빈약콘텐츠). 숨긴 `#seo-landing`을 보이는 랜딩으로 공개(Phase 1, 애드센스 해결) + 게스트 모드(Phase 2). 상태: **미착수(설계 확정)**.
+> # ✅ 애드센스 대응 Phase 1 완료 (b539) — 다음: AdSense 재심사 요청
+> 숨긴 `#seo-landing`(클로킹) → **보이는 랜딩으로 공개** 완료·배포·검증(라이브 HTML에 aria-hidden/숨김요소 0). 부팅 라우팅: 세션有→앱 / standalone→로그인 / 비로그인 브라우저→랜딩→「無料で始める」→로그인. **게스트 모드(Phase 2)는 사용자 결정으로 미채택(drop).**
+> **남은 액션(사용자):** AdSense 대시보드에서 "검토 요청" 클릭(숨김텍스트 제거 확인됨). 안정적 통과엔 **블로그 콘텐츠 보강(15~25편)** 권장. 상세 [`NEXT_TASK_landing_guest.md`](NEXT_TASK_landing_guest.md).
 >
-> # 🔜 그 다음 작업: 몰/빌딩 「층(階)」 구분
-> [`NEXT_TASK_mall_floor.md`](NEXT_TASK_mall_floor.md) — 같은 좌표 다수 가게 `stores.floor`/`building`. 위 애드센스 작업 이후.
+> # 🔜 다음 작업: 몰/빌딩 「층(階)」 구분
+> [`NEXT_TASK_mall_floor.md`](NEXT_TASK_mall_floor.md) — 같은 좌표 다수 가게 `stores.floor`/`building`.
 
 > 다른 컴퓨터에서 이어서 작업할 때 이 파일부터 읽으면 현황 파악 완료.
 > 최신 빌드: **build 538** · 도메인: **retwork.jp** · 일본 시장 타겟 영수증 OCR + 가성비 가게 정보 공유 PWA.
