@@ -964,7 +964,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
      세션 있음 / PWA standalone 이면 부팅 라우팅이 display:none 처리.
      ════════════════════════════════════════════════════════════════ -->
 <section id="seo-landing" lang="ja"
-  style="position:fixed;inset:0;z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  style="display:none;position:fixed;inset:0;z-index:300;overflow-y:auto;-webkit-overflow-scrolling:touch;
          background:linear-gradient(180deg,#0f2740,#0b1726);color:#fff;">
 <div style="max-width:760px;margin:0 auto;padding:34px 20px 110px;">
   <header style="border-bottom:1px solid rgba(255,255,255,.12);padding-bottom:20px;margin-bottom:28px;">
@@ -29291,7 +29291,12 @@ if (_isOAuthReturnTab) {
 } else {
   // ── 정상 앱 시작: 세션 먼저 확인 후 화면 분기 (로그인 화면 플래시 방지) ──
   (async function() {
-    // 랜딩 분기 (b539): 세션 있음 → 앱 / PWA standalone → 로그인 / 그 외(브라우저 비로그인) → 랜딩 노출
+    // 랜딩 분기 (b541): 플래시 방지 위해 동기적으로 먼저 판단 — 토큰 있거나 PWA면 랜딩 절대 노출 X.
+    var _standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    var _hasToken = false;
+    try { for (var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if (k && k.indexOf('sb-')===0 && k.indexOf('-auth-token')>-1){ _hasToken=true; break; } } } catch(e){}
+    // 로그아웃 + 브라우저 → 즉시 랜딩 / 그 외(토큰有·PWA) → 숨김 유지 (기본 display:none)
+    if (!_standalone && !_hasToken) _showLanding(); else _hideLanding();
     try {
       var res = await _sb.auth.getSession();
       if (res.data && res.data.session) {
@@ -29301,7 +29306,7 @@ if (_isOAuthReturnTab) {
         return;
       }
     } catch(e) {}
-    var _standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    // 세션 없음 확정: PWA → 로그인 / 브라우저 → 랜딩
     if (_standalone) {
       _hideLanding();
       document.getElementById('screen-auth').style.display = 'flex';
@@ -29488,7 +29493,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 540;
+window.__APP_BUILD__ = 541;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
