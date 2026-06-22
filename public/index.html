@@ -26899,7 +26899,8 @@ async function _admPcOpenPinStoreView(storeName) {
               +     comment
               +   '</div>'
               +   '<div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;">'
-              +     '<button onclick="_admPcEditMenuCardFromPin(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="이 가격 핀의 메뉴 카드 수정">편집</button>'
+              +     '<button onclick="openAdminPinDetail(\''+p.id+'\')" style="background:#0d7a5f;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="핀의 메뉴명·가격·코멘트를 직접 수정">✏️ 핀 수정</button>'
+              +     '<button onclick="_admPcEditMenuCardFromPin(\''+p.id+'\')" style="background:#172C58;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="이 핀의 메뉴 카드 만들기/수정">🍽️ 메뉴카드</button>'
               +     (p.comment ? '<button onclick="_admPcClearPinComment(\''+p.id+'\')" style="background:#fff;color:#92400E;border:1px solid #FDE68A;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="코멘트만 삭제(핀 유지)">💬 삭제</button>' : '')
               +     '<button onclick="_admPcDeletePinFromList(\''+p.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;" title="가격 핀 전체 삭제">핀 삭제</button>'
               +   '</div>'
@@ -28325,6 +28326,10 @@ async function admSavePin() {
   showToast('✅ 핀 정보 수정 완료');
   closeOv('ov-admin-edit-pin');
   if (_admDetailType === 'pins') await _loadAdminDetailData('pins');
+  // 어드민 PC '가게+핀 상세' 화면에서 편집한 경우 그 화면도 갱신
+  if (typeof _isAdminPcActive === 'function' && _isAdminPcActive() && window._admPcCurrentStoreName && typeof _admPcOpenPinStoreView === 'function') {
+    _admPcOpenPinStoreView(window._admPcCurrentStoreName);
+  }
 }
 
 var _admStatsPeriod = 'all'; // 'today' | '7d' | '30d' | '365d' | 'all'
@@ -29586,7 +29591,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 546;
+window.__APP_BUILD__ = 547;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
