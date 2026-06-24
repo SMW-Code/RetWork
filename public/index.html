@@ -1252,6 +1252,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       로그인
     </button>
 
+    <!-- 비밀번호 찾기 (로그인 탭만 노출 — switchAuthTab 에서 토글) -->
+    <div id="auth-forgot-row" style="text-align:center;margin:-10px 0 16px;">
+      <span onclick="authForgotPassword()" style="font-size:12px;color:var(--text-3);cursor:pointer;text-decoration:underline;" data-i18n="auth.forgot">비밀번호를 잊으셨나요?</span>
+    </div>
+
     <!-- 구분선 -->
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;width:100%;">
       <div style="flex:1;height:1px;background:var(--border-mid);"></div>
@@ -1282,6 +1287,23 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <span data-i18n="auth.line">LINEで続ける</span>
     </button>
 
+  </div>
+  <div style="text-align:center;font-size:11px;color:var(--text-3);padding:12px 24px 28px;">RetWork <span class="app-version-text"></span> · © 2026</div>
+</div>
+
+<!-- 비밀번호 재설정 화면 (b552) — recovery 메일 링크로 복귀 시 노출 -->
+<div id="screen-reset-pw" style="display:none;flex-direction:column;height:100%;background:var(--bg);overflow:hidden;position:fixed;inset:0;z-index:320;">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;">
+    <div style="font-size:48px;margin-bottom:14px;">🔑</div>
+    <div style="font-size:22px;font-weight:800;color:var(--text-1);margin-bottom:8px;letter-spacing:-.5px;" data-i18n="auth.reset_title">새 비밀번호 설정</div>
+    <div style="font-size:13px;color:var(--text-3);margin-bottom:24px;text-align:center;line-height:1.6;" data-i18n="auth.reset_sub">사용할 새 비밀번호를 입력해주세요.</div>
+    <div id="reset-pw-error" style="font-size:12px;color:var(--red);margin-bottom:10px;text-align:center;display:none;width:100%;max-width:360px;padding:8px 12px;background:var(--surface);border-radius:10px;border:0.5px solid var(--border);box-sizing:border-box;"></div>
+    <input id="reset-pw-new" type="password" placeholder="비밀번호 (6자 이상)" data-i18n-placeholder="auth.password_signup" autocomplete="new-password"
+      style="width:100%;max-width:360px;border:1px solid var(--border-mid);border-radius:12px;padding:13px 16px;font-size:14px;font-family:var(--font);margin-bottom:10px;outline:none;background:#fff;box-sizing:border-box;">
+    <input id="reset-pw-confirm" type="password" placeholder="새 비밀번호 확인" data-i18n-placeholder="auth.reset_confirm" autocomplete="new-password"
+      style="width:100%;max-width:360px;border:1px solid var(--border-mid);border-radius:12px;padding:13px 16px;font-size:14px;font-family:var(--font);margin-bottom:16px;outline:none;background:#fff;box-sizing:border-box;">
+    <button id="reset-pw-btn" onclick="submitResetPw()"
+      style="width:100%;max-width:360px;background:var(--green-grad);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:var(--font);box-shadow:var(--shadow-green);" data-i18n="auth.reset_btn">비밀번호 변경</button>
   </div>
   <div style="text-align:center;font-size:11px;color:var(--text-3);padding:12px 24px 28px;">RetWork <span class="app-version-text"></span> · © 2026</div>
 </div>
@@ -14039,6 +14061,7 @@ var I18N = {
     'auth.gender':'性別','auth.male':'男性','auth.female':'女性','auth.other':'その他',
     'auth.birth':'生年','auth.nickname':'ニックネーム',
     'auth.login_btn':'ログイン','auth.signup_btn':'新規登録',
+    'auth.forgot':'パスワードをお忘れですか？','auth.forgot_need_email':'メールアドレスを入力してください','auth.forgot_sent':'✉️ パスワード再設定メールを送信しました！メール内のリンクから新しいパスワードを設定してください。','auth.reset_title':'新しいパスワードの設定','auth.reset_sub':'新しく使用するパスワードを入力してください。','auth.reset_confirm':'新しいパスワード（確認）','auth.reset_btn':'パスワードを変更','auth.reset_mismatch':'パスワードが一致しません','auth.reset_ok':'✅ パスワードを変更しました！','auth.reset_fail':'変更に失敗しました。リンクの有効期限が切れている可能性があります。もう一度お試しください。',
     'auth.or':'または','auth.apple':'Appleで続ける','auth.line':'LINEで続ける','auth.birth_select':'生年を選択','auth.year_suffix':'年','auth.password_signup':'パスワード（6文字以上）','auth.logging_in':'ログイン中...','auth.signing_up':'登録中...','auth.after_mail_btn':'メール確認後にログイン','auth.email_sent':'✉️ 認証メールを送信しました！メール内のリンクをタップするとログイン完了です。','auth.google_redirect':'🔄 Googleログイン: 外部ブラウザで認証後、自動的に戻ります','auth.line_redirect':'🔄 LINEログイン: 外部ブラウザで認証後、自動的に戻ります','auth.err_empty':'メールアドレスとパスワードを入力してください','auth.err_login_bad':'メールアドレスまたはパスワードが正しくありません','auth.err_pw_short':'パスワードは6文字以上にしてください','auth.err_birth':'生年を選択してください','auth.err_gender':'性別を選択してください','auth.err_server':'サーバーエラーが発生しました。しばらくしてからもう一度お試しください。','auth.err_email_dup':'すでに登録済みのメールアドレスです。ログインタブからログインしてください。','auth.err_pw_weak':'セキュリティの弱いパスワードです。数字・文字を組み合わせた6文字以上に変更してください。','auth.err_email_invalid':'有効なメールアドレスを入力してください。','auth.err_rate_limit':'メール送信回数の制限です。しばらくしてからもう一度お試しください。','auth.retry_secs':'しばらくして再試行（{n}秒）','auth.err_signup_fail':'登録に失敗しました。しばらくしてからもう一度お試しください',
     'auth.google':'Googleでログイン','auth.terms_agree':'利用規約とプライバシーポリシーに同意します',
     // 홈 / 가계부
@@ -14320,6 +14343,7 @@ var I18N = {
     'auth.gender':'성별','auth.male':'남자','auth.female':'여자','auth.other':'기타',
     'auth.birth':'출생년도','auth.nickname':'닉네임',
     'auth.login_btn':'로그인','auth.signup_btn':'회원가입',
+    'auth.forgot':'비밀번호를 잊으셨나요?','auth.forgot_need_email':'이메일을 먼저 입력해주세요','auth.forgot_sent':'✉️ 비밀번호 재설정 메일을 보냈어요! 메일함의 링크로 새 비밀번호를 설정하세요.','auth.reset_title':'새 비밀번호 설정','auth.reset_sub':'사용할 새 비밀번호를 입력해주세요.','auth.reset_confirm':'새 비밀번호 확인','auth.reset_btn':'비밀번호 변경','auth.reset_mismatch':'비밀번호가 일치하지 않아요','auth.reset_ok':'✅ 비밀번호가 변경됐어요!','auth.reset_fail':'변경에 실패했어요. 링크가 만료됐을 수 있어요. 다시 시도해주세요.',
     'auth.or':'또는','auth.apple':'Apple로 계속하기','auth.line':'LINE으로 계속하기','auth.birth_select':'출생년도 선택','auth.year_suffix':'년','auth.password_signup':'비밀번호 (6자 이상)','auth.logging_in':'로그인 중...','auth.signing_up':'가입 중...','auth.after_mail_btn':'메일 확인 후 로그인','auth.email_sent':'✉️ 인증 메일을 보냈어요! 메일함에서 링크를 클릭하면 로그인 완료돼요.','auth.google_redirect':'🔄 Google 로그인: 외부 브라우저에서 인증 후 자동으로 돌아와요','auth.line_redirect':'🔄 LINE 로그인: 외부 브라우저에서 인증 후 자동으로 돌아와요','auth.err_empty':'이메일과 비밀번호를 입력해주세요','auth.err_login_bad':'이메일 또는 비밀번호가 올바르지 않아요','auth.err_pw_short':'비밀번호는 6자 이상이어야 해요','auth.err_birth':'출생년도를 선택해주세요','auth.err_gender':'성별을 선택해주세요','auth.err_server':'서버 오류가 발생했어요. 잠시 후 다시 시도해주세요.','auth.err_email_dup':'이미 가입된 이메일이에요. 로그인 탭에서 로그인해주세요.','auth.err_pw_weak':'보안이 약한 비밀번호예요. 숫자·문자 조합 6자 이상으로 변경해주세요.','auth.err_email_invalid':'유효한 이메일 주소를 입력해주세요.','auth.err_rate_limit':'이메일 발송 횟수 제한이에요. 잠시 후 다시 시도해주세요.','auth.retry_secs':'잠시 후 재시도 ({n}초)','auth.err_signup_fail':'회원가입에 실패했어요. 잠시 후 다시 시도해주세요',
     'auth.google':'Google로 로그인','auth.terms_agree':'이용약관과 개인정보 처리방침에 동의합니다',
     'home.recent':'최근 영수증','home.no_data':'아직 데이터가 없어요',
@@ -14581,6 +14605,7 @@ var I18N = {
     'auth.gender':'Gender','auth.male':'Male','auth.female':'Female','auth.other':'Other',
     'auth.birth':'Birth Year','auth.nickname':'Nickname',
     'auth.login_btn':'Login','auth.signup_btn':'Sign Up',
+    'auth.forgot':'Forgot password?','auth.forgot_need_email':'Please enter your email first','auth.forgot_sent':'✉️ Password reset email sent! Use the link in the email to set a new password.','auth.reset_title':'Set a new password','auth.reset_sub':'Enter the new password you want to use.','auth.reset_confirm':'Confirm new password','auth.reset_btn':'Change password','auth.reset_mismatch':'Passwords do not match','auth.reset_ok':'✅ Password changed!','auth.reset_fail':'Update failed. The link may have expired. Please try again.',
     'auth.or':'or','auth.apple':'Continue with Apple','auth.line':'Continue with LINE','auth.birth_select':'Select birth year','auth.year_suffix':'','auth.password_signup':'Password (6+ characters)','auth.logging_in':'Logging in...','auth.signing_up':'Signing up...','auth.after_mail_btn':'Log in after email check','auth.email_sent':'✉️ Verification email sent! Tap the link in the email to finish login.','auth.google_redirect':'🔄 Google login: authenticate in your browser and you will return automatically','auth.line_redirect':'🔄 LINE login: authenticate in your browser and you will return automatically','auth.err_empty':'Please enter your email and password','auth.err_login_bad':'Incorrect email or password','auth.err_pw_short':'Password must be at least 6 characters','auth.err_birth':'Please select your birth year','auth.err_gender':'Please select your gender','auth.err_server':'A server error occurred. Please try again later.','auth.err_email_dup':'This email is already registered. Please log in from the Login tab.','auth.err_pw_weak':'Weak password. Use 6+ characters with letters and numbers.','auth.err_email_invalid':'Please enter a valid email address.','auth.err_rate_limit':'Email send limit reached. Please try again later.','auth.retry_secs':'Retry in a moment ({n}s)','auth.err_signup_fail':'Sign up failed. Please try again later',
     'auth.google':'Sign in with Google','auth.terms_agree':'I agree to the Terms of Service and Privacy Policy',
     'home.recent':'Recent Receipts','home.no_data':'No data yet',
@@ -14842,6 +14867,7 @@ var I18N = {
     'auth.gender':'性别','auth.male':'男','auth.female':'女','auth.other':'其他',
     'auth.birth':'出生年','auth.nickname':'昵称',
     'auth.login_btn':'登录','auth.signup_btn':'注册',
+    'auth.forgot':'忘记密码了？','auth.forgot_need_email':'请先输入邮箱','auth.forgot_sent':'✉️ 重置密码邮件已发送！请点击邮件中的链接设置新密码。','auth.reset_title':'设置新密码','auth.reset_sub':'请输入要使用的新密码。','auth.reset_confirm':'确认新密码','auth.reset_btn':'修改密码','auth.reset_mismatch':'两次密码不一致','auth.reset_ok':'✅ 密码已修改！','auth.reset_fail':'修改失败，链接可能已过期，请重试。',
     'auth.or':'或','auth.apple':'使用 Apple 继续','auth.line':'使用 LINE 继续','auth.birth_select':'选择出生年','auth.year_suffix':'年','auth.password_signup':'密码（6位以上）','auth.logging_in':'登录中...','auth.signing_up':'注册中...','auth.after_mail_btn':'确认邮件后登录','auth.email_sent':'✉️ 验证邮件已发送！点击邮件中的链接即可完成登录。','auth.google_redirect':'🔄 Google 登录：在外部浏览器认证后会自动返回','auth.line_redirect':'🔄 LINE 登录：在外部浏览器认证后会自动返回','auth.err_empty':'请输入邮箱和密码','auth.err_login_bad':'邮箱或密码不正确','auth.err_pw_short':'密码需至少6位','auth.err_birth':'请选择出生年','auth.err_gender':'请选择性别','auth.err_server':'服务器出错了，请稍后再试。','auth.err_email_dup':'该邮箱已注册，请在登录标签页登录。','auth.err_pw_weak':'密码强度过弱，请改为包含数字和字母的6位以上密码。','auth.err_email_invalid':'请输入有效的邮箱地址。','auth.err_rate_limit':'邮件发送次数已达上限，请稍后再试。','auth.retry_secs':'稍后重试（{n}秒）','auth.err_signup_fail':'注册失败，请稍后再试',
     'auth.google':'使用 Google 登录','auth.terms_agree':'我同意使用条款和隐私政策',
     'home.recent':'最近票据','home.no_data':'暂无数据',
@@ -18935,7 +18961,56 @@ function showApp() {
 function showAuthError(msg) {
   var el = document.getElementById('auth-error');
   el.textContent = msg;
+  el.style.color = 'var(--red)';
   el.style.display = 'block';
+}
+
+// ── 비밀번호 찾기 (b552) ──
+// 로그인 탭의 "비밀번호를 잊으셨나요?" → 재설정 메일 발송 (Resend SMTP)
+async function authForgotPassword() {
+  var emailEl = document.getElementById('auth-email');
+  var email = emailEl ? emailEl.value.trim() : '';
+  if (!email || email.indexOf('@') === -1) { showAuthError(t('auth.forgot_need_email')); return; }
+  var btn = document.getElementById('auth-main-btn');
+  try {
+    var res = await _sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    if (res.error) { showAuthError(res.error.message || t('auth.err_server')); return; }
+    // 성공 — 초록색 안내 (showAuthError 와 같은 박스 재사용)
+    var el = document.getElementById('auth-error');
+    if (el) { el.textContent = t('auth.forgot_sent'); el.style.color = 'var(--green)'; el.style.display = 'block'; }
+  } catch(e) { showAuthError(t('auth.err_server')); }
+}
+
+// recovery 링크로 복귀 시 새 비밀번호 입력 화면 표시
+function _showResetPwScreen() {
+  try { _hideLanding(); } catch(e){}
+  var a=document.getElementById('screen-auth'); if(a) a.style.display='none';
+  var m=document.getElementById('screen-main'); if(m) m.style.display='none';
+  var r=document.getElementById('screen-reset-pw'); if(r) r.style.display='flex';
+  try { if (typeof applyLang==='function') applyLang(_currentLang); } catch(e){}
+}
+
+// 새 비밀번호 확정 (recovery 세션에서 updateUser)
+async function submitResetPw() {
+  var p1=document.getElementById('reset-pw-new'), p2=document.getElementById('reset-pw-confirm');
+  var errEl=document.getElementById('reset-pw-error');
+  function err(msg){ if(errEl){ errEl.textContent=msg; errEl.style.display='block'; } }
+  var pw=p1?p1.value:'', pw2=p2?p2.value:'';
+  if (!pw || pw.length < 6) { err(t('auth.err_pw_short')); return; }
+  if (pw !== pw2) { err(t('auth.reset_mismatch')); return; }
+  var btn=document.getElementById('reset-pw-btn');
+  if (btn){ btn.disabled=true; btn.style.opacity='.6'; }
+  try {
+    var res = await _sb.auth.updateUser({ password: pw });
+    if (res.error) { err(t('auth.reset_fail')); if(btn){btn.disabled=false;btn.style.opacity='';} return; }
+    // 성공 → recovery 종료, URL 정리, 앱 진입
+    window._isPwRecovery = false;
+    try { history.replaceState(null,'',window.location.pathname); } catch(e){}
+    if (res.data && res.data.user) _currentUser = res.data.user;
+    var r=document.getElementById('screen-reset-pw'); if(r) r.style.display='none';
+    try { showToast(t('auth.reset_ok')); } catch(e){}
+    showApp();
+  } catch(e) { err(t('auth.reset_fail')); if(btn){btn.disabled=false;btn.style.opacity='';} }
 }
 
 var _authMode   = 'login'; // 'login' | 'signup'
@@ -18993,6 +19068,7 @@ function switchAuthTab(mode) {
     pwInput.placeholder  = t('auth.password');
     pwInput.autocomplete = 'current-password';
     if (extraEl) extraEl.style.display = 'none';
+    var fgLogin = document.getElementById('auth-forgot-row'); if (fgLogin) fgLogin.style.display = 'block';
   } else {
     tabSignup.style.background = 'var(--green-grad)'; tabSignup.style.color = '#fff';
     tabLogin.style.background  = 'transparent';   tabLogin.style.color  = 'var(--text-3)';
@@ -19000,6 +19076,7 @@ function switchAuthTab(mode) {
     pwInput.placeholder  = t('auth.password_signup');
     pwInput.autocomplete = 'new-password';
     if (extraEl) extraEl.style.display = 'block';
+    var fgSignup = document.getElementById('auth-forgot-row'); if (fgSignup) fgSignup.style.display = 'none';
   }
 }
 
@@ -29348,6 +29425,8 @@ async function _sdDoSubmitNewCard(p){
 var _isStandalone  = window.matchMedia('(display-mode: standalone)').matches ||
                      window.navigator.standalone === true;
 var _hasOAuthToken = !!(window.location.hash && window.location.hash.indexOf('access_token') !== -1);
+// 비밀번호 재설정 메일 링크 복귀 감지 (b552) — #...type=recovery → 새 비번 입력 화면으로
+window._isPwRecovery = !!(window.location.hash && window.location.hash.indexOf('type=recovery') !== -1);
 // PWA에서 시작한 OAuth 표식: URL(?pwaret=1) 우선, 저장소 플래그는 보조 (저장소 미공유 기기 대비)
 var _hasReturnMark = (window.location.search.indexOf('pwaret=1') !== -1) ||
                      (localStorage.getItem('riq_oauth_from_pwa') === '1');
@@ -29394,6 +29473,12 @@ if (_isOAuthReturnTab) {
 } else {
   // ── 정상 앱 시작: 세션 먼저 확인 후 화면 분기 (로그인 화면 플래시 방지) ──
   (async function() {
+    // 비번 재설정 복귀(b552): recovery 토큰이면 세션→showApp 분기보다 먼저 가로채 새 비번 화면 표시
+    if (window._isPwRecovery) {
+      try { await _sb.auth.getSession(); } catch(e) {}   // URL hash → recovery 세션 확립 대기
+      _showResetPwScreen();
+      return;
+    }
     // 랜딩 분기 (b541): 플래시 방지 위해 동기적으로 먼저 판단 — 토큰 있거나 PWA면 랜딩 절대 노출 X.
     var _standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     var _hasToken = false;
@@ -29433,6 +29518,9 @@ _sb.auth.onAuthStateChange(function(event, session) {
   console.log('[auth] event:', event, 'hasSession:', !!session);
   if (_isOAuthReturnTab) return; // 크롬 복귀 탭: 앱 렌더 없이 닫기만 진행
   if (event === 'INITIAL_SESSION') return;
+  if (event === 'PASSWORD_RECOVERY') { _showResetPwScreen(); return; } // 재설정 링크 복귀
+  // 재설정 진행 중(updateUser 의 USER_UPDATED 등)에는 앱으로 보내지 않음 (submitResetPw 가 직접 showApp)
+  if (window._isPwRecovery) return;
   if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session && session.user) {
     _currentUser = session.user;
     // PWA OAuth 복귀 시 화면 강제 전환
@@ -29599,7 +29687,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 551;
+window.__APP_BUILD__ = 552;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
