@@ -13257,7 +13257,11 @@ function _doSaveOcrResult() {
     var _pmins = _parseParkingMins(window._rawOcrText);
     if (_pmins) finalItems.forEach(function(it){ if (_isParkingItem(it.name, r.cat)) it.mins = _pmins; });
   }
-  var finalTotal = window._originalTotal || r.total || finalItems.reduce(function(a,it){ return a + it.price; }, 0);
+  // b549 — 화면에 보이는 합계(r.total = syncOcrItems 가 품목편집+세금offset 반영해 갱신)를 우선 저장.
+  //   기존: _originalTotal(GPT 원본 合計) 우선 → 사용자가 품목 편집해도 원본이 저장되는 WYSIWYG 불일치 버그.
+  //   미편집 시 r.total === _originalTotal 이라 영향 없음. 카테고리/지불 편집은 r.total 안 건드림.
+  var finalTotal = (r.total != null ? r.total
+                    : (window._originalTotal || finalItems.reduce(function(a,it){ return a + it.price; }, 0)));
   // 사용자가 편집한 날짜(연/월/일 직접입력) 값을 최우선으로 사용
   var _ey=document.getElementById('ocr-date-y'), _em=document.getElementById('ocr-date-m'), _ed=document.getElementById('ocr-date-d');
   var userDate = '';
@@ -29595,7 +29599,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 548;
+window.__APP_BUILD__ = 549;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
