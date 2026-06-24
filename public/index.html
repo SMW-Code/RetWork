@@ -29426,7 +29426,7 @@ var _isStandalone  = window.matchMedia('(display-mode: standalone)').matches ||
                      window.navigator.standalone === true;
 var _hasOAuthToken = !!(window.location.hash && window.location.hash.indexOf('access_token') !== -1);
 // 비밀번호 재설정 메일 링크 복귀 감지 (b552) — #...type=recovery → 새 비번 입력 화면으로
-window._isPwRecovery = !!(window.location.hash && window.location.hash.indexOf('type=recovery') !== -1);
+window._isPwRecovery = (((window.location.hash||'') + (window.location.search||'')).indexOf('type=recovery') !== -1);
 // PWA에서 시작한 OAuth 표식: URL(?pwaret=1) 우선, 저장소 플래그는 보조 (저장소 미공유 기기 대비)
 var _hasReturnMark = (window.location.search.indexOf('pwaret=1') !== -1) ||
                      (localStorage.getItem('riq_oauth_from_pwa') === '1');
@@ -29488,6 +29488,8 @@ if (_isOAuthReturnTab) {
     try {
       var res = await _sb.auth.getSession();
       if (res.data && res.data.session) {
+        // recovery 이벤트가 await 중에 떴을 수 있음 → showApp 대신 재설정 화면
+        if (window._isPwRecovery) { _showResetPwScreen(); return; }
         _currentUser = res.data.session.user;
         _hideLanding();
         showApp();
@@ -29518,7 +29520,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
   console.log('[auth] event:', event, 'hasSession:', !!session);
   if (_isOAuthReturnTab) return; // 크롬 복귀 탭: 앱 렌더 없이 닫기만 진행
   if (event === 'INITIAL_SESSION') return;
-  if (event === 'PASSWORD_RECOVERY') { _showResetPwScreen(); return; } // 재설정 링크 복귀
+  if (event === 'PASSWORD_RECOVERY') { window._isPwRecovery = true; _showResetPwScreen(); return; } // 재설정 링크 복귀
   // 재설정 진행 중(updateUser 의 USER_UPDATED 등)에는 앱으로 보내지 않음 (submitResetPw 가 직접 showApp)
   if (window._isPwRecovery) return;
   if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session && session.user) {
@@ -29539,6 +29541,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
 // PWA 가시성 변경 시 (외부 브라우저에서 OAuth 후 PWA 복귀) 세션 재확인
 document.addEventListener('visibilitychange', async function() {
   if (_isOAuthReturnTab) return; // 크롬 복귀 탭: 세션 전환 불필요
+  if (window._isPwRecovery) return; // 비번 재설정 중: 앱으로 전환 금지
   if (document.hidden) return;
   try {
     var res = await _sb.auth.getSession();
@@ -29558,7 +29561,7 @@ document.addEventListener('visibilitychange', async function() {
 });
 
 // PWA 시작 시 URL hash에 OAuth 토큰이 있으면 1초 후 한 번 더 세션 확인 (안전망)
-if (!_isOAuthReturnTab && window.location.hash && window.location.hash.indexOf('access_token') !== -1) {
+if (!_isOAuthReturnTab && !window._isPwRecovery && window.location.hash && window.location.hash.indexOf('access_token') !== -1) {
   console.log('[auth] URL hash에 OAuth 토큰 발견 → 세션 재확인 예약');
   setTimeout(async function() {
     try {
@@ -29687,7 +29690,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 552;
+window.__APP_BUILD__ = 553;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
