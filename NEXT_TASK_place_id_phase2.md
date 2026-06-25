@@ -27,12 +27,25 @@ stores 테이블만 place_id 로 분리해도 **부족**하다. 댓글·메뉴·
 이미 합쳐진 동명 데이터는 "어느 지점"인지 정보가 없어 못 쪼갬. **앞으로 들어오는 데이터만** 올바르게 분리됨.
 
 ## 전체 단계 플랜 (dual-write, 안전 우선)
-- **2a** ✅ 커뮤니티 테이블에 store_id 컬럼 추가 (additive, 위험 0) — `phase2a_add_store_id.sql`
-- **2b** 클라가 커뮤니티 데이터 쓸 때 store_name + store_id **둘 다 기록** (dual-write). 읽기는 아직 name.
-- **2c** 기존 행 backfill: store_name → stores.id 매칭(모호하면 대표/NULL). store_name 유지(가역).
-- **2d** 읽기를 store_id 로 **테이블/기능 단위로 점진 전환** + 각 단계 배포·검증. (회귀 위험 구간)
-- **2e** stores 식별을 place_id 로 (name UNIQUE 제거) → 동명 지점 실제 분리. 커뮤니티가 store_id 따라감.
-- **2f** (선택·먼 훗날) store_name 의존 제거. **컬럼 DROP 은 충분히 안정된 뒤에만.**
+- **2a** ✅ **완료** 커뮤니티 테이블에 store_id 컬럼 추가 — `phase2a_add_store_id.sql`
+- **2b** ✅ **완료(b557)** dual-write(store_name + store_id), `_resolveStoreId` 헬퍼.
+- **2c** ✅ **완료** 기존 행 backfill — `phase2c_backfill_store_id.sql` (검증 unmatched 모두 0). `_bak2c_*` 백업 존재.
+- **2d** ⬜ **다음(회귀 위험)** 읽기/수정을 store_id 로 **기능 단위 점진 전환** + 각 단계 배포·수동검증.
+- **2e** ⬜ stores 식별을 place_id 로 (name UNIQUE 제거) → 동명 지점 실제 분리. 커뮤니티가 store_id 따라감.
+- **2f** ⬜ (먼 훗날) store_name 의존 제거 + `_bak2c_*` DROP. **컬럼 DROP 은 충분히 안정 후에만.**
+
+### 2d 대상 사이트 (~40곳, by-name read/update) — 기능별 그룹
+> 지금 name 이 아직 유니크 → store_id 로 바꿔도 **결과 동일(검증 가능)**. 2e 전에 안전하게 전환.
+> 각 read 컨텍스트에서 store_id 확보 필요. store_id NULL(고아) 대비 **name 폴백** 유지 권장.
+
+- **A. 가게상세(user, 최우선·자기완결)**: `openStoreDetail` 에서 `_sdStoreId` 확보(20528) 후 내부 read 전환 —
+  20521(메뉴) · 20239/20246(사진) · 20606 · 29202(댓글) · 19353(google_maps_url) · 11425/19800(확인) · 28049/28052/28058(featured).
+- **B. 별점(user)**: `ctSubmitRating` 8294/8297 pin_ratings.
+- **C. 치리공개/수동핀 existing 조회**: 13550 · 13870 · 16803 · 16963 store_menu_cards.
+- **D. 맵 그룹핑(표시 키)**: 6923/6926/7001/7041/7052/25358 `stores.name`→`stores.id` · 6200/15388 좌표 배치조회.
+- **E. 어드민(삭제·featured·사진)**: 26880~26882 · 27126~27128 · 27062 · 27293 · 27569 · 27638 · 27649 · 28076 · 28148 · 28153 · 28261 · 28288 · 28306 · 28361 (_admEditStoreId 활용).
+
+> 진행순서: **A → B → C → D → E**, 각 그룹 배포 후 실제 화면 확인. (라인번호는 b557 기준 — 작업 시 재확인)
 
 ### 롤백 원칙
 - store_name 컬럼은 끝까지 **남겨둠** (가역성). 비가역(DROP/마이그레이션)은 맨 마지막.
