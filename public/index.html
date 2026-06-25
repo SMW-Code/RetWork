@@ -19301,6 +19301,7 @@ async function authLogout() {
    가게 상세 모달 (마커 탭 → 상세 패널)
 ══════════════════════════════ */
 var _sdName      = '';   // 현재 가게명
+var _sdStoreId   = null; // 현재 가게 store_id (2d — 읽기 store_id 전환용, 없으면 name 폴백)
 var _sdSData     = null; // 현재 가게 객체
 var _sdExpandId  = null; // 펼쳐진 메뉴카드 ID
 var _sdCStar     = {};   // {cardId: 별점}
@@ -19334,9 +19335,15 @@ var _SD_CAT1_ICON = {
 };
 
 /* ── 열기 ── */
+// 가게상세 read 필터(2d): _sdStoreId 있으면 store_id 로, 없으면(고아) store_name 폴백
+function _sdStoreFilter(q){ return _sdStoreId ? q.eq('store_id', _sdStoreId) : q.eq('store_name', _sdName); }
+
 async function openStoreDetail(sData) {
   _sdName     = sData.name;
   _sdSData    = sData;
+  // store_id 확보(2d-A): 핀 등에서 받은 id 우선, 없으면 이름으로 1회 조회(현재 name 유니크). 실패 시 null→name 폴백.
+  _sdStoreId  = (sData && sData.id) || null;
+  if (!_sdStoreId) { try { _sdStoreId = await _resolveStoreId(sData.name); } catch(e){ _sdStoreId = null; } }
   _sdExpandId = null;
   _sdNewImgFile = null;
   window._sdPlaceCur = null; // build 439 — 이전 가게 Places 정보 잔존 방지
@@ -20234,16 +20241,14 @@ async function mdShareMenu(){
 async function _sdLoadPhotos() {
   if(!_sb) return;
   // 1) 어드민이 등록한 store_photos (is_primary 우선, sort_order 다음)
-  var aRes = await _sb.from('store_photos')
-    .select('id,photo_url,is_primary,sort_order,created_at')
-    .eq('store_name',_sdName)
+  var aRes = await _sdStoreFilter(_sb.from('store_photos')
+    .select('id,photo_url,is_primary,sort_order,created_at'))
     .order('is_primary', {ascending:false})
     .order('sort_order', {ascending:true, nullsFirst:false})
     .order('created_at', {ascending:false});
   // 2) 유저 커뮤니티 사진 (최신순)
-  var cRes = await _sb.from('store_community_photos')
-    .select('*')
-    .eq('store_name',_sdName)
+  var cRes = await _sdStoreFilter(_sb.from('store_community_photos')
+    .select('*'))
     .order('created_at',{ascending:false});
 
   // 어드민 사진 우선 (대표 + 정렬) → 커뮤니티 사진 (최신순)
@@ -20518,7 +20523,7 @@ function _sdRenderGmaps(){
 async function _sdLoadMenuCards(){
   if(!_sb){_sdCards=[];_sdRenderMenus([],true);return;}
   // 1. store_menu_cards (메인 소스) — sort_order 우선 정렬
-  var res=await _sb.from('store_menu_cards').select('*').eq('store_name',_sdName).order('sort_order',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
+  var res=await _sdStoreFilter(_sb.from('store_menu_cards').select('*')).order('sort_order',{ascending:true,nullsFirst:false}).order('created_at',{ascending:false});
   var cards = res.data || [];
 
   // 2. ★ Fallback: 옛 치리 공개 데이터(price_pins)도 같이 표시
@@ -20601,9 +20606,8 @@ async function _sdLoadStoreComments(){
   var wrap = document.getElementById('sd-store-comments-wrap');
   if (!wrap) return; // 모달에 영역 없으면 skip
   try {
-    var res = await _sb.from('store_comments')
-      .select('id,user_id,user_name,content,rating,has_receipt,created_at')
-      .eq('store_name', _sdName)
+    var res = await _sdStoreFilter(_sb.from('store_comments')
+      .select('id,user_id,user_name,content,rating,has_receipt,created_at'))
       .order('created_at', { ascending:false })
       .limit(20);
     var rows = (res.data || []);
@@ -29197,9 +29201,8 @@ async function sdSubmitComment(cardId,existingId){
       if (_sdName && _currentUser) {
         console.log('[sdSubmitComment] store_comments 동기화 시도 store=', _sdName, 'user=', _currentUser.id);
         // 같은 가게+사용자의 모든 store_comments 가져오기 (혹시 여러 개 있어도 다 처리)
-        var scRes = await _sb.from('store_comments')
-          .select('id,content,rating')
-          .eq('store_name', _sdName)
+        var scRes = await _sdStoreFilter(_sb.from('store_comments')
+          .select('id,content,rating'))
           .eq('user_id', _currentUser.id);
         if (scRes.error) {
           console.error('[sdSubmitComment] store_comments select error:', scRes.error);
@@ -29732,7 +29735,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 557;
+window.__APP_BUILD__ = 558;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
