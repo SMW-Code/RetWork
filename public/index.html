@@ -8288,12 +8288,17 @@ async function _resolveStoreId(name){
     return id;
   } catch(e){ return null; }
 }
+// 가게 read 필터(2d): store_id 있으면 (store_id OR store_name) — 전환기엔 store_id NULL 행(새 가게 첫 공개 등)도
+//   name 으로 함께 잡음. 현재 name 유니크라 정확. 2e(동명 분리) 직전 최종 backfill 후 store_id 단독으로 좁힐 것.
+function _storeOr(q, sid, sname){
+  return sid ? q.or('store_id.eq.'+sid+',store_name.eq.'+JSON.stringify(sname)) : q.eq('store_name', sname);
+}
 
 async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (!_currentUser || !_sb) return;
   // 2d-B: store_id 우선(없으면 store_name 폴백)
   var _sid = await _resolveStoreId(storeName);
-  var _prKey = function(q){ return _sid ? q.eq('store_id', _sid) : q.eq('store_name', storeName); };
+  var _prKey = function(q){ return _storeOr(q, _sid, storeName); };
   var ex = await _prKey(_sb.from('pin_ratings').select('id')).eq('user_id', _currentUser.id).maybeSingle();
   var res;
   if (ex.data) {
@@ -13550,7 +13555,8 @@ async function openChiriPublish() {
   window._cpPublishedSet = {};
   try {
     if (_sb) {
-      var _exq = await _sb.from('store_menu_cards').select('menu_name').eq('store_name', store);
+      var _csidA = await _resolveStoreId(store);
+      var _exq = await _storeOr(_sb.from('store_menu_cards').select('menu_name'), _csidA, store);
       (_exq.data||[]).forEach(function(c){ window._cpPublishedSet[_normChiri(c.menu_name)] = true; });
     }
   } catch(e){ console.warn('[chiri-pub] exist query', e.message||e); }
@@ -13870,7 +13876,7 @@ async function submitChiriPublish() {
   // ★ 메뉴 카드: 품목별 사진 업로드 + 평점. 기존 카드는 평점/사진 추가, 신규는 생성
   if (_currentUser && _sb && _cpSelectedItems.length > 0) {
     var _normMenu = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
-    var existRes = await _sb.from('store_menu_cards').select('id,menu_name,image_url').eq('store_name', store);
+    var existRes = await _storeOr(_sb.from('store_menu_cards').select('id,menu_name,image_url'), await _resolveStoreId(store), store);
     var existMap = {};
     (existRes.data||[]).forEach(function(c){ existMap[_normMenu(c.menu_name)] = c; });
 
@@ -16803,7 +16809,7 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
     }
     // 메뉴카드 생성/갱신 (같은 가게+정규화명 있으면 사진만 보강)
     var _norm = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
-    var exist = await _sb.from('store_menu_cards').select('id,menu_name,image_url').eq('store_name', store);
+    var exist = await _storeOr(_sb.from('store_menu_cards').select('id,menu_name,image_url'), await _resolveStoreId(store), store);
     var emap = {}; (exist.data||[]).forEach(function(c){ emap[_norm(c.menu_name)] = c; });
     for (var i=0; i<items.length; i++){
       var it = items[i];
@@ -19339,7 +19345,7 @@ var _SD_CAT1_ICON = {
 
 /* ── 열기 ── */
 // 가게상세 read 필터(2d): _sdStoreId 있으면 store_id 로, 없으면(고아) store_name 폴백
-function _sdStoreFilter(q){ return _sdStoreId ? q.eq('store_id', _sdStoreId) : q.eq('store_name', _sdName); }
+function _sdStoreFilter(q){ return _storeOr(q, _sdStoreId, _sdName); }
 
 async function openStoreDetail(sData) {
   _sdName     = sData.name;
@@ -29418,7 +29424,7 @@ async function _sdDoSubmitNewCard(p){
   var _normMenu = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
   var _existCard = null;
   try {
-    var exq = await _sb.from('store_menu_cards').select('id,menu_name,image_url').eq('store_name', _sdName);
+    var exq = await _sdStoreFilter(_sb.from('store_menu_cards').select('id,menu_name,image_url'));
     var tgt = _normMenu(p.name);
     (exq.data||[]).forEach(function(c){ if (_normMenu(c.menu_name) === tgt) _existCard = c; });
   } catch(e){ console.warn('[newCard dup check]', e); }
@@ -29738,7 +29744,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 559;
+window.__APP_BUILD__ = 560;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
