@@ -5,6 +5,46 @@
 
 ---
 
+## ★ 2026-06-24 추가 발견 (중요) — 커뮤니티 데이터가 전부 store_name(문자열) 기준
+
+stores 테이블만 place_id 로 분리해도 **부족**하다. 댓글·메뉴·사진·별점이 store_id 가 아니라
+**store_name(TEXT)** 으로 묶여 있어, 동명 지점은 커뮤니티 데이터가 계속 공유됨.
+
+| 테이블 | 현재 키 | store_id 필요 |
+|---|---|---|
+| store_comments | store_name | ✅ |
+| store_menu_cards | store_name | ✅ |
+| store_community_photos | store_name | ✅ |
+| store_photos | store_name (과거 store_id DROP 이력) | ✅ |
+| pin_ratings | store_name | ✅ |
+| store_menu_comments / store_menu_photos | menu_card_id | ❌ (카드 통해 간접) |
+| price_pins / store_reactions / store_favorites | store_id | ✅ 이미 |
+| (별개 기능) pricewatch / product_prices / store_edit_requests | store_name | 후순위 |
+
+코드에서 `store_name` 참조 **~150곳**. → 진짜 분리 = **다중 테이블 재키잉 + 데이터 마이그레이션 + 150곳 전환** = 수일+ 규모.
+
+### 기존 데이터는 소급 분리 불가
+이미 합쳐진 동명 데이터는 "어느 지점"인지 정보가 없어 못 쪼갬. **앞으로 들어오는 데이터만** 올바르게 분리됨.
+
+## 전체 단계 플랜 (dual-write, 안전 우선)
+- **2a** ✅ 커뮤니티 테이블에 store_id 컬럼 추가 (additive, 위험 0) — `phase2a_add_store_id.sql`
+- **2b** 클라가 커뮤니티 데이터 쓸 때 store_name + store_id **둘 다 기록** (dual-write). 읽기는 아직 name.
+- **2c** 기존 행 backfill: store_name → stores.id 매칭(모호하면 대표/NULL). store_name 유지(가역).
+- **2d** 읽기를 store_id 로 **테이블/기능 단위로 점진 전환** + 각 단계 배포·검증. (회귀 위험 구간)
+- **2e** stores 식별을 place_id 로 (name UNIQUE 제거) → 동명 지점 실제 분리. 커뮤니티가 store_id 따라감.
+- **2f** (선택·먼 훗날) store_name 의존 제거. **컬럼 DROP 은 충분히 안정된 뒤에만.**
+
+### 롤백 원칙
+- store_name 컬럼은 끝까지 **남겨둠** (가역성). 비가역(DROP/마이그레이션)은 맨 마지막.
+- 각 phase 배포 후 실제 테스트 통과해야 다음으로. 문제 시 클라는 직전 빌드로 즉시 롤백.
+- 데이터 마이그레이션(2c) 전 **Supabase 에서 해당 테이블 export 백업**.
+
+---
+
+## (이하 초기 분석 — stores 테이블 한정. 위 ★ 발견으로 범위 확장됨)
+
+---
+
 ## 0. 배경 (확정된 진단)
 
 - `stores` 는 **`name` 으로 식별**됨 (live DB 에서 `name` UNIQUE — 스키마 파일엔 없지만 `onConflict:'name'` 이 동작하므로 존재).
