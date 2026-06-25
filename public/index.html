@@ -13914,12 +13914,17 @@ async function submitChiriPublish() {
   if (_currentUser) newPins.forEach(function(p){ _persistPinToSupabase(p); });
 
   // geocoding — 영수증 OCR 의 가게명+주소로 실제 위치 자동 추정 (지도중앙은 초기 표시 fallback 이었음)
-  searchAndPinStore(store, storeAddress, function(lat, lng) {
+  searchAndPinStore(store, storeAddress, function(lat, lng, placeId) {
     if (!lat) return;
     newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
     if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
     if (_currentUser && _sb) {
       _sb.from('stores').update({ lat: lat, lng: lng }).eq('name', store).then(function(){});
+      // Phase 1(b556): place_id 백필 — 아직 비어있는 가게만, UNIQUE 충돌 시 무시 (식별방식 변경 X)
+      if (placeId) {
+        _sb.from('stores').update({ place_id: placeId }).eq('name', store).is('place_id', null)
+          .then(function(r){ if (r && r.error) console.log('[place_id backfill skip]', r.error.message); });
+      }
     }
   });
 }
@@ -16964,7 +16969,7 @@ function searchAndPinStore(storeName, address, callback) {
     geocoder.geocode({ address: address }, function(results, status) {
       if (status === 'OK' && results[0]) {
         var loc = results[0].geometry.location;
-        callback(loc.lat(), loc.lng());
+        callback(loc.lat(), loc.lng(), (results[0] && results[0].place_id) || null);
       }
     });
     return;
@@ -16976,19 +16981,19 @@ function searchAndPinStore(storeName, address, callback) {
     geocoder.geocode({ address: address }, function(results, status) {
       if (status === 'OK' && results[0]) {
         var loc = results[0].geometry.location;
-        callback(loc.lat(), loc.lng());
+        callback(loc.lat(), loc.lng(), (results[0] && results[0].place_id) || null);
       } else {
         // Geocoder 실패 시 가게명+주소 조합으로 Places 재시도
         _searchByPlaces(storeName + ' ' + address, function(r) {
-          if (!r) _searchByPlaces(storeName, callback);
-          else callback(r.lat, r.lng);
+          if (!r) _searchByPlaces(storeName, function(r2){ if (r2) callback(r2.lat, r2.lng, r2.place_id || null); });
+          else callback(r.lat, r.lng, r.place_id || null);
         });
       }
     });
   } else {
     // 주소 없으면 Places 텍스트 검색
     _searchByPlaces(storeName, function(r) {
-      if (r) callback(r.lat, r.lng);
+      if (r) callback(r.lat, r.lng, r.place_id || null);
     });
   }
 }
@@ -16997,10 +17002,10 @@ function _searchByPlaces(query, callback) {
   // PlacesService는 map 또는 div 필요 — _map 없으면 임시 div 사용
   var container = _map || document.createElement('div');
   var service = new google.maps.places.PlacesService(container);
-  service.findPlaceFromQuery({ query: query, fields: ['geometry'] }, function(results, status) {
+  service.findPlaceFromQuery({ query: query, fields: ['geometry','place_id'] }, function(results, status) {
     if (status === google.maps.places.PlacesServiceStatus.OK && results[0]) {
       var loc = results[0].geometry.location;
-      callback({ lat: loc.lat(), lng: loc.lng() });
+      callback({ lat: loc.lat(), lng: loc.lng(), place_id: results[0].place_id || null });
     } else {
       callback(null);
     }
@@ -29708,7 +29713,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 555;
+window.__APP_BUILD__ = 556;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
