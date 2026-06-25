@@ -17,6 +17,13 @@ CREATE TABLE IF NOT EXISTS _bak2c_store_community_photos  AS SELECT * FROM store
 CREATE TABLE IF NOT EXISTS _bak2c_store_photos            AS SELECT * FROM store_photos;
 CREATE TABLE IF NOT EXISTS _bak2c_pin_ratings             AS SELECT * FROM pin_ratings;
 
+-- 백업 테이블 RLS 켜기(정책 없음 = API 접근 차단, 관리자/SQL 은 그대로). 유저 데이터 노출 방지.
+ALTER TABLE _bak2c_store_comments         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE _bak2c_store_menu_cards       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE _bak2c_store_community_photos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE _bak2c_store_photos           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE _bak2c_pin_ratings            ENABLE ROW LEVEL SECURITY;
+
 -- ── Part 1. backfill (NULL 인 것만, name 매칭) ──
 BEGIN;
 
