@@ -30,22 +30,35 @@ stores 테이블만 place_id 로 분리해도 **부족**하다. 댓글·메뉴·
 - **2a** ✅ **완료** 커뮤니티 테이블에 store_id 컬럼 추가 — `phase2a_add_store_id.sql`
 - **2b** ✅ **완료(b557)** dual-write(store_name + store_id), `_resolveStoreId` 헬퍼.
 - **2c** ✅ **완료** 기존 행 backfill — `phase2c_backfill_store_id.sql` (검증 unmatched 모두 0). `_bak2c_*` 백업 존재.
-- **2d** ⬜ **다음(회귀 위험)** 읽기/수정을 store_id 로 **기능 단위 점진 전환** + 각 단계 배포·수동검증.
-- **2e** ⬜ stores 식별을 place_id 로 (name UNIQUE 제거) → 동명 지점 실제 분리. 커뮤니티가 store_id 따라감.
+- **2d** 🔶 **부분완료** 사용자 대면 읽기(A/B/C) store_id 전환 완료. 맵(D)·어드민(E)은 2e 로 이관(아래).
+- **2e** ⬜ stores 식별을 place_id 로 (name UNIQUE 제거) → 동명 지점 실제 분리. **finale — 아래 체크리스트.**
 - **2f** ⬜ (먼 훗날) store_name 의존 제거 + `_bak2c_*` DROP. **컬럼 DROP 은 충분히 안정 후에만.**
 
-### 2d 대상 사이트 (~40곳, by-name read/update) — 기능별 그룹
-> 지금 name 이 아직 유니크 → store_id 로 바꿔도 **결과 동일(검증 가능)**. 2e 전에 안전하게 전환.
-> 각 read 컨텍스트에서 store_id 확보 필요. store_id NULL(고아) 대비 **name 폴백** 유지 권장.
+### 2d 진행 결과
+> 읽기는 **`_storeOr(q, sid, sname)`** = `sid` 있으면 `or(store_id.eq, store_name.eq)` 아니면 name.
+> 이유: **새 가게 첫 공개 시 메뉴카드가 store 행보다 먼저 생성돼 store_id=NULL** → store_id 단독 read 면 누락.
+> id-OR-name 로 NULL 행도 name 으로 포착. 현재 name 유니크라 정확. **2e 직전 최종 backfill 후 store_id 단독으로 좁힐 것.**
 
-- **A. 가게상세(user, 최우선·자기완결)**: `openStoreDetail` 에서 `_sdStoreId` 확보(20528) 후 내부 read 전환 —
-  20521(메뉴) · 20239/20246(사진) · 20606 · 29202(댓글) · 19353(google_maps_url) · 11425/19800(확인) · 28049/28052/28058(featured).
-- **B. 별점(user)**: `ctSubmitRating` 8294/8297 pin_ratings.
-- **C. 치리공개/수동핀 existing 조회**: 13550 · 13870 · 16803 · 16963 store_menu_cards.
-- **D. 맵 그룹핑(표시 키)**: 6923/6926/7001/7041/7052/25358 `stores.name`→`stores.id` · 6200/15388 좌표 배치조회.
-- **E. 어드민(삭제·featured·사진)**: 26880~26882 · 27126~27128 · 27062 · 27293 · 27569 · 27638 · 27649 · 28076 · 28148 · 28153 · 28261 · 28288 · 28306 · 28361 (_admEditStoreId 활용).
+- **A. 가게상세** ✅(b558,b560) `_sdStoreFilter=_storeOr(_sdStoreId,_sdName)` — 사진/메뉴/댓글/댓글동기화/메뉴추가 dedup.
+- **B. 별점** ✅(b559,b560) `ctSubmitRating` `_prKey=_storeOr`.
+- **C. 공개·수동핀 dedup** ✅(b560) store_menu_cards 기존조회 `_storeOr`.
+- **D. 맵 그룹핑** ⏸️ **→ 2e 로 이관**: 그룹 키 `p.stores.name`(7001 등). **방금 등록한 pending 핀은 stores.id 가 없음**
+  (로컬 `{name,lat,lng}` 로만 생성) → 키를 id 로 바꾸면 같은 가게가 pending(name)+DB(id) 로 **마커 2개로 쪼개짐**.
+  ⇒ 2e 에서 **pending 핀에도 store_id 부여** 하면서 함께 전환. (지금은 name 유니크라 정확, 건드리지 말 것)
+  로드 dedup 6923/6926 도 pending 핀 id 없음 이슈 동일 → 2e.
+- **E. 어드민(삭제·featured·사진)** ⏸️ **→ 2e**: 26880~26882 · 27126~27128 · 27062 · 27293 · 27569 · 27638 · 27649 ·
+  28076 · 28148 · 28153 · 28261 · 28288 · 28306 · 28361. 현재 name 유니크라 정확(behavior-neutral) → 2e 에서 일괄.
 
-> 진행순서: **A → B → C → D → E**, 각 그룹 배포 후 실제 화면 확인. (라인번호는 b557 기준 — 작업 시 재확인)
+### 2e finale 체크리스트 (순서대로, 충분히 테스트)
+1. **write 순서 보정**: 공개/수동핀에서 store 행을 **커뮤니티 쓰기 전에** upsert(place_id 우선) → store_id 항상 확보.
+   pending 핀 객체에도 `stores.id` 채우기(맵 그룹핑·dedup 일관성).
+2. **place_id 식별**: `_persistPinToSupabase`/공개 흐름을 geocode-first → `stores.upsert(onConflict place_id)`,
+   place_id 없을 때만 name 폴백. `searchAndPinStore` 는 이미 place_id 반환(b556).
+3. **최종 backfill**: 남은 store_id NULL 커뮤니티 행을 다시 backfill(`phase2c` 재실행).
+4. **name UNIQUE 제거** SQL(`stores`). (제약/인덱스명 확인 후 DROP)
+5. **읽기 좁힘**: `_storeOr` 를 store_id 단독으로(또는 name 폴백 제거). 맵 그룹핑/어드민(D·E) 전환.
+6. **검증**: 동명 체인 2곳(다른 위치) 등록 → stores 2행 + 커뮤니티 분리 + 마커 2개 정상.
+7. 롤백: name 컬럼·`_bak2c_*` 유지. 동명 중복 생기기 전 소량 테스트.
 
 ### 롤백 원칙
 - store_name 컬럼은 끝까지 **남겨둠** (가역성). 비가역(DROP/마이그레이션)은 맨 마지막.
