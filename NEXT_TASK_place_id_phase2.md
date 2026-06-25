@@ -49,6 +49,13 @@ stores 테이블만 place_id 로 분리해도 **부족**하다. 댓글·메뉴·
 - **E. 어드민(삭제·featured·사진)** ⏸️ **→ 2e**: 26880~26882 · 27126~27128 · 27062 · 27293 · 27569 · 27638 · 27649 ·
   28076 · 28148 · 28153 · 28261 · 28288 · 28306 · 28361. 현재 name 유니크라 정확(behavior-neutral) → 2e 에서 일괄.
 
+### ⚠️ 2e-1 진행/회귀 메모 (2026-06-24)
+- **공개흐름(submitChiriPublish)**: `_ensureStore`(find-or-create, 좌표보존) 적용 **유지(b561)** — 정상.
+- **수동핀(submitManualPin)**: `_ensureStore` 를 핀 push~첫 `ctRenderPricePins()` **사이**(await)에 넣었더니
+  **"핀 추가 직후 사라짐" 회귀** → b562 에서 **제거(롤백)**. (stores/price_pins 엔 realtime 구독 없음 → reload 아님)
+- **교훈(필수)**: 핀 push 와 **첫 `ctRenderPricePins()` 사이에 awaited 네트워크 호출 금지.**
+  store_id 사전확보·pending 핀 stamp 는 **첫 렌더 이후 백그라운드**로. 수동핀은 이 방식으로 재적용할 것.
+
 ### 2e finale 체크리스트 (순서대로, 충분히 테스트)
 1. **write 순서 보정**: 공개/수동핀에서 store 행을 **커뮤니티 쓰기 전에** upsert(place_id 우선) → store_id 항상 확보.
    pending 핀 객체에도 `stores.id` 채우기(맵 그룹핑·dedup 일관성).
