@@ -6556,30 +6556,46 @@ async function ctStoreExchangeDB(itemId) {
     return;
   }
   if (!confirm('「' + it.name + '」と交換しますか？\n' + it.cost_chiri + ' チリを消費します。')) return;
-  // 1) 코인 차감
-  ctAddCoin(-it.cost_chiri, '🎁 「' + it.name + '」交換', 'shop');
-  // 2) exchange_requests 에 신청 기록 (Phase 3.C, build 283+)
-  try {
-    await _sb.from('exchange_requests').insert({
-      user_id:        _currentUser.id,
-      item_id:        it.id,
-      item_name:      it.name,
-      item_image_url: it.image_url || null,
-      cost_chiri:     it.cost_chiri,
-      user_email:     _currentUser.email || null,
-      user_nickname:  (typeof _userNickname !== 'undefined' && _userNickname) ? _userNickname : null,
-      status:         'pending'
-    });
-  } catch(e) { console.warn('[exr] insert failed', e); }
-  // 3) 재고가 유한이면 차감
-  if (it.stock > 0) {
-    await _sb.from('store_items').update({ stock: it.stock - 1 }).eq('id', it.id);
-    _ctStoreCache = null; // 캐시 무효화 → 다음 로드 시 갱신
-    renderCtStore().then(function(){
-      var ov = document.getElementById('ov-ct-store-full');
-      if (ov && ov.style.display !== 'none') renderCtStoreFull();
-    });
+
+  // ── 원자적 교환 RPC (b554) ──
+  //   잔액검사 + 코인차감 + 재고차감 + exchange_requests 생성을 서버 트랜잭션 1건으로 처리.
+  //   기존: ctAddCoin(fire-and-forget) + 별도 insert/update 가 분리돼 "공짜 상품/코인만 날림" 사고 가능.
+  var rr = await _sb.rpc('client_redeem_item', { p_item_id: itemId });
+  if (rr.error || !rr.data || !rr.data.ok) {
+    var err = (rr.data && rr.data.err) || (rr.error && rr.error.message) || 'unknown';
+    if (err === 'insufficient') {
+      // 서버 권위 잔액으로 로컬 동기화 후 안내
+      if (rr.data && typeof rr.data.balance === 'number') { _ctCoinBalance = rr.data.balance; ctUpdateCoinDisplay(); }
+      var lack = it.cost_chiri - ((rr.data && rr.data.balance) || 0);
+      showToast(t('toast.coin_short', {n: (lack > 0 ? lack : it.cost_chiri)}));
+    } else if (err === 'out_of_stock') {
+      showToast(t('toast.out_of_stock'));
+    } else if (err === 'item_not_found') {
+      showToast(t('toast.product_not_found'));
+    } else {
+      showToast(t('toast.exchange_fail'));
+      console.warn('[redeem]', err);
+    }
+    return;
   }
+
+  // 성공 → 서버 권위 잔액으로 동기화 + 코인 내역 추가
+  if (typeof rr.data.balance === 'number') {
+    _ctCoinBalance = rr.data.balance;
+    var _now = new Date();
+    var _ds = (_now.getMonth()+1) + '/' + _now.getDate()
+      + ' ' + String(_now.getHours()).padStart(2,'0') + ':' + String(_now.getMinutes()).padStart(2,'0');
+    _ctCoinHistory.unshift({ desc: '🎁 「' + it.name + '」交換', amount: -it.cost_chiri, date: _ds });
+    if (_ctCoinHistory.length > 100) _ctCoinHistory.pop();
+    ctUpdateCoinDisplay();
+    if (_ctCoinHistoryOpen) ctRenderCoinHistory();
+  }
+  // 재고 표시 갱신 (캐시 무효화 → 재렌더)
+  _ctStoreCache = null;
+  renderCtStore().then(function(){
+    var ov = document.getElementById('ov-ct-store-full');
+    if (ov && ov.style.display !== 'none') renderCtStoreFull();
+  });
   showToast(t('toast.exchange_done', {name: it.name}));
 }
 
@@ -14203,7 +14219,7 @@ var I18N = {
     'catwheel.hint':'カテゴリ選択','catwheel.filtering':'フィルター適用中','catwheel.all':'すべて',
     'toast.coin_short':'チリが足りません。あと{n}チリ必要です',
     'toast.daily_limit':'今日の視聴上限（{n}回）に達しました',
-    'toast.exchange_done':'✅ {name} と交換しました！',
+    'toast.exchange_done':'✅ {name} と交換しました！','toast.exchange_fail':'交換に失敗しました。もう一度お試しください。',
     'toast.streak':'🎉 連続{days}日達成！ +{coins}チリ',
     'toast.checkin':'✨ +5チリ 獲得！',
     'toast.ad_reward':'🎉 +50チリ 獲得！広告視聴ありがとうございます！',
@@ -14465,7 +14481,7 @@ var I18N = {
     'catwheel.hint':'카테고리 선택','catwheel.filtering':'필터 적용 중','catwheel.all':'전체',
     'toast.coin_short':'치리가 부족해요. {n}치리 더 필요해요',
     'toast.daily_limit':'오늘 시청 한도({n}회)에 도달했어요',
-    'toast.exchange_done':'✅ {name} 으로 교환했어요!',
+    'toast.exchange_done':'✅ {name} 으로 교환했어요!','toast.exchange_fail':'교환에 실패했어요. 다시 시도해주세요.',
     'toast.streak':'🎉 연속 {days}일 달성! +{coins}치리',
     'toast.checkin':'✨ +5치리 획득!',
     'toast.ad_reward':'🎉 +50치리 획득! 광고 시청 감사합니다!',
@@ -14727,7 +14743,7 @@ var I18N = {
     'catwheel.hint':'Select Category','catwheel.filtering':'Filter applied','catwheel.all':'All',
     'toast.coin_short':'Not enough chiri. Need {n} more',
     'toast.daily_limit':"You've hit today's limit ({n})",
-    'toast.exchange_done':'✅ Exchanged for {name}!',
+    'toast.exchange_done':'✅ Exchanged for {name}!','toast.exchange_fail':'Exchange failed. Please try again.',
     'toast.streak':'🎉 {days}-day streak! +{coins} chiri',
     'toast.checkin':'✨ +5 chiri earned!',
     'toast.ad_reward':'🎉 +50 chiri earned! Thanks for watching.',
@@ -14989,7 +15005,7 @@ var I18N = {
     'catwheel.hint':'选择类别','catwheel.filtering':'已应用筛选','catwheel.all':'全部',
     'toast.coin_short':'积分不足。还需 {n} 个',
     'toast.daily_limit':'今日已达到观看上限（{n}次）',
-    'toast.exchange_done':'✅ 已兑换为 {name}！',
+    'toast.exchange_done':'✅ 已兑换为 {name}！','toast.exchange_fail':'兑换失败，请重试。',
     'toast.streak':'🎉 连续 {days} 天达成！+{coins} 积分',
     'toast.checkin':'✨ +5 积分获取！',
     'toast.ad_reward':'🎉 +50 积分获取！感谢观看广告',
@@ -29690,7 +29706,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 553;
+window.__APP_BUILD__ = 554;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
