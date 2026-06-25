@@ -8275,6 +8275,20 @@ async function ctSubmitPost() {
 var _cpStarRating = 0;
 var _mpStarRating = 0;
 
+// dual-write 헬퍼(b557): store_name → store_id 1회 조회(name 유니크 전제) + 세션 캐시.
+//   #6 Phase 2b — 커뮤니티 데이터 저장 시 store_id 동반 기록(읽기는 아직 store_name).
+var _storeIdByName = {};
+async function _resolveStoreId(name){
+  if (!_sb || !name) return null;
+  if (_storeIdByName[name]) return _storeIdByName[name];
+  try {
+    var r = await _sb.from('stores').select('id').eq('name', name).maybeSingle();
+    var id = (r.data && r.data.id) || null;
+    if (id) _storeIdByName[name] = id;
+    return id;
+  } catch(e){ return null; }
+}
+
 async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (!_currentUser || !_sb) return;
   var ex = await _sb.from('pin_ratings').select('id').eq('store_name', storeName).eq('user_id', _currentUser.id).maybeSingle();
@@ -8282,7 +8296,7 @@ async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (ex.data) {
     res = await _sb.from('pin_ratings').update({ rating: star, has_receipt: hasReceipt }).eq('store_name', storeName).eq('user_id', _currentUser.id);
   } else {
-    res = await _sb.from('pin_ratings').insert({ store_name: storeName, user_id: _currentUser.id, rating: star, has_receipt: hasReceipt });
+    res = await _sb.from('pin_ratings').insert({ store_name: storeName, store_id: await _resolveStoreId(storeName), user_id: _currentUser.id, rating: star, has_receipt: hasReceipt });
   }
   if (res && res.error) { showToast(t('toast.rating_fail')); return; }
   if (!silent) showToast(t('toast.rating_done'));
@@ -13833,13 +13847,14 @@ async function submitChiriPublish() {
   // ★ 가게 사진 업로드 → store_community_photos
   if (window._cpStorePhotoFile && _currentUser && _sb) {
     var _spUrl = await _cpUploadPhoto(window._cpStorePhotoFile, 'community');
-    if (_spUrl) { try { await _sb.from('store_community_photos').insert({ store_name: store, photo_url: _spUrl, uploaded_by: _currentUser.id }); } catch(e){ console.warn('[cp store photo]', e); } }
+    if (_spUrl) { try { await _sb.from('store_community_photos').insert({ store_name: store, store_id: await _resolveStoreId(store), photo_url: _spUrl, uploaded_by: _currentUser.id }); } catch(e){ console.warn('[cp store photo]', e); } }
   }
 
   // 코멘트 → store_comments (가게 단위), 평점은 메뉴별 평균
   if (commentText && _currentUser && _sb) {
     _sb.from('store_comments').insert({
       store_name:  store,
+      store_id:    await _resolveStoreId(store),
       user_id:     _currentUser.id,
       user_name:   _userNickname || '節約ユーザー',
       content:     commentText,
@@ -13873,7 +13888,7 @@ async function submitChiriPublish() {
       } else {
         // 신규 카드 생성 (대표 사진 + 평점)
         var _ins = await _sb.from('store_menu_cards').insert({
-          store_name:store, menu_name:_it.name, category:_cpCategory||r.cat||'other',
+          store_name:store, store_id: await _resolveStoreId(store), menu_name:_it.name, category:_cpCategory||r.cat||'other',
           price:_it.price, image_url:_mPhoto,
           rating_avg:_mR>0?_mR:0, rating_count:_mR>0?1:0, created_by:_currentUser.id
         }).select().maybeSingle();
@@ -16781,7 +16796,7 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
   try {
     if (storePhotoFile) {
       var _u = await _cpUploadPhoto(storePhotoFile, 'community');
-      if (_u) { try { await _sb.from('store_community_photos').insert({ store_name:store, photo_url:_u, uploaded_by:_currentUser.id }); } catch(e){ console.warn('[mp store photo]', e); } }
+      if (_u) { try { await _sb.from('store_community_photos').insert({ store_name:store, store_id: await _resolveStoreId(store), photo_url:_u, uploaded_by:_currentUser.id }); } catch(e){ console.warn('[mp store photo]', e); } }
     }
     // 메뉴카드 생성/갱신 (같은 가게+정규화명 있으면 사진만 보강)
     var _norm = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
@@ -16798,7 +16813,7 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
         }
       } else {
         var ins = await _sb.from('store_menu_cards').insert({
-          store_name:store, menu_name:it.name, category:category||'other',
+          store_name:store, store_id: await _resolveStoreId(store), menu_name:it.name, category:category||'other',
           price:parseInt(it.price)||0, image_url:photo,
           rating_avg:0, rating_count:0, created_by:_currentUser.id
         }).select().maybeSingle();
@@ -20476,7 +20491,7 @@ async function _sdDoPhotoUpload(file){
     var pub = _sb.storage.from('store-photos').getPublicUrl(path);
     var url = pub.data && pub.data.publicUrl;
     if(!url){ alert('画像URL取得失敗'); return; }
-    var ins = await _sb.from('store_community_photos').insert({ store_name:_sdName, photo_url:url, uploaded_by:_currentUser.id });
+    var ins = await _sb.from('store_community_photos').insert({ store_name:_sdName, store_id: await _resolveStoreId(_sdName), photo_url:url, uploaded_by:_currentUser.id });
     if(ins.error){ alert('DB保存失敗: '+ins.error.message); console.error('[SD db]', ins.error); return; }
     await _sdLoadPhotos();
   } catch(e){
@@ -27664,6 +27679,7 @@ async function _admPcEditMenuCardFromPin(pinId) {
       if (!confirm('해당 메뉴 카드가 없어요.\n핀("' + itemName + '" ¥' + (pin.price||0).toLocaleString() + ')으로 새 메뉴 카드를 생성할까요?')) return;
       var ins = await _sb.from('store_menu_cards').insert({
         store_name:   storeName,
+        store_id:     await _resolveStoreId(storeName),
         menu_name:    pin.item_name || '(이름 없음)',
         price:        pin.price || 0,
         category:     'other',
@@ -28215,6 +28231,7 @@ async function _admUploadStorePhotos(input) {
 
       var ins = await _sb.from('store_photos').insert({
         store_name: storeName,
+        store_id:   await _resolveStoreId(storeName),
         photo_url:  publicUrl,
         user_id:    _currentUser ? _currentUser.id : null,
         is_primary: false,
@@ -28245,6 +28262,7 @@ async function _admTogglePrimaryPhoto(photoId, source) {
       // store_photos 에 복사 + 대표 지정 (Storage 파일은 그대로 공유 — URL 만 복사)
       var ins = await _sb.from('store_photos').insert({
         store_name: storeName,
+        store_id:   await _resolveStoreId(storeName),
         photo_url:  c.data.photo_url,
         user_id:    c.data.uploaded_by || (_currentUser ? _currentUser.id : null),
         is_primary: true
@@ -29210,6 +29228,7 @@ async function sdSubmitComment(cardId,existingId){
           // 신규 insert
           var ins2 = await _sb.from('store_comments').insert({
             store_name:  _sdName,
+            store_id:    await _resolveStoreId(_sdName),
             user_id:     _currentUser.id,
             user_name:   _userNickname || '節約ユーザー',
             content:     tx,
@@ -29430,7 +29449,7 @@ async function _sdDoSubmitNewCard(p){
     showToast('既に登録されたメニューです。評価・写真を追加しました');
   } else {
     var ins=await _sb.from('store_menu_cards').insert({
-      store_name:_sdName,menu_name:p.name,category:p.cat||null,price:p.price,
+      store_name:_sdName,store_id: await _resolveStoreId(_sdName),menu_name:p.name,category:p.cat||null,price:p.price,
       image_url:imgUrl,rating_avg:p.st||0,rating_count:p.st?1:0,created_by:_currentUser.id
     }).select().single();
     if(ins.data && p.st>0){
@@ -29713,7 +29732,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 556;
+window.__APP_BUILD__ = 557;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
