@@ -8293,6 +8293,18 @@ async function _resolveStoreId(name){
 function _storeOr(q, sid, sname){
   return sid ? q.or('store_id.eq.'+sid+',store_name.eq.'+JSON.stringify(sname)) : q.eq('store_name', sname);
 }
+// 가게 행 find-or-create(2e-1): 있으면 좌표 안 건드리고 id 반환, 없으면 insert.
+//   커뮤니티 쓰기/pending 핀에 store_id 를 미리 확보하기 위함(좌표 덮어쓰기 churn 방지).
+async function _ensureStore(name, lat, lng, category){
+  if (!_sb || !name) return null;
+  var id = await _resolveStoreId(name);
+  if (id) return id;
+  try {
+    var r = await _sb.from('stores').insert({ name:name, lat:lat, lng:lng, category:category||'other', receipt_count:1 }).select('id').single();
+    if (!r.error && r.data) { _storeIdByName[name] = r.data.id; return r.data.id; }
+  } catch(e){ /* 동시 생성 race → 아래 재조회 */ }
+  return await _resolveStoreId(name);
+}
 
 async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (!_currentUser || !_sb) return;
@@ -13846,6 +13858,10 @@ async function submitChiriPublish() {
     _ctPendingPins.unshift(p);
   });
 
+  // 2e-1: 커뮤니티 쓰기 전에 store 행 확보(좌표 보존) → store_id 항상 확보 + pending 핀에 id 부여(맵 일관성)
+  var _cpStoreId = await _ensureStore(store, fallback.lat, fallback.lng, _cpCategory || r.cat);
+  if (_cpStoreId) newPins.forEach(function(p){ p.stores.id = _cpStoreId; });
+
   // 포인트 지급 (+10 고정, 품목 수 무관)
   ctAddCoin(10, '🧾 チリつも共有', 'publish');
 
@@ -16761,6 +16777,9 @@ async function submitManualPin() {
   });
 
   newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
+  // 2e-1: store 행 확보(좌표 보존) → store_id 항상 확보 + pending 핀에 id 부여(맵 일관성)
+  var _mpStoreId = await _ensureStore(storeName, pos.lat, pos.lng, _mpCategory);
+  if (_mpStoreId) newPins.forEach(function(p){ p.stores.id = _mpStoreId; });
   if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
 
   ctAddCoin(10, '📌 手動ピン登録', 'pin');
@@ -29744,7 +29763,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 560;
+window.__APP_BUILD__ = 561;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
