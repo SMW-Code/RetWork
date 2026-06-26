@@ -5245,6 +5245,11 @@ function ctAddCoin(amount, desc, type) {
         } else {
           console.warn('[coin]', err);
         }
+      } else if (r.data && typeof r.data.balance === 'number') {
+        // 성공 → 서버 권위 잔액으로 동기화 (낙관적 0클램프 드리프트 보정)
+        _ctCoinBalance = r.data.balance;
+        ctUpdateCoinDisplay();
+        if (_ctCoinHistoryOpen) ctRenderCoinHistory();
       }
     });
   }
@@ -5762,14 +5767,9 @@ function ctStartRewardAd() {
 
 function ctResetRewardAd()  { ctCloseFullscreenAd(); }
 
+// (b573) 레거시·비원자적 교환 함수 → 안전한 원자적 RPC 경로로 위임 (만약 어딘가 아직 호출돼도 안전).
 function ctStoreExchange(id, name, cost) {
-  if (_ctCoinBalance < cost) {
-    showToast(t('toast.coin_short', {n: (cost - _ctCoinBalance)}));
-    return;
-  }
-  if (!confirm('「' + name + '」と交換しますか？\n' + cost + 'pt消費します。')) return;
-  ctAddCoin(-cost, '🎁 「' + name + '」交換', 'shop');
-  showToast(t('toast.exchange_done', {name: name}));
+  if (typeof ctStoreExchangeDB === 'function') { ctStoreExchangeDB(id); return; }
 }
 
 /* ══════════════════════════════
@@ -6918,13 +6918,11 @@ async function ctLoadPricePins(lat, lng) {
     return p.stores && p.stores.lat != null && p.stores.lng != null;
   });
 
-  // 중복 제거: _ctPendingPins에 이미 있는 store+item은 DB 결과에서 제외
-  var pendingKeys = _ctPendingPins.map(function(p) {
-    return (p.stores && p.stores.name || '') + '|' + (p.item_name || '');
-  });
+  // 중복 제거: _ctPendingPins에 이미 있는 store+item은 DB 결과에서 제외 (store_id 우선 — 동명 다른지점 구분)
+  var _dk = function(p){ return ((p.stores && (p.stores.id || p.stores.name)) || '') + '|' + (p.item_name || ''); };
+  var pendingKeys = _ctPendingPins.map(_dk);
   var deduped = loaded.filter(function(p) {
-    var key = (p.stores && p.stores.name || '') + '|' + (p.item_name || '');
-    return pendingKeys.indexOf(key) < 0;
+    return pendingKeys.indexOf(_dk(p)) < 0;
   });
 
   _ctPins = _ctPendingPins.concat(deduped);
@@ -27636,7 +27634,8 @@ async function admSaveMenuCard() {
   try {
     // 1) 대표 메뉴 처리 (라디오)
     if (isFeatured && _admEditMenuStoreName) {
-      await _sb.from('store_menu_cards').update({ is_featured:false }).eq('store_name', _admEditMenuStoreName);
+      var _amSid = await _resolveStoreId(_admEditMenuStoreName);
+      await _sb.from('store_menu_cards').update({ is_featured:false }).eq(_amSid?'store_id':'store_name', _amSid||_admEditMenuStoreName);
     }
     // 2) 카드 본문 + is_featured 업데이트
     var upd = await _sb.from('store_menu_cards').update({
@@ -28322,13 +28321,14 @@ async function _admTogglePrimaryPhoto(photoId, source) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   var storeName = document.getElementById('adm-store-name').value.trim();
   if (!storeName) return;
+  var _apSid = await _resolveStoreId(storeName);   // 동명 분리: 대표사진 리셋을 store_id 로 스코프
   // b430 — 커뮤니티 사진(유저 등록)을 대표로 지정 → store_photos 로 자동 복사 후 대표 표시
   if (source === 'community') {
     try {
       var c = await _sb.from('store_community_photos').select('photo_url,uploaded_by').eq('id', photoId).maybeSingle();
       if (c.error || !c.data) { showToast('로드 실패'); return; }
       // 다른 대표 모두 해제
-      await _sb.from('store_photos').update({ is_primary:false }).eq('store_name', storeName);
+      await _sb.from('store_photos').update({ is_primary:false }).eq(_apSid?'store_id':'store_name', _apSid||storeName);
       // store_photos 에 복사 + 대표 지정 (Storage 파일은 그대로 공유 — URL 만 복사)
       var ins = await _sb.from('store_photos').insert({
         store_name: storeName,
@@ -28355,7 +28355,7 @@ async function _admTogglePrimaryPhoto(photoId, source) {
       showToast('대표 해제');
     } else {
       // 가게당 1장만 대표 → 모두 해제 후 이것만 지정 (UNIQUE 제약 충돌 방지)
-      await _sb.from('store_photos').update({ is_primary:false }).eq('store_name', storeName);
+      await _sb.from('store_photos').update({ is_primary:false }).eq(_apSid?'store_id':'store_name', _apSid||storeName);
       var upd = await _sb.from('store_photos').update({ is_primary:true }).eq('id', photoId);
       if (upd.error) { showToast('지정 실패: ' + upd.error.message); return; }
       showToast('⭐ 대표 사진 지정');
@@ -28427,8 +28427,8 @@ async function _admDeleteStorePhoto(photoId, source) {
 // 대표 메뉴 토글 — 가게당 한 개만 대표로 (라디오 방식)
 async function admToggleFeaturedMenu(menuId, storeName) {
   if (!_isAdmin || !_sb) return;
-  // 1. 그 가게의 모든 메뉴 is_featured=false로 리셋
-  await _sb.from('store_menu_cards').update({ is_featured: false }).eq('store_name', storeName);
+  // 1. 그 가게의 모든 메뉴 is_featured=false로 리셋 (동명 분리 위해 store_id 우선)
+  await _sb.from('store_menu_cards').update({ is_featured: false }).eq(_admEditStoreId?'store_id':'store_name', _admEditStoreId||storeName);
   // 2. 선택한 메뉴만 is_featured=true
   var res = await _sb.from('store_menu_cards').update({ is_featured: true }).eq('id', menuId).select('menu_name,price').maybeSingle();
   if (res.error) { showToast('설정 실패: '+res.error.message); return; }
@@ -29801,7 +29801,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 572;
+window.__APP_BUILD__ = 573;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
