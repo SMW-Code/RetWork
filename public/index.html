@@ -8295,8 +8295,34 @@ function _storeOr(q, sid, sname){
 }
 // 가게 행 find-or-create(2e-1): 있으면 좌표 안 건드리고 id 반환, 없으면 insert.
 //   커뮤니티 쓰기/pending 핀에 store_id 를 미리 확보하기 위함(좌표 덮어쓰기 churn 방지).
+// 가게명 → Google place_id+좌표 (Promise 래퍼, 5s 타임아웃). _searchByPlaces(b556) 재사용.
+function _geocodeStore(name){
+  return new Promise(function(res){
+    if (!name || typeof _searchByPlaces !== 'function') { res(null); return; }
+    var done = false;
+    try { _searchByPlaces(name, function(r){ if (done) return; done = true; res(r || null); }); }
+    catch(e){ res(null); return; }
+    setTimeout(function(){ if (!done){ done = true; res(null); } }, 5000);
+  });
+}
+// 가게 find-or-create (2e-3a): place_id 우선 식별(동명 다른지점=다른 행). place_id 없거나
+//   (name UNIQUE 아직 있는 동안) 충돌하면 이름 기준 폴백 → 우아하게 merge(분리는 name UNIQUE 제거 후).
 async function _ensureStore(name, lat, lng, category){
   if (!_sb || !name) return null;
+  // 1) place_id 확보 (geocode) — 동명 지점 구분 키
+  var placeId = null, gLat = lat, gLng = lng;
+  try { var g = await _geocodeStore(name); if (g && g.place_id){ placeId = g.place_id; if (g.lat != null){ gLat = g.lat; gLng = g.lng; } } } catch(e){}
+  // 2) place_id 있으면 그걸로 find-or-create
+  if (placeId) {
+    try {
+      var ex = await _sb.from('stores').select('id').eq('place_id', placeId).maybeSingle();
+      if (ex.data && ex.data.id){ _storeIdByName[name] = ex.data.id; return ex.data.id; }
+      var ins = await _sb.from('stores').insert({ name:name, place_id:placeId, lat:gLat, lng:gLng, category:category||'other', receipt_count:1 }).select('id').single();
+      if (!ins.error && ins.data){ _storeIdByName[name] = ins.data.id; return ins.data.id; }
+      // insert 실패(name UNIQUE 충돌 등) → 아래 이름 폴백
+    } catch(e){}
+  }
+  // 3) place_id 없음/충돌 → 이름 기준 find-or-create (현행)
   var id = await _resolveStoreId(name);
   if (id) return id;
   try {
@@ -29766,7 +29792,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 564;
+window.__APP_BUILD__ = 565;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
