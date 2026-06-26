@@ -34,7 +34,7 @@ stores 테이블만 place_id 로 분리해도 **부족**하다. 댓글·메뉴·
 - **2e** ✅ **완료** stores 식별 place_id 화 + **name UNIQUE 제거(b561~570 + `phase2e_drop_name_unique.sql` 실행, 검증 0행)**.
   `_ensureStore`(geocode·place_id) 공개흐름 / `_storeByNameOrCreate`(geocode無) persist·수동핀 / `_storeOr` store_id 단독 /
   맵 그룹핑 id / stores 조회 limit(1)·id화. 백업 `_bak2e_stores` 존재. → 동명 다른지점 **앞으로** 자동 분리(기존 소급 X).
-- **2e-남은것(후순위)**: 어드민 by-name 삭제/조회(E그룹: 26880~ 등) 일부 미전환 — 동명 중복 생기면 그때. price_pins 로드 dedup(6923) name 키.
+- **2e-남은것**: ✅ **거의 완료(b572~573)** — 어드민 가게삭제 자식 store_id화(#1)·featured/대표사진 by-name 리셋 store_id화(#7)·맵 dedup store_id화(#8)·by-name maybeSingle limit(1)화(b570). 잔여: store_photos `is_primary` UNIQUE 가 (store_name) 기준이면 동명 분리 후 충돌 가능 — 발생 시 그때.
 - **2f** ⬜ (먼 훗날) store_name 의존 제거 + `_bak2c_*`/`_bak2e_stores` DROP. **컬럼 DROP 은 충분히 안정 후에만.**
 
 ### 2d 진행 결과
