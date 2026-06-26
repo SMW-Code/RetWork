@@ -31,8 +31,11 @@ stores 테이블만 place_id 로 분리해도 **부족**하다. 댓글·메뉴·
 - **2b** ✅ **완료(b557)** dual-write(store_name + store_id), `_resolveStoreId` 헬퍼.
 - **2c** ✅ **완료** 기존 행 backfill — `phase2c_backfill_store_id.sql` (검증 unmatched 모두 0). `_bak2c_*` 백업 존재.
 - **2d** 🔶 **부분완료** 사용자 대면 읽기(A/B/C) store_id 전환 완료. 맵(D)·어드민(E)은 2e 로 이관(아래).
-- **2e** ⬜ stores 식별을 place_id 로 (name UNIQUE 제거) → 동명 지점 실제 분리. **finale — 아래 체크리스트.**
-- **2f** ⬜ (먼 훗날) store_name 의존 제거 + `_bak2c_*` DROP. **컬럼 DROP 은 충분히 안정 후에만.**
+- **2e** ✅ **완료** stores 식별 place_id 화 + **name UNIQUE 제거(b561~570 + `phase2e_drop_name_unique.sql` 실행, 검증 0행)**.
+  `_ensureStore`(geocode·place_id) 공개흐름 / `_storeByNameOrCreate`(geocode無) persist·수동핀 / `_storeOr` store_id 단독 /
+  맵 그룹핑 id / stores 조회 limit(1)·id화. 백업 `_bak2e_stores` 존재. → 동명 다른지점 **앞으로** 자동 분리(기존 소급 X).
+- **2e-남은것(후순위)**: 어드민 by-name 삭제/조회(E그룹: 26880~ 등) 일부 미전환 — 동명 중복 생기면 그때. price_pins 로드 dedup(6923) name 키.
+- **2f** ⬜ (먼 훗날) store_name 의존 제거 + `_bak2c_*`/`_bak2e_stores` DROP. **컬럼 DROP 은 충분히 안정 후에만.**
 
 ### 2d 진행 결과
 > 읽기는 **`_storeOr(q, sid, sname)`** = `sid` 있으면 `or(store_id.eq, store_name.eq)` 아니면 name.
