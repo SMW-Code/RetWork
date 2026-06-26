@@ -25349,8 +25349,8 @@ var ADM_DETAIL_TABS = {
   ],
   pins: [
     { key:'all',         label:'📍 전체',       match: function(){ return true; } },
-    { key:'with-gmap',   label:'🔗 링크O',      match: function(p){ return !!(p.stores && p.stores.google_maps_url); } },
-    { key:'no-gmap',     label:'❌ 링크X',      match: function(p){ return !(p.stores && p.stores.google_maps_url); } },
+    { key:'with-gmap',   label:'🔗 링크O',      match: function(p){ return !!(p.google_maps_url || (p.stores && p.stores.google_maps_url)); } },
+    { key:'no-gmap',     label:'❌ 링크X',      match: function(p){ return !(p.google_maps_url || (p.stores && p.stores.google_maps_url)); } },
     { key:'low',         label:'~¥500',        match: function(p){ return (p.price||0) < 500; } },
     { key:'mid',         label:'¥500~2K',      match: function(p){ return (p.price||0) >= 500 && (p.price||0) < 2000; } },
     { key:'high',        label:'¥2K~10K',      match: function(p){ return (p.price||0) >= 2000 && (p.price||0) < 10000; } },
@@ -29798,7 +29798,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 570;
+window.__APP_BUILD__ = 571;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
