@@ -8331,6 +8331,18 @@ async function _ensureStore(name, lat, lng, category){
   } catch(e){ /* 동시 생성 race → 아래 재조회 */ }
   return await _resolveStoreId(name);
 }
+// 이름 기준 find-or-create (geocode 없음 — 수동핀/persist 처럼 좌표가 이미 확정된 경우용).
+//   _ensureStore 는 geocode 로 위치를 옮길 수 있어 "유저가 찍은 위치"엔 부적합 → 이걸 사용.
+async function _storeByNameOrCreate(name, lat, lng, category){
+  if (!_sb || !name) return null;
+  var id = await _resolveStoreId(name);
+  if (id) return id;
+  try {
+    var r = await _sb.from('stores').insert({ name:name, lat:lat, lng:lng, category:category||'other', receipt_count:1 }).select('id').single();
+    if (!r.error && r.data){ _storeIdByName[name] = r.data.id; return r.data.id; }
+  } catch(e){}
+  return await _resolveStoreId(name);
+}
 
 async function ctSubmitRating(star, hasReceipt, storeName, silent) {
   if (!_currentUser || !_sb) return;
@@ -16805,7 +16817,8 @@ async function submitManualPin() {
   newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
   if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
   // 2e-2: store_id 확보는 **논블로킹 백그라운드**로 (첫 렌더를 막지 않음 — b561 회귀 교훈).
-  if (_currentUser) _ensureStore(storeName, pos.lat, pos.lng, _mpCategory).then(function(_id){
+  //   수동핀은 유저가 찍은 위치가 정답 → geocode 없는 _storeByNameOrCreate 사용(b567, 위치 이동 방지).
+  if (_currentUser) _storeByNameOrCreate(storeName, pos.lat, pos.lng, _mpCategory).then(function(_id){
     if (_id) { _storeIdByName[storeName] = _id; newPins.forEach(function(p){ p.stores.id = _id; }); }
   });
 
@@ -16927,7 +16940,7 @@ async function _persistPinToSupabase(pin) {
     var storeData = pin.stores || pin.store || {};
     // 2e-3b: name 키 의존 제거 — pin.stores.id(있으면) 또는 _ensureStore(place_id 우선)로 store_id 확보.
     //   (기존 stores.upsert(onConflict:'name') 제거 → name UNIQUE 제거에도 안전)
-    var _sid = storeData.id || await _ensureStore(storeData.name, storeData.lat, storeData.lng, storeData.category);
+    var _sid = storeData.id || await _storeByNameOrCreate(storeData.name, storeData.lat, storeData.lng, storeData.category);
     if (!_sid) {
       console.warn('_persist: store id 확보 실패', storeData.name);
       showToast(t('toast.store_save_err', {msg: 'store'}));
@@ -29788,7 +29801,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 566;
+window.__APP_BUILD__ = 567;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
