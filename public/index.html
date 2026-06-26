@@ -16847,14 +16847,8 @@ async function submitManualPin() {
   var _mpSP = window._mpStorePhotoFile || null;
   if (_currentUser) _mpPersistPhotosAndCards(storeName, validItems, _mpCategory, _mpSP);
   window._mpStorePhotoFile = null;
-
-  // 가게명으로 좌표 보정 (백그라운드)
-  searchAndPinStore(storeName, null, function(lat, lng) {
-    if (lat) {
-      newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
-      if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
-    }
-  });
+  // (b568) 끝부분 searchAndPinStore geocode 제거 — 수동핀은 유저가 찍은 pos 가 정답(저장도 pos).
+  //   geocode 가 로컬 핀을 구글 검색 위치로 옮겨 "찍은 자리에 안 뜸" 유발하던 문제 해소.
 }
 
 // 수동핀: 가게 대표사진 업로드 + 메뉴별 사진 → 메뉴카드 생성/갱신 (치리공개 로직 미러)
@@ -29801,7 +29795,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 567;
+window.__APP_BUILD__ = 568;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
