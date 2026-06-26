@@ -5754,7 +5754,7 @@ function ctStartRewardAd() {
   // _BYPASS_ADS true 면 일일 한도 무시
   if (typeof _BYPASS_ADS === 'undefined' || !_BYPASS_ADS) {
     var today = new Date().toDateString();
-    var used  = parseInt(localStorage.getItem('ct_rad_' + today) || '0');
+    var used  = parseInt(localStorage.getItem('ct_rad_' + today) || '0', 10) || 0;
     if (used >= 3) { showToast(t('toast.daily_limit', {n: 3})); return; }
   }
   ctOpenFullscreenAd('reward', null);
@@ -13900,7 +13900,7 @@ async function submitChiriPublish() {
   });
 
   // 2e-1: 커뮤니티 쓰기 전에 store 행 확보(좌표 보존) → store_id 항상 확보 + pending 핀에 id 부여(맵 일관성)
-  var _cpStoreId = await _ensureStore(store, fallback.lat, fallback.lng, _cpCategory || r.cat);
+  var _cpStoreId = await _ensureStore(store, fallback.lat, fallback.lng, _cpCategory || r.cat).catch(function(){ return null; });
   if (_cpStoreId) newPins.forEach(function(p){ p.stores.id = _cpStoreId; });
 
   // 포인트 지급 (+10 고정, 품목 수 무관)
@@ -13912,7 +13912,7 @@ async function submitChiriPublish() {
 
   // ★ 가게 사진 업로드 → store_community_photos
   if (window._cpStorePhotoFile && _currentUser && _sb) {
-    var _spUrl = await _cpUploadPhoto(window._cpStorePhotoFile, 'community');
+    var _spUrl = await _cpUploadPhoto(window._cpStorePhotoFile, 'community').catch(function(){ return null; });
     if (_spUrl) { try { await _sb.from('store_community_photos').insert({ store_name: store, store_id: await _resolveStoreId(store), photo_url: _spUrl, uploaded_by: _currentUser.id }); } catch(e){ console.warn('[cp store photo]', e); } }
   }
 
@@ -13942,7 +13942,7 @@ async function submitChiriPublish() {
       var _mkey = _normMenu(_it.name);
       var _mR = _it.cpRating || 0;
       var _mC = (_it.cpComment||'').trim();
-      var _mPhoto = _it.cpPhotoFile ? await _cpUploadPhoto(_it.cpPhotoFile, 'menu-cards') : null;
+      var _mPhoto = _it.cpPhotoFile ? await _cpUploadPhoto(_it.cpPhotoFile, 'menu-cards').catch(function(){ return null; }) : null;
       var _card = existMap[_mkey];
       if (_card && _card.id) {
         // 기존 카드: 평점/코멘트 추가 + 사진(비어있으면 대표로, 아니면 추가사진 테이블)
@@ -14000,10 +14000,10 @@ async function submitChiriPublish() {
     newPins.forEach(function(p) { p.stores.lat = lat; p.stores.lng = lng; });
     if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
     if (_currentUser && _sb) {
-      _sb.from('stores').update({ lat: lat, lng: lng }).eq('name', store).then(function(){});
-      // Phase 1(b556): place_id 백필 — 아직 비어있는 가게만, UNIQUE 충돌 시 무시 (식별방식 변경 X)
+      _sb.from('stores').update({ lat: lat, lng: lng }).eq(_cpStoreId?'id':'name', _cpStoreId||store).then(function(){});
+      // place_id 백필 — 아직 비어있는 가게만, UNIQUE 충돌 시 무시. (b572: 동명 분리 위해 store_id 기준)
       if (placeId) {
-        _sb.from('stores').update({ place_id: placeId }).eq('name', store).is('place_id', null)
+        _sb.from('stores').update({ place_id: placeId }).eq(_cpStoreId?'id':'name', _cpStoreId||store).is('place_id', null)
           .then(function(r){ if (r && r.error) console.log('[place_id backfill skip]', r.error.message); });
       }
     }
@@ -25351,11 +25351,11 @@ var ADM_DETAIL_TABS = {
     { key:'all',         label:'📍 전체',       match: function(){ return true; } },
     { key:'with-gmap',   label:'🔗 링크O',      match: function(p){ return !!(p.google_maps_url || (p.stores && p.stores.google_maps_url)); } },
     { key:'no-gmap',     label:'❌ 링크X',      match: function(p){ return !(p.google_maps_url || (p.stores && p.stores.google_maps_url)); } },
-    { key:'low',         label:'~¥500',        match: function(p){ return (p.price||0) < 500; } },
-    { key:'mid',         label:'¥500~2K',      match: function(p){ return (p.price||0) >= 500 && (p.price||0) < 2000; } },
-    { key:'high',        label:'¥2K~10K',      match: function(p){ return (p.price||0) >= 2000 && (p.price||0) < 10000; } },
-    { key:'huge',        label:'¥10K+',        match: function(p){ return (p.price||0) >= 10000; } },
-    { key:'with-comment',label:'💬 코멘트',     match: function(p){ return !!(p.comment && p.comment.trim()); } },
+    { key:'low',         label:'~¥500',        match: function(p){ return (p.minPrice||0) < 500; } },
+    { key:'mid',         label:'¥500~2K',      match: function(p){ return (p.maxPrice||0) >= 500 && (p.minPrice||0) < 2000; } },
+    { key:'high',        label:'¥2K~10K',      match: function(p){ return (p.maxPrice||0) >= 2000 && (p.minPrice||0) < 10000; } },
+    { key:'huge',        label:'¥10K+',        match: function(p){ return (p.maxPrice||0) >= 10000; } },
+    { key:'with-comment',label:'💬 코멘트',     match: function(p){ return !!p.hasComment; } },
   ]
 };
 
@@ -25413,7 +25413,7 @@ async function _loadAdminDetailData(type) {
   var res;
   if (type === 'users') {
     res = await _sb.from('profiles')
-      .select('id,nickname,is_admin,created_at,referral_code,referred_by')
+      .select('id,nickname,is_admin,created_at,referral_code,referred_by,is_premium,premium_until,deleted_at')
       .order('created_at', { ascending:false })
       .limit(500);
   } else if (type === 'receipts') {
@@ -25460,6 +25460,9 @@ async function _loadAdminDetailData(type) {
         if (p.price < g.minPrice) g.minPrice = p.price;
         if (p.price > g.maxPrice) g.maxPrice = p.price;
         if ((p.created_at||'') > g.latestAt) g.latestAt = p.created_at;
+        // (b572) 핀 코멘트/품목명 집계 → 코멘트 필터 + 검색 동작
+        if (p.comment && p.comment.trim()) g.hasComment = true;
+        g._search = (g._search || '') + ' ' + (p.item_name||'') + ' ' + (p.comment||'');
       });
       res = { data: Object.values(storeMap).sort(function(a,b){ return (b.latestAt||'').localeCompare(a.latestAt||''); }), error: null };
     }
@@ -26944,9 +26947,9 @@ async function adminDeleteStoreFromList(id) {
   if (!confirm('「' + name + '」 가게를 삭제할까요?\n\n가게 + 가격핀 + 메뉴카드 + 사진 + 가게댓글이 모두 삭제됩니다. (복구 불가)')) return;
   try {
     await _sb.from('price_pins').delete().eq('store_id', id);
-    await _sb.from('store_menu_cards').delete().eq('store_name', name);
-    await _sb.from('store_photos').delete().eq('store_name', name);
-    await _sb.from('store_comments').delete().eq('store_name', name);
+    await _sb.from('store_menu_cards').delete().eq('store_id', id);
+    await _sb.from('store_photos').delete().eq('store_id', id);
+    await _sb.from('store_comments').delete().eq('store_id', id);
     var res = await _sb.from('stores').delete().eq('id', id).select();
     if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
     if (!res.data || res.data.length === 0) { alert('가게 삭제가 막혔어요 — stores_admin_delete 정책 확인 필요'); return; }
@@ -27190,9 +27193,9 @@ async function _admPcDeleteStore() {
   try {
     // 자식부터 삭제 (FK/고아 방지). 핀은 store_id, 나머지는 store_name 으로 연결.
     await _sb.from('price_pins').delete().eq('store_id', t.id);
-    await _sb.from('store_menu_cards').delete().eq('store_name', t.name);
-    await _sb.from('store_photos').delete().eq('store_name', t.name);
-    await _sb.from('store_comments').delete().eq('store_name', t.name);
+    await _sb.from('store_menu_cards').delete().eq('store_id', t.id);
+    await _sb.from('store_photos').delete().eq('store_id', t.id);
+    await _sb.from('store_comments').delete().eq('store_id', t.id);
     // 마지막으로 가게 행 삭제 (RLS 확인 위해 .select())
     var res = await _sb.from('stores').delete().eq('id', t.id).select();
     if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
@@ -29798,7 +29801,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 571;
+window.__APP_BUILD__ = 572;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
