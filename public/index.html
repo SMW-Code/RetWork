@@ -16778,7 +16778,10 @@ async function submitManualPin() {
 
   newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
   if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
-  // (2e-1 수동핀 store_id 사전확보는 핀 사라짐 회귀로 보류 — b562. 공개흐름만 유지. 2e 에서 원인규명 후 재적용)
+  // 2e-2: store_id 확보는 **논블로킹 백그라운드**로 (첫 렌더를 막지 않음 — b561 회귀 교훈).
+  if (_currentUser) _ensureStore(storeName, pos.lat, pos.lng, _mpCategory).then(function(_id){
+    if (_id) { _storeIdByName[storeName] = _id; newPins.forEach(function(p){ p.stores.id = _id; }); }
+  });
 
   ctAddCoin(10, '📌 手動ピン登録', 'pin');
 
@@ -29763,7 +29766,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 563;
+window.__APP_BUILD__ = 564;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
