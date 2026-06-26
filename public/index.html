@@ -8282,8 +8282,10 @@ async function _resolveStoreId(name){
   if (!_sb || !name) return null;
   if (_storeIdByName[name]) return _storeIdByName[name];
   try {
-    var r = await _sb.from('stores').select('id').eq('name', name).maybeSingle();
-    var id = (r.data && r.data.id) || null;
+    // 2e: name UNIQUE 제거 후 동명 다수행 대비 limit(1) (maybeSingle 은 2행+면 에러).
+    //   가장 오래된 행 1개 반환(보조 경로 — 캐시/_ensureStore 가 정확 id 우선 제공).
+    var r = await _sb.from('stores').select('id').eq('name', name).order('created_at',{ascending:true}).limit(1);
+    var id = (r.data && r.data[0] && r.data[0].id) || null;
     if (id) _storeIdByName[name] = id;
     return id;
   } catch(e){ return null; }
@@ -19418,7 +19420,7 @@ async function openStoreDetail(sData) {
   // stores.google_maps_url 가져오기 (어드민이 설정한 정확한 링크)
   try {
     if (_sb && sData.name) {
-      var gmRes = await _sb.from('stores').select('google_maps_url').eq('name', sData.name).maybeSingle();
+      var gmRes = await (_sdStoreId ? _sb.from('stores').select('google_maps_url').eq('id', _sdStoreId) : _sb.from('stores').select('google_maps_url').eq('name', sData.name).limit(1)).maybeSingle();
       if (gmRes.data && gmRes.data.google_maps_url) {
         sData.google_maps_url = gmRes.data.google_maps_url;
         _sdSData.google_maps_url = gmRes.data.google_maps_url;
@@ -20591,9 +20593,9 @@ async function _sdLoadMenuCards(){
   //    옛 흐름에서는 store_menu_cards에 저장 안 되고 price_pins에만 저장됨
   //    같은 메뉴명이 store_menu_cards에 이미 있으면 중복 표시 안 함
   try {
-    var storeRes = await _sb.from('stores').select('id').eq('name', _sdName).maybeSingle();
-    if (storeRes.data && storeRes.data.id) {
-      var pinsRes = await _sb.from('price_pins').select('id,item_name,price,comment,user_id,created_at').eq('store_id', storeRes.data.id);
+    var _msid = _sdStoreId || (await _resolveStoreId(_sdName));
+    if (_msid) {
+      var pinsRes = await _sb.from('price_pins').select('id,item_name,price,comment,user_id,created_at').eq('store_id', _msid);
       if (pinsRes.data && pinsRes.data.length > 0) {
         var existingNames = {};
         cards.forEach(function(c){ existingNames[c.menu_name] = true; });
@@ -27008,7 +27010,7 @@ async function _admPcOpenPinStoreView(storeName) {
   try {
     // 가게 정보 + 핀 목록 동시 fetch
     var [sRes, pRes] = await Promise.all([
-      _sb.from('stores').select('*').eq('name', storeName).maybeSingle(),
+      _sb.from('stores').select('*').eq('name', storeName).order('created_at',{ascending:true}).limit(1).maybeSingle(),
       _sb.from('price_pins').select('id,item_name,price,comment,user_id,store_id,created_at,stores(id,name)').eq('stores.name', storeName).order('created_at', { ascending:false }).limit(200)
     ]);
     var s = sRes.data;
@@ -27647,7 +27649,7 @@ async function admSaveMenuCard() {
     // 3) 대표 메뉴면 stores 캐시 갱신
     if (isFeatured && _admEditMenuStoreName) {
       // stores 의 id 찾기
-      var sRes = await _sb.from('stores').select('id').eq('name', _admEditMenuStoreName).maybeSingle();
+      var sRes = await _sb.from('stores').select('id').eq('name', _admEditMenuStoreName).order('created_at',{ascending:true}).limit(1).maybeSingle();
       if (sRes.data && sRes.data.id) {
         await _sb.from('stores').update({
           featured_price: price,
@@ -28111,7 +28113,7 @@ async function admFeatureMenu(cardId) {
   if (card.is_featured) {
     await _sb.from('store_menu_cards').update({ is_featured: false }).eq('id', cardId);
     // stores도 cleanup
-    await _sb.from('stores').update({ featured_price: null, featured_menu_name: null }).eq('name', _sdName);
+    await _sb.from('stores').update({ featured_price: null, featured_menu_name: null }).eq(_sdStoreId?'id':'name', _sdStoreId || _sdName);
     showToast('대표 메뉴 해제됨');
   } else {
     await _sb.from('store_menu_cards').update({ is_featured: false }).eq('store_name', _sdName);
@@ -28120,7 +28122,7 @@ async function admFeatureMenu(cardId) {
       await _sb.from('stores').update({
         featured_price: res.data.price,
         featured_menu_name: res.data.menu_name
-      }).eq('name', _sdName);
+      }).eq(_sdStoreId?'id':'name', _sdStoreId || _sdName);
     }
     showToast('⭐ 대표 메뉴로 지정됨');
   }
@@ -29796,7 +29798,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 569;
+window.__APP_BUILD__ = 570;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
