@@ -6998,7 +6998,7 @@ function ctRenderPricePins() {
     if (!p.stores || p.stores.lat == null || p.stores.lng == null) return;
     var _pend = _ctPendingPins.indexOf(p) >= 0;
     if (!_pend && _ctCatFilter !== 'all' && _genreGroup(p.stores.category) !== _ctCatFilter) return;
-    var sid = p.stores.name;
+    var sid = (p.stores && p.stores.id) || (p.stores && p.stores.name);  // 2e-3d: store_id 우선(동명 다른지점 분리). 없으면(pending 초기) name.
     if (!_allGroups[sid]) _allGroups[sid] = { store: p.stores, items: [], pending: false };
     _allGroups[sid].items.push({ name: p.item_name || '', price: p.price, comment: p.comment || '' });
     if (_pend) _allGroups[sid].pending = true;
@@ -8291,7 +8291,8 @@ async function _resolveStoreId(name){
 // 가게 read 필터(2d): store_id 있으면 (store_id OR store_name) — 전환기엔 store_id NULL 행(새 가게 첫 공개 등)도
 //   name 으로 함께 잡음. 현재 name 유니크라 정확. 2e(동명 분리) 직전 최종 backfill 후 store_id 단독으로 좁힐 것.
 function _storeOr(q, sid, sname){
-  return sid ? q.or('store_id.eq.'+sid+',store_name.eq.'+JSON.stringify(sname)) : q.eq('store_name', sname);
+  // 2e-3d: store_id 있으면 store_id 단독(동명 분리 정확). 없을 때만(고아) store_name 폴백.
+  return sid ? q.eq('store_id', sid) : q.eq('store_name', sname);
 }
 // 가게 행 find-or-create(2e-1): 있으면 좌표 안 건드리고 id 반환, 없으면 insert.
 //   커뮤니티 쓰기/pending 핀에 store_id 를 미리 확보하기 위함(좌표 덮어쓰기 churn 방지).
@@ -29795,7 +29796,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 568;
+window.__APP_BUILD__ = 569;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
