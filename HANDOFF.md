@@ -1,6 +1,6 @@
-# RetWork (チリつも) — HANDOFF (build 563 시점)
+# RetWork (チリつも) — HANDOFF (build 573 시점)
 
-> # 📌 2026-06-24 작업 요약 (build 548→563)
+> # 📌 2026-06-24 작업 요약 (build 548→573) — 다른 PC에서 이어가려면 이 블록 + `NEXT_TASK_place_id_phase2.md` 읽기
 > **인증·이메일 인프라:**
 > - 이메일 회원가입/로그인 영역 **재활성화**(b550, `#auth-manual-block` display 복구) + 로그인/가입 탭 그라데이션(b551).
 > - **비밀번호 찾기 구현**(b552·553): 로그인탭 "비밀번호를 잊으셨나요?"→`resetPasswordForEmail`→`#type=recovery` 복귀→`#screen-reset-pw`(`submitResetPw`→`updateUser`). 모든 showApp 경로에 `window._isPwRecovery` 가드.
@@ -8,17 +8,22 @@
 > - **메일 발송 = Resend SMTP**(Supabase Custom SMTP): `smtp.resend.com:465`, user `resend`, sender `no-reply@retwork.jp`. 무료 월3000/일100.
 > - ⚠️ **DNS = Cloudflare 관리**(등록처는 お名前.com이나 NS=Cloudflare). 레코드는 **Cloudflare에만** 추가. **네임서버를 dnsv.jp로 바꾸면 사이트 다운**(절대 금지). Resend 인증레코드(DKIM `resend._domainkey` / MX·SPF `send.` / DMARC `_dmarc`)는 Cloudflare에 등록됨.
 >
-> **버그 수정:** b548 `_cpFromMap` 누수(영수증 저장 깨짐) / b549 영수증 합계 WYSIWYG / **b554 상품교환 원자성 서버RPC `client_redeem_item`** / **b555 price_pins 중복방지(유니크+upsert)**.
+> **버그 수정:** b548 `_cpFromMap` 누수 / b549 영수증 합계 WYSIWYG / **b554 상품교환 원자성 RPC `client_redeem_item`** / **b555 price_pins 중복방지(유니크+upsert)**.
 >
-> **#6 가게 식별 재아키텍처 (동명 지점 분리) — 진행중:** → 상세·재개는 [`NEXT_TASK_place_id_phase2.md`](NEXT_TASK_place_id_phase2.md)
-> - 발견: 커뮤니티 데이터(댓글/메뉴/사진/별점)가 **store_name(문자열) 기준** → store_id 재키잉 필요(대공사).
-> - **2a 컬럼추가 ✅ / 2b dual-write(b557) ✅ / 2c backfill ✅** (SQL 다 실행, unmatched 0). 읽기 헬퍼 `_storeOr`(=store_id OR store_name).
-> - **2d-A 가게상세·B 별점·C 공개dedup ✅**(b558~560) 읽기 store_id 전환.
-> - **2e-1 공개흐름 write순서(`_ensureStore`) ✅(b561) / 수동핀 회귀 롤백(b562) / 수동핀 즉시표시 fix(b563).**
-> - **남음(다음 세션, 비가역 주의):** 2e 후반 = place_id 식별전환 + **`stores` name UNIQUE 제거(되돌리기 어려움)** + 읽기 store_id로 좁힘 + 맵/어드민 전환. **백업 뜨고 단독 세션으로.**
-> - 교훈: 핀 push~첫 `ctRenderPricePins()` **사이에 awaited 네트워크 호출 금지**(수동핀 회귀 원인).
+> **#6 가게 식별 재아키텍처 (동명 지점 분리) — ✅ 본체 완료:** 상세는 [`NEXT_TASK_place_id_phase2.md`](NEXT_TASK_place_id_phase2.md)
+> - 문제: 가게가 `stores.name`(UNIQUE)으로 식별돼 동명 다른 지점이 한 행으로 합쳐짐 + 커뮤니티(댓글/메뉴/사진/별점)가 **store_name 문자열** 기준.
+> - 해결: 커뮤니티에 `store_id` 컬럼+dual-write+backfill(2a~2c) → 읽기/맵/persist/어드민 store_id화(2d·2e-1~3d) → **`stores.name UNIQUE 제거(비가역, 검증 0행)**.
+> - 식별자 전환: `_ensureStore`(공개=geocode·place_id 우선) / `_storeByNameOrCreate`(persist·수동핀=좌표 그대로, geocode無) / `_storeOr`(읽기 store_id 단독) / `_resolveStoreId`(limit1).
+> - **효과:** 앞으로 등록되는 동명 다른 지점은 **다른 place_id → 별도 store_id 행**으로 자동 분리. **기존 합쳐진 데이터는 소급 분리 X.**
+> - 백업 테이블: `_bak2c_*`(커뮤니티) · `_bak2e_stores`(stores). 안정화 후 DROP 가능. 기존 stores 는 `place_id` 대부분 NULL(생성당시 미수집) → 활동하면 채워짐.
+> - ⚠️ 교훈: 핀 push~첫 `ctRenderPricePins()` **사이에 awaited 네트워크 호출 금지**(수동핀 회귀 원인 b561→567). 수동핀은 **유저가 찍은 좌표가 정답**(geocode 이동 금지).
 >
-> **실행 완료 SQL(사용자 확인):** `redeem_item_rpc.sql` · `price_pins_dedup.sql` · `phase2a_add_store_id.sql` · `phase2c_backfill_store_id.sql`. (백업 `_bak2c_*` 테이블 존재 — 안정화 후 DROP 가능)
+> **버그헌트 (병렬 에이전트 발굴→검증→수정, b571~573):** #1 어드민 가게삭제 자식 store_id화(데이터손실 방지) · #2 공개 stuck-lock(.catch) · #3 공개 geocode 좌표 store_id · #4 어드민 핀 가격필터(minPrice/maxPrice) · #5 user 구독/탈퇴 탭 select · #6 핀 코멘트필터+검색 · #7 featured/대표사진 by-name 리셋 store_id · #8 맵 dedup store_id · #9 리워드광고 parseInt · #10 코인 잔액 서버동기화 + 죽은 ctStoreExchange. + b571 어드민 가게핀 링크필터 반전.
+>
+> **실행 완료 SQL(사용자 확인):** `redeem_item_rpc.sql` · `price_pins_dedup.sql` · `phase2a_add_store_id.sql` · `phase2c_backfill_store_id.sql` · **`phase2e_drop_name_unique.sql`(비가역 실행됨)**.
+>
+> **#6 잔여(사소, 발생 시):** `store_photos.is_primary` UNIQUE 가 store_name 기준이면 동명 분리 후 충돌 가능.
+> **다음 후보:** AdSense 승인 후 블로그 광고 슬롯 / 몰·빌딩 층 구분([`NEXT_TASK_mall_floor.md`](NEXT_TASK_mall_floor.md)) / 商品券 현금화 붙일 때 이메일확인 ON + abuse 방어.
 
 > # ⏳ AdSense 심사 중 (retwork.jp, 2026-06-19 08:27 요청)
 > 랜딩 공개·블로그 14편·구르메 13편·상호링크 완료 후 **검토 요청 제출**. 결과 며칠~2-4주. **승인 후: 자동광고 OFF + 블로그 글에만 수동 유닛**(앱·랜딩엔 AdSense X).
