@@ -8427,7 +8427,7 @@ function switchTab(name) {
   if (name==='home') renderHome();
   if (name==='history') { updateHistMonthLabel(); renderHistory(currentFilter||'all'); renderBars('week'); renderCatBreakdown(); renderReportSummary(); }
   if (name==='calendar') renderCalendar(calYear, calMonth);
-  if (name==='map') setTimeout(initGoogleMap, 100);
+  if (name==='map') { if (_mapInitialized && _map && typeof renderMapPins === 'function') { try { renderMapPins(); } catch(e){} } setTimeout(initGoogleMap, 100); }  // build 578 — 재진입 시 목록 갱신
 }
 function switchSubtab(name) {
   ['history','report'].forEach(function(n){
@@ -15505,7 +15505,7 @@ async function _ctShowUnvisitedMarkers() {
         anchor: new google.maps.Point(20, 20)
       },
       zIndex: 7,
-      title: name + ' — 주변 미방문',
+      title: name + ' · ' + t('comm.unvisited_badge'),
       optimized: true,         // 한 번에 빠르게 렌더
       clickable: true
     });
@@ -15562,14 +15562,19 @@ async function fetchAndRenderCommunity() {
   var el = document.getElementById('price-community-content');
   if (!el) return;
 
-  // ── 중심 좌표 계산 ──
-  var myPinned = DB.filter(function(r){ return r.lat && r.lng; });
-  if (myPinned.length === 0) {
-    el.innerHTML = _commEmptyMsg(t('comm.need_location'));
-    return;
+  // ── 중심 좌표 계산 — 현재 GPS 우선(근처 유저끼리 데이터 공유되게), 없으면 내 영수증 좌표 평균 (build 578)
+  var centerLat, centerLng;
+  if (_mapUserPos && _mapUserPos.lat && _mapUserPos.lng) {
+    centerLat = _mapUserPos.lat; centerLng = _mapUserPos.lng;
+  } else {
+    var myPinned = DB.filter(function(r){ return r.lat && r.lng; });
+    if (myPinned.length === 0) {
+      el.innerHTML = _commEmptyMsg(t('comm.need_location'));
+      return;
+    }
+    centerLat = myPinned.reduce(function(a,r){return a+parseFloat(r.lat);},0) / myPinned.length;
+    centerLng = myPinned.reduce(function(a,r){return a+parseFloat(r.lng);},0) / myPinned.length;
   }
-  var centerLat = myPinned.reduce(function(a,r){return a+parseFloat(r.lat);},0) / myPinned.length;
-  var centerLng = myPinned.reduce(function(a,r){return a+parseFloat(r.lng);},0) / myPinned.length;
   var cacheKey  = centerLat.toFixed(4) + ',' + centerLng.toFixed(4);
 
   // ── 캐시 히트 ──
@@ -16138,7 +16143,7 @@ function _renderMapStoreListPage() {
   };
   var html = '';
   if (total === 0) {
-    html = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">영수증을 스캔하면 가게가 여기 표시돼요</div>'
+    html = '<div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;">'+t('rmap.empty')+'</div>'
          + _mapAd('ad-slot-map-empty');
   } else {
     page.forEach(function(card, idx) {
@@ -17395,6 +17400,9 @@ async function loadFromSupabase() {
   renderReportSummary();
   var now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth()+1);
+  // build 578 — DB 로드 완료 후 지도 가게목록도 재렌더 (PTR 전체 새로고침 시 init 가 DB 로드 전에 1회만
+  //   그려 목록이 빈 채 남던 race 수정). _map 준비됐을 때만.
+  if (typeof renderMapPins === 'function' && _map) { try { renderMapPins(); } catch(e){} }
 }
 
 /* ══════════════════════════════
@@ -29929,7 +29937,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 577;
+window.__APP_BUILD__ = 578;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
