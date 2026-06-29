@@ -4842,6 +4842,24 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
 
     <button class="save-btn" onclick="saveEditReceipt()" data-i18n="edit.save">💾 修正を保存</button>
+    <button onclick="openReceiptPdf(_editId)" style="width:100%;margin-top:8px;padding:13px;border-radius:14px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-1);font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="pdf.btn">📄 PDFで保存</button>
+  </div>
+</div>
+
+<!-- ══ PDF 내보내기 시트 (build 580) — 내용 선택: 사진+데이터 / 데이터 / 원본사진 ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-pdf-export" onclick="closeOvOutside(event,'ov-pdf-export')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" data-i18n="pdf.title">📄 PDFダウンロード</div>
+    <div class="sheet-sub" id="pdf-export-target" style="margin-bottom:14px;"></div>
+    <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;" data-i18n="pdf.content_label">含める内容</div>
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button id="pdfc-both"  onclick="_setPdfContent('both')"  data-i18n="pdf.both"  style="flex:1;padding:9px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--green);color:#fff;">写真+データ</button>
+      <button id="pdfc-data"  onclick="_setPdfContent('data')"  data-i18n="pdf.data"  style="flex:1;padding:9px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--bg-2);color:var(--text-2);">データ</button>
+      <button id="pdfc-photo" onclick="_setPdfContent('photo')" data-i18n="pdf.photo" style="flex:1;padding:9px 0;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--bg-2);color:var(--text-2);">元の写真</button>
+    </div>
+    <div style="font-size:10px;color:var(--text-3);margin-bottom:14px;line-height:1.4;" data-i18n="pdf.photo_note">元の写真はスキャンしたレシートのみ（手動入力は除く）</div>
+    <button id="pdf-export-go" class="save-btn" onclick="runPdfExport()" data-i18n="pdf.download">⬇ PDFダウンロード</button>
   </div>
 </div>
 
@@ -10697,6 +10715,8 @@ function renderMonthReport(){
 
   // 공유
   html+='<button onclick="mrShare()" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);">'+t('mr.share')+'</button>';
+  // 이 기간 영수증 전부 PDF (build 580)
+  html+='<button onclick="openPeriodPdf()" style="width:100%;margin-top:8px;padding:14px;border:1px solid var(--border-mid);border-radius:14px;background:var(--surface);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);cursor:pointer;">'+t('pdf.period_btn')+'</button>';
 
   el.innerHTML=html; el.scrollTop=0;
   _mrRenderValueIndex();
@@ -14237,7 +14257,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','pc.found_count':'{n}件で価格差を発見','pc.per_unit':'/ 1個','pc.per_hour':'/ 1時間','pc.best':'最安','pc.savings':'最大¥{amt}（{pct}%）節約可能','pc.parking_tag':'時間単価','pc.parking_note':'⏱ 駐車時間が異なるため1時間あたりの単価で比較しています','park.time_label':'駐車時間','park.hours':'時間','park.minutes':'分','park.hint':'⏱ 駐車料金は1時間あたりの単価で比較されます','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
     'rmap.iw_visit':'訪問','rmap.iw_avg':'平均','rmap.view_detail':'📋 詳細を見る →','rmap.per_unit':'/個','rmap.no_items':'品目データなし','rmap.avg_per':'1回平均',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
-    'comm.need_location':'まず自分の店舗位置を登録してください 📍','comm.aggregating':'周辺店舗を集計中...','comm.no_nearby':'半径5km以内に他ユーザーのデータがありません。<br>ユーザーが増えるほど比較データが貯まります 🌱','comm.nearby_unvisited':'📍 半径5km・未訪問 {n}件','comm.visited_stats':'🟢 訪問した店舗・ユーザー統計','comm.visited_badge':'訪問済み','comm.unvisited_badge':'未訪問','comm.date_unknown':'日付不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人訪問','comm.receipts_n':'{n}件','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最終訪問: {d}','comm.popular_items':'📋 人気品目','comm.collapse':'閉じる','comm.my_vs_avg':'📊 自分の支出 vs 全ユーザー平均','comm.items_n':'{n}個','comm.cheaper':'平均より安い','comm.pricier':'平均より高い','comm.mine_label':'自分','comm.load_failed':'データを取得できませんでした 😢','comm.map_btn':'🗺 地図','comm.center_gps':'📡 現在地','comm.center_receipt':'🧾 レシート位置','comm.gps_wait':'現在地を取得できません。位置情報を許可するか「レシート位置」に切り替えてください 📍',
+    'comm.need_location':'まず自分の店舗位置を登録してください 📍','comm.aggregating':'周辺店舗を集計中...','comm.no_nearby':'半径5km以内に他ユーザーのデータがありません。<br>ユーザーが増えるほど比較データが貯まります 🌱','comm.nearby_unvisited':'📍 半径5km・未訪問 {n}件','comm.visited_stats':'🟢 訪問した店舗・ユーザー統計','comm.visited_badge':'訪問済み','comm.unvisited_badge':'未訪問','comm.date_unknown':'日付不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人訪問','comm.receipts_n':'{n}件','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最終訪問: {d}','comm.popular_items':'📋 人気品目','comm.collapse':'閉じる','comm.my_vs_avg':'📊 自分の支出 vs 全ユーザー平均','comm.items_n':'{n}個','comm.cheaper':'平均より安い','comm.pricier':'平均より高い','comm.mine_label':'自分','comm.load_failed':'データを取得できませんでした 😢','comm.map_btn':'🗺 地図','comm.center_gps':'📡 現在地','comm.center_receipt':'🧾 レシート位置','comm.gps_wait':'現在地を取得できません。位置情報を許可するか「レシート位置」に切り替えてください 📍','pdf.title':'📄 PDFダウンロード','pdf.content_label':'含める内容','pdf.both':'写真+データ','pdf.data':'データ','pdf.photo':'元の写真','pdf.photo_note':'元の写真はスキャンしたレシートのみ（手動入力は除く）','pdf.download':'⬇ PDFダウンロード','pdf.making':'作成中...','pdf.done':'PDFを保存しました 📄','pdf.fail':'PDF作成に失敗しました 😢','pdf.no_photo':'写真がありません','pdf.btn':'📄 PDFで保存','pdf.period_btn':'📄 この期間のレシートをPDFで',
     // 카테고리 라벨 (영수증 기록)
     'cat.all':'すべて','cat.food':'食料品','cat.eat':'食事','cat.snack':'お菓子','cat.fuel':'給油','cat.park':'駐車','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
@@ -14515,7 +14535,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','pc.found_count':'{n}개 품목에서 가격 차이 발견','pc.per_unit':'/ 1개','pc.per_hour':'/ 1시간','pc.best':'최저가','pc.savings':'최대 ¥{amt} ({pct}%) 절약 가능','pc.parking_tag':'시간단가','pc.parking_note':'⏱ 주차시간이 달라 시간당 단가로 비교해요','park.time_label':'주차시간','park.hours':'시간','park.minutes':'분','park.hint':'⏱ 주차요금은 시간당 단가로 비교돼요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.iw_visit':'방문','rmap.iw_avg':'평균','rmap.view_detail':'📋 내역 보기 →','rmap.per_unit':'/1개','rmap.no_items':'품목 데이터 없음','rmap.avg_per':'방문 평균',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
-    'comm.need_location':'내 가게 위치를 먼저 등록해주세요 📍','comm.aggregating':'주변 가게 집계 중...','comm.no_nearby':'반경 5km 내 다른 유저 데이터가 없어요.<br>유저가 늘수록 비교 데이터가 쌓여요 🌱','comm.nearby_unvisited':'📍 반경 5km · 미방문 {n}곳','comm.visited_stats':'🟢 내가 방문한 가게 · 유저 통계','comm.visited_badge':'방문함','comm.unvisited_badge':'미방문','comm.date_unknown':'날짜 미상','comm.date_md':'{m}월 {d}일','comm.visitors':'{n}명 방문','comm.receipts_n':'{n}건','comm.avg_yen':'평균 ¥{v}','comm.last_visit':'최근 방문: {d}','comm.popular_items':'📋 인기 품목','comm.collapse':'접기','comm.my_vs_avg':'📊 내 지출 vs 전체 유저 평균','comm.items_n':'{n}개','comm.cheaper':'평균보다 저렴','comm.pricier':'평균보다 비쌈','comm.mine_label':'내','comm.load_failed':'데이터를 불러오지 못했어요 😢','comm.map_btn':'🗺 지도','comm.center_gps':'📡 현재 위치','comm.center_receipt':'🧾 내 영수증 위치','comm.gps_wait':'현재 위치를 가져올 수 없어요. 위치 권한을 허용하거나 "내 영수증 위치"로 전환하세요 📍',
+    'comm.need_location':'내 가게 위치를 먼저 등록해주세요 📍','comm.aggregating':'주변 가게 집계 중...','comm.no_nearby':'반경 5km 내 다른 유저 데이터가 없어요.<br>유저가 늘수록 비교 데이터가 쌓여요 🌱','comm.nearby_unvisited':'📍 반경 5km · 미방문 {n}곳','comm.visited_stats':'🟢 내가 방문한 가게 · 유저 통계','comm.visited_badge':'방문함','comm.unvisited_badge':'미방문','comm.date_unknown':'날짜 미상','comm.date_md':'{m}월 {d}일','comm.visitors':'{n}명 방문','comm.receipts_n':'{n}건','comm.avg_yen':'평균 ¥{v}','comm.last_visit':'최근 방문: {d}','comm.popular_items':'📋 인기 품목','comm.collapse':'접기','comm.my_vs_avg':'📊 내 지출 vs 전체 유저 평균','comm.items_n':'{n}개','comm.cheaper':'평균보다 저렴','comm.pricier':'평균보다 비쌈','comm.mine_label':'내','comm.load_failed':'데이터를 불러오지 못했어요 😢','comm.map_btn':'🗺 지도','comm.center_gps':'📡 현재 위치','comm.center_receipt':'🧾 내 영수증 위치','comm.gps_wait':'현재 위치를 가져올 수 없어요. 위치 권한을 허용하거나 "내 영수증 위치"로 전환하세요 📍','pdf.title':'📄 PDF 다운로드','pdf.content_label':'포함 내용','pdf.both':'사진+데이터','pdf.data':'데이터','pdf.photo':'원본 사진','pdf.photo_note':'원본 사진은 스캔한 영수증에만 있어요 (수동입력 제외)','pdf.download':'⬇ PDF 다운로드','pdf.making':'만드는 중...','pdf.done':'PDF를 저장했어요 📄','pdf.fail':'PDF 생성에 실패했어요 😢','pdf.no_photo':'사진이 없어요','pdf.btn':'📄 PDF로 저장','pdf.period_btn':'📄 이 기간 영수증 PDF로',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'식사','cat.snack':'군것질·과자','cat.fuel':'주유','cat.park':'주차','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
@@ -14777,7 +14797,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','pc.found_count':'Price differences found in {n} item(s)','pc.per_unit':'/ each','pc.per_hour':'/ hour','pc.best':'Lowest','pc.savings':'Save up to ¥{amt} ({pct}%)','pc.parking_tag':'hourly','pc.parking_note':'⏱ Compared by hourly rate since parking durations differ','park.time_label':'Parking time','park.hours':'h','park.minutes':'min','park.hint':'⏱ Parking fees are compared by hourly rate','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.iw_visit':'Visits','rmap.iw_avg':'Average','rmap.view_detail':'📋 View detail →','rmap.per_unit':'/ea','rmap.no_items':'No item data','rmap.avg_per':'Avg/visit',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
-    'comm.need_location':'Please register your store location first 📍','comm.aggregating':'Aggregating nearby stores...','comm.no_nearby':'No data from other users within 5km.<br>Comparison data grows as more users join 🌱','comm.nearby_unvisited':'📍 Within 5km · {n} unvisited','comm.visited_stats':'🟢 Stores you visited · user stats','comm.visited_badge':'Visited','comm.unvisited_badge':'Unvisited','comm.date_unknown':'Date unknown','comm.date_md':'{m}/{d}','comm.visitors':'{n} visitors','comm.receipts_n':'{n}','comm.avg_yen':'Avg ¥{v}','comm.last_visit':'Last visit: {d}','comm.popular_items':'📋 Popular items','comm.collapse':'Collapse','comm.my_vs_avg':'📊 My spending vs all-user avg','comm.items_n':'{n}','comm.cheaper':'Below average','comm.pricier':'Above average','comm.mine_label':'Mine','comm.load_failed':'Could not load data 😢','comm.map_btn':'🗺 Map','comm.center_gps':'📡 Current','comm.center_receipt':'🧾 My receipts','comm.gps_wait':'Cannot get current location. Allow location access or switch to "My receipts" 📍',
+    'comm.need_location':'Please register your store location first 📍','comm.aggregating':'Aggregating nearby stores...','comm.no_nearby':'No data from other users within 5km.<br>Comparison data grows as more users join 🌱','comm.nearby_unvisited':'📍 Within 5km · {n} unvisited','comm.visited_stats':'🟢 Stores you visited · user stats','comm.visited_badge':'Visited','comm.unvisited_badge':'Unvisited','comm.date_unknown':'Date unknown','comm.date_md':'{m}/{d}','comm.visitors':'{n} visitors','comm.receipts_n':'{n}','comm.avg_yen':'Avg ¥{v}','comm.last_visit':'Last visit: {d}','comm.popular_items':'📋 Popular items','comm.collapse':'Collapse','comm.my_vs_avg':'📊 My spending vs all-user avg','comm.items_n':'{n}','comm.cheaper':'Below average','comm.pricier':'Above average','comm.mine_label':'Mine','comm.load_failed':'Could not load data 😢','comm.map_btn':'🗺 Map','comm.center_gps':'📡 Current','comm.center_receipt':'🧾 My receipts','comm.gps_wait':'Cannot get current location. Allow location access or switch to "My receipts" 📍','pdf.title':'📄 Download PDF','pdf.content_label':'Include','pdf.both':'Photo + data','pdf.data':'Data','pdf.photo':'Original photo','pdf.photo_note':'Original photo only exists for scanned receipts (not manual entries)','pdf.download':'⬇ Download PDF','pdf.making':'Generating...','pdf.done':'PDF saved 📄','pdf.fail':'Failed to create PDF 😢','pdf.no_photo':'No photo','pdf.btn':'📄 Save as PDF','pdf.period_btn':'📄 This period as PDF',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Meal','cat.snack':'Snacks','cat.fuel':'Fuel','cat.park':'Parking','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
@@ -15039,7 +15059,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','pc.found_count':'在{n}个品项中发现价格差异','pc.per_unit':'/ 每个','pc.per_hour':'/ 每小时','pc.best':'最低价','pc.savings':'最多可省¥{amt}（{pct}%）','pc.parking_tag':'每小时','pc.parking_note':'⏱ 因停车时长不同，按每小时单价比较','park.time_label':'停车时间','park.hours':'小时','park.minutes':'分钟','park.hint':'⏱ 停车费按每小时单价比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.iw_visit':'到访','rmap.iw_avg':'平均','rmap.view_detail':'📋 查看明细 →','rmap.per_unit':'/个','rmap.no_items':'无商品数据','rmap.avg_per':'每次平均',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
-    'comm.need_location':'请先登记你的店铺位置 📍','comm.aggregating':'正在统计周边店铺...','comm.no_nearby':'5km内暂无其他用户数据。<br>用户越多，比较数据越丰富 🌱','comm.nearby_unvisited':'📍 5km内·未访问 {n}家','comm.visited_stats':'🟢 你访问过的店铺·用户统计','comm.visited_badge':'已访问','comm.unvisited_badge':'未访问','comm.date_unknown':'日期不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人访问','comm.receipts_n':'{n}','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最近访问: {d}','comm.popular_items':'📋 热门品项','comm.collapse':'收起','comm.my_vs_avg':'📊 我的支出 vs 全体用户平均','comm.items_n':'{n}','comm.cheaper':'低于平均','comm.pricier':'高于平均','comm.mine_label':'我','comm.load_failed':'数据加载失败 😢','comm.map_btn':'🗺 地图','comm.center_gps':'📡 当前位置','comm.center_receipt':'🧾 我的小票位置','comm.gps_wait':'无法获取当前位置。请允许定位或切换到"我的小票位置" 📍',
+    'comm.need_location':'请先登记你的店铺位置 📍','comm.aggregating':'正在统计周边店铺...','comm.no_nearby':'5km内暂无其他用户数据。<br>用户越多，比较数据越丰富 🌱','comm.nearby_unvisited':'📍 5km内·未访问 {n}家','comm.visited_stats':'🟢 你访问过的店铺·用户统计','comm.visited_badge':'已访问','comm.unvisited_badge':'未访问','comm.date_unknown':'日期不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人访问','comm.receipts_n':'{n}','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最近访问: {d}','comm.popular_items':'📋 热门品项','comm.collapse':'收起','comm.my_vs_avg':'📊 我的支出 vs 全体用户平均','comm.items_n':'{n}','comm.cheaper':'低于平均','comm.pricier':'高于平均','comm.mine_label':'我','comm.load_failed':'数据加载失败 😢','comm.map_btn':'🗺 地图','comm.center_gps':'📡 当前位置','comm.center_receipt':'🧾 我的小票位置','comm.gps_wait':'无法获取当前位置。请允许定位或切换到"我的小票位置" 📍','pdf.title':'📄 下载PDF','pdf.content_label':'包含内容','pdf.both':'照片+数据','pdf.data':'数据','pdf.photo':'原始照片','pdf.photo_note':'原始照片仅扫描的小票才有（手动录入除外）','pdf.download':'⬇ 下载PDF','pdf.making':'生成中...','pdf.done':'已保存PDF 📄','pdf.fail':'PDF生成失败 😢','pdf.no_photo':'没有照片','pdf.btn':'📄 保存为PDF','pdf.period_btn':'📄 本期间小票PDF',
     'cat.all':'全部','cat.food':'食品','cat.eat':'用餐','cat.snack':'零食','cat.fuel':'加油','cat.park':'停车','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
@@ -29966,9 +29986,199 @@ function ctOpenSns(key){
   window.open(url, '_blank', 'noopener');
 }
 
+/* ══════════════════════════════
+   영수증 PDF 내보내기 (build 580) — 외부 라이브러리 없이 캔버스→JPEG→PDF
+   · 내용 선택: data(정리본) / photo(원본사진) / both
+   · 범위: 1건(single, 편집모달) / 기간 묶음(period, 월별리포트)
+   · 원본사진은 비공개 버킷 → signed URL → blob URL 로 로드(canvas taint 회피) → JPEG 정규화
+══════════════════════════════ */
+var _pdfContent = 'both';   // 'data' | 'photo' | 'both'
+var _pdfCtx = null;         // { scope, receipts:[r], label }
+
+function _downloadBlob(blob, filename){
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ try{ document.body.removeChild(a); }catch(e){} URL.revokeObjectURL(url); }, 1500);
+}
+function _jpegBytesFromDataUrl(durl){
+  var b64 = durl.split(',')[1] || '';
+  var bin = atob(b64), u8 = new Uint8Array(bin.length);
+  for (var i=0;i<bin.length;i++) u8[i] = bin.charCodeAt(i);
+  return u8;
+}
+// pages: [{jpeg:Uint8Array, w, h}] → PDF Blob (각 JPEG = 1페이지)
+function _jpegToPdf(pages){
+  var chunks = [], pos = 0, offsets = [];
+  function _b(s){ var a=new Uint8Array(s.length); for(var i=0;i<s.length;i++) a[i]=s.charCodeAt(i)&0xff; return a; }
+  function put(s){ var u8=_b(s); chunks.push(u8); pos+=u8.length; }
+  function putRaw(u8){ chunks.push(u8); pos+=u8.length; }
+  function mark(n){ offsets[n]=pos; }
+  put('%PDF-1.4\n%\xFF\xFF\xFF\xFF\n');
+  var objCount = 2 + pages.length*3, kids = [];
+  for (var i=0;i<pages.length;i++) kids.push((3+i*3)+' 0 R');
+  mark(1); put('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  mark(2); put('2 0 obj\n<< /Type /Pages /Kids ['+kids.join(' ')+'] /Count '+pages.length+' >>\nendobj\n');
+  for (var j=0;j<pages.length;j++){
+    var p = pages[j], pageN=3+j*3, contN=4+j*3, imgN=5+j*3;
+    var maxW = 595, pw, ph;
+    if (p.w > maxW){ pw = maxW; ph = Math.round(p.h*maxW/p.w); } else { pw=p.w; ph=p.h; }
+    var content = 'q\n'+pw+' 0 0 '+ph+' 0 0 cm\n/Im0 Do\nQ\n';
+    mark(pageN); put(pageN+' 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 '+pw+' '+ph+'] /Resources << /XObject << /Im0 '+imgN+' 0 R >> >> /Contents '+contN+' 0 R >>\nendobj\n');
+    mark(contN); put(contN+' 0 obj\n<< /Length '+content.length+' >>\nstream\n'+content+'endstream\nendobj\n');
+    mark(imgN); put(imgN+' 0 obj\n<< /Type /XObject /Subtype /Image /Width '+p.w+' /Height '+p.h+' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length '+p.jpeg.length+' >>\nstream\n');
+    putRaw(p.jpeg); put('\nendstream\nendobj\n');
+  }
+  var xrefPos = pos, total = objCount+1;
+  var xref = 'xref\n0 '+total+'\n0000000000 65535 f \n';
+  for (var n=1;n<=objCount;n++) xref += ('0000000000'+(offsets[n]||0)).slice(-10)+' 00000 n \n';
+  put(xref);
+  put('trailer\n<< /Size '+total+' /Root 1 0 R >>\nstartxref\n'+xrefPos+'\n%%EOF');
+  return new Blob(chunks, {type:'application/pdf'});
+}
+function _pdfClip(ctx, str, maxW){
+  str = String(str==null?'':str);
+  if (ctx.measureText(str).width <= maxW) return str;
+  var s = str;
+  while (s.length>1 && ctx.measureText(s+'…').width > maxW) s = s.slice(0,-1);
+  return s+'…';
+}
+// 영수증 데이터 → 캔버스(정리본). 일본어 등은 브라우저 폰트로 렌더되어 PDF에 이미지로 박힘.
+function _renderReceiptCanvas(r){
+  var SC = 2, W = 380, pad = 22;
+  var items = (r.items||[]).filter(function(it){ return it.name || it.price; });
+  var headH = 132, itemsHdr = 26, rowH = 22, totalH = 60, memoH = (r.memo? 30:0), footH = 40;
+  var H = headH + itemsHdr + items.length*rowH + 14 + totalH + memoH + footH;
+  var cv = document.createElement('canvas'); cv.width=W*SC; cv.height=H*SC;
+  var x = cv.getContext('2d'); x.scale(SC,SC);
+  x.fillStyle='#ffffff'; x.fillRect(0,0,W,H);
+  var green='#16A87A', t1='#1A1F26', t3='#8A8F99';
+  x.fillStyle=green; x.fillRect(0,0,W,8);
+  x.textBaseline='alphabetic'; x.textAlign='left';
+  var cy=36;
+  x.fillStyle=t1; x.font='800 19px sans-serif'; x.fillText(_pdfClip(x, r.store||'-', W-pad*2), pad, cy); cy+=24;
+  x.fillStyle=t3; x.font='600 12px sans-serif'; x.fillText(r.date||'', pad, cy); cy+=20;
+  var catLabel = (typeof CAT_LABEL!=='undefined' && CAT_LABEL[r.cat]) ? CAT_LABEL[r.cat] : (r.cat||'');
+  var payLabel = (r.pay && typeof PAY_LABEL!=='undefined' && PAY_LABEL[r.pay]) ? PAY_LABEL[r.pay] : '';
+  x.fillText(_pdfClip(x, catLabel + (payLabel? '  ·  '+payLabel:''), W-pad*2), pad, cy);
+  cy = headH-12; x.strokeStyle='#E5E7EB'; x.lineWidth=1; x.beginPath(); x.moveTo(pad,cy); x.lineTo(W-pad,cy); x.stroke();
+  cy = headH + 6;
+  x.fillStyle=t3; x.font='700 11px sans-serif'; x.fillText(t('ocr.items_recognized'), pad, cy);
+  cy += itemsHdr - 6;
+  x.font='500 12.5px sans-serif';
+  items.forEach(function(it){
+    var q = it.qty||1, nm = (it.name||'-') + (q>1? ' ×'+q : '');
+    x.fillStyle=t1; x.textAlign='left'; x.fillText(_pdfClip(x, nm, W-pad*2-92), pad, cy);
+    x.textAlign='right'; x.fillText('¥'+Number(it.price||0).toLocaleString(), W-pad, cy);
+    cy += rowH;
+  });
+  x.textAlign='left'; cy += 10;
+  x.strokeStyle='#E5E7EB'; x.beginPath(); x.moveTo(pad,cy); x.lineTo(W-pad,cy); x.stroke();
+  cy += 28;
+  x.fillStyle=green; x.font='800 16px sans-serif'; x.textAlign='left'; x.fillText(t('ocr.total'), pad, cy);
+  x.textAlign='right'; x.font='900 22px sans-serif'; x.fillText('¥'+Number(r.total||0).toLocaleString(), W-pad, cy);
+  x.textAlign='left'; cy += 28;
+  if (r.memo){ x.fillStyle=t3; x.font='500 11.5px sans-serif'; x.fillText(_pdfClip(x, '📝 '+r.memo, W-pad*2), pad, cy); }
+  x.fillStyle=t3; x.font='600 10px sans-serif'; x.textAlign='center'; x.fillText('RetWork · retwork.jp', W/2, H-14); x.textAlign='left';
+  return cv;
+}
+// 원본 사진(비공개 버킷) → JPEG 캔버스. 없거나 실패 시 null.
+async function _receiptPhotoCanvas(imagePath){
+  if (!imagePath || !_sb) return null;
+  try {
+    var sg = await _sb.storage.from('receipt-images').createSignedUrl(imagePath, 120);
+    var url = sg && sg.data && sg.data.signedUrl; if (!url) return null;
+    var resp = await fetch(url); if (!resp.ok) return null;
+    var blob = await resp.blob(), burl = URL.createObjectURL(blob);
+    var img = await new Promise(function(res,rej){ var im=new Image(); im.onload=function(){res(im);}; im.onerror=rej; im.src=burl; });
+    var w = img.naturalWidth||img.width, h = img.naturalHeight||img.height, maxW=1000, sc = w>maxW? maxW/w : 1;
+    var cv = document.createElement('canvas'); cv.width=Math.round(w*sc); cv.height=Math.round(h*sc);
+    cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+    URL.revokeObjectURL(burl);
+    return cv;
+  } catch(e){ console.warn('[pdf photo]', e); return null; }
+}
+function _canvasToJpegPage(cv){
+  var durl = cv.toDataURL('image/jpeg', 0.85);
+  return { jpeg: _jpegBytesFromDataUrl(durl), w: cv.width, h: cv.height };
+}
+function openReceiptPdf(id){
+  var r = DB.find(function(x){ return String(x.id)===String(id); });
+  if (!r) return;
+  _pdfCtx = { scope:'single', receipts:[r], label:(r.store||'') + (r.date? ' · '+r.date : '') };
+  _openPdfSheet();
+}
+function openPeriodPdf(){
+  var y = (typeof _mrY!=='undefined'&&_mrY)?_mrY:(new Date()).getFullYear();
+  var m = (typeof _mrM!=='undefined'&&_mrM)?_mrM:((new Date()).getMonth()+1);
+  var list, lab;
+  if (typeof _periodForMonth==='function'){
+    var rg=_periodForMonth(y,m), s=_ymd(rg.start), e=_ymd(rg.endExcl);
+    list = DB.filter(function(r){ return r.date>=s && r.date<e; });
+    lab = (typeof _periodLabelForMonth==='function' && _periodLabelForMonth(y,m)) || (y+'/'+m);
+  } else {
+    var key=y+'-'+String(m).padStart(2,'0');
+    list = DB.filter(function(r){ return (r.date||'').startsWith(key); });
+    lab = y+'/'+m;
+  }
+  list = list.slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  if (!list.length){ showToast(t('toast.no_receipts')); return; }
+  _pdfCtx = { scope:'period', receipts:list, label: lab + ' · ' + t('mdet.count_n',{n:list.length}) };
+  _openPdfSheet();
+}
+function _openPdfSheet(){
+  var lab = document.getElementById('pdf-export-target');
+  if (lab) lab.textContent = (_pdfCtx&&_pdfCtx.label)||'';
+  _setPdfContent(_pdfContent);
+  openOv('ov-pdf-export');
+}
+function _setPdfContent(c){
+  _pdfContent = c;
+  ['data','photo','both'].forEach(function(k){
+    var b = document.getElementById('pdfc-'+k); if (!b) return;
+    b.style.background = (k===c)?'var(--green)':'var(--bg-2)';
+    b.style.color = (k===c)?'#fff':'var(--text-2)';
+  });
+}
+async function runPdfExport(){
+  if (!_pdfCtx) return;
+  var btn = document.getElementById('pdf-export-go');
+  if (btn){ btn.disabled=true; btn.style.opacity='.6'; btn.textContent=t('pdf.making'); }
+  try {
+    var wantData = (_pdfContent==='data'||_pdfContent==='both');
+    var wantPhoto = (_pdfContent==='photo'||_pdfContent==='both');
+    var photoMap = {};
+    if (wantPhoto && _sb){
+      var ids = _pdfCtx.receipts.map(function(r){ return r.id; }).filter(Boolean);
+      if (ids.length){
+        try { var q = await _sb.from('receipts').select('id,image_url').in('id', ids);
+          (q.data||[]).forEach(function(row){ if(row.image_url) photoMap[String(row.id)] = row.image_url; }); } catch(e){}
+      }
+    }
+    var pages = [];
+    for (var i=0;i<_pdfCtx.receipts.length;i++){
+      var r = _pdfCtx.receipts[i];
+      if (wantData) pages.push(_canvasToJpegPage(_renderReceiptCanvas(r)));
+      if (wantPhoto){
+        var path = photoMap[String(r.id)];
+        if (path){ var pcv = await _receiptPhotoCanvas(path); if (pcv) pages.push(_canvasToJpegPage(pcv)); }
+      }
+    }
+    if (!pages.length){ showToast(t('pdf.no_photo')); if(btn){btn.disabled=false;btn.style.opacity='';btn.textContent=t('pdf.download');} return; }
+    var pdf = _jpegToPdf(pages);
+    var stamp = ((_pdfCtx.receipts[0] && _pdfCtx.receipts[0].date) || 'export').replace(/[^0-9]/g,'');
+    var fn = (_pdfCtx.scope==='period' ? 'RetWork_receipts_' : 'RetWork_receipt_') + stamp + '.pdf';
+    _downloadBlob(pdf, fn);
+    showToast(t('pdf.done'));
+    closeOv('ov-pdf-export');
+  } catch(e){ console.warn('[pdf export]', e); showToast(t('pdf.fail')); }
+  if (btn){ btn.disabled=false; btn.style.opacity=''; btn.textContent=t('pdf.download'); }
+}
+
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 579;
+window.__APP_BUILD__ = 580;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
