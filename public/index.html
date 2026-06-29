@@ -1621,7 +1621,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <input class="pc-search" id="pc-search-input" placeholder="品目を検索..." data-i18n-placeholder="rmap.search_ph" oninput="renderPriceComparison(this.value)">
         <div id="price-compare-content"></div>
       </div>
-      <div id="pc-nearby" style="display:none;"><div id="price-community-content"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;" data-i18n="rmap.loading">読み込み中...</div></div></div>
+      <div id="pc-nearby" style="display:none;">
+        <!-- 중심 기준 토글: 현재 GPS / 내 영수증 위치 (build 579) -->
+        <div style="display:flex;gap:6px;margin-bottom:10px;">
+          <button id="commctr-gps" onclick="setCommCenterMode('gps')" data-i18n="comm.center_gps" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;font-family:var(--font);">📡 現在地</button>
+          <button id="commctr-receipt" onclick="setCommCenterMode('receipt')" data-i18n="comm.center_receipt" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);font-family:var(--font);">🧾 レシート位置</button>
+        </div>
+        <div id="price-community-content"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;" data-i18n="rmap.loading">読み込み中...</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -14230,7 +14237,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 マイ店舗','rmap.pc_nearby':'📡 周辺未訪問','rmap.pc_info':'💡 <strong style="color:var(--text-2);">マイ店舗比較</strong> — 複数の店で買った<strong style="color:var(--text-2);">同じ商品</strong>の価格を比較します。<br>より安く買える店をお知らせします。','rmap.pc_empty':'同じ商品を複数の店で買うと比較が表示されます','pc.found_count':'{n}件で価格差を発見','pc.per_unit':'/ 1個','pc.per_hour':'/ 1時間','pc.best':'最安','pc.savings':'最大¥{amt}（{pct}%）節約可能','pc.parking_tag':'時間単価','pc.parking_note':'⏱ 駐車時間が異なるため1時間あたりの単価で比較しています','park.time_label':'駐車時間','park.hours':'時間','park.minutes':'分','park.hint':'⏱ 駐車料金は1時間あたりの単価で比較されます','rmap.search_no_result':'「{kw}」検索結果なし','rmap.edit_loc':'✏️ 位置修正','rmap.set_loc':'📍 位置設定','rmap.tap_go':'📍 タップで移動','rmap.no_pin':'位置未登録','rmap.total':'合計',
     'rmap.iw_visit':'訪問','rmap.iw_avg':'平均','rmap.view_detail':'📋 詳細を見る →','rmap.per_unit':'/個','rmap.no_items':'品目データなし','rmap.avg_per':'1回平均',
     'rmap.empty':'レシートをスキャンすると店舗がここに表示されます','rmap.search_ph':'品目を検索...','rmap.loading':'読み込み中...',
-    'comm.need_location':'まず自分の店舗位置を登録してください 📍','comm.aggregating':'周辺店舗を集計中...','comm.no_nearby':'半径5km以内に他ユーザーのデータがありません。<br>ユーザーが増えるほど比較データが貯まります 🌱','comm.nearby_unvisited':'📍 半径5km・未訪問 {n}件','comm.visited_stats':'🟢 訪問した店舗・ユーザー統計','comm.visited_badge':'訪問済み','comm.unvisited_badge':'未訪問','comm.date_unknown':'日付不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人訪問','comm.receipts_n':'{n}件','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最終訪問: {d}','comm.popular_items':'📋 人気品目','comm.collapse':'閉じる','comm.my_vs_avg':'📊 自分の支出 vs 全ユーザー平均','comm.items_n':'{n}個','comm.cheaper':'平均より安い','comm.pricier':'平均より高い','comm.mine_label':'自分','comm.load_failed':'データを取得できませんでした 😢','comm.map_btn':'🗺 地図',
+    'comm.need_location':'まず自分の店舗位置を登録してください 📍','comm.aggregating':'周辺店舗を集計中...','comm.no_nearby':'半径5km以内に他ユーザーのデータがありません。<br>ユーザーが増えるほど比較データが貯まります 🌱','comm.nearby_unvisited':'📍 半径5km・未訪問 {n}件','comm.visited_stats':'🟢 訪問した店舗・ユーザー統計','comm.visited_badge':'訪問済み','comm.unvisited_badge':'未訪問','comm.date_unknown':'日付不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人訪問','comm.receipts_n':'{n}件','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最終訪問: {d}','comm.popular_items':'📋 人気品目','comm.collapse':'閉じる','comm.my_vs_avg':'📊 自分の支出 vs 全ユーザー平均','comm.items_n':'{n}個','comm.cheaper':'平均より安い','comm.pricier':'平均より高い','comm.mine_label':'自分','comm.load_failed':'データを取得できませんでした 😢','comm.map_btn':'🗺 地図','comm.center_gps':'📡 現在地','comm.center_receipt':'🧾 レシート位置','comm.gps_wait':'現在地を取得できません。位置情報を許可するか「レシート位置」に切り替えてください 📍',
     // 카테고리 라벨 (영수증 기록)
     'cat.all':'すべて','cat.food':'食料品','cat.eat':'食事','cat.snack':'お菓子','cat.fuel':'給油','cat.park':'駐車','cat.cafe':'カフェ','cat.life':'生活雑貨',
     'cat.med':'医療・健康','cat.shop':'ショッピング','cat.ent':'娯楽','cat.tra':'交通',
@@ -14508,7 +14515,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 내 가게','rmap.pc_nearby':'📡 주변 미방문','rmap.pc_info':'💡 <strong style="color:var(--text-2);">내 가게 비교</strong> — 내가 여러 가게에서 산 <strong style="color:var(--text-2);">같은 품목</strong>의 가격을 비교해요.<br>더 싸게 살 수 있는 가게를 알려드려요.','rmap.pc_empty':'같은 물건을 여러 가게에서 사면 비교가 나타나요','pc.found_count':'{n}개 품목에서 가격 차이 발견','pc.per_unit':'/ 1개','pc.per_hour':'/ 1시간','pc.best':'최저가','pc.savings':'최대 ¥{amt} ({pct}%) 절약 가능','pc.parking_tag':'시간단가','pc.parking_note':'⏱ 주차시간이 달라 시간당 단가로 비교해요','park.time_label':'주차시간','park.hours':'시간','park.minutes':'분','park.hint':'⏱ 주차요금은 시간당 단가로 비교돼요','rmap.search_no_result':'"{kw}" 검색 결과 없음','rmap.edit_loc':'✏️ 위치 수정','rmap.set_loc':'📍 위치 설정','rmap.tap_go':'📍 탭해서 이동','rmap.no_pin':'위치 미등록','rmap.total':'합계',
     'rmap.iw_visit':'방문','rmap.iw_avg':'평균','rmap.view_detail':'📋 내역 보기 →','rmap.per_unit':'/1개','rmap.no_items':'품목 데이터 없음','rmap.avg_per':'방문 평균',
     'rmap.empty':'영수증을 스캔하면 가게가 여기 표시돼요','rmap.search_ph':'품목 검색...','rmap.loading':'불러오는 중...',
-    'comm.need_location':'내 가게 위치를 먼저 등록해주세요 📍','comm.aggregating':'주변 가게 집계 중...','comm.no_nearby':'반경 5km 내 다른 유저 데이터가 없어요.<br>유저가 늘수록 비교 데이터가 쌓여요 🌱','comm.nearby_unvisited':'📍 반경 5km · 미방문 {n}곳','comm.visited_stats':'🟢 내가 방문한 가게 · 유저 통계','comm.visited_badge':'방문함','comm.unvisited_badge':'미방문','comm.date_unknown':'날짜 미상','comm.date_md':'{m}월 {d}일','comm.visitors':'{n}명 방문','comm.receipts_n':'{n}건','comm.avg_yen':'평균 ¥{v}','comm.last_visit':'최근 방문: {d}','comm.popular_items':'📋 인기 품목','comm.collapse':'접기','comm.my_vs_avg':'📊 내 지출 vs 전체 유저 평균','comm.items_n':'{n}개','comm.cheaper':'평균보다 저렴','comm.pricier':'평균보다 비쌈','comm.mine_label':'내','comm.load_failed':'데이터를 불러오지 못했어요 😢','comm.map_btn':'🗺 지도',
+    'comm.need_location':'내 가게 위치를 먼저 등록해주세요 📍','comm.aggregating':'주변 가게 집계 중...','comm.no_nearby':'반경 5km 내 다른 유저 데이터가 없어요.<br>유저가 늘수록 비교 데이터가 쌓여요 🌱','comm.nearby_unvisited':'📍 반경 5km · 미방문 {n}곳','comm.visited_stats':'🟢 내가 방문한 가게 · 유저 통계','comm.visited_badge':'방문함','comm.unvisited_badge':'미방문','comm.date_unknown':'날짜 미상','comm.date_md':'{m}월 {d}일','comm.visitors':'{n}명 방문','comm.receipts_n':'{n}건','comm.avg_yen':'평균 ¥{v}','comm.last_visit':'최근 방문: {d}','comm.popular_items':'📋 인기 품목','comm.collapse':'접기','comm.my_vs_avg':'📊 내 지출 vs 전체 유저 평균','comm.items_n':'{n}개','comm.cheaper':'평균보다 저렴','comm.pricier':'평균보다 비쌈','comm.mine_label':'내','comm.load_failed':'데이터를 불러오지 못했어요 😢','comm.map_btn':'🗺 지도','comm.center_gps':'📡 현재 위치','comm.center_receipt':'🧾 내 영수증 위치','comm.gps_wait':'현재 위치를 가져올 수 없어요. 위치 권한을 허용하거나 "내 영수증 위치"로 전환하세요 📍',
     'cat.all':'전체','cat.food':'식료품','cat.eat':'식사','cat.snack':'군것질·과자','cat.fuel':'주유','cat.park':'주차','cat.cafe':'카페','cat.life':'생활용품',
     'cat.med':'의료·건강','cat.shop':'쇼핑','cat.ent':'엔터/문화','cat.tra':'교통',
     'cat.travel':'여행','cat.fixed':'고정비','cat.hobby':'취미','cat.beauty':'미용',
@@ -14770,7 +14777,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 My stores','rmap.pc_nearby':'📡 Nearby','rmap.pc_info':'💡 <strong style="color:var(--text-2);">My store compare</strong> — compares prices of the <strong style="color:var(--text-2);">same items</strong> you bought at different stores.<br>We show you where to buy cheaper.','rmap.pc_empty':'Buy the same item at multiple stores to see a comparison','pc.found_count':'Price differences found in {n} item(s)','pc.per_unit':'/ each','pc.per_hour':'/ hour','pc.best':'Lowest','pc.savings':'Save up to ¥{amt} ({pct}%)','pc.parking_tag':'hourly','pc.parking_note':'⏱ Compared by hourly rate since parking durations differ','park.time_label':'Parking time','park.hours':'h','park.minutes':'min','park.hint':'⏱ Parking fees are compared by hourly rate','rmap.search_no_result':'No results for "{kw}"','rmap.edit_loc':'✏️ Edit location','rmap.set_loc':'📍 Set location','rmap.tap_go':'📍 Tap to view','rmap.no_pin':'No location','rmap.total':'Total',
     'rmap.iw_visit':'Visits','rmap.iw_avg':'Average','rmap.view_detail':'📋 View detail →','rmap.per_unit':'/ea','rmap.no_items':'No item data','rmap.avg_per':'Avg/visit',
     'rmap.empty':'Scan a receipt and stores appear here','rmap.search_ph':'Search item...','rmap.loading':'Loading...',
-    'comm.need_location':'Please register your store location first 📍','comm.aggregating':'Aggregating nearby stores...','comm.no_nearby':'No data from other users within 5km.<br>Comparison data grows as more users join 🌱','comm.nearby_unvisited':'📍 Within 5km · {n} unvisited','comm.visited_stats':'🟢 Stores you visited · user stats','comm.visited_badge':'Visited','comm.unvisited_badge':'Unvisited','comm.date_unknown':'Date unknown','comm.date_md':'{m}/{d}','comm.visitors':'{n} visitors','comm.receipts_n':'{n}','comm.avg_yen':'Avg ¥{v}','comm.last_visit':'Last visit: {d}','comm.popular_items':'📋 Popular items','comm.collapse':'Collapse','comm.my_vs_avg':'📊 My spending vs all-user avg','comm.items_n':'{n}','comm.cheaper':'Below average','comm.pricier':'Above average','comm.mine_label':'Mine','comm.load_failed':'Could not load data 😢','comm.map_btn':'🗺 Map',
+    'comm.need_location':'Please register your store location first 📍','comm.aggregating':'Aggregating nearby stores...','comm.no_nearby':'No data from other users within 5km.<br>Comparison data grows as more users join 🌱','comm.nearby_unvisited':'📍 Within 5km · {n} unvisited','comm.visited_stats':'🟢 Stores you visited · user stats','comm.visited_badge':'Visited','comm.unvisited_badge':'Unvisited','comm.date_unknown':'Date unknown','comm.date_md':'{m}/{d}','comm.visitors':'{n} visitors','comm.receipts_n':'{n}','comm.avg_yen':'Avg ¥{v}','comm.last_visit':'Last visit: {d}','comm.popular_items':'📋 Popular items','comm.collapse':'Collapse','comm.my_vs_avg':'📊 My spending vs all-user avg','comm.items_n':'{n}','comm.cheaper':'Below average','comm.pricier':'Above average','comm.mine_label':'Mine','comm.load_failed':'Could not load data 😢','comm.map_btn':'🗺 Map','comm.center_gps':'📡 Current','comm.center_receipt':'🧾 My receipts','comm.gps_wait':'Cannot get current location. Allow location access or switch to "My receipts" 📍',
     'cat.all':'All','cat.food':'Groceries','cat.eat':'Meal','cat.snack':'Snacks','cat.fuel':'Fuel','cat.park':'Parking','cat.cafe':'Cafe','cat.life':'Daily',
     'cat.med':'Health','cat.shop':'Shopping','cat.ent':'Entertainment','cat.tra':'Transit',
     'cat.travel':'Travel','cat.fixed':'Fixed','cat.hobby':'Hobby','cat.beauty':'Beauty',
@@ -15032,7 +15039,7 @@ var I18N = {
     'rmap.pc_mine':'🧾 我的店铺','rmap.pc_nearby':'📡 周边未访问','rmap.pc_info':'💡 <strong style="color:var(--text-2);">我的店铺比价</strong> — 比较你在多家店铺购买的<strong style="color:var(--text-2);">相同商品</strong>价格。<br>告诉你哪里买更便宜。','rmap.pc_empty':'在多家店铺购买相同商品后会显示比较','pc.found_count':'在{n}个品项中发现价格差异','pc.per_unit':'/ 每个','pc.per_hour':'/ 每小时','pc.best':'最低价','pc.savings':'最多可省¥{amt}（{pct}%）','pc.parking_tag':'每小时','pc.parking_note':'⏱ 因停车时长不同，按每小时单价比较','park.time_label':'停车时间','park.hours':'小时','park.minutes':'分钟','park.hint':'⏱ 停车费按每小时单价比较','rmap.search_no_result':'未找到 "{kw}"','rmap.edit_loc':'✏️ 修改位置','rmap.set_loc':'📍 设置位置','rmap.tap_go':'📍 点击查看','rmap.no_pin':'未登记位置','rmap.total':'合计',
     'rmap.iw_visit':'到访','rmap.iw_avg':'平均','rmap.view_detail':'📋 查看明细 →','rmap.per_unit':'/个','rmap.no_items':'无商品数据','rmap.avg_per':'每次平均',
     'rmap.empty':'扫描票据后店铺会显示在这里','rmap.search_ph':'搜索商品...','rmap.loading':'加载中...',
-    'comm.need_location':'请先登记你的店铺位置 📍','comm.aggregating':'正在统计周边店铺...','comm.no_nearby':'5km内暂无其他用户数据。<br>用户越多，比较数据越丰富 🌱','comm.nearby_unvisited':'📍 5km内·未访问 {n}家','comm.visited_stats':'🟢 你访问过的店铺·用户统计','comm.visited_badge':'已访问','comm.unvisited_badge':'未访问','comm.date_unknown':'日期不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人访问','comm.receipts_n':'{n}','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最近访问: {d}','comm.popular_items':'📋 热门品项','comm.collapse':'收起','comm.my_vs_avg':'📊 我的支出 vs 全体用户平均','comm.items_n':'{n}','comm.cheaper':'低于平均','comm.pricier':'高于平均','comm.mine_label':'我','comm.load_failed':'数据加载失败 😢','comm.map_btn':'🗺 地图',
+    'comm.need_location':'请先登记你的店铺位置 📍','comm.aggregating':'正在统计周边店铺...','comm.no_nearby':'5km内暂无其他用户数据。<br>用户越多，比较数据越丰富 🌱','comm.nearby_unvisited':'📍 5km内·未访问 {n}家','comm.visited_stats':'🟢 你访问过的店铺·用户统计','comm.visited_badge':'已访问','comm.unvisited_badge':'未访问','comm.date_unknown':'日期不明','comm.date_md':'{m}月{d}日','comm.visitors':'{n}人访问','comm.receipts_n':'{n}','comm.avg_yen':'平均 ¥{v}','comm.last_visit':'最近访问: {d}','comm.popular_items':'📋 热门品项','comm.collapse':'收起','comm.my_vs_avg':'📊 我的支出 vs 全体用户平均','comm.items_n':'{n}','comm.cheaper':'低于平均','comm.pricier':'高于平均','comm.mine_label':'我','comm.load_failed':'数据加载失败 😢','comm.map_btn':'🗺 地图','comm.center_gps':'📡 当前位置','comm.center_receipt':'🧾 我的小票位置','comm.gps_wait':'无法获取当前位置。请允许定位或切换到"我的小票位置" 📍',
     'cat.all':'全部','cat.food':'食品','cat.eat':'用餐','cat.snack':'零食','cat.fuel':'加油','cat.park':'停车','cat.cafe':'咖啡','cat.life':'生活用品',
     'cat.med':'医疗保健','cat.shop':'购物','cat.ent':'娱乐','cat.tra':'交通',
     'cat.travel':'旅行','cat.fixed':'固定支出','cat.hobby':'兴趣','cat.beauty':'美容',
@@ -15558,22 +15565,46 @@ function _ctMakeUnvisitedSVG() {
 var _commCache = null;      // 마지막 조회 결과 캐시
 var _commCacheKey = '';     // 캐시 키 (centerLat,centerLng)
 
+/* build 579 — 주변 미방문 중심 기준: 'gps'(현재 위치) / 'receipt'(내 영수증 위치) 토글 */
+var _commCenterMode = (localStorage.getItem('riq_comm_center') === 'receipt') ? 'receipt' : 'gps';
+function _updateCommCenterToggleUI(){
+  var g = document.getElementById('commctr-gps'), r = document.getElementById('commctr-receipt');
+  if (!g || !r) return;
+  var on = _commCenterMode;
+  g.style.background = on==='gps'     ? 'var(--green)' : 'var(--bg-2)';
+  g.style.color      = on==='gps'     ? '#fff'         : 'var(--text-2)';
+  r.style.background = on==='receipt' ? 'var(--green)' : 'var(--bg-2)';
+  r.style.color      = on==='receipt' ? '#fff'         : 'var(--text-2)';
+}
+function setCommCenterMode(mode){
+  _commCenterMode = (mode==='receipt') ? 'receipt' : 'gps';
+  localStorage.setItem('riq_comm_center', _commCenterMode);
+  _updateCommCenterToggleUI();
+  fetchAndRenderCommunity().then(function(){
+    if (typeof _ctShowUnvisitedMarkers === 'function') _ctShowUnvisitedMarkers();
+  });
+}
+
 async function fetchAndRenderCommunity() {
   var el = document.getElementById('price-community-content');
   if (!el) return;
+  _updateCommCenterToggleUI();
 
-  // ── 중심 좌표 계산 — 현재 GPS 우선(근처 유저끼리 데이터 공유되게), 없으면 내 영수증 좌표 평균 (build 578)
+  // ── 중심 좌표 계산 — 토글(gps/receipt) 기준 (build 578·579) ──
   var centerLat, centerLng;
-  if (_mapUserPos && _mapUserPos.lat && _mapUserPos.lng) {
-    centerLat = _mapUserPos.lat; centerLng = _mapUserPos.lng;
-  } else {
+  if (_commCenterMode === 'receipt') {
+    // 내 영수증 좌표 평균 = 생활권 기준
     var myPinned = DB.filter(function(r){ return r.lat && r.lng; });
-    if (myPinned.length === 0) {
-      el.innerHTML = _commEmptyMsg(t('comm.need_location'));
-      return;
-    }
+    if (myPinned.length === 0) { el.innerHTML = _commEmptyMsg(t('comm.need_location')); return; }
     centerLat = myPinned.reduce(function(a,r){return a+parseFloat(r.lat);},0) / myPinned.length;
     centerLng = myPinned.reduce(function(a,r){return a+parseFloat(r.lng);},0) / myPinned.length;
+  } else {
+    // 현재 GPS = 지금 내 주변
+    if (_mapUserPos && _mapUserPos.lat && _mapUserPos.lng) {
+      centerLat = _mapUserPos.lat; centerLng = _mapUserPos.lng;
+    } else {
+      el.innerHTML = _commEmptyMsg(t('comm.gps_wait')); return;
+    }
   }
   var cacheKey  = centerLat.toFixed(4) + ',' + centerLng.toFixed(4);
 
@@ -29937,7 +29968,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 578;
+window.__APP_BUILD__ = 579;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
