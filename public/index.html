@@ -30227,13 +30227,7 @@ function ctOpenSns(key){
 var _pdfContent = 'both';   // 'data' | 'photo' | 'both'
 var _pdfCtx = null;         // { scope, receipts:[r], label }
 
-function _downloadBlob(blob, filename){
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click();
-  setTimeout(function(){ try{ document.body.removeChild(a); }catch(e){} URL.revokeObjectURL(url); }, 1500);
-}
+// _downloadBlob 은 기존 정의(어드민 데이터셋 다운로드) 재사용 — 중복 정의 제거(b588)
 function _jpegBytesFromDataUrl(durl){
   var b64 = durl.split(',')[1] || '';
   var bin = atob(b64), u8 = new Uint8Array(bin.length);
@@ -30587,7 +30581,8 @@ function _pcsRender(el, rows, nameById){
   var now=Date.now(), MAXAGE=180*86400000;
   rows=rows.filter(function(r){ var tt=r.updated_at?new Date(r.updated_at).getTime():0; return !tt || (now-tt)<=MAXAGE; });   // 신선도 컷
   if(!rows.length){ el.innerHTML=_commEmptyMsg(t('rmap.pcs_none')); return; }
-  rows.forEach(function(r){ r._u = (r.qty_base>0) ? (r.price/r.qty_base) : r.price; });
+  // 같은 product_id 내 비교 → 원가(price) 기준 일관 정렬. (qty_base 단가와 원가를 섞으면 단가행이 항상 위로 올라가 순서가 틀어짐)
+  rows.forEach(function(r){ r._u = Number(r.price)||0; });
   var us=rows.map(function(r){return r._u;}).sort(function(a,b){return a-b;});
   var med=us[Math.floor(us.length/2)]||0;
   if(med>0) rows=rows.filter(function(r){ return r._u<=med*3; });   // 이상치 컷
@@ -30602,7 +30597,7 @@ function _pcsRender(el, rows, nameById){
     var nm=nameById[r.product_id]||'';
     var best=(i===0);
     var distTxt=(r._dist!=null&&!isNaN(r._dist))?('・'+(r._dist>=1000?(Math.round(r._dist/100)/10)+'km':Math.round(r._dist)+'m')):'';
-    var unitTxt=(r.qty_base>0)?('¥'+Math.round(r._u).toLocaleString()+t('rmap.per_unit')):('¥'+Number(r.price).toLocaleString());
+    var unitTxt='¥'+Number(r.price).toLocaleString();
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:0.5px solid '+(best?'var(--green)':'var(--border)')+';border-radius:12px;margin-bottom:8px;">'
       +'<div style="font-size:13px;font-weight:800;color:'+(best?'var(--green)':'var(--text-3)')+';width:20px;text-align:center;flex-shrink:0;">'+(i+1)+'</div>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(r.store_name)+(best?' <span style="font-size:9px;color:var(--green);font-weight:800;">'+t('rmap.pcs_best')+'</span>':'')+'</div>'
@@ -30738,7 +30733,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 587;
+window.__APP_BUILD__ = 588;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
