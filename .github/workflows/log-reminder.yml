@@ -1,0 +1,30 @@
+# 기록 리마인더 — 1일 1회 (JST 20:00, 저녁) / build 583
+# GitHub Actions cron → /api/cron/log-reminder
+#
+# JST(UTC+9) ↔ UTC:
+#   JST 20:00 → UTC 11:00
+#
+# 환경변수 (Repo Settings → Secrets and variables → Actions):
+#   CRON_SECRET    — Vercel 환경변수와 동일한 토큰
+#   PRODUCTION_URL — https://retwork.jp
+
+name: Log Reminder Push
+
+on:
+  schedule:
+    # JST 20:00 (저녁) = UTC 11:00
+    - cron: '0 11 * * *'
+  workflow_dispatch:  # 수동 테스트
+
+jobs:
+  send-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send log-reminder push
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            --fail-with-body \
+            "${{ secrets.PRODUCTION_URL }}/api/cron/log-reminder"
