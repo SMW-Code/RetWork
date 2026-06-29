@@ -11340,6 +11340,9 @@ async function preprocessReceiptImage(file, opts){
 async function handleImageFile(input) {
   if (!input.files || !input.files[0]) return;
   var file = input.files[0];
+  // build 577 — 같은 파일 재선택 시 onchange 미발생 방지: 파일 참조 확보 후 value 초기화.
+  //   (촬영/업로드 → 파싱 → 캔슬 → 같은 사진 재선택 시 분석 안 되던 문제)
+  try { input.value = ''; } catch(e){}
   closeOv('ov-scan');
 
   // 0) 전처리 → 1) 미리보기 → 2) OCR
@@ -29926,7 +29929,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 576;
+window.__APP_BUILD__ = 577;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
