@@ -2510,6 +2510,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <div class="si"><span class="lico" data-lico="globe" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
         <div class="si"><span class="lico" data-lico="coin" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.currency">통화</span><span class="si-val">¥ JPY</span></div>
         <div class="si"><span class="lico" data-lico="calendar" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.week_start">주 시작 요일</span><select id="week-start-select" onchange="setWeekStart(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;"><option value="0" data-i18n="week.sun">일요일</option><option value="1" data-i18n="week.mon">월요일</option></select></div>
+        <div class="si" style="align-items:flex-start;"><span class="lico" data-lico="calendar" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;margin-top:1px;"></span><div style="flex:1;min-width:0;"><div class="si-lbl" data-i18n="settings.month_start">월 시작일</div><div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;line-height:1.4;" data-i18n="settings.month_start_hint">급여일 기준으로 한 달을 잡으려면 변경하세요 (예: 25일)</div></div><select id="month-start-select" onchange="setMonthStartDay(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;align-self:center;margin-left:auto;"></select></div>
       </div>
       <div class="sg">
         <div class="si" onclick="toggleThemeAccordion()" style="cursor:pointer;">
@@ -2703,19 +2704,6 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="setBudgetQuick(80000)"  style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥80,000</div>
       <div onclick="setBudgetQuick(100000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥100,000</div>
       <div onclick="setBudgetQuick(150000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥150,000</div>
-    </div>
-    <!-- 월 시작일 (급여 주기) — build 575 -->
-    <div style="margin:4px 0 18px;border-top:1px solid var(--border);padding-top:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;" data-i18n="budget.start_day">月の開始日（給料日）</div>
-      <div style="display:flex;align-items:center;gap:8px;">
-        <input id="budget-start-day" type="number" min="1" max="28" step="1" placeholder="1"
-          onchange="setMonthStartDay(this.value)"
-          style="width:84px;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 12px;font-size:16px;font-weight:700;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);text-align:center;"
-          onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border-mid)'">
-        <span style="font-size:13px;color:var(--text-2);font-weight:600;" data-i18n="budget.start_day_unit">日</span>
-      </div>
-      <div id="budget-period-label" style="font-size:11px;color:var(--green-dark);font-weight:700;margin-top:8px;display:none;"></div>
-      <div style="font-size:11px;color:var(--text-3);margin-top:4px;line-height:1.4;" data-i18n="budget.start_day_hint">例: 25日 = 毎月25日〜翌月24日を1ヶ月として計算</div>
     </div>
     <button onclick="saveBudget()" style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.save">保存</button>
     <div onclick="clearBudget()" style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-3);cursor:pointer;padding:6px;" data-i18n="budget.clear">予算を解除</div>
@@ -10191,7 +10179,8 @@ function buildCalData() {
 }
 function renderCalendar(y,m) {
   calYear=y; calMonth=m;
-  document.getElementById('cal-label').textContent=t('hist.month',{y:y,m:m,mon:_monName(m)});
+  var _calLab = _periodLabelForMonth(y, m);   // build 576 — 커스텀 시작일이면 '6/25~7/24'
+  document.getElementById('cal-label').textContent = _calLab ? _calLab : t('hist.month',{y:y,m:m,mon:_monName(m)});
   // 설정의 주 시작 요일 동기화
   var wsSel = document.getElementById('week-start-select');
   if (wsSel) wsSel.value = String(_weekStart);
@@ -10207,27 +10196,33 @@ function renderCalendar(y,m) {
     }).join('');
   }
   var calMap = buildCalData();
-  var first=new Date(y,m-1,1).getDay();
-  // 주 시작 요일에 맞춘 첫 칸 오프셋
-  var firstCol = (first - _weekStart + 7) % 7;
-  var total=new Date(y,m,0).getDate();
-  var monthData=(calMap[y+'-'+m])||{};
-  var monthTotal=0; var monthCnt=0;
-  Object.values(monthData).forEach(function(arr){ arr.forEach(function(r){ monthTotal+=r.total; monthCnt++; }); });
+  // build 576 — 월 시작일(급여 주기) 기준 달력. 시작일=1이면 기존 1일~말일과 동일.
+  //   주기가 두 달에 걸칠 수 있어 날짜를 start~endExcl 로 순회하고, 각 셀에 실제 (yy,mm,dd) 사용.
+  var rg = _periodForMonth(y, m);          // [start, endExcl)
+  var lenDays = _periodLen(rg);
+  var startDow = rg.start.getDay();
+  var firstCol = (startDow - _weekStart + 7) % 7;   // 주 시작 요일에 맞춘 첫 칸 오프셋
+  var monthTotal=0, monthCnt=0;
+  for(var pi=0; pi<lenDays; pi++){
+    var cd = new Date(rg.start.getFullYear(), rg.start.getMonth(), rg.start.getDate()+pi);
+    var carr = ((calMap[cd.getFullYear()+'-'+(cd.getMonth()+1)])||{})[cd.getDate()]||[];
+    carr.forEach(function(r){ monthTotal+=r.total; monthCnt++; });
+  }
   document.getElementById('cal-month-total').textContent='¥ '+monthTotal.toLocaleString();
   document.getElementById('cal-month-cnt').textContent=monthCnt+t('rep.unit_cnt');
-  document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/_avgDivDays(y,m)).toLocaleString():0);   // 진행중인 달은 경과일 기준
+  document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/_periodElapsedDays(rg)).toLocaleString():0);   // 진행중 주기는 경과일 기준
   var html=''; var today=new Date();
   for(var i=0;i<firstCol;i++) html+='<div class="cal-day empty">0</div>';
-  for(var d=1;d<=total;d++){
-    var dow=(first+d-1)%7;
-    var isToday=(y===today.getFullYear()&&m===today.getMonth()+1&&d===today.getDate());
-    var entries=monthData[d]||[];
+  for(var pj=0; pj<lenDays; pj++){
+    var dt = new Date(rg.start.getFullYear(), rg.start.getMonth(), rg.start.getDate()+pj);
+    var yy=dt.getFullYear(), mm=dt.getMonth()+1, dd=dt.getDate(), dow=dt.getDay();
+    var isToday=(yy===today.getFullYear()&&mm===today.getMonth()+1&&dd===today.getDate());
+    var entries=((calMap[yy+'-'+mm])||{})[dd]||[];
     var cls='cal-day'+(isToday?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
     var cats={};
     entries.forEach(function(e){cats[e.cat]=true;});
     var dots=Object.keys(cats).map(function(cat){return '<div class="day-dot" style="background:'+CAT_COLOR[cat]+';"></div>';}).join('');
-    html+='<div class="'+cls+'" onclick="selectDay('+y+','+m+','+d+')">'+d+(dots?'<div class="day-dots">'+dots+'</div>':'')+'</div>';
+    html+='<div class="'+cls+'" onclick="selectDay(this,'+yy+','+mm+','+dd+')">'+dd+(dots?'<div class="day-dots">'+dots+'</div>':'')+'</div>';
   }
   document.getElementById('cal-days').innerHTML=html;
   document.getElementById('cal-detail').classList.remove('show');
@@ -10235,17 +10230,18 @@ function renderCalendar(y,m) {
 function changeMonth(dir){ calMonth+=dir; if(calMonth<1){calMonth=12;calYear--;} if(calMonth>12){calMonth=1;calYear++;} renderCalendar(calYear,calMonth); }
 
 function openMonthDetail() {
-  var monthReceipts = DB.filter(function(r) {
-    var d = new Date(r.date);
-    return d.getFullYear() === calYear && (d.getMonth()+1) === calMonth;
-  });
+  // build 576 — 달력과 동일하게 월 시작일(급여 주기) 기준
+  var _mdRg = _periodForMonth(calYear, calMonth);
+  var _mdS = _ymd(_mdRg.start), _mdE = _ymd(_mdRg.endExcl);
+  var monthReceipts = DB.filter(function(r) { return r.date >= _mdS && r.date < _mdE; });
   if (!monthReceipts.length) { showToast(t('toast.no_receipts')); return; }
 
   var total = monthReceipts.reduce(function(s,r){ return s+r.total; },0);
   var days  = new Set(monthReceipts.map(function(r){ return r.date; })).size;
 
   // 제목 + 히어로 카드
-  document.getElementById('mdet-title').textContent    = t('mdet.detail_title', { y: calYear, m: calMonth, mon: _monName(calMonth) });
+  var _mdLab = _periodLabelForMonth(calYear, calMonth);
+  document.getElementById('mdet-title').textContent    = _mdLab ? _mdLab : t('mdet.detail_title', { y: calYear, m: calMonth, mon: _monName(calMonth) });
   document.getElementById('mdet-total-amt').textContent = '¥'+total.toLocaleString();
   document.getElementById('mdet-sub').textContent       = t('mdet.count_n', { n: monthReceipts.length });
 
@@ -10370,7 +10366,7 @@ function closeMonthReport() {
 function mrChangeMonth(dir){
   var now = new Date();
   _mrM += dir; if(_mrM<1){_mrM=12;_mrY--;} if(_mrM>12){_mrM=1;_mrY++;}
-  if(_mrY>now.getFullYear() || (_mrY===now.getFullYear() && _mrM>now.getMonth()+1)){
+  if(_periodForMonth(_mrY,_mrM).start > now){   // build 576 — 아직 시작 안 된 미래 주기 차단(주기 기준)
     _mrM-=dir; if(_mrM<1){_mrM=12;_mrY--;} if(_mrM>12){_mrM=1;_mrY++;} return;
   }
   renderMonthReport();
@@ -10577,20 +10573,24 @@ function _mrLbl(txt){ return '<div style="font-size:11px;font-weight:800;color:v
 function renderMonthReport(){
   var el = document.getElementById('mr-body'); if(!el) return;
   var y=_mrY, m=_mrM, now=new Date();
-  document.getElementById('mr-month-label').textContent = t('hist.month',{y:y,m:m,mon:_monName(m)});
-  var nb=document.getElementById('mr-next'); if(nb) nb.style.opacity=(y===now.getFullYear()&&m===now.getMonth()+1)?'.3':'1';
+  // build 576 — 달력과 동일하게 월 시작일(급여 주기) 기준
+  var curRg = _periodForMonth(y, m);
+  var _pmM = m===1?12:m-1, _pmY = m===1?y-1:y;
+  var prevRg = _periodForMonth(_pmY, _pmM);
+  var _mrLab = _periodLabelForMonth(y, m);
+  document.getElementById('mr-month-label').textContent = _mrLab ? _mrLab : t('hist.month',{y:y,m:m,mon:_monName(m)});
+  var nb=document.getElementById('mr-next'); if(nb) nb.style.opacity=_periodContainsToday(curRg)?'.3':'1';
 
-  var key=y+'-'+String(m).padStart(2,'0');
-  var pm=m===1?12:m-1, py=m===1?y-1:y, pkey=py+'-'+String(pm).padStart(2,'0');
-  var cur=DB.filter(function(r){return r.date.startsWith(key);});
-  var prev=DB.filter(function(r){return r.date.startsWith(pkey);});
+  var _curS=_ymd(curRg.start), _curE=_ymd(curRg.endExcl), _prvS=_ymd(prevRg.start), _prvE=_ymd(prevRg.endExcl);
+  var cur=DB.filter(function(r){return r.date>=_curS && r.date<_curE;});
+  var prev=DB.filter(function(r){return r.date>=_prvS && r.date<_prvE;});
 
   if(cur.length===0){ el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text-3);font-size:13px;">'+t('mr.empty')+'</div>'; return; }
 
   var total=cur.reduce(function(a,r){return a+r.total;},0);
   var prevTotal=prev.reduce(function(a,r){return a+r.total;},0);
-  var daysInMonth=new Date(y,m,0).getDate();
-  var avg=Math.round(total/_avgDivDays(y,m));   // 진행중인 달은 경과일 기준(남은 날 ¥0 미포함)
+  var daysInMonth=_periodLen(curRg);            // 주기 길이(예측에 사용)
+  var avg=Math.round(total/_periodElapsedDays(curRg));   // 진행중 주기는 경과일 기준(남은 날 ¥0 미포함)
   function catSum(list){var o={};list.forEach(function(r){o[r.cat]=(o[r.cat]||0)+r.total;});return o;}
   var cc=catSum(cur), pc=catSum(prev);
   var html='';
@@ -10624,7 +10624,7 @@ function renderMonthReport(){
   html+=_mrLbl(t('mr.sec_compare'));
   if(prev.length===0){ html+='<div class="card" style="margin-bottom:14px;text-align:center;color:var(--text-3);font-size:12px;padding:18px;">'+t('mr.no_prev')+'</div>'; }
   else{ function pctd(c,p){if(!p)return '';var d=Math.round((c-p)/p*100);return d<=0?'<span style="color:var(--green);">▼ '+Math.abs(d)+'%</span>':'<span style="color:var(--red);">▲ '+d+'%</span>';}
-    var pAvg=Math.round(prevTotal/new Date(py,pm,0).getDate());
+    var pAvg=Math.round(prevTotal/_periodLen(prevRg));
     function col(h,v,dd){return '<div style="flex:1;text-align:center;background:var(--bg);border-radius:12px;padding:11px 6px;"><div style="font-size:10px;color:var(--text-3);font-weight:700;">'+h+'</div><div style="font-size:15px;font-weight:900;margin-top:4px;">¥'+v.toLocaleString()+'</div><div style="font-size:10px;font-weight:700;margin-top:3px;">'+dd+'</div></div>';}
     html+='<div class="card" style="margin-bottom:14px;"><div style="display:flex;gap:8px;">'+col(t('mr.cmp_total'),total,pctd(total,prevTotal))+col(t('mr.cmp_eat'),cc.eat||0,pctd(cc.eat||0,pc.eat||0))+col(t('mr.cmp_food'),cc.food||0,pctd(cc.food||0,pc.food||0))+col(t('mr.cmp_avg'),avg,pctd(avg,pAvg))+'</div></div>';
   }
@@ -10681,7 +10681,7 @@ function renderMonthReport(){
   html+=_mrLbl(t('mr.sec_weekday'))+'<div class="card" style="margin-bottom:14px;"><div style="display:flex;align-items:flex-end;justify-content:space-between;height:90px;gap:6px;">'+wk+'</div><div style="font-size:11px;color:var(--text-2);text-align:center;margin-top:10px;">'+t('mr.most_dow',{dow:dows[maxIdx]})+'</div></div>';
 
   // 예측 (현재 달일 때만)
-  if(y===now.getFullYear()&&m===now.getMonth()+1){var dom=now.getDate();var fc=Math.round(total/dom*daysInMonth);var fOk=budget>0?fc<=budget:true;
+  if(_periodContainsToday(curRg)){var dom=_periodElapsedDays(curRg);var fc=Math.round(total/dom*daysInMonth);var fOk=budget>0?fc<=budget:true;  // build 576 — 주기 기준 예측
     html+='<div style="background:#FFF6E9;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;"><span style="font-size:18px;">🔮</span><div style="font-size:12.5px;font-weight:600;color:#8a6d1f;line-height:1.5;">'+t('mr.forecast',{amt:fc.toLocaleString()})+(budget>0?'<br>'+(fOk?t('mr.forecast_ok'):t('mr.forecast_over')):'')+'</div></div>';
   }
 
@@ -10728,11 +10728,9 @@ async function _mrRenderValueIndex(){
   box.innerHTML = h;
 }
 
-function selectDay(y,m,d){
-  document.querySelectorAll('.cal-day').forEach(function(el){el.classList.remove('sel');});
-  var first=new Date(y,m-1,1).getDay();
-  var all=document.querySelectorAll('.cal-day');
-  if(all[first+d-1]) all[first+d-1].classList.add('sel');
+function selectDay(el,y,m,d){
+  document.querySelectorAll('.cal-day').forEach(function(c){c.classList.remove('sel');});
+  if(el && el.classList) el.classList.add('sel');   // build 576 — 주기가 두 달 걸칠 수 있어 인덱스 계산 대신 클릭 요소 직접 사용
   var calMap=buildCalData();
   var entries=((calMap[y+'-'+m])||{})[d]||[];
   var detail=document.getElementById('cal-detail');
@@ -14081,7 +14079,7 @@ var I18N = {
     // 설정
     'settings.dark':'ダークモード','settings.fontsize':'文字サイズ','settings.fs_s':'小','settings.fs_m':'標準','settings.fs_l':'大','settings.fs_xl':'特大','unit.chiri':'チリ','settings.notif.save':'節約通知','settings.notif.weekly':'週間レポート','settings.notif.compare':'価格比較通知',
     'settings.lang':'言語','settings.currency':'通貨','settings.theme':'テーマカラー',
-    'settings.week_start':'週の開始曜日','week.sun':'日曜日','week.mon':'月曜日',
+    'settings.week_start':'週の開始曜日','week.sun':'日曜日','week.mon':'月曜日','settings.month_start':'月の開始日','settings.month_start_hint':'給料日基準で1ヶ月を区切るなら変更（例: 25日）','settings.month_start_first':'1日（基本）','settings.month_start_nth':'{d}日',
     'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.gourmet_blog':'グルメブログ','settings.view_landing':'ランディングページを見る','settings.logout':'ログアウト',
     'settings.profile':'プロフィール','settings.notif.title':'通知','settings.account':'アカウント','settings.legal':'規約・お問い合わせ',
     // 공통 버튼
@@ -14392,7 +14390,7 @@ var I18N = {
     'plan.free':'무료 플랜','plan.premium':'프리미엄',
     'settings.dark':'다크모드','settings.fontsize':'글자 크기','settings.fs_s':'작게','settings.fs_m':'표준','settings.fs_l':'크게','settings.fs_xl':'아주 크게','unit.chiri':'치리','settings.notif.save':'절약 알림','settings.notif.weekly':'주간 리포트','settings.notif.compare':'가격 비교 알림',
     'settings.lang':'언어','settings.currency':'통화','settings.theme':'테마 색상',
-    'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일',
+    'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일','settings.month_start':'월 시작일','settings.month_start_hint':'급여일 기준으로 한 달을 잡으려면 변경 (예: 25일)','settings.month_start_first':'1일 (기본)','settings.month_start_nth':'{d}일',
     'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.gourmet_blog':'그루메 블로그','settings.view_landing':'랜딩 페이지 보기','settings.logout':'로그아웃',
     'settings.profile':'프로필','settings.notif.title':'알림','settings.account':'계정','settings.legal':'약관 · 문의',
     'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도',
@@ -14654,7 +14652,7 @@ var I18N = {
     'plan.free':'Free plan','plan.premium':'Premium',
     'settings.dark':'Dark Mode','settings.fontsize':'Font Size','settings.fs_s':'Small','settings.fs_m':'Normal','settings.fs_l':'Large','settings.fs_xl':'X-Large','unit.chiri':'Chiri','settings.notif.save':'Savings Alert','settings.notif.weekly':'Weekly Report','settings.notif.compare':'Price Compare Alert',
     'settings.lang':'Language','settings.currency':'Currency','settings.theme':'Theme Color',
-    'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday',
+    'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday','settings.month_start':'Month start day','settings.month_start_hint':'Change to align the month with your payday (e.g. 25)','settings.month_start_first':'Day 1 (default)','settings.month_start_nth':'Day {d}',
     'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.gourmet_blog':'Gourmet Blog','settings.view_landing':'View landing page','settings.logout':'Logout',
     'settings.profile':'Profile','settings.notif.title':'Notifications','settings.account':'Account','settings.legal':'Legal & Contact',
     'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry',
@@ -14916,7 +14914,7 @@ var I18N = {
     'plan.free':'免费版','plan.premium':'高级版',
     'settings.dark':'深色模式','settings.fontsize':'字体大小','settings.fs_s':'小','settings.fs_m':'标准','settings.fs_l':'大','settings.fs_xl':'特大','unit.chiri':'Chiri','settings.notif.save':'省钱提醒','settings.notif.weekly':'每周报告','settings.notif.compare':'比价提醒',
     'settings.lang':'语言','settings.currency':'货币','settings.theme':'主题颜色',
-    'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一',
+    'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一','settings.month_start':'每月起始日','settings.month_start_hint':'想按发薪日划分一个月就修改（例如25日）','settings.month_start_first':'1日（默认）','settings.month_start_nth':'{d}日',
     'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.gourmet_blog':'美食博客','settings.view_landing':'查看着陆页','settings.logout':'登出',
     'settings.profile':'个人信息','settings.notif.title':'通知','settings.account':'账户','settings.legal':'条款与联系',
     'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试',
@@ -15241,6 +15239,8 @@ function applyLang(lang){
   if (sel) sel.value = lang;
   // 테마 스와치 이름(JS 생성)도 즉시 재렌더 (data-i18n 아님)
   if (typeof renderThemeSwatches === 'function') { try { renderThemeSwatches(); } catch(e){} }
+  // 월 시작일 셀렉트(JS 생성 옵션) 언어별 재렌더 (build 576)
+  if (typeof _refreshMonthStartUI === 'function') { try { _refreshMonthStartUI(); } catch(e){} }
   // JS로 동적 생성된 본문도 즉시 재렌더 (data-i18n 아님)
   try { if (typeof updateHistMonthLabel === 'function') updateHistMonthLabel(); } catch(e){}
   try { if (typeof renderHistory === 'function') renderHistory(typeof currentFilter !== 'undefined' ? currentFilter : 'all'); } catch(e){}
@@ -17960,6 +17960,22 @@ function _periodLabel(ref){
   var endIncl = new Date(rg.endExcl.getTime() - 86400000);
   return (rg.start.getMonth()+1)+'/'+rg.start.getDate()+'~'+(endIncl.getMonth()+1)+'/'+endIncl.getDate();
 }
+/* build 576 — (시작월 y,m) 기준 주기 헬퍼 (달력·월별리포트용). 시작일=1이면 해당 달력월과 동일. */
+function _periodForMonth(y, m){ return _periodRange(new Date(y, m-1, _monthStartDay())); }
+function _periodLen(rg){ return Math.round((rg.endExcl - rg.start) / 86400000); }
+function _periodElapsedDays(rg){
+  var now = new Date();
+  if (now >= rg.start && now < rg.endExcl) return Math.max(1, Math.floor((now - rg.start)/86400000) + 1);
+  return _periodLen(rg);
+}
+function _periodContainsToday(rg){ var now = new Date(); return now >= rg.start && now < rg.endExcl; }
+/** 'M/D~M/D' (시작일=1이면 null) — (y,m) 시작월 기준 */
+function _periodLabelForMonth(y, m){
+  if (_monthStartDay() === 1) return null;
+  var rg = _periodForMonth(y, m);
+  var endIncl = new Date(rg.endExcl.getTime() - 86400000);
+  return (rg.start.getMonth()+1)+'/'+rg.start.getDate()+'~'+(endIncl.getMonth()+1)+'/'+endIncl.getDate();
+}
 function _budgetYMKey(){
   // 시작일=1(기본)이면 기존 'YYYY-MM' 키 유지 → 기존 유저 예산 대량 리셋 방지(하위호환).
   // 커스텀 시작일이면 주기 시작 'YYYY-MM-DD' 를 키로 사용.
@@ -18014,20 +18030,24 @@ async function _budgetSaveToCloud(amount){
   if (res.error) console.warn('[budget cloud save]', res.error);
 }
 
-/* build 575 — 월 시작일(급여 주기) 저장/표시/클라우드 동기화 */
-function _updateBudgetPeriodLabel(){
-  var el = document.getElementById('budget-period-label');
-  if (!el) return;
-  var lab = _periodLabel(new Date());
-  if (lab) { el.textContent = t('budget.cur_period') + ': ' + lab; el.style.display = 'block'; }
-  else { el.textContent = ''; el.style.display = 'none'; }
+/* build 575/576 — 월 시작일(급여 주기) 저장/동기화. 설정 화면에서 지정(예산 모달 아님). */
+function _refreshMonthStartUI(){
+  var sel = document.getElementById('month-start-select');
+  if (!sel) return;
+  var cur = _monthStartDay(), html = '';
+  for (var i=1; i<=28; i++){
+    var lbl = (i===1) ? t('settings.month_start_first') : t('settings.month_start_nth', {d:i});
+    html += '<option value="'+i+'"'+(i===cur?' selected':'')+'>'+lbl+'</option>';
+  }
+  sel.innerHTML = html;
+  sel.value = String(cur);
 }
 function setMonthStartDay(v){
   var d = parseInt(v||'1',10);
   if (!(d>=1)) d = 1;
   if (d > 28) d = 28;
   localStorage.setItem('riq_month_start_day', String(d));
-  var inp = document.getElementById('budget-start-day'); if (inp) inp.value = d;
+  _refreshMonthStartUI();
   // 기존 예산이 있으면 새 주기 키로 재스탬프 → 시작일 변경만으로 예산이 리셋되지 않게
   var curBudget = parseInt(localStorage.getItem('receiptiq_budget')||'0',10);
   if (curBudget > 0) {
@@ -18035,8 +18055,8 @@ function setMonthStartDay(v){
     if (typeof _budgetSaveToCloud === 'function') _budgetSaveToCloud(curBudget);
   }
   if (typeof _monthStartSaveToCloud === 'function') _monthStartSaveToCloud(d);
-  _updateBudgetPeriodLabel();
   try { renderHome(); } catch(e){}
+  try { if (typeof renderCalendar === 'function') renderCalendar(calYear, calMonth); } catch(e){}  // 달력도 새 주기로 재렌더
 }
 async function _monthStartSaveToCloud(d){
   if (!_currentUser || !_sb) return;
@@ -18049,7 +18069,12 @@ async function _monthStartLoadFromCloud(){
     var res = await _sb.from('profiles').select('budget_start_day').eq('id', _currentUser.id).maybeSingle();
     if (!res.error && res.data && res.data.budget_start_day) {
       var d = parseInt(res.data.budget_start_day, 10);
-      if (d>=1 && d<=28) { localStorage.setItem('riq_month_start_day', String(d)); try { renderHome(); } catch(e){} }
+      if (d>=1 && d<=28) {
+        localStorage.setItem('riq_month_start_day', String(d));
+        _refreshMonthStartUI();
+        try { renderHome(); } catch(e){}
+        try { if (typeof renderCalendar === 'function') renderCalendar(calYear, calMonth); } catch(e){}
+      }
     }
   } catch(e){}
 }
@@ -18058,9 +18083,6 @@ function openBudgetSet() {
   var cur = localStorage.getItem('receiptiq_budget') || '';
   var inp = document.getElementById('budget-input');
   if (inp) inp.value = cur ? parseInt(cur) : '';
-  var sd = document.getElementById('budget-start-day');
-  if (sd) sd.value = _monthStartDay();
-  _updateBudgetPeriodLabel();
   openOv('ov-budget');
 }
 function setBudgetQuick(val) {
@@ -29904,7 +29926,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 575;
+window.__APP_BUILD__ = 576;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
