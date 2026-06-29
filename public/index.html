@@ -2704,6 +2704,19 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div onclick="setBudgetQuick(100000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥100,000</div>
       <div onclick="setBudgetQuick(150000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥150,000</div>
     </div>
+    <!-- 월 시작일 (급여 주기) — build 575 -->
+    <div style="margin:4px 0 18px;border-top:1px solid var(--border);padding-top:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:6px;letter-spacing:.3px;" data-i18n="budget.start_day">月の開始日（給料日）</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input id="budget-start-day" type="number" min="1" max="28" step="1" placeholder="1"
+          onchange="setMonthStartDay(this.value)"
+          style="width:84px;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 12px;font-size:16px;font-weight:700;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);text-align:center;"
+          onfocus="this.style.borderColor='var(--green)'" onblur="this.style.borderColor='var(--border-mid)'">
+        <span style="font-size:13px;color:var(--text-2);font-weight:600;" data-i18n="budget.start_day_unit">日</span>
+      </div>
+      <div id="budget-period-label" style="font-size:11px;color:var(--green-dark);font-weight:700;margin-top:8px;display:none;"></div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;line-height:1.4;" data-i18n="budget.start_day_hint">例: 25日 = 毎月25日〜翌月24日を1ヶ月として計算</div>
+    </div>
     <button onclick="saveBudget()" style="width:100%;background:var(--green-grad);color:#fff;border:none;border-radius:14px;padding:13px;font-size:14px;font-weight:700;font-family:var(--font);cursor:pointer;" data-i18n="btn.save">保存</button>
     <div onclick="clearBudget()" style="text-align:center;margin-top:10px;font-size:12px;color:var(--text-3);cursor:pointer;padding:6px;" data-i18n="budget.clear">予算を解除</div>
   </div>
@@ -8933,12 +8946,11 @@ function renderHome() {
   var yest  = new Date(now); yest.setDate(now.getDate()-1);
   var yestStr  = yest.getFullYear()+'-'+String(yest.getMonth()+1).padStart(2,'0')+'-'+String(yest.getDate()).padStart(2,'0');
 
-  var monthKey = y+'-'+String(m).padStart(2,'0');
-  var prevM = m===1?12:m-1, prevY = m===1?y-1:y;
-  var prevKey  = prevY+'-'+String(prevM).padStart(2,'0');
-
-  var monthReceipts = DB.filter(function(r){ return r.date.startsWith(monthKey); });
-  var prevReceipts  = DB.filter(function(r){ return r.date.startsWith(prevKey);  });
+  // build 575 — '이번 달'을 월 시작일(급여 주기) 기준으로 계산. 시작일=1이면 기존 1일~말일과 동일.
+  var _curRange = _periodRange(now);
+  var _prevRef  = new Date(_curRange.start.getTime() - 86400000);  // 직전 주기의 임의 날짜(주기 시작 하루 전)
+  var monthReceipts = _periodReceipts(DB, now);
+  var prevReceipts  = _periodReceipts(DB, _prevRef);
   var todayReceipts = DB.filter(function(r){ return r.date === todayStr; });
 
   var totalAmt = monthReceipts.reduce(function(a,r){return a+r.total;},0);
@@ -8991,7 +9003,12 @@ function renderHome() {
   document.getElementById('home-eat').textContent   = '¥'+eatAmt.toLocaleString();
   document.getElementById('home-other').textContent = '¥'+(totalAmt-foodAmt-eatAmt).toLocaleString();
   var labelEl = document.getElementById('home-label');
-  if (labelEl) labelEl.textContent = t('home.month_total', {m: m, n: monthReceipts.length});
+  if (labelEl) {
+    var _plabel = _periodLabel(now);   // 커스텀 시작일이면 '6/25~7/24' 범위 표시
+    labelEl.textContent = _plabel
+      ? t('home.period_total', {range: _plabel, n: monthReceipts.length})
+      : t('home.month_total',  {m: m,          n: monthReceipts.length});
+  }
   var subEl = document.getElementById('home-sub');
   if (subEl) {
     if (prevAmt===0) { subEl.textContent=''; }
@@ -9076,7 +9093,7 @@ function renderHome() {
       var remain=budget-totalAmt;
       budgetEl.innerHTML='<div class="budget-wrap" onclick="openBudgetSet()">'
         +'<div style="display:flex;align-items:center;justify-content:space-between;">'
-        +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('home.budget_this')+'</div>'
+        +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('home.budget_this')+(_periodLabel(now)?' <span style="font-weight:600;color:var(--text-3);">('+_periodLabel(now)+')</span>':'')+'</div>'
         +'<div style="display:flex;align-items:baseline;gap:6px;">'
         +'<span style="font-size:12px;font-weight:700;color:'+(remain>=0?'var(--green)':'var(--red)')+';">'
         +(remain>=0?'¥'+remain.toLocaleString()+' '+t('home.budget_remain'):'¥'+Math.abs(remain).toLocaleString()+' '+t('home.budget_over'))
@@ -14107,7 +14124,7 @@ var I18N = {
     // 이달 요약
     'mdet.month_total':'今月の総支出','mdet.count':'件','mdet.title':'月別支出詳細',
     // 예산
-    'budget.title':'🎯 今月の予算設定','budget.sub':'目標支出額を入力','budget.amount':'予算額 (¥)','budget.clear':'予算を解除',
+    'budget.title':'🎯 今月の予算設定','budget.sub':'目標支出額を入力','budget.amount':'予算額 (¥)','budget.clear':'予算を解除','budget.start_day':'月の開始日（給料日）','budget.start_day_unit':'日','budget.start_day_hint':'例: 25 = 毎月25日〜翌月24日を1ヶ月として計算','budget.cur_period':'対象期間',
     // 홈 메인
     'home.this_month':'今月の合計支出','home.today_label':'今日の支出','home.budget_label':'今月の予算',
     'home.chart.weekly':'今週の日別支出','home.chart.monthly':'今月の日別支出','home.chart.yearly':'今年の月別支出',
@@ -14230,7 +14247,7 @@ var I18N = {
     'confirm.delete_private_note':'この店の非公開メモを削除しますか？<br>(マーカーリングも消えます)',
     'toast.private_deleted':'🗑 非公開メモを削除しました',
     // 홈 메인 라벨 (월 합계 지출 · N건)
-    'home.month_total':'{m}月 合計支出 · {n}件','home.ref_reward_pre':'紹介報酬 ','home.ref_reward_post':'件 受け取り待ち！','home.ref_reward_sub':'広告を見て200チリずつ受け取る',
+    'home.month_total':'{m}月 合計支出 · {n}件','home.period_total':'{range} 合計支出 · {n}件','home.ref_reward_pre':'紹介報酬 ','home.ref_reward_post':'件 受け取り待ち！','home.ref_reward_sub':'広告を見て200チリずつ受け取る',
     'home.vs_prev_save':'前月比 ▼ ¥{amt} 節約中 🎉','home.vs_prev_up':'前月比 ▲ ¥{amt} 増加',
     // OCR 결과 저장 화면
     'ocr.result.title':'✅ 認識結果の確認','ocr.result.multipage':'📜 分割撮影',
@@ -14405,7 +14422,7 @@ var I18N = {
     'saving.title':'💡 절약 기회 분석','saving.sub':'내 영수증 기반','saving.based_on':'{n}개 상품 분석','saving.you':'내 구매','saving.per_ct':'개','saving.per_month':'/월','saving.buy_basis':'월 {n}회 구매 페이스','saving.empty_title':'아직 분석할 데이터가 부족해요','saving.empty_sub':'같은 상품을 2곳 이상 마트에서 사면, 최저가 마트와의 차액을 자동 분석해요. 영수증을 모아보세요.','home.saving_sub':'{n}개 상품 마트만 바꿔도 월 ¥{amt} 절약 가능','home.saving_collecting':'마트 영수증을 모으면 절약 기회를 찾아드려요',
     'saving.based':'매달 12회 구매 기준','saving.total':'합계 절약 예상액','saving.annual':'연간 절약 가능','saving.cheap':'저렴',
     'mdet.month_total':'이달 총 지출','mdet.count':'건','mdet.title':'월별 지출 상세',
-    'budget.title':'🎯 이달 예산 설정','budget.sub':'목표 지출 금액을 입력하세요','budget.amount':'예산 금액 (¥)','budget.clear':'예산 해제',
+    'budget.title':'🎯 이달 예산 설정','budget.sub':'목표 지출 금액을 입력하세요','budget.amount':'예산 금액 (¥)','budget.clear':'예산 해제','budget.start_day':'월 시작일 (급여일)','budget.start_day_unit':'일','budget.start_day_hint':'예: 25 = 매월 25일~다음달 24일을 한 달로 계산','budget.cur_period':'대상 기간',
     'home.this_month':'이달 합계 지출','home.today_label':'오늘의 지출','home.budget_label':'이달 예산',
     'home.chart.weekly':'이번 주 일별 지출','home.chart.monthly':'이번 달 일별 지출','home.chart.yearly':'올해 월별 지출',
     'home.trend':'📈 지출 추이',
@@ -14503,7 +14520,7 @@ var I18N = {
     'confirm.delete':'정말 삭제하시겠습니까?','confirm.yes':'네','confirm.no':'아니오',
     'confirm.delete_private_note':'이 가게의 비공개 메모를 삭제하시겠습니까?<br>(마커 링도 제거됩니다)',
     'toast.private_deleted':'🗑 비공개 메모 삭제됨',
-    'home.month_total':'{m}月 합계 지출 · {n}건','home.ref_reward_pre':'추천 보상 ','home.ref_reward_post':'건 대기 중!','home.ref_reward_sub':'광고 보고 200치리씩 받기',
+    'home.month_total':'{m}月 합계 지출 · {n}건','home.period_total':'{range} 합계 지출 · {n}건','home.ref_reward_pre':'추천 보상 ','home.ref_reward_post':'건 대기 중!','home.ref_reward_sub':'광고 보고 200치리씩 받기',
     'home.vs_prev_save':'전월 대비 ▼ ¥{amt} 절약 중 🎉','home.vs_prev_up':'전월 대비 ▲ ¥{amt} 증가',
     'ocr.result.title':'✅ 인식 결과 확인','ocr.result.multipage':'📜 분할촬영',
     'ocr.store_name':'가게 이름','ocr.date':'날짜','ocr.items_recognized':'인식된 품목','ocr.add_item':'+ 품목 추가',
@@ -14667,7 +14684,7 @@ var I18N = {
     'saving.title':'💡 Savings Opportunity','saving.sub':'Based on your receipts','saving.based_on':'{n} items analyzed','saving.you':'You','saving.per_ct':'ea','saving.per_month':'/mo','saving.buy_basis':'~{n}×/mo pace','saving.empty_title':'Not enough data yet','saving.empty_sub':'Buy the same item at 2+ stores and we’ll auto-analyze the gap vs. the cheapest store. Keep scanning receipts.','home.saving_sub':'Switch stores for {n} items, save ¥{amt}/mo','home.saving_collecting':'Scan grocery receipts to find savings',
     'saving.based':'Based on 12 purchases/mo','saving.total':'Total Estimated Savings','saving.annual':'Annual savings','saving.cheap':'cheaper',
     'mdet.month_total':"This month's total",'mdet.count':'records','mdet.title':'Monthly Detail',
-    'budget.title':'🎯 Monthly Budget','budget.sub':'Enter target amount','budget.amount':'Budget (¥)','budget.clear':'Clear budget',
+    'budget.title':'🎯 Monthly Budget','budget.sub':'Enter target amount','budget.amount':'Budget (¥)','budget.clear':'Clear budget','budget.start_day':'Month start day (payday)','budget.start_day_unit':'th','budget.start_day_hint':'e.g. 25 = each cycle runs from the 25th to the 24th of next month','budget.cur_period':'Period',
     'home.this_month':"This month's total",'home.today_label':"Today's spend",'home.budget_label':"This month's budget",
     'home.chart.weekly':'Daily spend this week','home.chart.monthly':'Daily spend this month','home.chart.yearly':'Monthly spend this year',
     'home.trend':'📈 Spend trend',
@@ -14765,7 +14782,7 @@ var I18N = {
     'confirm.delete':'Are you sure to delete?','confirm.yes':'Yes','confirm.no':'No',
     'confirm.delete_private_note':'Delete the private note for this store?<br>(Marker ring will be removed)',
     'toast.private_deleted':'🗑 Private note deleted',
-    'home.month_total':'{m}/ Total spend · {n}','home.ref_reward_pre':'Referral reward: ','home.ref_reward_post':' pending!','home.ref_reward_sub':'Watch an ad to get 200 Chiri each',
+    'home.month_total':'{m}/ Total spend · {n}','home.period_total':'{range} Total spend · {n}','home.ref_reward_pre':'Referral reward: ','home.ref_reward_post':' pending!','home.ref_reward_sub':'Watch an ad to get 200 Chiri each',
     'home.vs_prev_save':'▼ ¥{amt} saved vs last month 🎉','home.vs_prev_up':'▲ ¥{amt} more than last month',
     'ocr.result.title':'✅ Confirm Recognition','ocr.result.multipage':'📜 Multi-shot',
     'ocr.store_name':'Store Name','ocr.date':'Date','ocr.items_recognized':'Recognized Items','ocr.add_item':'+ Add Item',
@@ -14929,7 +14946,7 @@ var I18N = {
     'saving.title':'💡 省钱机会分析','saving.sub':'基于我的票据','saving.based_on':'分析{n}件商品','saving.you':'你','saving.per_ct':'个','saving.per_month':'/月','saving.buy_basis':'每月约{n}次','saving.empty_title':'数据还不够','saving.empty_sub':'在2家以上店铺购买相同商品后，自动分析与最低价店的差额。多积累票据试试。','home.saving_sub':'{n}件商品换家超市，每月省¥{amt}','home.saving_collecting':'积累超市票据后分析省钱机会',
     'saving.based':'每月12次购买基准','saving.total':'合计预计节省','saving.annual':'每年节省','saving.cheap':'便宜',
     'mdet.month_total':'本月总支出','mdet.count':'笔','mdet.title':'月支出明细',
-    'budget.title':'🎯 本月预算设置','budget.sub':'请输入目标支出额','budget.amount':'预算 (¥)','budget.clear':'清除预算',
+    'budget.title':'🎯 本月预算设置','budget.sub':'请输入目标支出额','budget.amount':'预算 (¥)','budget.clear':'清除预算','budget.start_day':'每月起始日（发薪日）','budget.start_day_unit':'日','budget.start_day_hint':'例如 25 = 每月25日至次月24日为一个周期','budget.cur_period':'周期',
     'home.this_month':'本月总支出','home.today_label':'今日支出','home.budget_label':'本月预算',
     'home.chart.weekly':'本周每日支出','home.chart.monthly':'本月每日支出','home.chart.yearly':'本年每月支出',
     'home.trend':'📈 支出趋势',
@@ -15027,7 +15044,7 @@ var I18N = {
     'confirm.delete':'确定要删除吗？','confirm.yes':'是','confirm.no':'否',
     'confirm.delete_private_note':'删除该店的私密备注吗？<br>(图钉环也会消失)',
     'toast.private_deleted':'🗑 私密备注已删除',
-    'home.month_total':'{m}月 总支出 · {n}笔','home.ref_reward_pre':'推荐奖励 ','home.ref_reward_post':'项待领取！','home.ref_reward_sub':'看广告每次领200 Chiri',
+    'home.month_total':'{m}月 总支出 · {n}笔','home.period_total':'{range} 总支出 · {n}笔','home.ref_reward_pre':'推荐奖励 ','home.ref_reward_post':'项待领取！','home.ref_reward_sub':'看广告每次领200 Chiri',
     'home.vs_prev_save':'较上月 ▼ ¥{amt} 节省中 🎉','home.vs_prev_up':'较上月 ▲ ¥{amt} 增加',
     'ocr.result.title':'✅ 确认识别结果','ocr.result.multipage':'📜 分段拍摄',
     'ocr.store_name':'店名','ocr.date':'日期','ocr.items_recognized':'识别的商品','ocr.add_item':'+ 添加商品',
@@ -17913,9 +17930,44 @@ function _updateMobileBarColor(){
    예산 설정
 ══════════════════════════════ */
 /* build 322 — 이달 예산: Supabase 동기화 + 매달 1일 자동 리셋 */
+/* build 575 — 월 시작일(급여 주기) 설정. 1=기본(1일~말일). 25=매월 25일~다음달 24일 등.
+   예산 + 홈 지출 합계에만 적용(달력·리포트는 일반 달력월 유지). */
+function _monthStartDay(){
+  var d = parseInt(localStorage.getItem('riq_month_start_day')||'1',10);
+  return (d>=1 && d<=28) ? d : 1;   // 28 상한: 모든 달에 존재하는 날짜만 허용
+}
+function _pad2(n){ return String(n).padStart(2,'0'); }
+function _ymd(d){ return d.getFullYear()+'-'+_pad2(d.getMonth()+1)+'-'+_pad2(d.getDate()); }
+/** ref(기본 오늘)이 속한 예산 주기 [start, endExcl) 반환 (Date 객체) */
+function _periodRange(ref){
+  ref = ref || new Date();
+  var S = _monthStartDay();
+  var y = ref.getFullYear(), mo = ref.getMonth(), day = ref.getDate();
+  var start = (day >= S) ? new Date(y, mo, S) : new Date(y, mo-1, S);
+  var endExcl = new Date(start.getFullYear(), start.getMonth()+1, S);
+  return { start: start, endExcl: endExcl };
+}
+/** DB 배열에서 주어진 주기(기본 현재)에 속한 영수증 필터. 시작일=1이면 기존 '그 달' 과 동일 */
+function _periodReceipts(arr, ref){
+  var rg = _periodRange(ref);
+  var s = _ymd(rg.start), e = _ymd(rg.endExcl);
+  return (arr||[]).filter(function(r){ return r.date >= s && r.date < e; });
+}
+/** 표시용 기간 라벨: 시작일=1이면 null(월 라벨 사용), 아니면 'M/D~M/D' */
+function _periodLabel(ref){
+  if (_monthStartDay() === 1) return null;
+  var rg = _periodRange(ref);
+  var endIncl = new Date(rg.endExcl.getTime() - 86400000);
+  return (rg.start.getMonth()+1)+'/'+rg.start.getDate()+'~'+(endIncl.getMonth()+1)+'/'+endIncl.getDate();
+}
 function _budgetYMKey(){
-  var d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+  // 시작일=1(기본)이면 기존 'YYYY-MM' 키 유지 → 기존 유저 예산 대량 리셋 방지(하위호환).
+  // 커스텀 시작일이면 주기 시작 'YYYY-MM-DD' 를 키로 사용.
+  if (_monthStartDay() === 1) {
+    var d = new Date();
+    return d.getFullYear() + '-' + _pad2(d.getMonth()+1);
+  }
+  return _ymd(_periodRange().start);
 }
 
 /** renderHome 진입 시 호출 — 새 달이면 자동 리셋 */
@@ -17962,10 +18014,53 @@ async function _budgetSaveToCloud(amount){
   if (res.error) console.warn('[budget cloud save]', res.error);
 }
 
+/* build 575 — 월 시작일(급여 주기) 저장/표시/클라우드 동기화 */
+function _updateBudgetPeriodLabel(){
+  var el = document.getElementById('budget-period-label');
+  if (!el) return;
+  var lab = _periodLabel(new Date());
+  if (lab) { el.textContent = t('budget.cur_period') + ': ' + lab; el.style.display = 'block'; }
+  else { el.textContent = ''; el.style.display = 'none'; }
+}
+function setMonthStartDay(v){
+  var d = parseInt(v||'1',10);
+  if (!(d>=1)) d = 1;
+  if (d > 28) d = 28;
+  localStorage.setItem('riq_month_start_day', String(d));
+  var inp = document.getElementById('budget-start-day'); if (inp) inp.value = d;
+  // 기존 예산이 있으면 새 주기 키로 재스탬프 → 시작일 변경만으로 예산이 리셋되지 않게
+  var curBudget = parseInt(localStorage.getItem('receiptiq_budget')||'0',10);
+  if (curBudget > 0) {
+    localStorage.setItem('receiptiq_budget_month', _budgetYMKey());
+    if (typeof _budgetSaveToCloud === 'function') _budgetSaveToCloud(curBudget);
+  }
+  if (typeof _monthStartSaveToCloud === 'function') _monthStartSaveToCloud(d);
+  _updateBudgetPeriodLabel();
+  try { renderHome(); } catch(e){}
+}
+async function _monthStartSaveToCloud(d){
+  if (!_currentUser || !_sb) return;
+  // profiles.budget_start_day 컬럼 (budget_start_day.sql). 미존재 시 조용히 무시(로컬만 동작).
+  try { await _sb.from('profiles').update({ budget_start_day: d }).eq('id', _currentUser.id); } catch(e){}
+}
+async function _monthStartLoadFromCloud(){
+  if (!_currentUser || !_sb) return;
+  try {
+    var res = await _sb.from('profiles').select('budget_start_day').eq('id', _currentUser.id).maybeSingle();
+    if (!res.error && res.data && res.data.budget_start_day) {
+      var d = parseInt(res.data.budget_start_day, 10);
+      if (d>=1 && d<=28) { localStorage.setItem('riq_month_start_day', String(d)); try { renderHome(); } catch(e){} }
+    }
+  } catch(e){}
+}
+
 function openBudgetSet() {
   var cur = localStorage.getItem('receiptiq_budget') || '';
   var inp = document.getElementById('budget-input');
   if (inp) inp.value = cur ? parseInt(cur) : '';
+  var sd = document.getElementById('budget-start-day');
+  if (sd) sd.value = _monthStartDay();
+  _updateBudgetPeriodLabel();
   openOv('ov-budget');
 }
 function setBudgetQuick(val) {
@@ -19020,7 +19115,9 @@ function showApp() {
   // 받은 쪽지함 realtime 구독 시작 + 헤더 아바타 배지 즉시 갱신 (build 305)
   if (typeof _startInboxRealtime === 'function') setTimeout(_startInboxRealtime, 800);
   // 이달 예산 클라우드 동기화 (build 322) — Supabase 의 budget_amount/month 복원
-  if (typeof _budgetLoadFromCloud === 'function') setTimeout(_budgetLoadFromCloud, 600);
+  // ⚠️ 월 시작일을 먼저 복원해야 _budgetYMKey() 키가 맞아 예산 복원이 정확함 (build 575)
+  if (typeof _monthStartLoadFromCloud === 'function') setTimeout(_monthStartLoadFromCloud, 550);
+  if (typeof _budgetLoadFromCloud === 'function') setTimeout(_budgetLoadFromCloud, 650);
   // 본인 비공개 메모 가게 목록 캐시 (프라이빗 모드 필터링용)
   if (typeof _loadMyPrivateNoteStores === 'function') _loadMyPrivateNoteStores();
   // 최종 활동 시각 갱신
@@ -29807,7 +29904,7 @@ function ctOpenSns(key){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 574;
+window.__APP_BUILD__ = 575;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
