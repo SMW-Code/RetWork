@@ -30704,11 +30704,19 @@ function renderYearReport(){
     +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">¥'+total.toLocaleString()+'</div>'+deltaHtml
     +'<div style="margin-top:14px;font-size:12px;opacity:.85;">'+t('yr.month_avg',{v:monAvg.toLocaleString()})+'</div>'
     +'</div>';
+  // build 589 — 월별 추이: 가로 막대 + 금액 직접 표기(직관적). 현재 연도는 이번 달까지만.
   var mlabels=t('yr.months').split(',');
-  var bars='';
-  for(var i=0;i<12;i++){ var hp=Math.round(mon[i]/mmax*100); var isCur=(y===now.getFullYear()&&i===now.getMonth());
-    bars+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px;"><div style="width:78%;border-radius:5px 5px 0 0;height:'+Math.max(hp,2)+'%;background:'+(isCur?'var(--green)':'var(--green-light)')+';"></div><div style="font-size:8px;color:var(--text-3);font-weight:700;">'+(mlabels[i]||(i+1))+'</div></div>'; }
-  html+=_mrLbl(t('yr.sec_trend'))+'<div class="card" style="margin-bottom:14px;"><div style="display:flex;align-items:flex-end;justify-content:space-between;height:112px;gap:3px;">'+bars+'</div></div>';
+  var lastIdx=(y===now.getFullYear())?now.getMonth():11;
+  var rows='';
+  for(var i=0;i<=lastIdx;i++){
+    var hp=Math.round(mon[i]/mmax*100), isCur=(y===now.getFullYear()&&i===now.getMonth()), has=mon[i]>0;
+    rows+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
+      +'<span style="font-size:11px;font-weight:700;color:'+(isCur?'var(--green)':'var(--text-2)')+';width:30px;flex-shrink:0;">'+(mlabels[i]||(i+1))+'</span>'
+      +'<div style="flex:1;height:14px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;width:'+(has?Math.max(hp,4):0)+'%;background:'+(isCur?'var(--green)':'var(--green-light)')+';"></div></div>'
+      +'<span style="font-size:11.5px;font-weight:800;color:'+(has?'var(--text-1)':'var(--text-3)')+';width:82px;text-align:right;flex-shrink:0;">¥'+mon[i].toLocaleString()+'</span>'
+      +'</div>';
+  }
+  html+=_mrLbl(t('yr.sec_trend'))+'<div class="card" style="margin-bottom:14px;">'+rows+'</div>';
   var cc={}; cur.forEach(function(r){ cc[r.cat]=(cc[r.cat]||0)+r.total; });
   var catSorted=Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];});
   var catBars=catSorted.map(function(c){var pct=total>0?Math.round(cc[c]/total*100):0;var color=(typeof CAT_COLOR!=='undefined'&&CAT_COLOR[c])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">¥'+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
@@ -30733,7 +30741,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 588;
+window.__APP_BUILD__ = 589;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
