@@ -1,4 +1,28 @@
-# RetWork (チリつも) — HANDOFF (build 573 시점)
+# RetWork (チリつも) — HANDOFF (build 592 시점)
+
+> # 📌 2026-06-30 작업 요약 (build 574→592) — 가계부 신기능 6종 + 영수증 PDF + 파싱 문서화
+> **다른 PC에서 이어가려면 이 블록부터.** 단일 파일 `public/index.html` + Next.js(`app/api/*`) + Supabase + Vercel(`ret-work`) + Cloudflare DNS 구조는 그대로.
+>
+> **🟥 실행 완료된 SQL (이번 세션, 사용자 확인):** `budget_start_day.sql`(b575, profiles.budget_start_day) · `recurring_expenses.sql`(b582, 신규 테이블+RLS) · `logreminder.sql`(b583, push_subscriptions.logreminder_optin) · `cat_budgets.sql`(b584, profiles.cat_budgets jsonb). **추가 대기 SQL 없음.**
+>
+> **버그 수정:** b574 연속 영수증 공개버튼 비활성화 잔존(_cpUnlock 성공경로) · b577 같은 영수증 재선택 시 분석 안 됨(file input.value 리셋) · b578 지도 빈목록 한글노출(t('rmap.empty'))+DB로드후 renderMapPins 재호출+주변비교 GPS중심 · b588 상품검색 정렬(qty_base 혼재→원가 기준)+_downloadBlob 중복정의 제거 · b590 주유 'N回'→'NL·리터당 ¥'(_FUEL_RE).
+>
+> **월 시작일(급여 주기) — b575·576:** 설정에 「월 시작일」(1~28). 시작일=1이면 기존과 완전동일(하위호환, 예산키도 YYYY-MM 유지). 커스텀이면 홈 '이번 달 지출'·예산·달력·월별리포트가 그 주기로(예 6/25~7/24). 헬퍼 `_monthStartDay/_periodRange/_periodForMonth/_periodReceipts/_periodLabel(ForMonth)/_periodElapsedDays/_periodLen/_periodContainsToday`. 달력은 두 달 걸친 날짜를 주 격자에 배치(selectDay(el,…)로 변경).
+>
+> **추천 신기능 6종 (내가 제안→순서대로 구현):**
+> - **#1 정기지출(b582):** 설정→🔁정기지출 관리. 구독·월세·통신비 등록→매월 지정일 가계부 자동기록. 앱 로드 시 idempotent 생성(last_generated 기준, 최초 1회만/미접속 누락달 백필 최대24/말일·연도경계 캡). `_generateRecurringDue`/`_createReceiptFromRecurring`. loadFromSupabase 끝에서 `_initRecurring()`.
+> - **#2 스트릭+리마인더(b583):** 홈에 🔥연속기록+오늘미기록 넛지(클라). 저녁 푸시 리마인더=크론 `app/api/cron/log-reminder/route.ts`(JST20시, `.github/workflows/log-reminder.yml`, price-watch 미러). 설정 토글(푸시 ON일 때만). 기존 VAPID/CRON_SECRET 재사용.
+> - **#3 카테고리별 예산(b584):** 예산 모달에 접이식 카테고리별 금액. 홈 카드 80%↑/초과 ⚠️칩 + 월별리포트 카테고리바에 /¥예산. `_catBudgets`(localStorage+profiles.cat_budgets). 인앱만(푸시 X).
+> - **#4 상품 가성비 검색(b585):** 가격비교 패널 3번째 탭 「🔍상품검색」. products_master.canonical ilike→product_prices. 신선도컷(180일)+이상치컷(중앙값3배)+원가기준 정렬+거리. `_pcsSearch`. 신규 SQL 없음.
+> - **#5 CSV 내보내기(b586):** 설정 「📊CSV로 내보내기」(전체) + 월별리포트 「이 기간 CSV」. 품목단위행+UTF-8 BOM(Excel). `_buildReceiptCsv`. 신규 SQL 없음.
+> - **#6 연간 리포트(b587·589·591):** 월별리포트 하단 「📅 N년 연간 리포트」 진입(`ov-year-report` z381). 연간총액·전년비·월평균 + 월별추이(가로막대+금액, b589) + 카테고리 + 자주간 가게 TOP10(횟수순)·지출많은 가게 TOP10(금액순, b591) + 공유. 신규 SQL 없음.
+> - **(b592)** 월별리포트에도 「💰지출 많은 가게 TOP5」 추가.
+>
+> **영수증 PDF(b580·581):** 내역→영수증 탭 펼침의 「📄PDF」 또는 편집모달 → 내용선택(사진/데이터/둘다) → 1건 / 월별리포트 「이 기간 PDF」. 외부라이브러리 없이 canvas→JPEG→PDF 직접조립(`_jpegToPdf`). 원본사진=receipt-images 비공개버킷 signed URL→blob URL(taint회피). 신규 SQL 없음.
+>
+> **📄 PARSING.md 신설(중요):** 영수증 OCR→파싱 설계서. 파이프라인(전처리→Vision→좌표파서→GPT폴백)·**GPT 시스템 프롬프트 전문**·모델2단(mini→4o)·검증기준(좌표 _valid 합계일치/세율역산, GPT ±5%/±12%)·해결한 문제 히스토리·함수맵. **파서/프롬프트 수정 전 반드시 읽기**(AGENTS.md에 규칙 추가). 정본은 코드, 수정 시 PARSING.md+table-proto.html 동기화.
+>
+> **검증 방식:** 이 세션 환경에선 브라우저 프리뷰 불가(작업 디렉터리가 프로젝트 밖이라 dev서버 실행 실패) → **로직은 node 단위테스트**(주기경계/스트릭/연간버킷/CSV BOM·이스케이프/PDF구조/주유감지/가게정렬)로 검증, JS 문법검사+i18n 4로케일 카운트 매 빌드 통과. **미검증(실기기 필요): 저녁 푸시 실제발송·원본사진 PDF(CORS)·navigator.share·다국어 상품검색(데이터=일본어 canonical)·클라우드 동기화 왕복.**
 
 > # 📌 2026-06-24 작업 요약 (build 548→573) — 다른 PC에서 이어가려면 이 블록 + `NEXT_TASK_place_id_phase2.md` 읽기
 > **인증·이메일 인프라:**
