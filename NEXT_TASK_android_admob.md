@@ -128,6 +128,15 @@ npx cap open android
 - **Claude**: capacitor.config.ts, AndroidManifest 스니펫, app-ads.txt 내용, `index.html` 리워드 분기 코드, 명령어·클릭 순서 안내.
 - **민우**: Android Studio 설치, Play/AdMob 계정 생성 및 ID 발급, 터미널 명령 실행, 스토어 제출.
 
+## 🐞 알려진 이슈 (네이티브 앱)
+- **소셜 로그인(Google/LINE/Apple) 딥링크** — 네이티브 WebView에서 OAuth가 외부 브라우저(Chrome)로 나갔다가 **앱으로 안 돌아옴**(세션이 Chrome에 생김). 이메일 로그인은 정상.
+  - 해결: 커스텀 스킴(`jp.retwork.app://login-callback`)을 Supabase OAuth redirect 로 등록 + AndroidManifest intent-filter + `App.addListener('appUrlOpen')` 로 토큰 받아 `supabase.auth` 세션 설정. (또는 네이티브 Google 로그인 플러그인 + `signInWithIdToken`)
+  - 우선순위: 낮음(이메일 로그인으로 대체 가능). AdMob 이후 처리.
+
+## 진행 상황 (b594 시점)
+- ✅ Phase 1: Capacitor + android 프로젝트 생성, 실기기(SM-F956Q)에서 네이티브 실행 성공(retwork.jp 로드)
+- 🔄 Phase 2: `index.html`에 AdMob 리워드 분기 코드 추가(테스트 광고 ID). **AdMob 실계정 발급 후** `_ADMOB_REWARD_ID`+`_ADMOB_TESTING=false`+Manifest App ID 교체 필요.
+
 ## 진행 체크리스트
 - [ ] Phase 1 — Capacitor 추가 + config
 - [ ] Phase 2 — AdMob 계정·ID 발급 + Manifest/app-ads.txt + index.html 분기
