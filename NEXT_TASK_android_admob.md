@@ -132,9 +132,12 @@ npx cap open android
 - **푸시 알림 = 네이티브에서 미지원** — 앱 설정에서 "이 브라우저는 지원 안 함". RetWork 푸시는 Web Push(브라우저 API)라 Capacitor WebView에선 안 됨. 웹(Chrome/PWA)은 정상.
   - 해결: **FCM(Firebase) + `@capacitor/push-notifications`** → Firebase 프로젝트 + google-services.json + 디바이스 토큰 Supabase 저장 + 서버 크론(log-reminder/price-watch)이 네이티브엔 FCM 발송(웹은 web-push 유지).
   - 우선순위: 낮음(리텐션 부가기능). Play 출시·AdMob 이후 후속 작업.
-- **소셜 로그인(Google/LINE/Apple) 딥링크** — 네이티브 WebView에서 OAuth가 외부 브라우저(Chrome)로 나갔다가 **앱으로 안 돌아옴**(세션이 Chrome에 생김). 이메일 로그인은 정상.
-  - 해결: 커스텀 스킴(`jp.retwork.app://login-callback`)을 Supabase OAuth redirect 로 등록 + AndroidManifest intent-filter + `App.addListener('appUrlOpen')` 로 토큰 받아 `supabase.auth` 세션 설정. (또는 네이티브 Google 로그인 플러그인 + `signInWithIdToken`)
-  - 우선순위: 낮음(이메일 로그인으로 대체 가능). AdMob 이후 처리.
+- **소셜 로그인(Google/LINE) 딥링크** — ✅ **코드 구현 완료(b596)**. 네이티브에서 OAuth가 외부 브라우저로 이탈하던 문제 수정.
+  - 구현: `@capacitor/app`+`@capacitor/browser` 추가 → 인앱 브라우저로 로그인 → `jp.retwork.app://login-callback` 딥링크 복귀 → `App.addListener('appUrlOpen')` 가 code(PKCE)/token(implicit) 받아 `_sb.auth.exchangeCodeForSession`/`setSession`. index.html `_nativeOAuthLogin()`(authGoogle/authLine 앞) + AndroidManifest intent-filter(scheme=jp.retwork.app host=login-callback).
+  - **남은 수동 작업 2가지 (민우):**
+    1. **Supabase 대시보드** → Authentication → URL Configuration → **Redirect URLs** 에 `jp.retwork.app://login-callback` 추가·저장.
+    2. **앱 재빌드** (플러그인·Manifest는 네이티브라 재빌드 필요): Android Studio ▶Run 으로 폰에서 구글 로그인 테스트 → 되면 새 AAB 빌드해 내부테스트 재업로드.
+  - Apple 로그인은 아직 "준비중"(Developer Program 미가입) — 대상 아님.
 
 ## ✅ 현재 상태 (2026-07-01, build 595) — 여기부터 재개
 - ✅ **Phase 1** Capacitor + `android/` 프로젝트 생성, 실기기(삼성 SM-F956Q)에서 **네이티브 실행 성공**(server.url=retwork.jp 로드, 이메일 로그인 OK)
