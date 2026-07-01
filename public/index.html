@@ -1542,7 +1542,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <div class="cal-card">
       <div class="cal-nav">
         <span class="cal-btn" onclick="changeMonth(-1)">‹</span>
-        <span class="cal-month" id="cal-label">2025年 5月</span>
+        <span class="cal-month" id="cal-label" onclick="openCalPicker()" style="cursor:pointer;user-select:none;" title="年月を選択">2025年 5月</span>
         <span class="cal-btn" onclick="changeMonth(1)">›</span>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding-bottom:10px;border-bottom:0.5px solid var(--border);">
@@ -2415,6 +2415,21 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     </div>
     <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;" data-i18n="alertinbox.sub">최근 7일간 받은 가격·절약 알림</div>
     <div id="alert-inbox-list" class="scroll" style="overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- ══ 달력 년/월 선택 (b597) ══ -->
+<div class="overlay" id="ov-calpick" onclick="closeOvOutside(event,'ov-calpick')">
+  <div class="sheet" style="align-self:flex-end;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" data-i18n="cal.pick_title">年月を選択</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:14px 0 18px;">
+      <span class="cal-btn" onclick="_cpChangeYear(-1)" style="font-size:26px;">‹</span>
+      <span id="cp-year-label" style="font-size:20px;font-weight:800;color:var(--text-1);min-width:96px;text-align:center;">2026</span>
+      <span class="cal-btn" onclick="_cpChangeYear(1)" style="font-size:26px;">›</span>
+    </div>
+    <div id="cp-month-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"></div>
+    <button onclick="calGoToday()" style="width:100%;margin-top:18px;padding:13px;border:none;border-radius:14px;background:var(--surface-2,rgba(127,127,127,.12));color:var(--text-1);font-size:14px;font-weight:700;cursor:pointer;" data-i18n="cal.pick_today">今月へ</button>
   </div>
 </div>
 
@@ -10350,6 +10365,30 @@ function renderCalendar(y,m) {
 }
 function changeMonth(dir){ calMonth+=dir; if(calMonth<1){calMonth=12;calYear--;} if(calMonth>12){calMonth=1;calYear++;} renderCalendar(calYear,calMonth); }
 
+// ── 년/월 빠른 선택 팝업 (b597) ──
+var _cpYear = 2026; // 팝업에서 편집 중인 연도(임시)
+function _cpYearSuffix(){ return (_currentLang==='ko')?'년':(_currentLang==='en')?'':'年'; }
+function _cpMonLabel(m){ return (_currentLang==='en') ? _monName(m) : (m + (_currentLang==='ko'?'월':'月')); }
+function openCalPicker(){ _cpYear = calYear; _renderCalPicker(); openOv('ov-calpick'); }
+function _cpChangeYear(d){ _cpYear += d; _renderCalPicker(); }
+function _renderCalPicker(){
+  var yl = document.getElementById('cp-year-label');
+  if (yl) yl.textContent = _cpYear + _cpYearSuffix();
+  var grid = document.getElementById('cp-month-grid');
+  if (!grid) return;
+  var html='';
+  for (var m=1;m<=12;m++){
+    var active = (_cpYear===calYear && m===calMonth);
+    var st = 'padding:13px 0;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;border:1px solid '
+      + (active?'transparent':'var(--border)') + ';'
+      + (active?'background:var(--green-grad);color:#fff;':'background:transparent;color:var(--text-1);');
+    html += '<button onclick="pickCalMonth('+m+')" style="'+st+'">'+_cpMonLabel(m)+'</button>';
+  }
+  grid.innerHTML = html;
+}
+function pickCalMonth(m){ closeOv('ov-calpick'); renderCalendar(_cpYear, m); }
+function calGoToday(){ var d=new Date(); closeOv('ov-calpick'); renderCalendar(d.getFullYear(), d.getMonth()+1); }
+
 function openMonthDetail() {
   // build 576 — 달력과 동일하게 월 시작일(급여 주기) 기준
   var _mdRg = _periodForMonth(calYear, calMonth);
@@ -14273,7 +14312,7 @@ var I18N = {
     // 서브탭
     'subtab.history':'支出履歴','subtab.report':'レポート',
     // 달력
-    'cal.title':'カレンダー','cal.sub':'日付別の支出を確認','cal.month_summary':'今月のまとめ','cal.month_total':'総支出',
+    'cal.title':'カレンダー','cal.sub':'日付別の支出を確認','cal.month_summary':'今月のまとめ','cal.month_total':'総支出','cal.pick_title':'年月を選択','cal.pick_today':'今月へ',
     // 영수증 편집
     'edit.title':'レシート編集','edit.store':'店名 / 支出先','edit.date':'日付','edit.amount':'金額','edit.memo':'メモ','edit.category':'カテゴリ',
     // 아바타
@@ -14568,7 +14607,7 @@ var I18N = {
     'home.chart.weekly':'이번 주 일별 지출','home.chart.monthly':'이번 달 일별 지출','home.chart.yearly':'올해 월별 지출',
     'home.trend':'📈 지출 추이',
     'subtab.history':'지출 내역','subtab.report':'리포트',
-    'cal.title':'달력','cal.sub':'날짜별 지출 확인','cal.month_summary':'이달 요약','cal.month_total':'총 지출',
+    'cal.title':'달력','cal.sub':'날짜별 지출 확인','cal.month_summary':'이달 요약','cal.month_total':'총 지출','cal.pick_title':'년/월 선택','cal.pick_today':'이번 달로',
     'edit.title':'영수증 편집','edit.store':'가게명 / 지출처','edit.date':'날짜','edit.amount':'금액','edit.memo':'메모','edit.category':'카테고리',
     'avatar.title':'아바타 편집','avatar.hint':'드래그로 위치 조정<br>슬라이더로 크기 조절','avatar.apply':'✅ 적용',
     'mp.title':'✏️ 수동으로 핀 추가','mp.location':'📍 핀 위치','mp.location.text':'🗺️ 치즈에서 선택한 위치','mp.receipt_btn':'영수증으로 등록 (자동입력)','mp.or_manual':'또는 수동 입력','mp.store_photo':'가게 사진 (선택)','mp.add_photo':'사진 추가','mp.store_name':'가게 이름','mp.store_ph':'예: 나카우 욧카이치점','mp.menu_price':'메뉴 & 가격','mp.add_menu':'＋ 메뉴 추가','mp.rating':'평가 (선택)','mp.menu_name':'메뉴명','mp.menu_photo':'메뉴 사진',
@@ -14830,7 +14869,7 @@ var I18N = {
     'home.chart.weekly':'Daily spend this week','home.chart.monthly':'Daily spend this month','home.chart.yearly':'Monthly spend this year',
     'home.trend':'📈 Spend trend',
     'subtab.history':'History','subtab.report':'Report',
-    'cal.title':'Calendar','cal.sub':'Spend by date','cal.month_summary':"Month Summary",'cal.month_total':'Total',
+    'cal.title':'Calendar','cal.sub':'Spend by date','cal.month_summary':"Month Summary",'cal.month_total':'Total','cal.pick_title':'Select Year / Month','cal.pick_today':'This month',
     'edit.title':'Edit Receipt','edit.store':'Store / Payee','edit.date':'Date','edit.amount':'Amount','edit.memo':'Memo','edit.category':'Category',
     'avatar.title':'Edit Avatar','avatar.hint':'Drag to position<br>Slider to resize','avatar.apply':'✅ Apply',
     'mp.title':'✏️ Add Pin Manually','mp.location':'📍 Pin Location','mp.location.text':'🗺️ Selected on map','mp.receipt_btn':'Register via receipt (auto-fill)','mp.or_manual':'or enter manually','mp.store_photo':'Store photo (optional)','mp.add_photo':'Add photo','mp.store_name':'Store name','mp.store_ph':'e.g. Nakau Yokkaichi','mp.menu_price':'Menu & price','mp.add_menu':'＋ Add menu','mp.rating':'Rating (optional)','mp.menu_name':'Menu name','mp.menu_photo':'Menu photo',
@@ -15092,7 +15131,7 @@ var I18N = {
     'home.chart.weekly':'本周每日支出','home.chart.monthly':'本月每日支出','home.chart.yearly':'本年每月支出',
     'home.trend':'📈 支出趋势',
     'subtab.history':'支出记录','subtab.report':'报表',
-    'cal.title':'日历','cal.sub':'按日期查看支出','cal.month_summary':'本月总结','cal.month_total':'总支出',
+    'cal.title':'日历','cal.sub':'按日期查看支出','cal.month_summary':'本月总结','cal.month_total':'总支出','cal.pick_title':'选择年月','cal.pick_today':'本月',
     'edit.title':'编辑票据','edit.store':'店名 / 支出对象','edit.date':'日期','edit.amount':'金额','edit.memo':'备注','edit.category':'类别',
     'avatar.title':'头像编辑','avatar.hint':'拖动调整位置<br>滑动调整尺寸','avatar.apply':'✅ 应用',
     'mp.title':'✏️ 手动添加图钉','mp.location':'📍 图钉位置','mp.location.text':'🗺️ 在地图上选择的位置','mp.receipt_btn':'用小票登记（自动填充）','mp.or_manual':'或手动输入','mp.store_photo':'店铺照片（可选）','mp.add_photo':'添加照片','mp.store_name':'店铺名称','mp.store_ph':'例：餐厅名 分店','mp.menu_price':'菜单 & 价格','mp.add_menu':'＋ 添加菜单','mp.rating':'评价（可选）','mp.menu_name':'菜单名','mp.menu_photo':'菜单照片',
@@ -30867,7 +30906,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 596;
+window.__APP_BUILD__ = 597;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
