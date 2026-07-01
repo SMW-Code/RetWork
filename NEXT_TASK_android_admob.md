@@ -136,13 +136,68 @@ npx cap open android
   - 해결: 커스텀 스킴(`jp.retwork.app://login-callback`)을 Supabase OAuth redirect 로 등록 + AndroidManifest intent-filter + `App.addListener('appUrlOpen')` 로 토큰 받아 `supabase.auth` 세션 설정. (또는 네이티브 Google 로그인 플러그인 + `signInWithIdToken`)
   - 우선순위: 낮음(이메일 로그인으로 대체 가능). AdMob 이후 처리.
 
-## 진행 상황 (b594 시점)
-- ✅ Phase 1: Capacitor + android 프로젝트 생성, 실기기(SM-F956Q)에서 네이티브 실행 성공(retwork.jp 로드)
-- 🔄 Phase 2: `index.html`에 AdMob 리워드 분기 코드 추가(테스트 광고 ID). **AdMob 실계정 발급 후** `_ADMOB_REWARD_ID`+`_ADMOB_TESTING=false`+Manifest App ID 교체 필요.
+## ✅ 현재 상태 (2026-07-01, build 595) — 여기부터 재개
+- ✅ **Phase 1** Capacitor + `android/` 프로젝트 생성, 실기기(삼성 SM-F956Q)에서 **네이티브 실행 성공**(server.url=retwork.jp 로드, 이메일 로그인 OK)
+- ✅ **Phase 2** AdMob 리워드 연동 완료 — 실기기에서 **테스트 리워드 영상 시청→영수증 저장 언락 동작 확인**
+- ✅ **실 AdMob ID + app-ads.txt** 반영 (아래 키값). 단 `_ADMOB_TESTING=true` 유지 → **출시 시 false 로**
+- ✅ **서명 AAB 빌드 완료**: `android/app/release/app-release.aab` (8.4MB)
+- ✅ **Google Play 개발자 계정 생성**(개인, $25 결제 완료). 계정 ID `6744529180288496834`
+- 🔴 **BLOCKED: Google 신원 확인 중(며칠 소요)** → 확인 완료 이메일(minwoo.seo1019@gmail.com) 와야 **「앱 만들기」 잠금 해제**. 그전까진 앱 등록 불가.
+
+### 🔑 키값 (교체·검증용)
+| 항목 | 값 |
+|---|---|
+| 패키지 ID(appId) | `jp.retwork.app` (변경 불가) |
+| AdMob **App ID** (Manifest) | `ca-app-pub-6495876616577319~1957083064` |
+| AdMob **보상형 광고단위** | `ca-app-pub-6495876616577319/1298194826` |
+| 퍼블리셔(app-ads.txt, =AdSense와 동일) | `pub-6495876616577319` |
+| 업로드 키스토어 | `C:\Users\minus\retwork-upload.jks` · alias `upload` · **비번 백업 필수(잃으면 업데이트 불가)** |
+| 리워드 코드 위치 | `public/index.html` `_ADMOB_REWARD_ID`/`_ADMOB_TESTING`/`_tryNativeRewarded`/`showAdModal` 분기 |
+
+## ▶ 재개 방법 (신원 확인 완료 이메일 온 뒤)
+1. Play Console → **앱 만들기**: 이름 `RetWork レシート家計簿・節約` / 기본언어 **日本語** / **앱** / **무료** / 정책 체크
+2. **테스트 → 내부 테스트** 트랙에 `android/app/release/app-release.aab` 업로드
+3. **앱 콘텐츠** 선언: 개인정보처리방침 `https://retwork.jp/privacy.html` · 앱 액세스(로그인 필요 → 테스트 계정 제공) · **광고 있음(예)** · 콘텐츠 등급 설문 · 타겟층(성인) · **데이터 안전**(수집: 이메일·영수증 이미지·대략 위치 등 신고) · 금융 특성=해당없음
+4. **스토어 등록정보**: 아래 §스토어 문구 + 스크린샷(최소 2장, 폰 캡처) + 아이콘 512² + (선택)피처그래픽 1024×500
+5. **심사 제출**(내부테스트 먼저 → 프로덕션). 승인 후:
+   - `public/index.html` `_ADMOB_TESTING=false` 로 전환 → 실광고 (push 후 앱 재실행이면 반영, server.url 이라 재빌드 불필요)
+   - AdMob 홈 **"앱 스토어 연결"**(Play 리스팅 URL 연결) → 계정 승인·app-ads.txt 검증
+6. **웹 게이팅(Phase 5)**: 네이티브 출시 후 비구독자 스캔 등 원가기능 → "앱에서 계속하기" 유도
+
+## 스토어 문구 (일본어, 붙여넣기용)
+**짧은 설명(80자):**
+`レシートを撮るだけでAIが家計簿を自動作成。近所の最安値マップで賢く節約。`
+
+**전체 설명:**
+```
+【レシートを撮るだけ、AIが家計簿を自動作成】
+RetWork（チリつも）は、買い物レシートを撮影するだけでAIが店舗名・商品名・金額を自動で読み取り、家計簿に記録する無料の節約アプリです。手入力ゼロで続けやすい家計管理を実現します。
+
+「チリも積もれば山となる」——毎日の小さな節約の積み重ねが、年間で大きな差に。RetWorkはその「チリ」を見える化します。
+
+■ 主な機能
+・レシートOCRスキャン：撮るだけで自動入力
+・カテゴリ別自動分類：食費・外食・日用品など
+・月別／年間レポート：支出傾向・予算消化を可視化
+・給料日ベースの予算管理：月初でなく給料日から1ヶ月で
+・コスパ価格マップ：近所のお店の実際の価格を共有・比較
+・商品コスパ検索：同じ商品の最安店をすぐ発見
+・PDF／CSV出力：家計データをまるごと保存
+・チリつもポイント：使うほど貯まる
+
+■ こんな方に
+一人暮らし・主婦・学生・共働き世帯など、食費や日用品を賢く節約したいすべての方に。
+
+日本語・韓国語・英語・中国語対応。基本機能はすべて無料。
+今日のレシートが、明日の節約につながります。
+```
 
 ## 진행 체크리스트
-- [ ] Phase 1 — Capacitor 추가 + config
-- [ ] Phase 2 — AdMob 계정·ID 발급 + Manifest/app-ads.txt + index.html 분기
-- [ ] Phase 3 — 로컬 빌드·테스트(테스트 광고)
-- [ ] Phase 4 — Play 심사·출시(실광고 교체)
-- [ ] Phase 5 — 웹 게이팅 ON / iOS 확장
+- [x] Phase 1 — Capacitor 추가 + config + 실기기 실행
+- [x] Phase 2 — AdMob 리워드 연동 + 실 ID/app-ads.txt (테스트 광고로 동작 확인)
+- [x] 서명 AAB 빌드 + Play 개발자 계정 생성($25)
+- [ ] **(대기) Google 신원 확인 완료** → 앱 만들기 잠금 해제
+- [ ] Play 앱 생성 + AAB 업로드 + 콘텐츠 선언 + 스토어 등록정보 + 심사 제출
+- [ ] 승인 후 `_ADMOB_TESTING=false` + AdMob 앱 스토어 연결 (실광고 ON)
+- [ ] Phase 5 — 웹 게이팅 ON / iOS 확장(클라우드 빌드)
+- [ ] (후속) 소셜 로그인 딥링크 / 네이티브 푸시(FCM)
