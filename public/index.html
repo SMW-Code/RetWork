@@ -19715,7 +19715,77 @@ async function authSignup() {
   showApp();
 }
 
+// ════════════════════════════════════════════════════════════════════════════
+// 네이티브 앱(Capacitor) OAuth — 딥링크 방식 (b596)
+//   웹: signInWithOAuth 가 전체 리다이렉트 → 외부 브라우저에서 세션 생김 → 앱 복귀 X (버그)
+//   네이티브: 인앱 브라우저(Custom Tab)로 로그인 → jp.retwork.app://login-callback 딥링크로 복귀
+//             → appUrlOpen 리스너가 code/token 을 받아 앱(WebView) 안에서 세션 확립
+//   ※ Supabase 대시보드 Auth→URL Configuration 의 Redirect URLs 에
+//     jp.retwork.app://login-callback 를 반드시 등록해야 함
+//   ※ @capacitor/app · @capacitor/browser 플러그인 + Manifest intent-filter 필요 (재빌드)
+// ════════════════════════════════════════════════════════════════════════════
+var _NATIVE_OAUTH_REDIRECT = 'jp.retwork.app://login-callback';
+var _nativeOAuthListenerSet = false;
+async function _nativeOAuthLogin(provider) {
+  var P = (window.Capacitor && window.Capacitor.Plugins) || null;
+  // 플러그인 미탑재(구버전 앱) → false 반환 → 기존 웹 방식으로 폴백
+  if (!P || !P.Browser || !P.App) return false;
+  try {
+    // 1) 딥링크 복귀 리스너 1회 등록
+    if (!_nativeOAuthListenerSet) {
+      _nativeOAuthListenerSet = true;
+      P.App.addListener('appUrlOpen', async function(data) {
+        try {
+          var url = (data && data.url) || '';
+          if (url.indexOf('login-callback') === -1) return; // 우리 콜백만 처리
+          try { await P.Browser.close(); } catch(e) {}
+          // PKCE: ?code=... / implicit: #access_token=...&refresh_token=...  (둘 다 대응)
+          var code = null, at = null, rt = null;
+          var qi = url.indexOf('?'), hi = url.indexOf('#');
+          if (qi >= 0) { try { var qs = new URLSearchParams(url.substring(qi + 1).split('#')[0]); code = qs.get('code'); } catch(e) {} }
+          if (hi >= 0) { try { var hp = new URLSearchParams(url.substring(hi + 1)); at = hp.get('access_token'); rt = hp.get('refresh_token'); if (!code) code = hp.get('code'); } catch(e) {} }
+          if (code) {
+            var r = await _sb.auth.exchangeCodeForSession(code);
+            if (r.error) throw r.error;
+          } else if (at && rt) {
+            var r2 = await _sb.auth.setSession({ access_token: at, refresh_token: rt });
+            if (r2.error) throw r2.error;
+          } else {
+            throw new Error('콜백에 code/token 없음');
+          }
+          // 세션 확립 → 앱 화면 전환 (onAuthStateChange 도 처리하지만 확실히)
+          var s = await _sb.auth.getSession();
+          if (s.data && s.data.session) {
+            _currentUser = s.data.session.user;
+            var ae = document.getElementById('screen-auth'); if (ae) ae.style.display = 'none';
+            _hideLanding();
+            showApp();
+          }
+        } catch(err) {
+          console.error('[native-oauth] callback error:', err);
+          try { showAuthError('로그인 처리 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); } catch(e) {}
+        }
+      });
+    }
+    // 2) OAuth URL 만 생성(리다이렉트 skip) → 인앱 브라우저로 연다
+    var res = await _sb.auth.signInWithOAuth({
+      provider: provider,
+      options: { redirectTo: _NATIVE_OAUTH_REDIRECT, skipBrowserRedirect: true }
+    });
+    if (res.error) throw res.error;
+    var authUrl = res.data && res.data.url;
+    if (!authUrl) throw new Error('인증 URL 생성 실패');
+    await P.Browser.open({ url: authUrl });
+  } catch(err) {
+    console.error('[native-oauth] init error:', err);
+    try { showAuthError('로그인 실패: ' + (err.message || '잠시 후 다시 시도해주세요')); } catch(e) {}
+  }
+  return true; // 네이티브 경로로 시도 완료 → 웹 폴백 안 함
+}
+
 async function authGoogle() {
+  // 네이티브 앱: 딥링크 OAuth (외부 브라우저 이탈 방지)
+  if (_isNativeApp()) { if (await _nativeOAuthLogin('google')) return; }
   // PWA standalone 환경 안내
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                      window.navigator.standalone === true;
@@ -19740,6 +19810,8 @@ async function authApple() {
 }
 
 async function authLine() {
+  // 네이티브 앱: 딥링크 OAuth (외부 브라우저 이탈 방지)
+  if (_isNativeApp()) { if (await _nativeOAuthLogin('custom:line-v2')) return; }
   // PWA standalone 환경 감지 (Android Chrome PWA, iOS Add to Home Screen)
   var isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
                      window.navigator.standalone === true;
@@ -30795,7 +30867,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 595;
+window.__APP_BUILD__ = 596;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
