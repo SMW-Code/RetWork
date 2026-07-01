@@ -19116,8 +19116,8 @@ function closeAdModal() {
 /* ══ 네이티브(AdMob) 리워드 광고 (build 594) — Capacitor 앱에서만. 웹은 기존 광고 페이지. ══
    구조: "광고 시청 완료 → 콜백(영수증 저장 등)". 스캔 원가를 광고 수익으로 상쇄.
    현재 Google 공식 "테스트" 리워드 단위. AdMob 계정 발급 후 _ADMOB_REWARD_ID / isTesting 교체. */
-var _ADMOB_REWARD_ID = 'ca-app-pub-3940256099942544/5224354917'; // 테스트 리워드 광고 단위
-var _ADMOB_TESTING   = true;                                     // 실계정 발급 후 false
+var _ADMOB_REWARD_ID = 'ca-app-pub-6495876616577319/1298194826'; // 실제 보상형 광고단위(b595)
+var _ADMOB_TESTING   = true;                                     // ⚠️ Play 출시 시 false 로 → 실광고. 그전엔 test 광고(안전)
 var _admobInited = false;
 function _isNativeApp(){ try{ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }catch(e){ return false; } }
 async function _tryNativeRewarded(callback){
@@ -30795,7 +30795,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 594;
+window.__APP_BUILD__ = 595;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

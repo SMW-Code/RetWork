@@ -9,10 +9,10 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!-- AdMob App ID — 지금은 Google 공식 "테스트" App ID. 실제 AdMob 계정 발급 후 교체할 것. -->
+        <!-- AdMob App ID (실제 계정, b595). 광고는 개발 중 isTesting=true 로 테스트 광고 표시 → Play 출시 시 실광고. -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713"/>
+            android:value="ca-app-pub-6495876616577319~1957083064"/>
 
         <activity
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode|navigation|density"
