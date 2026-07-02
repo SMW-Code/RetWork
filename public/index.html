@@ -19067,6 +19067,12 @@ function _getWatchAdOptsByContext(ctx){
 
 function openWatchAdPage(context, callback, opts){
   opts = opts || {};
+  // build 597 — 네이티브 앱이면 중간 시청 페이지 없이 바로 AdMob 리워드로 처리
+  //   (report_unlock / monthreport 등 showAdModal 안 거치는 직접 호출도 커버)
+  if (_isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) {
+    _tryNativeRewarded(callback);
+    return;
+  }
   // 기본 description은 context 매트릭스에서 자동 추출, opts 가 override
   var base = _getWatchAdOptsByContext(context);
   _watchAdCallback = callback;
@@ -19305,6 +19311,34 @@ function adComplete() {
          'reward' → チリ 지급
    ──────────────────────────────────────── */
 function ctOpenFullscreenAd(mode, callback) {
+  // build 597 — 네이티브 앱이면 모든 동영상 광고를 AdMob 리워드로 통일
+  //   (테스트 중엔 test 광고, Play 출시 후 _ADMOB_TESTING=false → 실광고).
+  //   웹은 아래 기존 풀스크린 영상 흐름 그대로.
+  if (_isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) {
+    _rvAdMode = mode;
+    _tryNativeRewarded(function(){
+      // 완료 처리 — 웹 흐름(카운트다운 종료 시점)과 동일하게 재현
+      if (mode === 'reward') {
+        // reward 모드는 콜백이 아니라 코인 50 지급으로 완료 (일일 사용 카운트 증가)
+        try {
+          var _today = new Date().toDateString();
+          var _key = 'ct_rad_' + _today;
+          var _used = parseInt(localStorage.getItem(_key) || '0');
+          localStorage.setItem(_key, String(_used + 1));
+        } catch(e) {}
+        if (typeof ctAddCoin === 'function') ctAddCoin(50, '📺 広告視聴', 'ad');
+      } else if (typeof callback === 'function') {
+        callback(); // save / attendance / bonus / referral / comment_quota 등
+      }
+      // ad_views 통계 기록 (웹과 동일)
+      if (_sb && _currentUser) {
+        var _rw = (mode === 'reward') ? 50 : 0;
+        _sb.from('ad_views').insert({ user_id: _currentUser.id, ad_context: mode || 'save', reward_chiri: _rw })
+          .then(function(r){ if (r.error) console.warn('[ad_views]', r.error.message); });
+      }
+    });
+    return;
+  }
   _rvAdMode = mode;
 
   var ov = document.getElementById('ov-reward-ad');
@@ -30906,7 +30940,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 597;
+window.__APP_BUILD__ = 598;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
