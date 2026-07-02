@@ -1991,6 +1991,8 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
       <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
     </div>
   </div>
+  <!-- 관리자 전용: 치리 리워드 OFF 상태 안내 (b599) — 일반 유저에겐 이 탭 자체가 숨겨짐 -->
+  <div id="adm-flag-notice-reward" style="display:none;margin:10px 16px 0;background:rgba(239,68,68,.12);border:1px solid var(--red);border-radius:12px;padding:10px 14px;font-size:11.5px;font-weight:700;color:var(--red);line-height:1.5;">🔴 치리 리워드 <b>OFF</b> 상태 · 일반 유저에겐 리워드 탭·치리 잔액·적립이 모두 숨겨져 있어요 (관리자만 표시됨)</div>
   <!-- 포인트 내역 아코디언 패널 -->
   <div id="ct-coin-panel-reward" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
     <div style="padding:10px 16px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:0.5px solid var(--border);">
@@ -3899,6 +3901,22 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
         <button onclick="admSavePricing()" style="width:100%;padding:9px;border:none;border-radius:8px;background:var(--green-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장 (대시보드 추정값에 즉시 반영)</button>
       </div>
 
+      <!-- 치리 리워드 시스템 ON/OFF (b599) — 수익 검증 전 리워드 경제 일시중단용 -->
+      <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+          <div style="flex:1;">
+            <div style="font-size:12px;font-weight:800;color:var(--text-1);">🎁 치리 리워드 시스템</div>
+            <div style="font-size:10.5px;color:var(--text-3);margin-top:3px;line-height:1.5;">OFF 시 일반 유저는 <b>리워드 탭·치리 잔액·적립</b>이 모두 사라집니다. 관리자(나)는 계속 보이며 리워드 탭에 'OFF 상태' 배너가 뜹니다. (수익 검증 후 가격 확정용)</div>
+          </div>
+          <label style="position:relative;display:inline-block;width:52px;height:30px;flex-shrink:0;">
+            <input type="checkbox" id="adm-flag-chiri-reward" onchange="admToggleChiriReward(this.checked)" style="opacity:0;width:0;height:0;">
+            <span id="adm-flag-chiri-reward-track" style="position:absolute;cursor:pointer;inset:0;background:var(--border-mid);border-radius:30px;transition:.25s;"></span>
+            <span id="adm-flag-chiri-reward-knob" style="position:absolute;height:24px;width:24px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.3);pointer-events:none;"></span>
+          </label>
+        </div>
+        <div id="adm-flag-chiri-reward-status" style="font-size:11px;font-weight:800;margin-top:8px;"></div>
+      </div>
+
       <!-- 표 1: 바우처 ↔ 필요 치리 -->
       <div style="font-size:12px;font-weight:800;color:var(--text-2);margin-bottom:8px;">📊 바우처 금액 ↔ 필요 치리 (운영 순마진)</div>
       <div style="overflow-x:auto;border:.5px solid var(--border);border-radius:12px;margin-bottom:14px;">
@@ -5339,6 +5357,8 @@ function _ctDetectCoinType(desc){
   return 'bonus';
 }
 function ctAddCoin(amount, desc, type) {
+  // b599 — 치리 리워드 OFF 시 적립/차감 전면 중단 (관리자는 isFeatureOn=true 라 정상 동작)
+  if (!isFeatureOn('chiri_reward')) return;
   // 낙관적 로컬 적립 (UX 빠르게)
   _ctCoinBalance += amount;
   if (_ctCoinBalance < 0) _ctCoinBalance = 0;
@@ -18507,6 +18527,42 @@ function _setupRealtimeSubscriptions() {
   }
 }
 
+// ══ 원격 기능 플래그 (b599) — 어드민에서 ON/OFF, 앱이 Supabase app_config 에서 로드 ══
+//   isFeatureOn(): 관리자는 항상 ON(우회) — 추가개발/업데이트 즉시 확인용.
+//   featureRawOn(): 실제 설정값 (관리자 우회 무시) — 'OFF 상태' 표시용.
+window._FLAGS = window._FLAGS || {};
+async function _loadAppFlags() {
+  if (!_sb) return;
+  try {
+    var res = await _sb.from('app_config').select('key,enabled');
+    if (res.data) { var m = {}; res.data.forEach(function(r){ m[r.key] = !!r.enabled; }); window._FLAGS = m; }
+  } catch(e) { console.warn('[flags] load failed:', e.message); }
+}
+function featureRawOn(key){ var v = window._FLAGS[key]; return (v === undefined) ? true : v; } // 미설정=ON(안전)
+function isFeatureOn(key){ if (_isAdmin) return true; return featureRawOn(key); }
+
+// 치리 리워드 경제 ON/OFF 를 UI에 적용 (리워드 탭·치리 잔액·적립 표시)
+function _applyChiriRewardFlag(){
+  var on     = isFeatureOn('chiri_reward');    // 관리자면 항상 true
+  var rawOff = !featureRawOn('chiri_reward');   // 실제 OFF 여부
+  // 1) 리워드 탭 버튼
+  var rtab = document.getElementById('ct-tab-reward');
+  if (rtab) rtab.style.display = on ? '' : 'none';
+  // 2) 치리 코인 잔액 배지 (치리 모드 모든 헤더)
+  try { document.querySelectorAll('.ct-coin').forEach(function(el){ el.style.display = on ? '' : 'none'; }); } catch(e){}
+  // 3) 프로필/설정의 치리 잔액 배지
+  var sp = document.getElementById('sp-coin-balance');
+  if (sp && sp.parentElement) sp.parentElement.style.display = on ? '' : 'none';
+  // 4) 관리자 전용 'OFF 상태' 배너 (리워드 화면 상단)
+  var notice = document.getElementById('adm-flag-notice-reward');
+  if (notice) notice.style.display = (_isAdmin && rawOff) ? 'block' : 'none';
+  // 5) 일반 유저가 리워드 탭을 보고 있었다면 맵으로 이동
+  if (!on) {
+    var rs = document.getElementById('ct-screen-reward');
+    if (rs && rs.classList.contains('active') && typeof ctSwitchTab === 'function') { try { ctSwitchTab('map'); } catch(e){} }
+  }
+}
+
 // 어드민 권한 로드 — 로그인 직후 호출
 async function _loadAdminFlag() {
   _isAdmin = false;
@@ -18518,6 +18574,7 @@ async function _loadAdminFlag() {
     console.warn('[admin] flag load error:', e.message);
     _isAdmin = false;
   }
+  await _loadAppFlags();   // 기능 플래그 로드 (관리자 판별 후 → 우회 정확히 적용)
   _applyAdminUI();
 }
 
@@ -18525,6 +18582,7 @@ async function _loadAdminFlag() {
 function _applyAdminUI() {
   var entry = document.getElementById('admin-entry-group');
   if (entry) entry.style.display = _isAdmin ? '' : 'none';
+  _applyChiriRewardFlag();   // 치리 리워드 플래그도 함께 반영
 }
 var _userAvatar    = localStorage.getItem('receiptiq_avatar')     || '😊';
 var _userAvatarImg = localStorage.getItem('receiptiq_avatar_img') || null;
@@ -29179,7 +29237,43 @@ function openAdminPricing() {
       return '<tr><td style="padding:7px 8px;">'+r.action+'</td><td style="padding:7px 8px;text-align:right;font-weight:700;color:var(--gold-dark);">+'+r.chiri+' チリ</td><td style="padding:7px 8px;text-align:right;color:var(--text-3);">≈ ¥'+val+'</td></tr>';
     }).join('');
   }
+  _admRenderFlagToggle();   // b599 — 치리 리워드 ON/OFF 토글 상태 반영
   openOv('ov-admin-pricing');
+}
+
+// ── b599 — 치리 리워드 ON/OFF 토글 (어드민) ──
+function _admRenderFlagToggle(){
+  var on = featureRawOn('chiri_reward');
+  var chk   = document.getElementById('adm-flag-chiri-reward');
+  var track = document.getElementById('adm-flag-chiri-reward-track');
+  var knob  = document.getElementById('adm-flag-chiri-reward-knob');
+  var st    = document.getElementById('adm-flag-chiri-reward-status');
+  if (chk)   chk.checked = on;
+  if (track) track.style.background = on ? 'var(--green)' : 'var(--border-mid)';
+  if (knob)  knob.style.left = on ? '25px' : '3px';
+  if (st){
+    st.textContent = on ? '🟢 현재 ON — 모든 유저에게 리워드 표시'
+                        : '🔴 현재 OFF — 일반 유저 숨김 (관리자만 보임)';
+    st.style.color = on ? 'var(--green)' : 'var(--red)';
+  }
+}
+async function admToggleChiriReward(checked){
+  if (!_isAdmin || !_sb){ showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  try {
+    var res = await _sb.from('app_config').upsert(
+      { key:'chiri_reward', enabled: !!checked, note:'치리 리워드 경제 전체 ON/OFF' },
+      { onConflict:'key' }
+    );
+    if (res.error) throw res.error;
+    window._FLAGS['chiri_reward'] = !!checked;
+    _admRenderFlagToggle();
+    _applyChiriRewardFlag();
+    showToast(checked ? '🟢 치리 리워드 ON' : '🔴 치리 리워드 OFF (일반 유저 숨김)');
+  } catch(e){
+    console.error('[flag] toggle failed:', e);
+    showToast('저장 실패: ' + (e.message || '권한/네트워크 확인'));
+    _admRenderFlagToggle();   // 실패 시 실제 상태로 원복 표시
+  }
 }
 
 function admSavePricing() {
@@ -30277,6 +30371,8 @@ document.addEventListener('visibilitychange', async function() {
       }
     }
   } catch(e) { console.warn('[visibility] session check failed', e); }
+  // b599 — 포그라운드 복귀 시 기능 플래그 재로드 (어드민이 켠/끈 걸 근실시간 반영)
+  try { if (_sb && _currentUser) { await _loadAppFlags(); _applyChiriRewardFlag(); } } catch(e){}
 });
 
 // PWA 시작 시 URL hash에 OAuth 토큰이 있으면 1초 후 한 번 더 세션 확인 (안전망)
@@ -30940,7 +31036,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 598;
+window.__APP_BUILD__ = 599;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
