@@ -19,6 +19,8 @@ export const dynamic = 'force-dynamic';
 import { createClient } from '@supabase/supabase-js';
 // web-push 는 CommonJS — namespace import 가 가장 호환성 좋음
 import * as webpush from 'web-push';
+// 네이티브(FCM) 발송 — 웹 web-push 와 별개로 native_push_tokens 로 발송
+import { sendFcmToTokens, isFcmConfigured } from '@/lib/fcm';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -125,9 +127,8 @@ export async function POST(request: Request) {
   if (subsErr) {
     return Response.json({ ok: false, err: 'subs fetch failed: ' + subsErr.message }, { status: 500 });
   }
-  if (!subs || subs.length === 0) {
-    return Response.json({ ok: true, sent: 0, failed: 0, note: 'no active subscriptions' });
-  }
+  // 웹 구독이 0개여도 네이티브(FCM) 발송은 계속 진행 (조기 반환 X)
+  const webSubs = subs || [];
 
   // 6) 각 구독에 발송 (병렬)
   const payload = JSON.stringify({
@@ -144,7 +145,7 @@ export async function POST(request: Request) {
   } as any;
 
   const expiredIds: string[] = [];
-  const results = await Promise.allSettled(subs.map(async (s) => {
+  const results = await Promise.allSettled(webSubs.map(async (s) => {
     const subscription = {
       endpoint: s.endpoint,
       keys: { p256dh: s.p256dh, auth: s.auth }
@@ -175,15 +176,40 @@ export async function POST(request: Request) {
     await sb.from('push_subscriptions').delete().in('id', expiredIds);
   }
 
-  const sent = results.filter(r => r.status === 'fulfilled' && (r.value as any).ok).length;
-  const failed = results.length - sent;
+  const webSent = results.filter(r => r.status === 'fulfilled' && (r.value as any).ok).length;
+  const webFailed = results.length - webSent;
+
+  // 8) 네이티브(FCM) 발송 — native_push_tokens
+  let nativeSent = 0, nativeFailed = 0, nativeInvalidDeleted = 0;
+  try {
+    if (isFcmConfigured()) {
+      let ntQuery = sb.from('native_push_tokens').select('token').eq('enabled', true);
+      if (!broadcast) ntQuery = ntQuery.in('user_id', recipientIds);
+      const { data: ntoks } = await ntQuery;
+      const tokens = (ntoks || []).map((r: any) => r.token).filter(Boolean);
+      if (tokens.length) {
+        const fr = await sendFcmToTokens(tokens, { title, body: msgBody, url, tag, priority, messageId });
+        nativeSent = fr.sent;
+        nativeFailed = fr.failed;
+        if (fr.invalidTokens.length) {
+          await sb.from('native_push_tokens').delete().in('token', fr.invalidTokens);
+          nativeInvalidDeleted = fr.invalidTokens.length;
+        }
+      }
+    }
+  } catch (e: any) {
+    console.warn('[push] native FCM error:', e?.message);
+  }
 
   return Response.json({
     ok: true,
-    total: results.length,
-    sent,
-    failed,
-    expired_deleted: expiredIds.length
+    total: results.length + nativeSent + nativeFailed,
+    sent: webSent + nativeSent,
+    failed: webFailed + nativeFailed,
+    web: { sent: webSent, failed: webFailed },
+    native: { sent: nativeSent, failed: nativeFailed },
+    expired_deleted: expiredIds.length,
+    native_invalid_deleted: nativeInvalidDeleted
   });
 }
 
