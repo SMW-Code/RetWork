@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "817299553806",
+    "project_id": "retwork-ea768",
+    "storage_bucket": "retwork-ea768.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:817299553806:android:5932902986f4bb8356c65f",
+        "android_client_info": {
+          "package_name": "jp.retwork.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKVYWdZv43D4uisxFhUJ6ZwdJ-14hoZAM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -19595,6 +19595,8 @@ function showApp() {
   if (typeof window.loadReferralStatus === 'function') setTimeout(window.loadReferralStatus, 700);
   // 어드민 권한 로드 (비동기, UI에 자동 반영됨)
   _loadAdminFlag();
+  // 네이티브 앱: 이미 알림 허용된 기기면 FCM 토큰 갱신 (b601)
+  if (typeof _registerNativePush === 'function') { try { _registerNativePush(); } catch(e){} }
   // 활성 공지 로드 → 상단 배너 표시
   if (typeof _loadActiveAnnouncement === 'function') _loadActiveAnnouncement();
   // 본인 차단 상태 체크 → 차단 시 상단 배너 표시
@@ -26940,7 +26942,56 @@ async function _sendSocialPush(recipientId, title, body, options) {
 // 임시: HTML 안에 직접 박을 수 있도록 window 에서 읽기. 미설정 시 푸시 기능 비활성화.
 window.__VAPID_PUBLIC_KEY__ = window.__VAPID_PUBLIC_KEY__ || '';
 
+// ══ 네이티브 푸시 (FCM, b601) — Capacitor Push Notifications. 웹은 아래 web-push 유지. ══
+//   네이티브 앱은 WebView 라 web-push 미지원 → FCM 토큰을 native_push_tokens 에 저장,
+//   서버(/api/push·크론)가 네이티브 토큰엔 FCM 으로 발송(웹은 web-push).
+window._nativeFcmToken = window._nativeFcmToken || null;
+window._nativePushListenersSet = false;
+function _nativePushPlugin(){
+  return (_isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications) || null;
+}
+// 옵트인 토글(출석/가격/리마인더)이 읽고 쓰는 테이블 — 네이티브면 native_push_tokens
+function _pushOptinTable(){ return _isNativeApp() ? 'native_push_tokens' : 'push_subscriptions'; }
+async function _saveNativeToken(token){
+  if (!token || !_sb || !_currentUser) return;
+  window._nativeFcmToken = token;
+  try {
+    await _sb.from('native_push_tokens').upsert({
+      user_id: _currentUser.id, token: token, platform: 'android',
+      device_label: _detectDeviceLabel(), enabled: true, updated_at: new Date().toISOString()
+    }, { onConflict: 'token' });
+  } catch(e){ console.warn('[native-push] token save failed', e); }
+}
+function _initNativePushListeners(){
+  var Push = _nativePushPlugin();
+  if (!Push || window._nativePushListenersSet) return;
+  window._nativePushListenersSet = true;
+  Push.addListener('registration', function(t){ if (t && t.value) _saveNativeToken(t.value); });
+  Push.addListener('registrationError', function(e){ console.warn('[native-push] reg error', e); });
+  Push.addListener('pushNotificationReceived', function(n){    // 포그라운드 수신
+    try { if (n && n.title) showToast('🔔 ' + n.title); } catch(e){}
+  });
+  Push.addListener('pushNotificationActionPerformed', function(a){  // 알림 탭
+    try {
+      var data = a && a.notification && a.notification.data;
+      var url = data && (data.url || data.link);
+      if (url && typeof url === 'string') { window.location.href = url; }
+    } catch(e){}
+  });
+}
+// 로그인 후 자동 호출 — 이미 권한 허용된 기기면 토큰 갱신(조용히). 최초 권한요청은 토글 ON 시.
+async function _registerNativePush(){
+  var Push = _nativePushPlugin();
+  if (!Push || !_currentUser) return;
+  try {
+    _initNativePushListeners();
+    var perm = await Push.checkPermissions();
+    if (perm.receive === 'granted') { await Push.register(); }
+  } catch(e){ console.warn('[native-push] auto register', e); }
+}
+
 function _isPushSupported() {
+  if (_isNativeApp()) return !!_nativePushPlugin();   // 네이티브: 플러그인 있으면 지원
   return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window);
 }
 
@@ -26964,6 +27015,22 @@ function _detectDeviceLabel() {
 
 /** 현재 알림 상태 — 'unsupported' | 'denied' | 'default' | 'granted-no-sub' | 'granted-subscribed' */
 async function _pushStatus() {
+  // 네이티브: 플러그인 권한 + native_push_tokens 활성 여부로 판단
+  if (_isNativeApp()) {
+    var Push = _nativePushPlugin();
+    if (!Push) return 'unsupported';
+    try {
+      var perm = await Push.checkPermissions();
+      if (perm.receive === 'denied') return 'denied';
+      if (perm.receive !== 'granted') return 'default';
+      if (_sb && _currentUser) {
+        var r = await _sb.from('native_push_tokens')
+          .select('token').eq('user_id', _currentUser.id).eq('enabled', true).limit(1).maybeSingle();
+        if (r && r.data) { if (r.data.token) window._nativeFcmToken = r.data.token; return 'granted-subscribed'; }
+      }
+      return 'granted-no-sub';
+    } catch (e) { return 'default'; }
+  }
   if (!_isPushSupported()) return 'unsupported';
   if (Notification.permission === 'denied') return 'denied';
   if (Notification.permission !== 'granted') return 'default';
@@ -26976,6 +27043,23 @@ async function _pushStatus() {
 
 /** 사용자가 '알림 켜기' 토글 ON 시 호출 — 권한 요청 + 구독 + DB 저장 */
 async function enablePushNotifications() {
+  // 네이티브: FCM 권한 요청 + 등록 + 토큰 저장
+  if (_isNativeApp()) {
+    var Push = _nativePushPlugin();
+    if (!Push) { showToast('알림 모듈 준비 중 — 앱 업데이트가 필요해요'); return false; }
+    try {
+      _initNativePushListeners();
+      var perm = await Push.checkPermissions();
+      if (perm.receive !== 'granted') perm = await Push.requestPermissions();
+      if (perm.receive !== 'granted') { showToast('알림 권한이 거부되었어요. 설정에서 변경 가능합니다.'); return false; }
+      await Push.register();   // → 'registration' → _saveNativeToken(enabled=true)
+      if (window._nativeFcmToken && _sb && _currentUser) {
+        await _sb.from('native_push_tokens').update({ enabled: true, updated_at: new Date().toISOString() }).eq('token', window._nativeFcmToken);
+      }
+      showToast('🔔 알림이 켜졌어요');
+      return true;
+    } catch (e) { console.error('[native-push] enable failed:', e); showToast('알림 등록 실패: ' + (e.message || 'unknown')); return false; }
+  }
   if (!_isPushSupported()) {
     showToast('이 브라우저는 푸시 알림을 지원하지 않아요');
     return false;
@@ -27035,6 +27119,19 @@ async function enablePushNotifications() {
 
 /** 사용자가 '알림 끄기' 토글 OFF 시 호출 — DB 에서 비활성화 + 구독 해제 */
 async function disablePushNotifications() {
+  // 네이티브: native_push_tokens 비활성화 (권한 자체는 유지)
+  if (_isNativeApp()) {
+    try {
+      if (_sb && _currentUser) {
+        var q = _sb.from('native_push_tokens').update({ enabled: false, updated_at: new Date().toISOString() });
+        if (window._nativeFcmToken) q = q.eq('token', window._nativeFcmToken);
+        else q = q.eq('user_id', _currentUser.id);
+        await q;
+      }
+      showToast('🔕 알림이 꺼졌어요');
+      return true;
+    } catch (e) { console.error('[native-push] disable failed:', e); showToast('알림 해제 실패: ' + (e.message || 'unknown')); return false; }
+  }
   try {
     var reg = await navigator.serviceWorker.ready;
     var sub = await reg.pushManager.getSubscription();
@@ -27103,7 +27200,7 @@ async function _syncAttendancePushUI() {
   try { localStorage.setItem('att_push_row_visible', '1'); } catch(_){}
 
   // DB 에서 현재 attendance_optin 값 조회
-  var res = await _sb.from('push_subscriptions')
+  var res = await _sb.from(_pushOptinTable())
     .select('attendance_optin')
     .eq('user_id', _currentUser.id)
     .eq('enabled', true)
@@ -27120,9 +27217,9 @@ async function toggleAttendancePush() {
   if (!tg || !_currentUser) return;
   var isOff = tg.classList.contains('off');
   tg.classList.toggle('off');
-  // 본인 모든 push_subscriptions 의 attendance_optin 일괄 변경
+  // 본인 모든 구독의 attendance_optin 일괄 변경 (네이티브면 native_push_tokens)
   var newVal = isOff;  // OFF 상태였으면 → ON 으로 변경
-  var res = await _sb.from('push_subscriptions')
+  var res = await _sb.from(_pushOptinTable())
     .update({ attendance_optin: newVal })
     .eq('user_id', _currentUser.id);
   if (res.error) {
@@ -27154,7 +27251,7 @@ async function _syncPriceWatchPushUI() {
   }
   row.style.display = 'flex';
   try { localStorage.setItem('pw_push_row_visible', '1'); } catch(_){}
-  var res = await _sb.from('push_subscriptions')
+  var res = await _sb.from(_pushOptinTable())
     .select('pricewatch_optin')
     .eq('user_id', _currentUser.id)
     .eq('enabled', true)
@@ -27171,7 +27268,7 @@ async function togglePriceWatchPush() {
   var isOff = tg.classList.contains('off');
   tg.classList.toggle('off');
   var newVal = isOff;  // OFF였으면 → ON
-  var res = await _sb.from('push_subscriptions')
+  var res = await _sb.from(_pushOptinTable())
     .update({ pricewatch_optin: newVal })
     .eq('user_id', _currentUser.id);
   if (res.error) {
@@ -27201,7 +27298,7 @@ async function _syncLogReminderPushUI() {
   }
   row.style.display = 'flex';
   try { localStorage.setItem('logrem_push_row_visible', '1'); } catch(_){}
-  var res = await _sb.from('push_subscriptions')
+  var res = await _sb.from(_pushOptinTable())
     .select('logreminder_optin')
     .eq('user_id', _currentUser.id)
     .eq('enabled', true)
@@ -27217,7 +27314,7 @@ async function toggleLogReminderPush() {
   var isOff = tg.classList.contains('off');
   tg.classList.toggle('off');
   var newVal = isOff;
-  var res = await _sb.from('push_subscriptions')
+  var res = await _sb.from(_pushOptinTable())
     .update({ logreminder_optin: newVal })
     .eq('user_id', _currentUser.id);
   if (res.error) {
@@ -31081,7 +31178,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 600;
+window.__APP_BUILD__ = 601;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
