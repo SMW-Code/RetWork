@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 import * as webpush from 'web-push';
+import { sendFcmToTokens } from '@/lib/fcm';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -51,14 +52,27 @@ export async function POST(request: Request) {
     .eq('enabled', true)
     .eq('logreminder_optin', true);
   if (subsErr) return Response.json({ ok: false, err: 'subs: ' + subsErr.message }, { status: 500 });
-  if (!subs || subs.length === 0) return Response.json({ ok: true, sent: 0, note: 'no opt-in subscribers' });
+
+  // 네이티브(FCM) 토큰 — logreminder_optin
+  const { data: ntoks } = await sb
+    .from('native_push_tokens')
+    .select('user_id, token')
+    .eq('enabled', true)
+    .eq('logreminder_optin', true);
 
   const subsByUser = new Map<string, any[]>();
-  for (const s of subs) {
+  for (const s of (subs || [])) {
     if (!subsByUser.has(s.user_id)) subsByUser.set(s.user_id, []);
     subsByUser.get(s.user_id)!.push(s);
   }
-  const userIds = Array.from(subsByUser.keys());
+  const tokensByUser = new Map<string, string[]>();
+  for (const t of (ntoks || [])) {
+    if (!t.token) continue;
+    if (!tokensByUser.has(t.user_id)) tokensByUser.set(t.user_id, []);
+    tokensByUser.get(t.user_id)!.push(t.token);
+  }
+  const userIds = Array.from(new Set([...subsByUser.keys(), ...tokensByUser.keys()]));
+  if (userIds.length === 0) return Response.json({ ok: true, sent: 0, note: 'no opt-in subscribers' });
 
   // 2) 오늘(JST) 기록 있는 유저
   const nowJst = new Date(Date.now() + 9 * 3600 * 1000);
@@ -88,7 +102,8 @@ export async function POST(request: Request) {
   const pushOptions = { TTL: 43200, urgency: 'normal' } as any;
 
   const expiredIds: string[] = [];
-  let sent = 0, failed = 0;
+  const invalidTokens: string[] = [];
+  let sent = 0, failed = 0, nativeSent = 0;
 
   await Promise.all(targets.map(async (uid) => {
     const userSubs = subsByUser.get(uid) || [];
@@ -104,10 +119,18 @@ export async function POST(request: Request) {
         else sb.from('push_subscriptions').update({ last_error: (e?.message || 'unknown').substring(0, 200) }).eq('id', s.id).then(() => {});
       }
     }));
+    // 네이티브(FCM)
+    const userTokens = tokensByUser.get(uid) || [];
+    if (userTokens.length) {
+      const fr = await sendFcmToTokens(userTokens, { title: '📝 今日の家計簿', body: '今日のレシート、まだ登録していません。サッと記録しましょう！', url: '/?from=logreminder', tag: 'logreminder', priority: 'normal' });
+      if (fr.sent > 0) { anyOk = true; nativeSent += fr.sent; }
+      if (fr.invalidTokens.length) invalidTokens.push(...fr.invalidTokens);
+    }
     if (anyOk) sent++; else failed++;
   }));
 
   if (expiredIds.length > 0) await sb.from('push_subscriptions').delete().in('id', expiredIds);
+  if (invalidTokens.length > 0) await sb.from('native_push_tokens').delete().in('token', invalidTokens);
 
-  return Response.json({ ok: true, targets: targets.length, sent, failed, expired_deleted: expiredIds.length });
+  return Response.json({ ok: true, targets: targets.length, sent, failed, native_sent: nativeSent, expired_deleted: expiredIds.length, native_invalid_deleted: invalidTokens.length });
 }

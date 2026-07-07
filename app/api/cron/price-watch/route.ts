@@ -22,6 +22,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 import * as webpush from 'web-push';
+import { sendFcmToTokens } from '@/lib/fcm';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -81,14 +82,27 @@ export async function POST(request: Request) {
     .eq('enabled', true)
     .eq('pricewatch_optin', true);
   if (subsErr) return Response.json({ ok: false, err: 'subs: ' + subsErr.message }, { status: 500 });
-  if (!subs || subs.length === 0) return Response.json({ ok: true, sent: 0, note: 'no opt-in subscribers' });
+
+  // 네이티브(FCM) 토큰 — pricewatch_optin
+  const { data: ntoks } = await sb
+    .from('native_push_tokens')
+    .select('user_id, token')
+    .eq('enabled', true)
+    .eq('pricewatch_optin', true);
 
   const subsByUser = new Map<string, any[]>();
-  for (const s of subs) {
+  for (const s of (subs || [])) {
     if (!subsByUser.has(s.user_id)) subsByUser.set(s.user_id, []);
     subsByUser.get(s.user_id)!.push(s);
   }
-  const userIds = Array.from(subsByUser.keys());
+  const tokensByUser = new Map<string, string[]>();
+  for (const t of (ntoks || [])) {
+    if (!t.token) continue;
+    if (!tokensByUser.has(t.user_id)) tokensByUser.set(t.user_id, []);
+    tokensByUser.get(t.user_id)!.push(t.token);
+  }
+  const userIds = Array.from(new Set([...subsByUser.keys(), ...tokensByUser.keys()]));
+  if (userIds.length === 0) return Response.json({ ok: true, sent: 0, note: 'no opt-in subscribers' });
 
   // 2) 옵트인 유저들의 "내가 산 것"
   const { data: myAll, error: myErr } = await sb
@@ -191,6 +205,7 @@ export async function POST(request: Request) {
   // 6) 딜은 항상 기록(인앱 벨/NEW), 푸시는 적응형 캡 통과시만
   const pushOptions = { TTL: 86400, urgency: 'normal' } as any;
   const expiredIds: string[] = [];
+  const invalidTokens: string[] = [];
   const stateUpserts: any[] = [];
   let recorded = 0, sent = 0, throttled = 0, failed = 0;
 
@@ -236,6 +251,13 @@ export async function POST(request: Request) {
         else sb.from('push_subscriptions').update({ last_error: (e?.message || 'unknown').substring(0, 200) }).eq('id', s.id).then(() => {});
       }
     }));
+    // 네이티브(FCM)
+    const userTokens = tokensByUser.get(a.user_id) || [];
+    if (userTokens.length) {
+      const fr = await sendFcmToTokens(userTokens, { title: '💰 もっと安いお店が見つかりました', body: msgBody, url: '/?from=pricewatch', tag: 'pricewatch-' + a.product_id, priority: 'normal' });
+      if (fr.sent > 0) anyOk = true;
+      if (fr.invalidTokens.length) invalidTokens.push(...fr.invalidTokens);
+    }
     if (anyOk) {
       sent++;
       // 푸시 보냄 → last_pushed_at 갱신 + 무시 streak +1 (탭하면 앱이 0으로 리셋)
@@ -248,6 +270,7 @@ export async function POST(request: Request) {
   // engagement(last_engaged_at)은 앱이 갱신하므로 여기선 미포함 → upsert 시 기존값 보존
   if (stateUpserts.length > 0) await sb.from('pricewatch_state').upsert(stateUpserts, { onConflict: 'user_id' });
   if (expiredIds.length > 0)   await sb.from('push_subscriptions').delete().in('id', expiredIds);
+  if (invalidTokens.length > 0) await sb.from('native_push_tokens').delete().in('token', invalidTokens);
 
-  return Response.json({ ok: true, candidates: alerts.length, recorded, sent, throttled, failed, expired_deleted: expiredIds.length });
+  return Response.json({ ok: true, candidates: alerts.length, recorded, sent, throttled, failed, expired_deleted: expiredIds.length, native_invalid_deleted: invalidTokens.length });
 }

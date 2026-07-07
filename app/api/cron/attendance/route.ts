@@ -19,6 +19,7 @@ export const dynamic = 'force-dynamic';
 
 import { createClient } from '@supabase/supabase-js';
 import * as webpush from 'web-push';
+import { sendFcmToTokens } from '@/lib/fcm';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || '';
 const SUPABASE_SERVICE_ROLE = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -64,7 +65,16 @@ export async function POST(request: Request) {
   if (subsErr) {
     return Response.json({ ok: false, err: 'subs fetch failed: ' + subsErr.message }, { status: 500 });
   }
-  if (!subs || subs.length === 0) {
+
+  // 네이티브(FCM) 토큰 — attendance_optin
+  const { data: ntoks } = await sb
+    .from('native_push_tokens')
+    .select('token')
+    .eq('enabled', true)
+    .eq('attendance_optin', true);
+  const nativeTokens = (ntoks || []).map((r: any) => r.token).filter(Boolean);
+
+  if ((!subs || subs.length === 0) && nativeTokens.length === 0) {
     return Response.json({ ok: true, sent: 0, note: 'no opt-in subscribers' });
   }
 
@@ -86,7 +96,7 @@ export async function POST(request: Request) {
 
   // 5. 병렬 발송
   const expiredIds: string[] = [];
-  const results = await Promise.allSettled(subs.map(async (s) => {
+  const results = await Promise.allSettled((subs || []).map(async (s) => {
     const subscription = {
       endpoint: s.endpoint,
       keys: { p256dh: s.p256dh, auth: s.auth }
@@ -114,15 +124,30 @@ export async function POST(request: Request) {
     await sb.from('push_subscriptions').delete().in('id', expiredIds);
   }
 
-  const sent = results.filter(r => r.status === 'fulfilled' && (r.value as any).ok).length;
-  const failed = results.length - sent;
+  const webSent = results.filter(r => r.status === 'fulfilled' && (r.value as any).ok).length;
+  const webFailed = results.length - webSent;
+
+  // 네이티브(FCM) 발송 — 옵트인 토큰 전체
+  let nativeSent = 0, nativeFailed = 0, nativeDeleted = 0;
+  if (nativeTokens.length) {
+    const fr = await sendFcmToTokens(nativeTokens, { title, body: msgBody, url: '/', tag: 'attendance-' + slot, priority: 'normal' });
+    nativeSent = fr.sent;
+    nativeFailed = fr.failed;
+    if (fr.invalidTokens.length) {
+      await sb.from('native_push_tokens').delete().in('token', fr.invalidTokens);
+      nativeDeleted = fr.invalidTokens.length;
+    }
+  }
 
   return Response.json({
     ok: true,
     slot,
-    total: results.length,
-    sent,
-    failed,
-    expired_deleted: expiredIds.length
+    total: results.length + nativeSent + nativeFailed,
+    sent: webSent + nativeSent,
+    failed: webFailed + nativeFailed,
+    web: { sent: webSent, failed: webFailed },
+    native: { sent: nativeSent, failed: nativeFailed },
+    expired_deleted: expiredIds.length,
+    native_invalid_deleted: nativeDeleted
   });
 }
