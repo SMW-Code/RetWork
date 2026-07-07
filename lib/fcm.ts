@@ -98,7 +98,6 @@ export async function sendFcmToTokens(tokens: string[], payload: FcmPayload): Pr
   }
 
   const endpoint = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
-  const isUrgent = payload.priority === 'urgent' || payload.priority === 'high';
   const invalidTokens: string[] = [];
   let sent = 0, failed = 0;
 
@@ -114,10 +113,12 @@ export async function sendFcmToTokens(tokens: string[], payload: FcmPayload): Pr
           messageId: payload.messageId ? String(payload.messageId) : '',
         },
         android: {
-          priority: isUrgent ? 'high' : 'normal',
+          priority: 'high',   // 즉시 전달 (도즈 상태에서도 깨움)
           notification: {
-            notification_priority: isUrgent ? 'PRIORITY_HIGH' : 'PRIORITY_DEFAULT',
+            channel_id: 'retwork_high',   // 앱에서 생성한 고중요도 채널 → 헤즈업 배너
+            notification_priority: 'PRIORITY_HIGH',
             default_sound: true,
+            default_vibrate_timings: true,
           },
         },
       },

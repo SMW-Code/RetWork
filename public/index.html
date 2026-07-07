@@ -26962,10 +26962,28 @@ async function _saveNativeToken(token){
     }, { onConflict: 'token' });
   } catch(e){ console.warn('[native-push] token save failed', e); }
 }
+// 고중요도 알림 채널 생성 (b602) — 헤즈업 배너(대기/잠금화면에서 위로 쓱)
+function _ensurePushChannel(){
+  var Push = _nativePushPlugin();
+  if (!Push || !Push.createChannel) return;
+  try {
+    Push.createChannel({
+      id: 'retwork_high',
+      name: 'RetWork 알림',
+      description: 'お知らせ・コメント・お得情報',
+      importance: 5,      // MAX → 헤즈업 배너 + 소리
+      visibility: 1,      // 잠금화면에 내용 표시
+      sound: 'default',
+      vibration: true,
+      lights: true
+    });
+  } catch(e){ console.warn('[native-push] createChannel', e); }
+}
 function _initNativePushListeners(){
   var Push = _nativePushPlugin();
   if (!Push || window._nativePushListenersSet) return;
   window._nativePushListenersSet = true;
+  _ensurePushChannel();   // 헤즈업 채널 준비
   Push.addListener('registration', function(t){ if (t && t.value) _saveNativeToken(t.value); });
   Push.addListener('registrationError', function(e){ console.warn('[native-push] reg error', e); });
   Push.addListener('pushNotificationReceived', function(n){    // 포그라운드 수신
@@ -31178,7 +31196,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 601;
+window.__APP_BUILD__ = 602;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
