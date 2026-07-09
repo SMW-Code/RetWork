@@ -4919,7 +4919,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
     <!-- 합계 -->
     <div style="background:var(--green-light);border-radius:12px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
       <span style="font-size:13px;font-weight:700;color:var(--text-2);" data-i18n="edit.total">合計</span>
-      <span id="edit-total-disp" style="font-size:18px;font-weight:800;color:var(--green);">¥0</span>
+      <div style="display:flex;align-items:center;gap:1px;"><span style="font-size:16px;font-weight:800;color:var(--green);">¥</span><input id="edit-total-disp" type="number" inputmode="numeric" value="0" oninput="onEditTotalEdit()" aria-label="total" style="width:100px;font-size:18px;font-weight:800;color:var(--green);text-align:right;border:none;border-bottom:1px dashed var(--border-mid);background:transparent;outline:none;font-family:var(--font);padding:2px 0;"></div>
     </div>
 
     <button class="save-btn" onclick="saveEditReceipt()" data-i18n="edit.save">💾 修正を保存</button>
@@ -9720,7 +9720,18 @@ function updateEditTotal() {
   var subtotal = _editItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
   // 세금 offset 더해서 세포함 합계 표시
   var total = subtotal + (_editTaxOffset || 0);
-  document.getElementById('edit-total-disp').textContent = '¥' + total.toLocaleString();
+  var el = document.getElementById('edit-total-disp');
+  if (el) {
+    if (el.tagName === 'INPUT') { if (document.activeElement !== el) el.value = total; }
+    else el.textContent = '¥' + total.toLocaleString();
+  }
+}
+// b603 — 저장된 영수증 편집에서도 합계 직접 수정 → offset 재계산
+function onEditTotalEdit() {
+  var el = document.getElementById('edit-total-disp');
+  if (!el) return;
+  var subtotal = _editItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
+  _editTaxOffset = (parseInt(el.value) || 0) - subtotal;
 }
 
 function saveEditReceipt() {
@@ -13318,7 +13329,10 @@ function showOcrResult(previewSrc, result) {
     +'<div><span style="font-size:13px;font-weight:700;color:var(--green-dark);">'+t('ocr.total')+'</span>'
     +(result.totalItems > 0 ? '<span style="font-size:11px;color:var(--green);margin-left:8px;">'+result.totalItems+t('ocr.item_unit')+'</span>' : '')
     +'</div>'
-    +'<span id="ocr-total-disp" style="font-size:22px;font-weight:900;color:var(--green);letter-spacing:-1px;">¥'+result.total.toLocaleString()+'</span>'
+    +'<div style="display:flex;align-items:center;gap:1px;">'
+    +  '<span style="font-size:20px;font-weight:900;color:var(--green);">¥</span>'
+    +  '<input id="ocr-total-disp" type="number" inputmode="numeric" value="'+(result.total||0)+'" oninput="onOcrTotalEdit()" aria-label="total" style="width:112px;font-size:22px;font-weight:900;color:var(--green);text-align:right;border:none;border-bottom:1px dashed rgba(29,158,117,.45);background:transparent;outline:none;font-family:var(--font);letter-spacing:-1px;padding:2px 0;">'
+    +'</div>'
     +'</div>'
     +'<button class="save-btn" onclick="saveOcrResult()" style="display:flex;align-items:center;justify-content:center;gap:8px;">'
     +'<span class="lico" data-lico="receipt" data-size="17" data-color="#fff"></span>'
@@ -13384,12 +13398,32 @@ function syncOcrItems() {
   }
   var displayTotal = itemsSum + (window._taxOffset || 0);
   var totEl = document.getElementById('ocr-total-disp');
-  if (totEl) totEl.textContent = '¥' + displayTotal.toLocaleString();
+  if (totEl) {
+    // b603 — 합계는 입력 필드. 유저가 지금 그 칸을 편집 중이면 덮어쓰지 않음
+    if (totEl.tagName === 'INPUT') { if (document.activeElement !== totEl) totEl.value = displayTotal; }
+    else totEl.textContent = '¥' + displayTotal.toLocaleString();
+  }
   var cntEl = document.getElementById('item-count');
   if (cntEl) cntEl.textContent = items.length;
   window._ocrResult.total = displayTotal;
   window._ocrResult.subtotal = itemsSum;
   window._ocrResult.items = items;
+}
+
+// b603 — 유저가 합계를 직접 수정 → offset 재계산 (파서 오독/카드전표/세금없음 대응)
+//   이후 품목 합(itemsSum)과의 차이를 offset 으로 잡아 "입력한 합계"가 유지되게 함.
+function onOcrTotalEdit() {
+  var el = document.getElementById('ocr-total-disp');
+  if (!el || !window._ocrItems) return;
+  // 현재 품목 합 (DOM 기준 — syncOcrItems 를 호출하면 입력칸이 덮여써서 직접 계산)
+  var itemsSum = 0;
+  for (var i = 0; i < window._ocrItems.length; i++) {
+    var p = document.getElementById('in-price-' + i);
+    itemsSum += p ? (parseInt(p.value) || 0) : (parseInt(window._ocrItems[i].price) || 0);
+  }
+  var v = parseInt(el.value) || 0;
+  window._taxOffset = v - itemsSum;   // 입력 합계 = 품목합 + offset 이 되도록
+  if (window._ocrResult) { window._ocrResult.total = v; window._ocrResult.subtotal = itemsSum; }
 }
 
 // 품목 삭제 후 목록 재렌더
@@ -31196,7 +31230,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 602;
+window.__APP_BUILD__ = 603;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
