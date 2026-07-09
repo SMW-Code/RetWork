@@ -187,6 +187,14 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
 .sbar{height:0;height:env(safe-area-inset-top,0px);background:var(--surface);flex-shrink:0;}
 .sbar-time,.sbar-r{display:none;}
 
+/* b605 — 전체화면 오버레이 세이프에어리어 (네이티브 상태바/네비바 침범 방지).
+   .sbar 를 안 거치는 inset:0 전체화면들에 상·하 시스템 영역만큼 여백 확보. */
+#ov-month-report, #ov-year-report, #ov-ct-store-full, #ov-ct-post-detail, #ct-write-ov, #screen-reset-pw {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+}
+
 .screen{flex:1;display:none;flex-direction:column;background:var(--bg);min-height:0;overflow:hidden;}
 .screen.active{display:flex;}
 .scroll{flex:1;overflow-y:auto;min-height:0;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;}
@@ -31237,7 +31245,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 604;
+window.__APP_BUILD__ = 605;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
