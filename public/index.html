@@ -13977,7 +13977,8 @@ function cpOnPhotoPicked(input){
 // store-photos 버킷 업로드 → public URL 반환
 async function _cpUploadPhoto(file, subdir){
   try {
-    if (typeof _compressImage === 'function') file = await _compressImage(file, 1600, 0.82);
+    // b603 — 업로드 속도 개선: 메뉴/가게 사진은 1280px/0.72 로도 충분 (파일 크기 ~절반)
+    if (typeof _compressImage === 'function') file = await _compressImage(file, 1280, 0.72);
     var ext = ((file.name && file.name.split('.').pop()) || 'jpg').toLowerCase() || 'jpg';
     var base = (typeof _sdAsciiName==='function') ? _sdAsciiName(window._cpStore||'store') : 'store';
     var path = subdir + '/' + base + '/' + Date.now() + '_' + Math.floor(Math.random()*99999) + '.' + ext;
@@ -17149,17 +17150,23 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
   if (hasPhotos) showToast('🔄 写真をアップロード中…');
   window._cpStore = store;   // _cpUploadPhoto 경로 base
   try {
-    if (storePhotoFile) {
-      var _u = await _cpUploadPhoto(storePhotoFile, 'community');
-      if (_u) { try { await _sb.from('store_community_photos').insert({ store_name:store, store_id: await _resolveStoreId(store), photo_url:_u, uploaded_by:_currentUser.id }); } catch(e){ console.warn('[mp store photo]', e); } }
-    }
+    // b603 — 사진들을 병렬로 먼저 업로드 (순차 → 병렬, 여러 장일수록 크게 빨라짐)
+    var storePhotoUrl = null;
+    var itemUrls = new Array(items.length).fill(null);
+    var _ups = [];
+    if (storePhotoFile) _ups.push(_cpUploadPhoto(storePhotoFile, 'community').then(function(u){ storePhotoUrl = u; }));
+    items.forEach(function(it, idx){ if (it.photoFile) _ups.push(_cpUploadPhoto(it.photoFile, 'menu-cards').then(function(u){ itemUrls[idx] = u; })); });
+    if (_ups.length) await Promise.all(_ups);
+
+    var storeId = await _resolveStoreId(store);
+    if (storePhotoUrl) { try { await _sb.from('store_community_photos').insert({ store_name:store, store_id: storeId, photo_url:storePhotoUrl, uploaded_by:_currentUser.id }); } catch(e){ console.warn('[mp store photo]', e); } }
     // 메뉴카드 생성/갱신 (같은 가게+정규화명 있으면 사진만 보강)
     var _norm = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
-    var exist = await _storeOr(_sb.from('store_menu_cards').select('id,menu_name,image_url'), await _resolveStoreId(store), store);
+    var exist = await _storeOr(_sb.from('store_menu_cards').select('id,menu_name,image_url'), storeId, store);
     var emap = {}; (exist.data||[]).forEach(function(c){ emap[_norm(c.menu_name)] = c; });
     for (var i=0; i<items.length; i++){
       var it = items[i];
-      var photo = it.photoFile ? await _cpUploadPhoto(it.photoFile, 'menu-cards') : null;
+      var photo = itemUrls[i];
       var card = emap[_norm(it.name)];
       if (card && card.id) {
         if (photo) {
@@ -17168,7 +17175,7 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
         }
       } else {
         var ins = await _sb.from('store_menu_cards').insert({
-          store_name:store, store_id: await _resolveStoreId(store), menu_name:it.name, category:category||'other',
+          store_name:store, store_id: storeId, menu_name:it.name, category:category||'other',
           price:parseInt(it.price)||0, image_url:photo,
           rating_avg:0, rating_count:0, created_by:_currentUser.id
         }).select().maybeSingle();
@@ -31230,7 +31237,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 603;
+window.__APP_BUILD__ = 604;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
