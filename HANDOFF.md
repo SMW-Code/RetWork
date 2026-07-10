@@ -1,4 +1,28 @@
-# RetWork (チリつも) — HANDOFF (build 592 시점)
+# RetWork (チリつも) — HANDOFF (build 608 시점)
+
+> # 📌 2026-07-10 작업 요약 (build 592→608) — 네이티브 앱화(Capacitor) + 푸시(FCM) + Play 비공개테스트 + AdSense 전략
+> **다른 PC에서 이어가려면 이 블록부터.** 앱을 **Capacitor로 네이티브 래핑**(server.url=https://retwork.jp 라이브 로드 방식 → JS/HTML 변경은 push만으로 앱 반영, 네이티브(플러그인·Manifest·아이콘·권한)만 AAB 재빌드 필요). Play 프로젝트 앱ID `jp.retwork.app`.
+>
+> **🟥 실행 완료 SQL(이번 세션):** `app_config`(b599, key/enabled, 관리자만 write RLS) · `native_push_tokens`(b601, FCM 토큰+옵트인 컬럼, 본인만 RLS). **추가 대기 SQL 없음.**
+> **🟥 Vercel 환경변수 추가:** `FIREBASE_SERVICE_ACCOUNT`(서비스계정 JSON, FCM 발송용) — 등록+재배포 완료.
+> **🟥 플러그인 추가:** `@capacitor/app`·`@capacitor/browser`(딥링크 OAuth) · `@capacitor/geolocation`(GPS) · `@capacitor/push-notifications`(FCM) · `@capacitor/assets`(dev, 아이콘생성). `@capacitor-community/admob`(기존).
+>
+> **네이티브 기능:**
+> - **소셜 로그인 딥링크(b596):** 웹 signInWithOAuth 전체리다이렉트 → 네이티브는 인앱브라우저+`jp.retwork.app://login-callback` 딥링크 복귀→`appUrlOpen`→exchangeCodeForSession/setSession. Manifest intent-filter + Supabase Redirect URL 등록 필요. `_nativeOAuthLogin()`.
+> - **GPS(b600):** navigator.geolocation을 네이티브에선 Capacitor Geolocation으로 라우팅(권한요청) — 기존 호출부 무수정. Manifest 위치권한 추가.
+> - **푸시 FCM(b601·602):** `native_push_tokens` 등록 + 설정 토글 네이티브화(`_isPushSupported/_pushStatus/enable/disablePush` 분기) + **`lib/fcm.ts`(의존성 0, Node crypto JWT→FCM v1)** + `/api/push`·크론3종(attendance/log-reminder/price-watch)이 웹 web-push + 네이티브 FCM 동시발송. 고중요도 채널 `retwork_high`→헤즈업 배너.
+> - **AdMob 리워드 통일(b598):** 모든 동영상광고(showAdModal 외 ctOpenFullscreenAd/openWatchAdPage 전부)를 네이티브에선 AdMob 테스트 리워드로. 배너는 유지. `_ADMOB_TESTING=true`(출시 후 false).
+> - **치리 리워드 ON/OFF 토글(b599):** 어드민 '단가·요율'에 스위치. OFF시 일반유저는 리워드탭·치리잔액·적립(`ctAddCoin` 가드) 숨김, **관리자는 항상 보이고 'OFF' 배너 표시**. 원격플래그 시스템(`_loadAppFlags/isFeatureOn`, 관리자 우회). 수익검증 전 지급중단용.
+> - **세이프에어리어(b605):** targetSDK36 엣지투엣지 → 전체화면 오버레이(월/연리포트·치리 상세/작성)에 env(safe-area-inset) 패딩.
+> - **아이콘/스플래시:** RW 로고(`assets/icon.png` 1024²)→`@capacitor/assets`로 전밀도 생성. versionCode **4**/versionName 1.0.3.
+>
+> **기타 기능/버그:**
+> - 달력 년/월 빠른 이동 팝업(b597) · 영수증 합계 직접 수정(b603, 카드전표 세금offset 오독 대응) · 치리공개 사진 업로드 압축(1280/0.72)+병렬(b604) · 예산초과 표시 예산카드 안 통합+카테고리 사용금액 칩(b607·608).
+>
+> **Play 스토어(진행중):** 앱생성 완료 → AAB 업로드(versionCode 1→2→3) → 앱콘텐츠 신고(광고ID·광고·콘텐츠등급·개인정보·타겟18+·데이터보안·로그인세부정보) 완료 → **비공개 테스트 활성 + 테스터 12명 옵트인 완료 → 14일 시계 진행중**. 콘텐츠등급: 소셜(치리톡)=예, 신고/차단/금지어=예, 현금보상/위치공유=아니요(치리 실기프트카드 미구현이라 지금은). ⚠️ **다음 AAB(versionCode4, GPS·푸시·헤즈업·아이콘 포함) 재빌드→업로드 대기.**
+> **▶ 출시 후:** `_ADMOB_TESTING=false`(JS, push만) + AdMob 앱스토어연결→실광고. 프로덕션 신청은 14일+12명 유지 후.
+>
+> **AdSense 전략(중요):** retwork.jp가 "가치낮은콘텐츠"로 반복 반려. AdSense는 **도메인 단위 심사(서브도메인 blog.retwork.jp 개별등록 불가 — apex만)**. 랜딩은 이미 콘텐츠 충분(h1·헤딩·블로그14편 링크) → 진짜 원인은 **앱이 주용도 + 절약글 일반성 + 신생**. 대응: 랜딩에 **실방문 그루메 리뷰 섹션 추가(b606)**. **결론: AdSense는 콘텐츠(1차경험 리뷰) 더 쌓고 재요청. 앱 수익은 AdMob이 메인.** 그루메 블로그=**별도 repo `C:\Users\minus\Desktop\retwork-blog`**(Next.js md, blog.retwork.jp, 웹 작성페이지로 발행). 돈까스 九六喜 리뷰 추가함.
 
 > # 📌 2026-06-30 작업 요약 (build 574→592) — 가계부 신기능 6종 + 영수증 PDF + 파싱 문서화
 > **다른 PC에서 이어가려면 이 블록부터.** 단일 파일 `public/index.html` + Next.js(`app/api/*`) + Supabase + Vercel(`ret-work`) + Cloudflare DNS 구조는 그대로.
