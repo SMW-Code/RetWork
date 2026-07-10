@@ -9270,11 +9270,17 @@ function renderHome() {
   var budget=parseInt(localStorage.getItem('receiptiq_budget')||'0');
   var budgetEl=document.getElementById('home-budget');
   if(budgetEl){
+    // build 606 — 카테고리 예산 초과 경고를 예산 카드 '안'(구분선 아래)에 통합
+    var _cwChips = (typeof _catBudgetWarnHtml==='function') ? _catBudgetWarnHtml(monthReceipts) : '';
+    var _cwInner = _cwChips ? '<div style="margin-top:10px;padding-top:9px;border-top:0.5px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;align-items:center;">'+_cwChips+'</div>' : '';
     if(budget<=0){
-      budgetEl.innerHTML='<div class="budget-wrap" onclick="openBudgetSet()" style="display:flex;align-items:center;justify-content:space-between;">'
+      budgetEl.innerHTML='<div class="budget-wrap" onclick="openBudgetSet()">'
+        +'<div style="display:flex;align-items:center;justify-content:space-between;">'
         +'<div><div style="font-size:13px;font-weight:700;color:var(--text-2);">'+t('home.budget_cta')+'</div>'
         +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('home.budget_cta_sub')+'</div></div>'
-        +'<div style="font-size:24px;">🎯</div></div>';
+        +'<div style="font-size:24px;">🎯</div></div>'
+        + _cwInner
+        +'</div>';
     } else {
       var pct=Math.min(Math.round(totalAmt/budget*100),100);
       var isWarn=pct>=80;
@@ -9291,11 +9297,10 @@ function renderHome() {
         +'<div class="budget-track"><div class="budget-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+(isWarn?'#F07340,#E8894A':'var(--green-dark),var(--green)')+');"></div></div>'
         +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-weight:600;">'
         +'<span>¥'+totalAmt.toLocaleString()+' '+t('home.budget_spent')+'</span><span>'+t('home.budget_goal')+' ¥'+budget.toLocaleString()+'</span>'
-        +'</div></div>';
+        +'</div>'
+        + _cwInner
+        +'</div>';
     }
-    // build 584 — 카테고리별 예산 80%↑/초과 경고 (이번 주기 기준)
-    var _cw = (typeof _catBudgetWarnHtml==='function') ? _catBudgetWarnHtml(monthReceipts) : '';
-    if (_cw) budgetEl.innerHTML += _cw;
   }
 
   // ── 5. 날짜별 그룹 영수증 ──
@@ -18468,7 +18473,7 @@ function _catBudgetWarnHtml(periodReceipts){
     var txt=f.lbl+' '+(f.over?t('budget.cat_over'):f.pct+'%');
     return '<span style="font-size:10px;font-weight:800;color:'+col+';background:'+bg+';padding:2px 8px;border-radius:20px;">⚠️ '+_esc(txt)+'</span>';
   }).join('');
-  return '<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;">'+chips+'</div>';
+  return chips;   // b606 — 칩만 반환 (예산 카드 안에 삽입)
 }
 
 function openBudgetSet() {
@@ -31285,7 +31290,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 606;
+window.__APP_BUILD__ = 607;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
