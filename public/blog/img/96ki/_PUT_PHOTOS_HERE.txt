@@ -1,7 +1,0 @@
-사진 6장을 여기에 넣으세요 (아래 파일명 그대로):
-- exterior.jpg      (외관)
-- table-set.jpg     (기본 세팅: 물·물티슈·젓가락·소스그릇)
-- tonkatsu-full.jpg (돈까스 전체)
-- tonkatsu-close.jpg(돈까스 확대)
-- cabbage.jpg       (양배추)
-- receipt.jpg       (영수증)
