@@ -12318,6 +12318,36 @@ async function _standardizeItemWithGPT(rawName) {
   }
 }
 
+// b613 — 「値引後/割引後」 금액을 품목가로 오인식한 경우 원문에서 원가를 찾아 결정적 교정
+//   (GPT가 프롬프트 S-7을 확률적으로 무시하는 것 대비. 마츠키요 등 per-item 쿠폰 영수증)
+function _fixCouponDiscountedPrices(items, rawText){
+  if (!items || !items.length || !rawText) return items;
+  var lines = String(rawText).split('\n');
+  function priceNum(s){
+    var m = String(s).match(/[¥￥]\s*([0-9][0-9,]*)/);       // ¥ 뒤 금액 우선(상품코드 오인 방지)
+    if (m) return parseInt(m[1].replace(/,/g,''));
+    var ns = String(s).match(/\d[\d,]*/g);
+    if (!ns) return null;
+    return Math.max.apply(null, ns.map(function(x){ return parseInt(x.replace(/,/g,'')); }));
+  }
+  function isDiscountLine(s){ return /(割引|値引|クーポン|ク-ポン)/.test(s) || /^\s*[-−ー]\s*\d/.test(s); }
+  var map = {};   // 값引後금액 → 원가
+  for (var i=0;i<lines.length;i++){
+    if (!/(値引後|割引後)/.test(lines[i])) continue;
+    var dAmt = priceNum(lines[i]);
+    if (dAmt==null && i+1<lines.length) dAmt = priceNum(lines[i+1]);   // 라벨/금액 분리행 대응
+    if (dAmt==null || dAmt<=0) continue;
+    for (var j=i-1; j>=0 && j>=i-8; j--){        // 위로 스캔 → 첫 '더 큰 비할인 금액' = 원가
+      if (isDiscountLine(lines[j])) continue;
+      var a = priceNum(lines[j]);
+      if (a!=null && a>dAmt){ map[dAmt]=a; break; }
+    }
+  }
+  if (!Object.keys(map).length) return items;
+  items.forEach(function(it){ var p=parseInt(it.price)||0; if (map[p]) it.price = map[p]; });
+  return items;
+}
+
 function parseWithGPTHybrid(rawText, base64Image) {
   // 줄 번호 붙이기 (GPT가 행 맥락을 파악할 수 있게)
   var numberedText = rawText.split('\n').map(function(line, i) {
@@ -12636,6 +12666,8 @@ JSONのみ出力。説明不要。`;
           price: toNum(it.price)
         };
       }).filter(function(it){ return it.price > 0; });
+
+      items = _fixCouponDiscountedPrices(items, rawText);   // b613 — 「値引後」 오인식 → 원가로 결정적 교정
 
       var subtotal = items.reduce(function(a, it){ return a + it.price; }, 0);
       var total    = toNum(result.total) || subtotal;
@@ -31327,7 +31359,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 612;
+window.__APP_BUILD__ = 613;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
