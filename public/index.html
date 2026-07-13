@@ -13299,6 +13299,7 @@ function _appendDiscountItem(result){
   var diff = total - itemsSum;   // 음수면 할인
   if (diff < 0) {
     result.items.push({ name: t('ocr.discount_item'), qty: 1, price: diff });
+    result.subtotal = total;   // 小計 요약줄도 品目合(=合計)에 맞춤
   }
   return result;
 }
@@ -31312,7 +31313,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 610;
+window.__APP_BUILD__ = 611;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
