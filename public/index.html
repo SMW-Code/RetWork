@@ -9707,8 +9707,8 @@ function openEditReceipt(id) {
   // offset 은 단가 변환 *후* 의 합산 기준으로 계산 → 반올림 손실(¥1~2)까지
   //  offset 에 흡수돼 원본 합계가 그대로 유지됨 (세금 + 반올림 손실 동시 보존)
   var convertedSum = _editItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
+  // b609 — 음수 offset = 쿠폰/할인 보존 (0 clamp 시 합계가 품목합으로 부풀려짐)
   _editTaxOffset = (r.total || 0) - convertedSum;
-  if (_editTaxOffset < 0) _editTaxOffset = 0; // 음수는 무시 (이상 케이스)
 
   document.getElementById('edit-store').value = r.store || '';
   document.getElementById('edit-date').value = r.date || '';
@@ -13446,8 +13446,8 @@ function syncOcrItems() {
   // - 품목 합(itemsSum)은 세전 (예: ¥21,911)
   // - 사용자가 품목 수정해도 세금 비율을 유지하기 위해 세금 offset을 보존
   if (window._taxOffset === undefined && window._originalTotal) {
+    // b609 — 음수 offset = 쿠폰/할인(품목합 > 실결제액). 0으로 clamp 하면 합계가 품목합으로 부풀려짐 → 그대로 보존
     window._taxOffset = window._originalTotal - itemsSum;
-    if (window._taxOffset < 0) window._taxOffset = 0;
   }
   var displayTotal = itemsSum + (window._taxOffset || 0);
   var totEl = document.getElementById('ocr-total-disp');
@@ -31295,7 +31295,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 608;
+window.__APP_BUILD__ = 609;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
