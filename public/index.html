@@ -7097,8 +7097,16 @@ function ctInitMap() {
     document.getElementById('ct-area-btn').style.display = '';
   });
 
-  /* 줌 변경 시 클러스터 ↔ 개별 핀 전환 */
-  _ctMap.addListener('zoom_changed', function() {
+  /* 줌 변경 시 클러스터 ↔ 개별 핀 전환 (b616)
+     — zoom_changed 는 핀치 중 초당 수십번 발화 → 매번 전체 마커 삭제/재생성이
+       제스처 도중 메인스레드를 막아 구글맵 제스처 인식이 틀어짐(세계지도로 튕김).
+       핀 위에 손가락이 있으면 재생성 마커가 터치를 가로채 더 잘 발생.
+     → idle(팬/줌 제스처가 끝난 뒤 1회)에서, 정수 줌이 실제로 바뀐 경우에만 재렌더 */
+  window._ctLastRenderZoom = Math.round(_ctMap.getZoom() || 15);
+  _ctMap.addListener('idle', function() {
+    var z = Math.round(_ctMap.getZoom() || 15);
+    if (z === window._ctLastRenderZoom) return;
+    window._ctLastRenderZoom = z;
     ctRenderPricePins();
   });
 
@@ -31381,7 +31389,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 615;
+window.__APP_BUILD__ = 616;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
