@@ -12646,9 +12646,13 @@ JSONのみ出力。説明不要。`;
     if (!total) return false;
     // 일본 영수증: 품목 가격은 세전(税抜), 합계는 세포함(税込) → 8~10% 차이 정상
     // sum > total: 명백한 오버카운트 (5% 이상이면 실패)
+    //   단, 원문에 割引/値引/クーポン이 있으면 품목합(원가) > 합계(할인 후)가 정상(S-7)
+    //   → 50%까지 허용 (b615. 아니면 쿠폰 영수증마다 mini 실패→4o 재호출로 비용 낭비)
     // sum < total: 소비세 포함 가능성 → 최대 12%까지 허용 (10% 세 + 여유)
     if (sum > total) {
-      return (sum - total) / total < 0.05;
+      var overPct = (sum - total) / total;
+      var hasDiscount = /(割引|値引|クーポン|ク-ポン)/.test(rawText || '');
+      return overPct < (hasDiscount ? 0.5 : 0.05);
     } else {
       return (total - sum) / total < 0.12;
     }
@@ -13381,7 +13385,7 @@ function showOcrResult(previewSrc, result) {
         +'<button onclick="deleteOcrItem('+idx+')" style="background:none;border:none;font-size:16px;color:#ccc;cursor:pointer;padding:0;line-height:1;">✕</button>'
         +'<div style="display:flex;align-items:center;gap:3px;">'
         +'<span style="font-size:11px;color:var(--green);font-weight:700;">¥</span>'
-        +'<input type="number" id="in-price-'+idx+'" value="'+item.price+'" min="0" style="width:75px;font-size:14px;font-weight:800;color:var(--green);border:0.5px solid rgba(29,158,117,.3);border-radius:8px;padding:4px 6px;text-align:right;background:var(--green-light);" oninput="syncOcrItems()">'
+        +'<input type="number" id="in-price-'+idx+'" value="'+item.price+'" '+(item.price<0?'':'min="0" ')+'style="width:75px;font-size:14px;font-weight:800;color:'+(item.price<0?'var(--red)':'var(--green)')+';border:0.5px solid rgba(29,158,117,.3);border-radius:8px;padding:4px 6px;text-align:right;background:var(--green-light);" oninput="syncOcrItems()">'
         +'</div>'
         +((item.qty||1) > 1 ? '<div style="font-size:10px;color:var(--text-3);margin-top:1px;text-align:right;">@¥'+Math.round(item.price/(item.qty||1)).toLocaleString()+' × '+(item.qty||1)+'</div>' : '')
         +'</div>'
@@ -27128,6 +27132,14 @@ function _pushOptinTable(){ return _isNativeApp() ? 'native_push_tokens' : 'push
 async function _saveNativeToken(token){
   if (!token || !_sb || !_currentUser) return;
   window._nativeFcmToken = token;
+  // b615 — RPC(claim_push_token) 우선: 같은 폰에서 계정을 바꿔 로그인하면 토큰 행이
+  //   이전 유저 소유라 RLS 에 막혀 upsert 실패 → 알림이 이전 계정으로 감.
+  //   security definer RPC 가 토큰을 현재 유저로 재귀속. (SQL 미실행 환경은 upsert 폴백)
+  try {
+    var r = await _sb.rpc('claim_push_token', { p_token: token, p_platform: 'android', p_device_label: _detectDeviceLabel() });
+    if (!r.error) return;
+    console.warn('[native-push] claim rpc:', r.error.message);
+  } catch(e){ console.warn('[native-push] claim rpc', e); }
   try {
     await _sb.from('native_push_tokens').upsert({
       user_id: _currentUser.id, token: token, platform: 'android',
@@ -27142,7 +27154,7 @@ function _ensurePushChannel(){
   try {
     Push.createChannel({
       id: 'retwork_high',
-      name: 'RetWork 알림',
+      name: 'RetWork 通知',
       description: 'お知らせ・コメント・お得情報',
       importance: 5,      // MAX → 헤즈업 배너 + 소리
       visibility: 1,      // 잠금화면에 내용 표시
@@ -31369,7 +31381,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 614;
+window.__APP_BUILD__ = 615;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
