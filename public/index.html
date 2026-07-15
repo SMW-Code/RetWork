@@ -29509,6 +29509,7 @@ async function openAdminPinDetail(pinId) {
   if (res.error || !res.data) { showToast('핀 로드 실패'); return; }
   var p = res.data;
   _admEditPinStoreId = p.store_id;
+  window._admEditPinOldItem = p.item_name || '';   // b617 — 이름 변경 시 매칭 메뉴카드 rename 용
   document.getElementById('adm-pin-item').value = p.item_name || '';
   document.getElementById('adm-pin-price').value = p.price || '';
   document.getElementById('adm-pin-comment').value = p.comment || '';
@@ -29538,6 +29539,17 @@ async function admSavePin() {
     item_name: item, price: price, comment: comment
   }).eq('id', _admEditPinId);
   if (res.error) { showToast('저장 실패: '+res.error.message); return; }
+  // b617 — 메뉴명이 바뀌면 매칭되는 store_menu_cards(사진·평점 보존)도 함께 rename.
+  //   가게상세 fallback 은 '정확한 이름'으로 중복판단하므로, 안 바꾸면 이름 어긋난
+  //   빈 fallback 카드가 새로 생김. store_id 로만 매칭(동명 다른 지점 오염 방지).
+  var _oldItem = window._admEditPinOldItem || '';
+  if (item !== _oldItem && _oldItem && _admEditPinStoreId) {
+    try { await _sb.from('store_menu_cards').update({ menu_name: item }).eq('store_id', _admEditPinStoreId).eq('menu_name', _oldItem); }
+    catch(e){ console.warn('[admSavePin] menu card rename', e); }
+    // 같은 가게의 옛 이름 형제 핀들도 함께 rename (fallback 중복 방지)
+    try { await _sb.from('price_pins').update({ item_name: item }).eq('store_id', _admEditPinStoreId).eq('item_name', _oldItem); }
+    catch(e){ console.warn('[admSavePin] sibling pins rename', e); }
+  }
   showToast('✅ 핀 정보 수정 완료');
   closeOv('ov-admin-edit-pin');
   if (_admDetailType === 'pins') await _loadAdminDetailData('pins');
@@ -31389,7 +31401,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 616;
+window.__APP_BUILD__ = 617;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
