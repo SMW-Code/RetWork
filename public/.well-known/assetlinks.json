@@ -1,8 +1,12 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "jp.retwork.app",
-    "sha256_cert_fingerprints": ["7D:38:51:F4:D8:A1:61:1A:91:84:57:F2:87:AA:B1:44:74:FD:2C:88:EC:25:35:F5:B1:EC:C3:FC:69:ED:B3:91"]
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "jp.retwork.app",
+      "sha256_cert_fingerprints": [
+        "57:E0:B4:34:52:D3:9A:B7:75:E7:F9:0E:B8:F8:02:D9:03:8B:AF:DE:9D:22:78:67:9F:5A:60:D8:56:57:A5:73"
+      ]
+    }
   }
-}]
+]
