@@ -23866,7 +23866,35 @@ function _downloadBlob(blob, filename) {
    데스크톱 등 파일 공유 미지원: 기존 <a download>. (WebView 는 <a download>·blob 다운로드가
    동작하지 않아 "저장됨" 토스트만 뜨고 파일이 안 생기는 문제를 해결)
    반환: 'shared' | 'downloaded' | 'canceled' */
+function _blobToBase64(blob){
+  return new Promise(function(res, rej){
+    var r = new FileReader();
+    r.onloadend = function(){ res(String(r.result).split(',')[1] || ''); };
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
 async function _saveOrShareBlob(blob, filename, mime, title) {
+  // 1) 네이티브 앱 (b620~) — Capacitor Filesystem 으로 캐시에 쓰고 Share 로 공유(→"ファイルに保存" 등).
+  //    WebView 는 <a download>·navigator.share(files) 둘 다 막혀 있어 네이티브 플러그인이 유일한 확실 경로.
+  //    (플러그인 미설치 구버전에선 P.Filesystem 이 없어 아래 웹 경로로 자동 폴백)
+  if (_isNativeApp()){
+    try {
+      var P = (window.Capacitor && window.Capacitor.Plugins) || {};
+      if (P.Filesystem && P.Share){
+        var b64 = await _blobToBase64(blob);
+        var w = await P.Filesystem.writeFile({ path: filename, data: b64, directory: 'CACHE' });
+        await P.Share.share({ title: title || 'RetWork', url: (w && w.uri) || '' });
+        return 'shared';
+      }
+    } catch (e) {
+      var msg = ((e && (e.message || e.errorMessage)) || '').toLowerCase();
+      if (msg.indexOf('cancel') >= 0 || msg.indexOf('abort') >= 0) return 'canceled';
+      console.warn('[native save] failed, fallback:', e);
+      // 플러그인은 있으나 실패 → 아래 웹/다운로드 경로로 폴백
+    }
+  }
+  // 2) 웹 — navigator.share({files}) (모바일 브라우저 등 파일 공유 지원 시)
   var file = (typeof File === 'function') ? new File([blob], filename, { type: mime }) : null;
   if (file && navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
     try {
@@ -23877,6 +23905,7 @@ async function _saveOrShareBlob(blob, filename, mime, title) {
       console.warn('[saveOrShare] file share failed, fallback to download:', e);
     }
   }
+  // 3) 폴백 — 다운로드 (데스크톱 브라우저에선 실제 저장됨)
   _downloadBlob(blob, filename);
   return 'downloaded';
 }
@@ -31066,27 +31095,11 @@ async function runPdfExport(){
     var pdf = _jpegToPdf(pages);
     var stamp = ((_pdfCtx.receipts[0] && _pdfCtx.receipts[0].date) || 'export').replace(/[^0-9]/g,'');
     var fn = (_pdfCtx.scope==='period' ? 'RetWork_receipts_' : 'RetWork_receipt_') + stamp + '.pdf';
-    var file = (typeof File==='function') ? new File([pdf], fn, {type:'application/pdf'}) : null;
-    // 파일 공유 지원(앱/모바일) → 버튼을 '保存/共有'로 바꿔 사용자의 "새 터치"로 공유.
-    //   PDF 생성 중의 await 로 사용자 제스처가 만료되면 navigator.share 가 거부되므로,
-    //   생성이 끝난 뒤 한 번 더 누르는 시점의 제스처로 공유 시트를 띄운다(= 확실하게 저장됨).
-    if (file && navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
-      if (btn){
-        btn.disabled=false; btn.style.opacity='';
-        btn.textContent=t('pdf.save_share');
-        btn.onclick=function(){
-          navigator.share({ title:(_pdfCtx&&_pdfCtx.label)||'RetWork PDF', files:[file] })
-            .then(function(){ showToast(t('pdf.done')); closeOv('ov-pdf-export'); })
-            .catch(function(e){ if(!(e&&e.name==='AbortError')){ console.warn('[pdf share]', e); showToast(t('pdf.fail')); } })
-            .then(function(){ btn.onclick=runPdfExport; btn.textContent=t('pdf.download'); });
-        };
-      }
-      return;   // 사용자의 공유 터치를 기다림 (아래 버튼 초기화도 건너뜀)
+    var how = await _saveOrShareBlob(pdf, fn, 'application/pdf', (_pdfCtx.label || 'RetWork PDF'));
+    if (how !== 'canceled'){
+      showToast((how==='downloaded' && _isNativeApp()) ? t('pdf.need_update') : t('pdf.done'));
+      closeOv('ov-pdf-export');
     }
-    // 파일 공유 미지원 — 데스크톱 등은 다운로드로 실제 저장되지만, 네이티브 WebView 는 저장 불가 → 솔직히 안내
-    _downloadBlob(pdf, fn);
-    showToast(_isNativeApp() ? t('pdf.need_update') : t('pdf.done'));
-    closeOv('ov-pdf-export');
   } catch(e){ console.warn('[pdf export]', e); showToast(t('pdf.fail')); }
   if (btn){ btn.disabled=false; btn.style.opacity=''; btn.textContent=t('pdf.download'); }
 }
@@ -31441,7 +31454,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 619;
+window.__APP_BUILD__ = 620;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
