@@ -23880,9 +23880,9 @@ async function _saveOrShareBlob(blob, filename, mime, title) {
   //    (플러그인 미설치 구버전에선 P.Filesystem 이 없어 아래 웹 경로로 자동 폴백)
   if (_isNativeApp()){
     var P = (window.Capacitor && window.Capacitor.Plugins) || {};
-    // 🔍 진단(b623) — 실기기 저장 실패 원인 특정용. 확인되면 제거.
+    // 🔍 진단(b624) — 핵심 플러그인 유무만 짧게. 확인되면 제거.
     if (!P.Filesystem || !P.Share){
-      showToast('🔍 Cap=' + (!!window.Capacitor) + ' FS=' + (!!P.Filesystem) + ' Sh=' + (!!P.Share) + ' | ' + Object.keys(P).join(','));
+      showToast('🔍 FS='+(P.Filesystem?1:0)+' Sh='+(P.Share?1:0)+' AdMob='+(P.AdMob?1:0)+' App='+(P.App?1:0)+' Geo='+(P.Geolocation?1:0)+' Push='+(P.PushNotifications?1:0)+' n='+Object.keys(P).length);
       return 'canceled';
     }
     try {
@@ -31462,7 +31462,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 623;
+window.__APP_BUILD__ = 624;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
