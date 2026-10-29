@@ -183,11 +183,12 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   }
 }
 
-/* b627 — 하단 AdMob 배너 노출 시 콘텐츠(탭바 포함)를 배너 높이만큼 위로 밀어 가림 방지 */
-body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-banner-h,56px); }
-/* b628 — 전체높이 설정 패널은 배너 높이만큼 위로, 바텀시트는 하단 여백 추가(버튼/링크 가림 방지) */
-body.has-admob-banner .settings-panel{ height:calc(100% - var(--admob-banner-h,56px)); }
-body.has-admob-banner .sheet{ padding-bottom:calc(36px + var(--admob-banner-h,56px)); }
+/* b627~629 — 하단 AdMob 배너에 콘텐츠가 가리지 않도록.
+   메인/탭바: .phone 하단 패딩.
+   모든 오버레이·바텀시트·설정패널: inset:0 라 .phone 패딩이 안 먹혀 → 오버레이 자체를
+   배너 높이만큼 위에서 끝나게(bottom) 해서, 바닥에 붙는 버튼/링크가 배너 위로 올라오게 함. */
+body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-banner-h,60px); }
+body.has-admob-banner .overlay{ bottom:var(--admob-banner-h,60px); }
 
 /* 상단 상태바 제거 — iOS Safe Area만큼만 높이 확보 */
 .sbar{height:0;height:env(safe-area-inset-top,0px);background:var(--surface);flex-shrink:0;}
@@ -31509,7 +31510,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 628;
+window.__APP_BUILD__ = 629;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
