@@ -183,12 +183,11 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   }
 }
 
-/* b627~629 — 하단 AdMob 배너에 콘텐츠가 가리지 않도록.
-   메인/탭바: .phone 하단 패딩.
-   모든 오버레이·바텀시트·설정패널: inset:0 라 .phone 패딩이 안 먹혀 → 오버레이 자체를
-   배너 높이만큼 위에서 끝나게(bottom) 해서, 바닥에 붙는 버튼/링크가 배너 위로 올라오게 함. */
+/* b627~630 — 하단 AdMob 배너 가림 방지.
+   메인 화면/탭바: .phone 하단 패딩으로 올림(배너 위에서 끝나게).
+   오버레이·바텀시트·팝업: 네이티브 배너가 항상 웹 콘텐츠 위에 떠서 CSS로 일괄 못 올림 →
+   오버레이가 하나라도 열려있는 동안은 배너를 숨김(openOv/closeOv 훅). */
 body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-banner-h,60px); }
-body.has-admob-banner .overlay{ bottom:var(--admob-banner-h,60px); }
 
 /* 상단 상태바 제거 — iOS Safe Area만큼만 높이 확보 */
 .sbar{height:0;height:env(safe-area-inset-top,0px);background:var(--surface);flex-shrink:0;}
@@ -17592,6 +17591,7 @@ function vote(btn,type){ var n=parseInt(btn.textContent.replace(/[^0-9]/g,'')); 
 function openOv(id){
   document.getElementById(id).classList.add('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); window._ovStack.push(id); // 뒤로가기 스택
+  if (window._ovStack.length === 1 && typeof _admobBannerPause === 'function') { try{ _admobBannerPause(); }catch(e){} } // b630 — 오버레이 열림 → 하단 배너 숨김(가림 방지)
   try{ history.pushState({riqNav:1},''); }catch(e){} // 모달 열 때 히스토리 엔트리 미리 쌓음(뒤로가기 안정화)
   if (id === 'ov-settings') {
     renderThemeSwatches();
@@ -17689,6 +17689,7 @@ function closeOv(id){
   var _ovEl=document.getElementById(id); var _ovWasOpen=_ovEl&&_ovEl.classList.contains('open');
   if(_ovEl) _ovEl.classList.remove('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); // 뒤로가기 스택
+  if ((window._ovStack||[]).length === 0 && typeof _admobBannerResume === 'function') { try{ _admobBannerResume(); }catch(e){} } // b630 — 모든 오버레이 닫힘 → 배너 다시 표시
   // UI(닫기 버튼)로 닫으면 열 때 쌓은 히스토리 엔트리를 회수. (뒤로가기로 닫힌 경우 _riqInPop=true → 회수 안 함)
   if(_ovWasOpen && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
   if (id === 'ov-settings') {
@@ -19522,6 +19523,20 @@ async function _admobHideBanner(){
   _ADMOB_BANNER_SHOWN = false;
   if(!AdMob || !AdMob.removeBanner) return;
   try{ await AdMob.removeBanner(); }catch(e){}
+}
+/* 오버레이/팝업 열려있는 동안 배너 잠깐 숨김 (네이티브 배너는 항상 웹 위에 떠서 하단 버튼을 가림).
+   hideBanner/resumeBanner 는 광고를 유지한 채 표시만 토글 → 리로드·비용 없음. b630 */
+async function _admobBannerPause(){
+  if(!_ADMOB_BANNER_SHOWN) return;
+  var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+  if(!AdMob || !AdMob.hideBanner) return;
+  try{ await AdMob.hideBanner(); }catch(e){}
+}
+async function _admobBannerResume(){
+  if(!_ADMOB_BANNER_SHOWN) return;
+  var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+  if(!AdMob || !AdMob.resumeBanner) return;
+  try{ await AdMob.resumeBanner(); }catch(e){}
 }
 
 function showAdModal(callback, context) {
@@ -31510,7 +31525,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 629;
+window.__APP_BUILD__ = 630;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
