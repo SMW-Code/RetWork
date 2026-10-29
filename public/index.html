@@ -17951,8 +17951,10 @@ function _injectAd(containerId, slotKey, contextOverride) {
   // 1) 로컬(자체) 광고 우선 — 세분화 context 가 매칭되면 그것 사용
   var local = _pickLocalAd(slotKey, contextOverride);
   if (local) { _renderLocalAd(c, local); return; }
-  // 2) AdSense (승인 후)
+  // 2) AdSense (승인 후) — 단, 네이티브 앱(WebView) 안에서는 금지(AdSense 정책 위반 → 계정 정지 위험)
+  //    앱 안 광고는 AdMob으로 처리. AdSense는 웹 브라우저(retwork.jp)에서만 노출.
   if (!AD_CONFIG.enabled) return;
+  if (_isNativeApp()) return;
   if (c.querySelector('ins.adsbygoogle')) return; // 중복 방지
   var ph = c.querySelector('[id^="ad-placeholder"]');
   if (ph) ph.style.display = 'none';
@@ -31457,7 +31459,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 625;
+window.__APP_BUILD__ = 626;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
