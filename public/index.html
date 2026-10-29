@@ -183,6 +183,9 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   }
 }
 
+/* b627 — 하단 AdMob 배너 노출 시 콘텐츠(탭바 포함)를 배너 높이만큼 위로 밀어 가림 방지 */
+body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-banner-h,56px); }
+
 /* 상단 상태바 제거 — iOS Safe Area만큼만 높이 확보 */
 .sbar{height:0;height:env(safe-area-inset-top,0px);background:var(--surface);flex-shrink:0;}
 .sbar-time,.sbar-r{display:none;}
@@ -19407,6 +19410,7 @@ function closeAdModal() {
    구조: "광고 시청 완료 → 콜백(영수증 저장 등)". 스캔 원가를 광고 수익으로 상쇄.
    현재 Google 공식 "테스트" 리워드 단위. AdMob 계정 발급 후 _ADMOB_REWARD_ID / isTesting 교체. */
 var _ADMOB_REWARD_ID = 'ca-app-pub-6495876616577319/1298194826'; // 실제 보상형 광고단위(b595)
+var _ADMOB_BANNER_ID = 'ca-app-pub-6495876616577319/6731432361'; // 하단 배너 광고단위(b627)
 var _ADMOB_TESTING   = false;                                    // b621 — Play 정식출시 완료 → 실광고 ON (2026-10-28)
 var _admobInited = false;
 function _isNativeApp(){ try{ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }catch(e){ return false; } }
@@ -19474,6 +19478,46 @@ async function _tryNativeRewarded(callback){
   }finally{
     try{ if(handle && handle.remove) handle.remove(); }catch(e){}
   }
+}
+
+/* ══ 하단 AdMob 배너 (b627) ══
+   화면 맨 아래 고정 띠. 콘텐츠(탭바 포함)는 CSS(.has-admob-banner)로 배너 높이만큼 위로 밀어 안 가림.
+   ⚠️ 리스트 중간 "인라인" 배너는 현 플러그인 미지원 → 추후 Capawesome 교체 시 전환. */
+var _ADMOB_BANNER_SHOWN = false;
+var _admobBannerSizeHandle = null;
+async function _admobShowBanner(){
+  if(!_isNativeApp()) return;
+  var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+  if(!AdMob || !AdMob.showBanner) return;              // 구버전 앱(배너 미지원) → 조용히 패스
+  if(_ADMOB_BANNER_SHOWN) return;
+  try{
+    if(!_admobInited){ try{ await AdMob.initialize(); }catch(e){} _admobInited = true; }
+    // 배너 실제 높이만큼 콘텐츠 밀어올림 (탭바 가림 방지)
+    if(!_admobBannerSizeHandle && AdMob.addListener){
+      try{
+        _admobBannerSizeHandle = await AdMob.addListener('bannerViewChangeSize', function(info){
+          var h = (info && (info.height || (info.size && info.size.height))) || 0;
+          if(h>0) document.documentElement.style.setProperty('--admob-banner-h', h+'px');
+        });
+      }catch(e){}
+    }
+    await AdMob.showBanner({
+      adId: _ADMOB_BANNER_ID,
+      adSize: 'ADAPTIVE_BANNER',
+      position: 'BOTTOM_CENTER',
+      margin: 0,
+      isTesting: _ADMOB_TESTING
+    });
+    _ADMOB_BANNER_SHOWN = true;
+    document.body.classList.add('has-admob-banner');
+  }catch(e){ console.warn('[admob banner]', e); }
+}
+async function _admobHideBanner(){
+  var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
+  document.body.classList.remove('has-admob-banner');
+  _ADMOB_BANNER_SHOWN = false;
+  if(!AdMob || !AdMob.removeBanner) return;
+  try{ await AdMob.removeBanner(); }catch(e){}
 }
 
 function showAdModal(callback, context) {
@@ -19784,6 +19828,8 @@ function showApp() {
   _loadAdminFlag();
   // 네이티브 앱: 이미 알림 허용된 기기면 FCM 토큰 갱신 (b601)
   if (typeof _registerNativePush === 'function') { try { _registerNativePush(); } catch(e){} }
+  // 네이티브 앱: 하단 AdMob 배너 표시 (b627) — UI 안정 후
+  if (typeof _admobShowBanner === 'function') setTimeout(function(){ try{ _admobShowBanner(); }catch(e){} }, 900);
   // 활성 공지 로드 → 상단 배너 표시
   if (typeof _loadActiveAnnouncement === 'function') _loadActiveAnnouncement();
   // 본인 차단 상태 체크 → 차단 시 상단 배너 표시
@@ -20206,6 +20252,7 @@ async function authLogout() {
   await _sb.auth.signOut();
   _currentUser = null;
   window._appShownOnce = false; // 재로그인 시 showApp 본문 다시 실행되도록 가드 리셋
+  if (typeof _admobHideBanner === 'function') { try{ _admobHideBanner(); }catch(e){} } // b627 — 로그아웃 시 하단 배너 제거
   // 이전 OAuth 토큰 hash 제거 (재로그인 오염 방지)
   history.replaceState(null, '', window.location.pathname);
   document.getElementById('screen-main').style.display = 'none';
@@ -31459,7 +31506,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 626;
+window.__APP_BUILD__ = 627;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
