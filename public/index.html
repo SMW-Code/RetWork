@@ -2542,7 +2542,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       </div>
       <div class="sg">
         <div class="si"><span class="lico" data-lico="globe" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
-        <div class="si" onclick="toggleCurrency()" style="cursor:pointer;"><span class="lico" data-lico="coin" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.currency">통화</span><span class="si-val" id="cur-val">¥ JPY</span><span style="font-size:11px;color:var(--text-3);margin-left:4px;">⇄</span></div>
+        <div class="si" onclick="openCurrencyPicker()" style="cursor:pointer;"><span class="lico" data-lico="coin" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.currency">통화</span><span class="si-val" id="cur-val" style="margin-left:auto;">¥ JPY</span><span style="font-size:12px;color:var(--text-3);margin-left:6px;">›</span></div>
         <div class="si"><span class="lico" data-lico="calendar" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.week_start">주 시작 요일</span><select id="week-start-select" onchange="setWeekStart(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;"><option value="0" data-i18n="week.sun">일요일</option><option value="1" data-i18n="week.mon">월요일</option></select></div>
         <div class="si" style="align-items:flex-start;"><span class="lico" data-lico="calendar" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;margin-top:1px;"></span><div style="flex:1;min-width:0;"><div class="si-lbl" data-i18n="settings.month_start">월 시작일</div><div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;line-height:1.4;" data-i18n="settings.month_start_hint">급여일 기준으로 한 달을 잡으려면 변경하세요 (예: 25일)</div></div><select id="month-start-select" onchange="setMonthStartDay(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;align-self:center;margin-left:auto;"></select></div>
         <div class="si" onclick="openRecurring()" style="cursor:pointer;"><span class="lico" data-lico="refresh" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="recur.menu">정기지출 관리</span><span class="si-val" id="recur-count-badge" style="margin-left:auto;"></span><span style="font-size:12px;color:var(--text-3);margin-left:8px;">›</span></div>
@@ -2720,6 +2720,16 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 </div>
 
 <!-- ══ 예산 설정 모달 ══ -->
+<!-- ══ 통화 표기 선택 (바텀시트) ══ -->
+<div class="overlay bottom-sheet-overlay" id="ov-currency" onclick="closeOvOutside(event,'ov-currency')">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" data-i18n="cur.title">통화 표기</div>
+    <div class="sheet-sub" data-i18n="cur.sub">환율 변환 없이 기호만 바뀝니다</div>
+    <div id="cur-options" style="margin:16px 0 8px;display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+</div>
+
 <div class="overlay bottom-sheet-overlay" id="ov-budget" onclick="closeOvOutside(event,'ov-budget')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -5137,6 +5147,22 @@ function applyCurrency(){
   try { if (typeof renderCatBreakdown === 'function') renderCatBreakdown(); } catch(e){}
   try { if (typeof renderBars === 'function') renderBars(typeof _reportPeriod !== 'undefined' ? _reportPeriod : 'week'); } catch(e){}
 }
+/* 통화 선택 바텀시트 — 토글 대신 눌러서 목록에서 선택 */
+function openCurrencyPicker(){ _renderCurrencyOptions(); try{ openOv('ov-currency'); }catch(e){} }
+function _renderCurrencyOptions(){
+  var box = document.getElementById('cur-options');
+  if (!box) return;
+  var opts = [ { sym:'¥', code:'JPY', name:t('cur.jpy') }, { sym:'₩', code:'KRW', name:t('cur.krw') } ];
+  box.innerHTML = opts.map(function(o){
+    var on = (_CUR === o.sym);
+    return '<div onclick="pickCurrency(\'' + o.sym + '\')" style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;cursor:pointer;border:1.5px solid ' + (on?'var(--green)':'var(--border-mid)') + ';background:' + (on?'var(--green-light)':'var(--surface)') + ';">'
+      + '<span style="font-size:22px;font-weight:800;color:var(--text-1);width:26px;text-align:center;">' + o.sym + '</span>'
+      + '<div style="flex:1;min-width:0;"><div style="font-size:14px;font-weight:800;color:var(--text-1);">' + o.code + '</div><div style="font-size:11px;color:var(--text-3);font-weight:600;">' + o.name + '</div></div>'
+      + (on ? '<span style="color:var(--green);font-size:18px;font-weight:900;">✓</span>' : '')
+      + '</div>';
+  }).join('');
+}
+function pickCurrency(sym){ setCurrency(sym); try{ closeOv('ov-currency'); }catch(e){} }
 /* ══════════════════════════════
    Supabase 초기화
 ══════════════════════════════ */
@@ -9172,7 +9198,7 @@ function renderHome() {
   }
 
   // ── 2. 메인 카드 ──
-  document.getElementById('home-total').textContent = '¥ '+totalAmt.toLocaleString();
+  document.getElementById('home-total').textContent = _cursym()+' '+totalAmt.toLocaleString();
   document.getElementById('home-food').textContent  = _cursym()+foodAmt.toLocaleString();
   document.getElementById('home-eat').textContent   = _cursym()+eatAmt.toLocaleString();
   document.getElementById('home-other').textContent = _cursym()+(totalAmt-foodAmt-eatAmt).toLocaleString();
@@ -10128,7 +10154,7 @@ function renderBars(type) {
 
   total = vals.reduce(function(a,b){return a+b;},0);
   document.getElementById('chart-title').textContent = title;
-  document.getElementById('report-total').textContent = total > 0 ? '¥ '+total.toLocaleString() : '¥ 0';
+  document.getElementById('report-total').textContent = total > 0 ? _cursym()+' '+total.toLocaleString() : _cursym()+' 0';
 
   var nonZero = vals.filter(function(v){return v>0;});
   var mx = nonZero.length > 0 ? Math.max.apply(null, nonZero) : 1;
@@ -10406,9 +10432,9 @@ function renderCalendar(y,m) {
     var carr = ((calMap[cd.getFullYear()+'-'+(cd.getMonth()+1)])||{})[cd.getDate()]||[];
     carr.forEach(function(r){ monthTotal+=r.total; monthCnt++; });
   }
-  document.getElementById('cal-month-total').textContent='¥ '+monthTotal.toLocaleString();
+  document.getElementById('cal-month-total').textContent=_cursym()+' '+monthTotal.toLocaleString();
   document.getElementById('cal-month-cnt').textContent=monthCnt+t('rep.unit_cnt');
-  document.getElementById('cal-month-avg').textContent='¥ '+(monthCnt>0?Math.round(monthTotal/_periodElapsedDays(rg)).toLocaleString():0);   // 진행중 주기는 경과일 기준
+  document.getElementById('cal-month-avg').textContent=_cursym()+' '+(monthCnt>0?Math.round(monthTotal/_periodElapsedDays(rg)).toLocaleString():0);   // 진행중 주기는 경과일 기준
   var html=''; var today=new Date();
   for(var i=0;i<firstCol;i++) html+='<div class="cal-day empty">0</div>';
   for(var pj=0; pj<lenDays; pj++){
@@ -11230,32 +11256,43 @@ function showOcrLoadingMulti(previewSrc, pageCount) {
    절약팁 / 블로그 유도 / 프리미엄 3종 로테이션. 블로그 클릭 = 웹 /blog/ (웹 AdSense 수익까지 연결). */
 var _houseAdRR = Math.floor(Math.random() * 3);
 function _houseGoBlog(){ try{ window.open('/blog/', '_blank', 'noopener'); }catch(e){ try{ location.href = '/blog/'; }catch(_){} } }
+/* opts.compact=true → 인라인 슬롯용 가로 1줄 카드, 아니면 자동재생용 세로 카드(opts.height). */
 function _houseAdCard(opts){
   opts = opts || {};
+  var compact = !!opts.compact;
   var H = opts.height || 200;
   var variant = ['tip','blog','premium'][(_houseAdRR++) % 3];
-  var inner, onclick;
+  var icon, title, body, cta, onclick;
   if (variant === 'premium'){
-    onclick = 'openPremium()';
-    inner = '<div style="font-size:30px;line-height:1;">✨</div>'
-      + '<div style="font-size:15px;font-weight:800;margin-top:8px;">' + t('ad.premium_title') + '</div>'
-      + '<div style="font-size:11px;opacity:.88;margin-top:4px;">' + t('ad.premium_sub') + '</div>'
-      + '<div style="margin-top:12px;display:inline-block;background:rgba(255,255,255,.22);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:800;">' + t('ad.detail') + ' →</div>';
+    icon = '✨'; title = t('ad.premium_title'); body = t('ad.premium_sub'); cta = t('ad.detail') + ' →'; onclick = 'openPremium()';
   } else if (variant === 'blog'){
-    onclick = '_houseGoBlog()';
-    inner = '<div style="font-size:30px;line-height:1;">📖</div>'
-      + '<div style="font-size:15px;font-weight:800;margin-top:8px;">' + t('house.blog_title') + '</div>'
-      + '<div style="font-size:11px;opacity:.88;margin-top:4px;">' + t('house.blog_sub') + '</div>'
-      + '<div style="margin-top:12px;display:inline-block;background:rgba(255,255,255,.22);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:800;">' + t('house.blog_cta') + '</div>';
+    icon = '📖'; title = t('house.blog_title'); body = t('house.blog_sub'); cta = t('house.blog_cta'); onclick = '_houseGoBlog()';
   } else {
     onclick = '_houseGoBlog()';
     var QS = (window._dbQuotes && window._dbQuotes[_currentLang] && window._dbQuotes[_currentLang].length)
            ? window._dbQuotes[_currentLang] : (_QUOTES_BY_LANG[_currentLang] || _QUOTES_BY_LANG.ja);
     var q = QS[Math.floor(Math.random() * QS.length)] || { q:'' };
-    inner = '<div style="font-size:15px;font-weight:800;">' + t('house.tip_title') + '</div>'
-      + '<div style="font-size:14px;font-weight:600;margin-top:12px;line-height:1.55;opacity:.96;">“' + _esc(q.q || '') + '”</div>';
+    icon = '💡'; title = t('house.tip_title'); body = '“' + _esc(q.q || '') + '”'; cta = t('house.blog_cta');
   }
-  return '<div onclick="' + onclick + '" style="cursor:pointer;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#1e3a8a,#6d28d9);color:#fff;min-height:' + H + 'px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;box-shadow:0 4px 16px rgba(29,42,138,.22);">'
+  var bg = 'linear-gradient(135deg,#1e3a8a,#6d28d9)';
+  if (compact){
+    return '<div onclick="' + onclick + '" style="cursor:pointer;display:flex;align-items:center;gap:12px;padding:11px 14px;border-radius:14px;background:' + bg + ';color:#fff;min-height:64px;box-sizing:border-box;box-shadow:0 2px 10px rgba(29,42,138,.18);">'
+      + '<div style="font-size:22px;flex-shrink:0;line-height:1;">' + icon + '</div>'
+      + '<div style="flex:1;min-width:0;text-align:left;">'
+        + '<div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + title + '</div>'
+        + '<div style="font-size:11px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">' + body + '</div>'
+      + '</div>'
+      + '<div style="flex-shrink:0;font-size:12px;font-weight:800;background:rgba(255,255,255,.22);border-radius:16px;padding:5px 11px;">→</div>'
+      + '</div>';
+  }
+  var inner = (variant === 'tip')
+    ? '<div style="font-size:15px;font-weight:800;">' + title + '</div>'
+      + '<div style="font-size:14px;font-weight:600;margin-top:12px;line-height:1.55;opacity:.96;">' + body + '</div>'
+    : '<div style="font-size:30px;line-height:1;">' + icon + '</div>'
+      + '<div style="font-size:15px;font-weight:800;margin-top:8px;">' + title + '</div>'
+      + '<div style="font-size:11px;opacity:.88;margin-top:4px;">' + body + '</div>'
+      + '<div style="margin-top:12px;display:inline-block;background:rgba(255,255,255,.22);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:800;">' + cta + '</div>';
+  return '<div onclick="' + onclick + '" style="cursor:pointer;border-radius:16px;overflow:hidden;background:' + bg + ';color:#fff;min-height:' + H + 'px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;box-shadow:0 4px 16px rgba(29,42,138,.22);">'
     + '<div>' + inner + '</div>'
     + '</div>';
 }
@@ -14241,6 +14278,7 @@ var I18N = {
     'ad.reward_get':'広告を見てチリ獲得','ad.loading':'広告を読み込み中...',
     'ad.autoplay':'広告 自動再生中','ad.label':'広告','ad.adsense_note':'AdSense承認後に実広告','ad.autoplay_short':'自動再生','ad.daily_hint':'毎日見て チリ をもっと貯めよう',
     'house.tip_title':'💡 今日の節約ヒント','house.blog_title':'📖 節約ブログ','house.blog_sub':'実践的な節約ノウハウ','house.blog_cta':'ブログで続きを読む →',
+    'cur.title':'通貨表示','cur.sub':'為替変換なし・記号のみ切替','cur.jpy':'日本円','cur.krw':'韓国ウォン',
     'plan.user':'{name}さん','sp.free_plan':'無料プラン',
     // 가게/맵
     'map.search':'店舗を検索...','map.filter':'フィルター','map.ranking':'ランキング','map.private':'プライベート','map.public':'公開',
@@ -14550,6 +14588,7 @@ var I18N = {
     'ad.reward_get':'광고 보고 치리 받기','ad.loading':'광고 불러오는 중...',
     'ad.autoplay':'광고 자동 재생 중','ad.label':'광고','ad.adsense_note':'AdSense 승인 후 실광고','ad.autoplay_short':'자동 재생','ad.daily_hint':'매일 보고 치리를 더 모으세요',
     'house.tip_title':'💡 오늘의 절약 팁','house.blog_title':'📖 절약 블로그','house.blog_sub':'실전 절약 노하우','house.blog_cta':'블로그에서 더 보기 →',
+    'cur.title':'통화 표기','cur.sub':'환율 변환 없이 기호만 바뀝니다','cur.jpy':'일본 엔','cur.krw':'한국 원',
     'plan.user':'{name}님','sp.free_plan':'무료 플랜',
     'map.search':'가게 검색...','map.filter':'필터','map.ranking':'랭킹','map.private':'프라이빗','map.public':'공개',
     'map.private.toast':'🔒 프라이빗 모드','map.public.toast':'🌐 공개 모드',
@@ -14813,6 +14852,7 @@ var I18N = {
     'ad.reward_get':'Watch ad & earn chiri','ad.loading':'Loading ad...',
     'ad.autoplay':'Ad auto-playing','ad.label':'Ad','ad.adsense_note':'Real ads after AdSense approval','ad.autoplay_short':'Auto-play','ad.daily_hint':'Watch daily to earn more Chiri',
     'house.tip_title':'💡 Today’s saving tip','house.blog_title':'📖 Savings blog','house.blog_sub':'Practical money-saving tips','house.blog_cta':'Read more on the blog →',
+    'cur.title':'Currency','cur.sub':'Symbol only — no conversion','cur.jpy':'Japanese Yen','cur.krw':'Korean Won',
     'plan.user':'{name}','sp.free_plan':'Free plan',
     'map.search':'Search store...','map.filter':'Filter','map.ranking':'Ranking','map.private':'Private','map.public':'Public',
     'map.private.toast':'🔒 Private mode','map.public.toast':'🌐 Public mode',
@@ -15076,6 +15116,7 @@ var I18N = {
     'ad.reward_get':'看广告领积分','ad.loading':'广告加载中...',
     'ad.autoplay':'广告自动播放中','ad.label':'广告','ad.adsense_note':'AdSense 审核通过后展示真实广告','ad.autoplay_short':'自动播放','ad.daily_hint':'每天观看，积攒更多 Chiri',
     'house.tip_title':'💡 今日省钱贴士','house.blog_title':'📖 省钱博客','house.blog_sub':'实用省钱窍门','house.blog_cta':'在博客阅读更多 →',
+    'cur.title':'货币显示','cur.sub':'仅切换符号，不换算汇率','cur.jpy':'日元','cur.krw':'韩元',
     'plan.user':'{name}','sp.free_plan':'免费版',
     'map.search':'搜索店铺...','map.filter':'筛选','map.ranking':'排行','map.private':'私密','map.public':'公开',
     'map.private.toast':'🔒 私密模式','map.public.toast':'🌐 公开模式',
@@ -17553,7 +17594,9 @@ function _renderLocalAd(c, ad) {
   if (_sb) { try { _sb.rpc('local_ad_bump', { p_id: ad.id, p_kind: 'imp' }).then(function(){}, function(){}); } catch(e){} }
 }
 
-/* 광고 컨테이너에 광고 주입 — 로컬 광고 우선(세분화 context > zone), 없으면 AdSense
+/* 인라인 광고 위치 — 로컬·유료광고 없을 때 자체콘텐츠 가로카드로 채울 context 집합 */
+var _HOUSE_FALLBACK_CTX = { home:1, modal:1, map:1, store:1, feed:1 };
+/* 광고 컨테이너에 광고 주입 — 캐스케이드: ①어드민OFF→숨김 ②로컬광고 ③유료광고(웹) ④자체콘텐츠(인라인)
    contextOverride: AD_POSITIONS.context 값 (예: 'save','chiri','attendance' 등) */
 function _injectAd(containerId, slotKey, contextOverride) {
   var c = document.getElementById(containerId);
@@ -17563,22 +17606,28 @@ function _injectAd(containerId, slotKey, contextOverride) {
   // 1) 로컬(자체) 광고 우선 — 세분화 context 가 매칭되면 그것 사용
   var local = _pickLocalAd(slotKey, contextOverride);
   if (local) { _renderLocalAd(c, local); return; }
-  // 2) AdSense (승인 후) — 단, 네이티브 앱(WebView) 안에서는 금지(AdSense 정책 위반 → 계정 정지 위험)
-  //    앱 안 광고는 AdMob으로 처리. AdSense는 웹 브라우저(retwork.jp)에서만 노출.
-  if (!AD_CONFIG.enabled) return;
-  if (_isNativeApp()) return;
-  if (c.querySelector('ins.adsbygoogle')) return; // 중복 방지
-  var ph = c.querySelector('[id^="ad-placeholder"]');
-  if (ph) ph.style.display = 'none';
-  var ins = document.createElement('ins');
-  ins.className = 'adsbygoogle';
-  ins.style.cssText = 'display:block;width:100%;';
-  ins.setAttribute('data-ad-client', AD_CONFIG.client);
-  ins.setAttribute('data-ad-slot', AD_CONFIG.slots[slotKey] || '');
-  ins.setAttribute('data-ad-format', 'auto');
-  ins.setAttribute('data-full-width-responsive', 'true');
-  c.appendChild(ins);
-  try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+  // 2) 유료광고(AdSense) — 웹 브라우저 전용. 앱 WebView 안에서는 금지(정책 위반 → 계정 정지).
+  //    유료광고가 걸리면 ③ 자체콘텐츠보다 우선. (앱 인라인 AdMob은 Capawesome 도입 시 여기에 추가)
+  if (AD_CONFIG.enabled && !_isNativeApp()) {
+    if (c.querySelector('ins.adsbygoogle')) return; // 중복 방지
+    var ph = c.querySelector('[id^="ad-placeholder"]');
+    if (ph) ph.style.display = 'none';
+    var ins = document.createElement('ins');
+    ins.className = 'adsbygoogle';
+    ins.style.cssText = 'display:block;width:100%;';
+    ins.setAttribute('data-ad-client', AD_CONFIG.client);
+    ins.setAttribute('data-ad-slot', AD_CONFIG.slots[slotKey] || '');
+    ins.setAttribute('data-ad-format', 'auto');
+    ins.setAttribute('data-full-width-responsive', 'true');
+    c.appendChild(ins);
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+    return;
+  }
+  // 3) 폴백: 로컬·유료광고 둘 다 없으면 자체콘텐츠 가로카드 (인라인 위치만 — 빈 "📢 広告" 박스 방지)
+  if (_HOUSE_FALLBACK_CTX[contextOverride || slotKey]) {
+    c.style.display = '';
+    c.innerHTML = _houseAdCard({ compact:true });
+  }
 }
 
 /* 앱 진입 시 항시 광고 슬롯 초기화 */
@@ -31137,7 +31186,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 647;
+window.__APP_BUILD__ = 648;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
