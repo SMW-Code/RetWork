@@ -2348,82 +2348,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 </div>
 
 <!-- ══ 광고 모달 (비구독 유저) ══ -->
-<div class="confirm-overlay" id="ov-saveconfirm" onclick="if(event.target===this)closeAdModal()">
-  <div class="confirm-sheet" style="padding:0;overflow:hidden;position:relative;">
- <!-- 닫기 X — 광고 안 보고 나가기 -->
-    <div onclick="closeAdModal()" style="position:absolute;top:10px;right:10px;z-index:20;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;font-weight:700;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.3);">✕</div>
-
-    <!-- 자동재생 광고 미리보기 -->
-    <div id="ad-slot-modal" style="overflow:hidden;border-bottom:0.5px solid var(--border);">
-      <!-- AdSense 미승인 시 플레이스홀더 -->
-      <div id="ad-placeholder-modal" style="display:flex;height:320px;">
-        <!-- 왼쪽: 동영상 시뮬레이션 -->
-        <div style="width:46%;position:relative;overflow:hidden;background:#0d0d22;">
-          <div style="position:absolute;inset:0;background:linear-gradient(135deg,#0d0d22,#1a2a6e,#0d1f44);animation:ct-ad-bg 3s ease-in-out infinite alternate;"></div>
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">
-            <div style="text-align:center;">
-              <div style="font-size:30px;animation:ct-ad-pulse 1.2s ease-in-out infinite;">🏰</div>
-              <div style="font-size:16px;margin-top:4px;animation:ct-ad-pulse 1.2s ease-in-out infinite .3s;">⚔️</div>
-            </div>
-          </div>
-          <div style="position:absolute;top:6px;left:6px;right:6px;display:flex;justify-content:space-between;">
-            <div style="display:flex;gap:4px;">
-              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">👍</div>
-              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">👎</div>
-            </div>
-            <div style="display:flex;gap:4px;">
-              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">🔇</div>
-              <div style="background:rgba(255,255,255,.18);border-radius:50%;width:21px;height:21px;display:flex;align-items:center;justify-content:center;font-size:9px;">⏸</div>
-            </div>
-          </div>
-          <div style="position:absolute;bottom:7px;left:7px;background:rgba(255,200,0,.9);border-radius:10px;padding:2px 7px;font-size:10px;font-weight:800;color:#5a3000;">💰 500</div>
-          <div style="position:absolute;bottom:7px;right:7px;background:rgba(0,0,0,.45);border-radius:4px;padding:1px 5px;font-size:9px;color:rgba(255,255,255,.7);">広告</div>
-        </div>
-        <!-- 오른쪽: 앱 정보 -->
-        <div style="flex:1;padding:10px 10px 10px 12px;display:flex;flex-direction:column;justify-content:space-between;background:#fff;">
-          <div style="display:flex;justify-content:flex-end;gap:6px;margin-bottom:4px;">
-            <span style="font-size:14px;color:#bbb;">ℹ️</span>
-            <span style="font-size:14px;color:#bbb;">⋮</span>
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#1e3a8a,#60a5fa);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🌍</div>
-            <div>
-              <div style="font-size:13px;font-weight:800;color:#111;">Strategy Game</div>
-              <div style="display:flex;align-items:center;gap:4px;margin-top:2px;">
-                <span style="font-size:11px;color:#555;font-weight:700;">4.5 ★</span>
-                <svg width="12" height="12" viewBox="0 0 24 24"><path fill="#34A853" d="M3.6 1.6L13.2 12 3.6 22.4"/><path fill="#FBBC04" d="M3.6 22.4l13.9-8-3.3-2.4z"/><path fill="#4285F4" d="M3.6 1.6l10.6 10.8-3.3-2.4z" transform="scale(1,-1) translate(0,-24)"/><path fill="#EA4335" d="M17.5 14.4l2.9-1.7a1 1 0 000-1.4L17.5 9.6l-3.3 2.4z"/></svg>
-                <span style="font-size:10px;color:#888;">Google Play</span>
-              </div>
-            </div>
-          </div>
-          <button style="width:100%;background:#1a73e8;color:#fff;border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="ad.install">インストール</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- 하단 버튼 영역 -->
-    <div style="padding:18px 20px 32px;">
-      <button id="confirm-action-btn" onclick="adStartFullscreen()"
-        style="width:100%;padding:17px;background:linear-gradient(135deg,#1BBF8A,#0D7A5F);color:#fff;border:none;border-radius:16px;font-size:15px;font-weight:900;cursor:pointer;font-family:var(--font);margin-bottom:10px;box-shadow:0 6px 20px rgba(13,122,95,.4);display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:-.2px;animation:ad-btn-pulse 2s ease-in-out infinite;">
-        <span style="font-size:18px;">▶️</span>
-        <span id="confirm-action-label" data-i18n="ad.save_free">広告を見て家計簿に無料保存</span>
-      </button>
-      <!-- 치리 공개 옵션 — 외식 카테고리(eat/cafe/drink) + 'save' 컨텍스트일 때만 노출. showAdModal에서 동적 제어 -->
-      <button id="confirm-publish-btn" onclick="adGoPublishChiri()" style="display:none;width:100%;padding:15px;background:linear-gradient(135deg,#F4B940,#D48E1A);color:#fff;border:none;border-radius:16px;font-size:13px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:14px;box-shadow:0 6px 18px rgba(212,142,26,.35);align-items:center;justify-content:center;gap:8px;letter-spacing:-.2px;">
-        <span style="font-size:16px;">📍</span>
-        <span data-i18n="ad.publish_btn">広告を見て保存＋チリモード公開</span>
-        <span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>
-      </button>
-      <div style="padding:12px 14px;background:var(--surface);border:1px solid var(--border-mid);border-radius:12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;opacity:.85;" onclick="openPremium()">
-        <div>
-          <div style="font-size:12px;font-weight:700;color:var(--text-2);" data-i18n="ad.premium_title">✨ プレミアムで広告なし</div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;" data-i18n="ad.premium_sub">¥320/月 · スキャン無制限</div>
-        </div>
-        <div style="font-size:11px;font-weight:700;color:var(--green);"><span data-i18n="ad.detail">詳細</span> ›</div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- 옛 ov-saveconfirm 바텀시트 광고모달(HTML+핸들러)은 openWatchAdPage로 대체 → LEGACY_SNIPPETS.md §3 (b642 제거) -->
 
 <!-- ══ チリワード 전체화면 광고 ══ -->
 <div id="ov-reward-ad" style="display:none;position:fixed;inset:0;z-index:9999;background:#000;flex-direction:column;align-items:stretch;">
@@ -19058,16 +18983,6 @@ function watchAdPageStartSecondary(){
 /* — 광고 모달 닫기 (콜백 실행 X, 광고 안 보고 나가기)
    - monthreport / report_unlock 컨텍스트에서 명시 닫기 가능
    - 영수증 저장 등에서도 닫으면 저장 안 됨 (사용자 의도 그대로) */
-function closeAdModal() {
-  var el = document.getElementById('ov-saveconfirm');
-  if (el) {
-    el.classList.remove('open');
-    el.style.cssText = '';
-  }
-  // 콜백 무효화 — 광고 보고 진입하지 않음
-  _adCallback = null;
-  _adContext = 'save';
-}
 
 /* ══ 네이티브(AdMob) 리워드 광고 — Capacitor 앱에서만. 웹은 기존 광고 페이지. ══
    구조: "광고 시청 완료 → 콜백(영수증 저장 등)". 스캔 원가를 광고 수익으로 상쇄.
@@ -19237,35 +19152,8 @@ function showAdModal(callback, context) {
 
 /* "광고 보고 치리에 공개" 버튼 클릭 → 광고 모달 닫고 치리 공개 흐름 시작
    외식 카테고리(eat/cafe/drink)에서만 노출되는 옵션 */
-function adGoPublishChiri() {
-  var _ad = document.getElementById('ov-saveconfirm');
-  if (_ad) {
-    _ad.classList.remove('open');
-    _ad.style.cssText = ''; // 인라인 style 리셋
-  }
-  _adCallback = null; // 가계부 저장 콜백 무효화 (치리 공개 흐름에서 저장+공개를 같이 처리)
-  if (typeof saveAndPublishChiri === 'function') {
-    saveAndPublishChiri();
-  }
-}
 
-/* "광고 보고 저장하기" 버튼 클릭 → 전체화면 광고로 전환 */
-function adStartFullscreen() {
-  var _ad = document.getElementById('ov-saveconfirm');
-  _ad.classList.remove('open');
-  _ad.style.cssText = ''; // 인라인 style 리셋 → CSS에서 다시 display:none 적용됨
-  ctOpenFullscreenAd('save', function() {
-    if (_adCallback) { _adCallback(); _adCallback = null; }
-  });
-}
 
-/* 하위 호환용 (기존 코드에서 adComplete() 호출 시) */
-function adComplete() {
-  var _ad = document.getElementById('ov-saveconfirm');
-  _ad.classList.remove('open');
-  _ad.style.cssText = '';
-  if (_adCallback) { _adCallback(); _adCallback = null; }
-}
 
 /* ────────────────────────────────────────
    공용 전체화면 광고
@@ -31190,7 +31078,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 641;
+window.__APP_BUILD__ = 642;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

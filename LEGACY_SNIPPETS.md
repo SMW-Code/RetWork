@@ -104,3 +104,15 @@ setTimeout(function() {
 | `_handleUserBannedError` / `showOnboarding` | 미연결 에러핸들러·온보딩 |
 | `_catLabel` / `_fmtMins` / `_admPcBackToUserList` | 트리비얼 미사용 헬퍼 |
 | `_radarDummyData` | 빈 레거시 배열 |
+
+---
+
+## 3. 옛 `ov-saveconfirm` 세트 — HTML 모달 + 핸들러 4개 (build 642에서 제거)
+
+§1에서 제거한 바텀시트 로직의 **나머지 껍데기**. 모달이 더 이상 열리지 않아 전부 고아 상태였음.
+
+**제거 대상 (전체 코드는 git `320122c:public/index.html` 복원 가능):**
+- **HTML `#ov-saveconfirm`** (약 76줄): 저장 시 뜨던 바텀시트. 가짜 광고 목업(🏰⚔️ Strategy Game, 👍👎🔇⏸, `広告` 배지, `💰500`, インストール 버튼) + 액션/치리공개 버튼 + 프리미엄 업셀. 내부 ID `ad-slot-modal`/`ad-placeholder-modal`/`confirm-action-btn`/`confirm-action-label`/`confirm-publish-btn`.
+- **핸들러 4개**: `closeAdModal`(닫기), `adStartFullscreen`("광고보고 저장"→ctOpenFullscreenAd), `adGoPublishChiri`("광고보고 치리공개"→saveAndPublishChiri), `adComplete`(하위호환 스텁, 호출처 없음).
+
+**왜 안전:** 활성 "저장 시 광고" 흐름은 `showAdModal`→`openWatchAdPage`→`ctOpenFullscreenAd`(전부 유지). 이 세트는 서로만 참조, 활성 코드 참조 0. CSS(`.confirm-overlay` 등)는 31717줄 셀렉터가 클래스명 참조해 **그대로 둠**(무해한 죽은 스타일).
