@@ -5691,30 +5691,9 @@ function _ctRenderAttendance(){
     + '<button class="att-go-btn" onclick="ctDoCheckIn()" '+(canCheck && todayCount<3 ? '' : 'disabled')+'>'+btnLabel+'</button>'
     + '</div>';
 
-  // ─── 카드2: 자동재생 동영상 광고 (더 prominent 하게) ───
-  h += '<div class="att-card" style="padding:0;overflow:hidden;border:1.5px solid var(--gold);box-shadow:0 4px 14px rgba(232,160,32,.18);flex-shrink:0;min-height:300px;">'
-    // 상단 라벨 바
-    + '<div style="background:var(--gold-grad);color:#fff;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">'
-      + '<div style="display:flex;align-items:center;gap:6px;"><span style="font-size:14px;">📢</span><span style="font-size:11px;font-weight:800;letter-spacing:.5px;">SPONSORED VIDEO AD</span></div>'
-      + '<span style="font-size:10px;font-weight:700;opacity:.85;">'+t('ad.autoplay_short')+' ▶️</span>'
-    + '</div>'
-    // 광고 본체 (240px 고정, min-height 보장)
-    + '<div style="position:relative;width:100%;height:240px;min-height:240px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;flex-shrink:0;">'
-      + '<div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>'
-      + '<div style="position:relative;z-index:2;text-align:center;color:#fff;padding:0 16px;">'
-        + '<div style="font-size:56px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>'
-        + '<div style="font-size:16px;font-weight:800;letter-spacing:.5px;margin-top:10px;">'+t('ad.autoplay')+'</div>'
-        + '<div style="font-size:11px;opacity:.8;margin-top:4px;font-weight:500;">'+t('ad.daily_hint')+' ✨</div>'
-      + '</div>'
-      + '<div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:rgba(255,255,255,.18);">'
-        + '<div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>'
-      + '</div>'
-    + '</div>'
-    // 하단 캡션
-    + '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg-2);">'
-      + '<span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 '+t('att.ad')+'</span>'
-      + '<span style="font-size:9px;color:var(--text-3);font-weight:500;">'+t('att.ad_note')+'</span>'
-    + '</div>'
+  // ─── 카드2: 자체 콘텐츠 (절약팁/블로그/프리미엄 — 가짜 광고 대체, B안) ───
+  h += '<div class="att-card" style="padding:0;background:transparent;border:none;box-shadow:none;overflow:visible;flex-shrink:0;">'
+    + _houseAdCard({ height:240 })
     + '</div>';
 
   // ─── 카드2.5: 추가 광고 보상 (출석 슬롯당 2회까지) ───
@@ -11247,29 +11226,42 @@ function showOcrLoadingMulti(previewSrc, pageCount) {
   openOv('ov-ocr');
 }
 
-/* OCR 분석 대기 중 광고 카드 (수익 노출) */
-function _ocrLoadingAdHtml(){
-  return '<div style="margin:14px 0 4px;border:.5px solid var(--border);border-radius:14px;overflow:hidden;background:#0d0d22;box-shadow:0 3px 12px rgba(0,0,0,.08);">'
-    + '<div style="background:var(--gold-grad);color:#fff;padding:5px 12px;display:flex;align-items:center;justify-content:space-between;">'
-      + '<div style="display:flex;align-items:center;gap:5px;"><span style="font-size:12px;">📢</span><span style="font-size:10px;font-weight:800;letter-spacing:.4px;">SPONSORED</span></div>'
-      + '<span style="font-size:9px;font-weight:700;opacity:.85;">'+t('ocr.ad_badge')+'</span>'
-    + '</div>'
-    + '<div style="position:relative;width:100%;height:160px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1e3a8a 0%,#7c3aed 50%,#ec4899 100%);overflow:hidden;">'
-      + '<div style="position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.16) 50%,transparent 60%);animation:uc-shimmer 2.6s linear infinite;"></div>'
-      + '<div style="position:relative;z-index:2;text-align:center;color:#fff;padding:0 16px;">'
-        + '<div style="font-size:36px;animation:uc-pulse 1.6s ease-in-out infinite;line-height:1;">▶️</div>'
-        + '<div style="font-size:12px;font-weight:800;letter-spacing:.5px;margin-top:6px;">'+t('ad.autoplay')+'</div>'
-      + '</div>'
-      + '<div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.18);">'
-        + '<div style="height:100%;background:#fff;animation:uc-progress 5s linear infinite;"></div>'
-      + '</div>'
-    + '</div>'
-    + '<div style="padding:6px 12px;background:var(--bg-2);display:flex;align-items:center;justify-content:space-between;">'
-      + '<span style="font-size:10px;color:var(--text-3);font-weight:700;">📢 '+t('ad.label')+'</span>'
-      + '<span style="font-size:9px;color:var(--text-3);font-weight:500;">'+t('ad.adsense_note')+'</span>'
-    + '</div>'
+/* 정직한 자체 콘텐츠 카드 — 가짜 "SPONSORED VIDEO" 대체 (B안).
+   절약팁 / 블로그 유도 / 프리미엄 3종 로테이션. 블로그 클릭 = 웹 /blog/ (웹 AdSense 수익까지 연결). */
+var _houseAdRR = Math.floor(Math.random() * 3);
+function _houseGoBlog(){ try{ window.open('/blog/', '_blank', 'noopener'); }catch(e){ try{ location.href = '/blog/'; }catch(_){} } }
+function _houseAdCard(opts){
+  opts = opts || {};
+  var H = opts.height || 200;
+  var variant = ['tip','blog','premium'][(_houseAdRR++) % 3];
+  var inner, onclick;
+  if (variant === 'premium'){
+    onclick = 'openPremium()';
+    inner = '<div style="font-size:30px;line-height:1;">✨</div>'
+      + '<div style="font-size:15px;font-weight:800;margin-top:8px;">' + t('ad.premium_title') + '</div>'
+      + '<div style="font-size:11px;opacity:.88;margin-top:4px;">' + t('ad.premium_sub') + '</div>'
+      + '<div style="margin-top:12px;display:inline-block;background:rgba(255,255,255,.22);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:800;">' + t('ad.detail') + ' →</div>';
+  } else if (variant === 'blog'){
+    onclick = '_houseGoBlog()';
+    inner = '<div style="font-size:30px;line-height:1;">📖</div>'
+      + '<div style="font-size:15px;font-weight:800;margin-top:8px;">' + t('house.blog_title') + '</div>'
+      + '<div style="font-size:11px;opacity:.88;margin-top:4px;">' + t('house.blog_sub') + '</div>'
+      + '<div style="margin-top:12px;display:inline-block;background:rgba(255,255,255,.22);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:800;">' + t('house.blog_cta') + '</div>';
+  } else {
+    onclick = '_houseGoBlog()';
+    var QS = (window._dbQuotes && window._dbQuotes[_currentLang] && window._dbQuotes[_currentLang].length)
+           ? window._dbQuotes[_currentLang] : (_QUOTES_BY_LANG[_currentLang] || _QUOTES_BY_LANG.ja);
+    var q = QS[Math.floor(Math.random() * QS.length)] || { q:'' };
+    inner = '<div style="font-size:15px;font-weight:800;">' + t('house.tip_title') + '</div>'
+      + '<div style="font-size:14px;font-weight:600;margin-top:12px;line-height:1.55;opacity:.96;">“' + _esc(q.q || '') + '”</div>';
+  }
+  return '<div onclick="' + onclick + '" style="cursor:pointer;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,#1e3a8a,#6d28d9);color:#fff;min-height:' + H + 'px;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px;box-shadow:0 4px 16px rgba(29,42,138,.22);">'
+    + '<div>' + inner + '</div>'
     + '</div>';
 }
+
+/* OCR 분석 대기 중 자체 콘텐츠 카드 (가짜 광고 대체) */
+function _ocrLoadingAdHtml(){ return '<div style="margin:14px 0 4px;">' + _houseAdCard({ height:150 }) + '</div>'; }
 
 /* ══════════════════════════════════════════════════
    영수증 이미지 전처리 (Phase 1A++ — OCR 정확도 향상)
@@ -14248,6 +14240,7 @@ var I18N = {
     'ad.premium_title':'✨ プレミアムで広告なし','ad.premium_sub':'¥320/月 · スキャン無制限','ad.detail':'詳細',
     'ad.reward_get':'広告を見てチリ獲得','ad.loading':'広告を読み込み中...',
     'ad.autoplay':'広告 自動再生中','ad.label':'広告','ad.adsense_note':'AdSense承認後に実広告','ad.autoplay_short':'自動再生','ad.daily_hint':'毎日見て チリ をもっと貯めよう',
+    'house.tip_title':'💡 今日の節約ヒント','house.blog_title':'📖 節約ブログ','house.blog_sub':'実践的な節約ノウハウ','house.blog_cta':'ブログで続きを読む →',
     'plan.user':'{name}さん','sp.free_plan':'無料プラン',
     // 가게/맵
     'map.search':'店舗を検索...','map.filter':'フィルター','map.ranking':'ランキング','map.private':'プライベート','map.public':'公開',
@@ -14556,6 +14549,7 @@ var I18N = {
     'ad.premium_title':'✨ 프리미엄 구독시 광고 없이 사용','ad.premium_sub':'¥320 / 월 · 무제한 스캔','ad.detail':'자세히',
     'ad.reward_get':'광고 보고 치리 받기','ad.loading':'광고 불러오는 중...',
     'ad.autoplay':'광고 자동 재생 중','ad.label':'광고','ad.adsense_note':'AdSense 승인 후 실광고','ad.autoplay_short':'자동 재생','ad.daily_hint':'매일 보고 치리를 더 모으세요',
+    'house.tip_title':'💡 오늘의 절약 팁','house.blog_title':'📖 절약 블로그','house.blog_sub':'실전 절약 노하우','house.blog_cta':'블로그에서 더 보기 →',
     'plan.user':'{name}님','sp.free_plan':'무료 플랜',
     'map.search':'가게 검색...','map.filter':'필터','map.ranking':'랭킹','map.private':'프라이빗','map.public':'공개',
     'map.private.toast':'🔒 프라이빗 모드','map.public.toast':'🌐 공개 모드',
@@ -14818,6 +14812,7 @@ var I18N = {
     'ad.premium_title':'✨ Go Premium, no ads','ad.premium_sub':'¥320/mo · unlimited scans','ad.detail':'Details',
     'ad.reward_get':'Watch ad & earn chiri','ad.loading':'Loading ad...',
     'ad.autoplay':'Ad auto-playing','ad.label':'Ad','ad.adsense_note':'Real ads after AdSense approval','ad.autoplay_short':'Auto-play','ad.daily_hint':'Watch daily to earn more Chiri',
+    'house.tip_title':'💡 Today’s saving tip','house.blog_title':'📖 Savings blog','house.blog_sub':'Practical money-saving tips','house.blog_cta':'Read more on the blog →',
     'plan.user':'{name}','sp.free_plan':'Free plan',
     'map.search':'Search store...','map.filter':'Filter','map.ranking':'Ranking','map.private':'Private','map.public':'Public',
     'map.private.toast':'🔒 Private mode','map.public.toast':'🌐 Public mode',
@@ -15080,6 +15075,7 @@ var I18N = {
     'ad.premium_title':'✨ 升级高级版免广告','ad.premium_sub':'¥320/月 · 无限扫描','ad.detail':'详情',
     'ad.reward_get':'看广告领积分','ad.loading':'广告加载中...',
     'ad.autoplay':'广告自动播放中','ad.label':'广告','ad.adsense_note':'AdSense 审核通过后展示真实广告','ad.autoplay_short':'自动播放','ad.daily_hint':'每天观看，积攒更多 Chiri',
+    'house.tip_title':'💡 今日省钱贴士','house.blog_title':'📖 省钱博客','house.blog_sub':'实用省钱窍门','house.blog_cta':'在博客阅读更多 →',
     'plan.user':'{name}','sp.free_plan':'免费版',
     'map.search':'搜索店铺...','map.filter':'筛选','map.ranking':'排行','map.private':'私密','map.public':'公开',
     'map.private.toast':'🔒 私密模式','map.public.toast':'🌐 公开模式',
@@ -31141,7 +31137,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 646;
+window.__APP_BUILD__ = 647;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
