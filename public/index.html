@@ -19671,66 +19671,7 @@ function showAdModal(callback, context) {
   }
   openWatchAdPage(ctx, callback, opts);
   return;
-  // ↓ 이하 옛 ov-saveconfirm 바텀시트 로직은 사용 안 함 (호환성 위해 코드 보존)
-  var el = document.getElementById('ov-saveconfirm');
-  if (!el) { console.warn('[ad] ov-saveconfirm 엘리먼트 없음'); if (callback) callback(); return; }
-  // 부모 stacking context에 갇히지 않도록 body로 이동
-  if (el.parentElement !== document.body) {
-    document.body.appendChild(el);
-  }
-  el.classList.add('open');
-  // ★ 컨텍스트별 버튼 UI 분기
-  var mainLabel = document.getElementById('confirm-action-label');
-  var pubBtn    = document.getElementById('confirm-publish-btn');
-  if (_adContext === 'chiri') {
-    if (mainLabel) mainLabel.textContent = t('ad.publish_btn');
-    if (pubBtn)    pubBtn.style.display = 'none';
-  } else if (_adContext === 'private') {
-    if (mainLabel) mainLabel.textContent = t('ad.to_private');
-    if (pubBtn)    pubBtn.style.display = 'none';
-  } else if (_adContext === 'menu_photo') {
-    if (mainLabel) mainLabel.textContent = '광고 보고 메뉴 사진 등록';
-    if (pubBtn)    pubBtn.style.display = 'none';
-  } else if (_adContext === 'monthreport') {
-    // 달력 자세히 보기 (월별 리포트) 진입 광고
-    if (mainLabel) mainLabel.textContent = '광고 보고 내용 확인하기';
-    if (pubBtn)    pubBtn.style.display = 'none';
-  } else if (_adContext === 'report_unlock') {
-    // 리포트 잠금 해제 광고
-    if (mainLabel) mainLabel.textContent = '📊 광고 보고 리포트 펼치기';
-    if (pubBtn)    pubBtn.style.display = 'none';
-  } else {
-    if (mainLabel) mainLabel.textContent = t('ad.save_free');
-    if (pubBtn) {
-      var cat = window._ocrResult && window._ocrResult.cat;
-      pubBtn.style.display = (typeof _shouldShowChiriPublish === 'function' && _shouldShowChiriPublish(cat)) ? 'flex' : 'none';
-    }
-  }
-  // CSS specificity 충돌 우회: 인라인 style로 강제 적용 (!important 포함)
-  el.style.cssText = 'position:fixed !important;inset:0 !important;z-index:99999 !important;background:rgba(0,0,0,0.7) !important;display:flex !important;align-items:flex-end !important;justify-content:center !important;backdrop-filter:blur(4px) !important;';
-
-  // Fallback: 광고 차단기 등으로 모달이 화면에 안 뜨면 자동으로 저장 진행
-  setTimeout(function() {
-    if (!_adCallback) return; // 이미 처리됨
-    var r = el.getBoundingClientRect();
-    var visible = r.width > 0 && r.height > 0 && getComputedStyle(el).display !== 'none';
-    if (!visible) {
-      console.warn('[ad] 모달 표시 실패 (광고 차단기 의심) → 광고 스킵, 저장 진행');
-      el.classList.remove('open');
-      el.style.cssText = '';
-      var cb = _adCallback;
-      _adCallback = null;
-      cb();
-    }
-  }, 600);
-
-  // AdSense 승인 후 실제 광고 주입 (플레이스홀더 대체)
-  setTimeout(function() {
-    if (_injectAd('ad-slot-modal', 'modal', _adContext)) {
-      var ph = document.getElementById('ad-placeholder-modal');
-      if (ph) ph.style.display = 'none';
-    }
-  }, 200);
+  // 옛 ov-saveconfirm 바텀시트 광고모달 로직은 openWatchAdPage(전체화면)로 대체됨 → LEGACY_SNIPPETS.md 참조 (b639 제거)
 }
 
 /* "광고 보고 치리에 공개" 버튼 클릭 → 광고 모달 닫고 치리 공개 흐름 시작
@@ -31721,7 +31662,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 638;
+window.__APP_BUILD__ = 639;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
