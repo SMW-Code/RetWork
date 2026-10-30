@@ -1,4 +1,30 @@
-# RetWork (チリつも) — HANDOFF (build 608 시점)
+# RetWork (チリつも) — HANDOFF (build 652 시점)
+
+> # 📌 2026-10-30 작업 요약 (build 645→652) — 광고 정직화(가짜 자동재생 제거) + 어드민 광고토글 + 통화 바텀시트 + 부팅 스플래시 + 그루메 글
+> **다른 PC에서 이어가려면 이 블록부터.** 구조 불변: 단일 파일 `public/index.html`(1.9MB) + Next.js API + Supabase + Vercel(`ret-work`), Capacitor 네이티브는 `server.url=https://retwork.jp` 라이브 로드 → **JS/HTML 변경은 `git push`만으로 앱 반영**(네이티브만 AAB 재빌드). 현재 `CACHE_NAME='receiptiq-v0.9.0-b652'`(+`__APP_BUILD__`) — 둘 **항상 동반 bump**. **이번 세션 추가 SQL/Vercel 환경변수 없음**(`app_config` 테이블 기존 재사용).
+>
+> **하단 AdMob 배너 비활성화(b645):** `_ADMOB_BANNER_ENABLED=false`(`_admobShowBanner` 상단 가드). 배너↔시스템 네비바↔탭바 3중 하단충돌을 한 번에 해결(탭바 가림 + 네비바 침범 동시 소멸, 사용자 확인). 되살리려면 플래그만 true.
+>
+> **어드민 광고영역 ON/OFF 토글(b646):** 하드코딩 "● 활성" → 진짜 토글. `_adPosOn(ctx)=featureRawOn('adpos_'+ctx)`(**관리자 특례 없음**), `_admPcToggleAdPos`가 `app_config {key:'adpos_'+ctx, enabled}` upsert(onConflict:'key'). 홈/모달/지도/매장/피드/마이카드 전 인라인 광고가 이 토글로 통제.
+>
+> **광고 캐스케이드 "C"(b647~651):** `_injectAd` = ①관리자 OFF면 숨김 → ②로컬광고(`_pickLocalAd`) → ③AdSense(**웹 전용** `AD_CONFIG.enabled && !_isNativeApp()`) → ④하우스 콘텐츠 폴백(`_houseAdCard`: 절약팁/블로그유도/프리미엄 로테이션, 블로그 보내면 웹 AdSense 수익 연결). **가짜 "SPONSORED VIDEO/자동재생" 박스를 정직한 하우스/리워드 카드로 전면 교체**: OCR 분석 로딩(`_ocrLoadingAdHtml`)·출석 화면 카드2·출석완료 모달·댓글한도 모달·메뉴사진 모달·치리카드. **웹 전용 전체화면 watch-ad 페이지(index.html ~line 4613)만 AdSense 심사결과까지 보류**(가짜 박스 잔존).
+>
+> **플래그 타이밍 레이스 수정(b649, 치리톡 피드광고 OFF 안 먹던 버그):** `_loadAppFlags()`가 로그인 후 `_loadAdminFlag()` 안에서만 호출돼, 피드가 플래그 로드 전에 렌더→기본 ON으로 광고 노출됐음. **부팅 시 조기 `_loadAppFlags()` 호출 + `_applyAdPosToDom()`**(이미 그려진 슬롯 사후 재조정)으로 해결. 라이브에서 `_FLAGS` 자동로드·`_adPosOn('feed')=false` 검증.
+>
+> **통화 선택 바텀시트(b647) + 엔화 고정 버그 수정(b648):** 스위치 → `openCurrencyPicker()` 바텀시트(`ov-currency`). 원화로 바꿔도 지출카드가 ¥로 뜨던 버그 4곳 `'¥ '+`→`_cursym()+' '+`(home-total/report-total/cal-month-total/cal-month-avg). `applyCurrency()`가 홈·내역·리포트 재렌더.
+>
+> **부팅 스플래시(b652):** 앱 시작 흰화면 체감개선. `<body>` 직후 `#boot-splash`(RW로고+CSS스피너, z최대), `_hideBootSplash()`(멱등·380ms 페이드, showApp/landing/auth 진입점 + 10s 안전타이머). ⚠️ **근본해결 아님**(파싱/컴파일 시간은 그대로) — 진짜 최적화는 보류 목록 참조.
+>
+> **그루메 블로그 글(별도 repo `retwork-blog`):** `posts/wearethefarm-toyosu.md` 발행(blog.retwork.jp, 固定種野菜 농원레스토랑 WE ARE THE FARM 豊洲, 사진5장+place 좌표 JSON-LD). ⚠️ **영수증 카드번호·전표·QR·얼굴은 공개 전 반드시 마스킹**(이번엔 사용자가 직접 가림 → 확인 후 게시). 돈까스 九六喜 글은 이전 세션.
+>
+> **🟧 보류 — AdSense 심사결과 나오면 재논의(사용자 명시):**
+> - **웹 무료유저 비용 문제(핵심):** 무료 저장 → `_isPremium` 아니면 광고. 네이티브=AdMob 실수익, **웹=가짜광고(수익 0)**. AdMob은 네이티브 전용, 웹 AdSense는 미승인. 즉 **무료 웹유저 = OCR 비용(¥0.3~1.5/scan)만 나가고 수익 0, 운영자 부담**. `_BYPASS_ADS=true`(베타) + 웹 스캔 하드캡 없음 = 비용 상한 무방비.
+> - **웹 전용 watch-ad 페이지 가짜 박스:** 승인=실 AdSense / 반려=하우스 카드.
+> - **시작 최적화:** minify(저위험 ~30%, **이름보존 변형 필수** — 인라인 onclick 깨짐) / code-split(대규모 리팩터) / 네이티브 SplashScreen 플러그인(AAB 재빌드).
+> - **아키텍처:** UI를 앱에 번들 + retwork.jp를 마케팅/블로그로 축소(단점: 즉시업데이트 상실).
+> - **출시 전 체크:** ①`_BYPASS_ADS=false` ②AdSense 결과 ③웹 스캔한도 or 웹기능 축소.
+>
+> **🟥 불변 제약(반드시 지킬 것):** service_role 키 **절대** 클라/git 금지(anon publishable `sb_publishable_…`만 클라 사용) · **자기 AdMob/AdSense 광고 클릭 금지**(invalid traffic=밴) · **앱 WebView 안에서 AdSense 금지**(정책, 계정+블로그 동반 밴) · 버전은 `__APP_BUILD__`+`CACHE_NAME` 동반 bump · 영수증/얼굴 등 개인정보 공개 전 마스킹 · Vercel env는 CLI 말고 대시보드(CLI add 잘림) · CI/리뷰 폴링 금지. 키스토어 alias `my-key-alias`.
 
 > # 📌 2026-07-10 작업 요약 (build 592→608) — 네이티브 앱화(Capacitor) + 푸시(FCM) + Play 비공개테스트 + AdSense 전략
 > **다른 PC에서 이어가려면 이 블록부터.** 앱을 **Capacitor로 네이티브 래핑**(server.url=https://retwork.jp 라이브 로드 방식 → JS/HTML 변경은 push만으로 앱 반영, 네이티브(플러그인·Manifest·아이콘·권한)만 AAB 재빌드 필요). Play 프로젝트 앱ID `jp.retwork.app`.
