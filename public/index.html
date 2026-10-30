@@ -19083,9 +19083,15 @@ async function _tryNativeRewarded(callback){
 /* ══ 하단 AdMob 배너 ══
    화면 맨 아래 고정 띠. 콘텐츠(탭바 포함)는 CSS(.has-admob-banner)로 배너 높이만큼 위로 밀어 안 가림.
    ⚠️ 리스트 중간 "인라인" 배너는 현 플러그인 미지원 → 추후 Capawesome 교체 시 전환. */
+/* 하단 배너 ON/OFF 스위치.
+   false = 배너 끔(네이티브 배너↔시스템 네비바↔탭바 바닥영역 3중 충돌 제거).
+   리워드 풀스크린(¥4.23/시청)이 실수익 담당 → 배너는 저수익·고충돌이라 비활성.
+   다시 켜려면 true (Capawesome resize 모드 도입 시 재검토). */
+var _ADMOB_BANNER_ENABLED = false;
 var _ADMOB_BANNER_SHOWN = false;
 var _admobBannerSizeHandle = null;
 async function _admobShowBanner(){
+  if(!_ADMOB_BANNER_ENABLED) return;
   if(!_isNativeApp()) return;
   var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
   if(!AdMob || !AdMob.showBanner) return;              // 구버전 앱(배너 미지원) → 조용히 패스
@@ -31100,7 +31106,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 644;
+window.__APP_BUILD__ = 645;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
