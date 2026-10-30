@@ -17562,6 +17562,8 @@ function _renderLocalAd(c, ad) {
 function _injectAd(containerId, slotKey, contextOverride) {
   var c = document.getElementById(containerId);
   if (!c) return;
+  // 0) 어드민에서 끈 인라인 광고 위치 — 슬롯 비우고 숨김 (adpos_<context>, 미설정=ON)
+  if (!_adPosOn(contextOverride || slotKey)) { c.innerHTML = ''; c.style.display = 'none'; return false; }
   // 1) 로컬(자체) 광고 우선 — 세분화 context 가 매칭되면 그것 사용
   var local = _pickLocalAd(slotKey, contextOverride);
   if (local) { _renderLocalAd(c, local); return; }
@@ -18342,6 +18344,9 @@ async function _loadAppFlags() {
 }
 function featureRawOn(key){ var v = window._FLAGS[key]; if (v !== undefined) return v; return key === 'chiri_reward' ? false : true; } // 미설정=ON(안전), 단 chiri_reward는 미설정 시 OFF(행 삭제돼도 전체 공개 방지)
 function isFeatureOn(key){ if (_isAdmin) return true; if (key === 'chiri_reward' && _chiriRewardUser) return true; return featureRawOn(key); } // 치리워드는 유저별 ON이 전역 OFF를 우선
+// 광고 위치 ON/OFF (어드민 전용, app_config.adpos_<context>). 미설정=ON(기존 동작 유지).
+// isFeatureOn과 달리 _isAdmin 특례 없음 — 관리자도 끈 위치는 안 보여야 실제로 꺼졌는지 검증됨.
+function _adPosOn(ctx){ if (!ctx) return true; return featureRawOn('adpos_' + ctx); }
 
 // 치리 리워드 경제 ON/OFF 를 UI에 적용 (리워드 탭·치리 잔액·적립 표시)
 function _applyChiriRewardFlag(){
@@ -22864,6 +22869,19 @@ async function _admPcLoadAdPagesStats() {
       else if (pos.type === 'autoplay') { typeBg='#FEF3C7'; typeColor='#92400E'; typeLbl='자동재생'; }
       else { typeBg='#DBEAFE'; typeColor='#1E40AF'; typeLbl='인라인'; }
       var unitPrice = pos.cpv ? (_cursym()+ pos.cpv + ' / 시청') : (_cursym()+ pos.cpm + ' / 노출');
+      // 상태/토글: 인라인=실제 ON/OFF 스위치, 풀스크린=리워드 고정, 자동재생=미연동(실슬롯 없음)
+      var statusHtml;
+      if (pos.type === 'inline') {
+        var _on = (typeof featureRawOn === 'function') ? featureRawOn('adpos_' + pos.context) : true;
+        statusHtml = '<button onclick="_admPcToggleAdPos(\''+pos.context+'\')" '
+          + 'style="border:none;border-radius:20px;padding:4px 13px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);'
+          + (_on ? 'background:#10B981;color:#fff;' : 'background:#E5E7EB;color:#9CA3AF;') + '">'
+          + (_on ? '● ON' : '○ OFF') + '</button>';
+      } else if (pos.type === 'autoplay') {
+        statusHtml = '<span style="font-size:10px;color:#9CA3AF;font-weight:700;" title="실제 광고 슬롯 미연동 (카탈로그 전용)">미연동</span>';
+      } else {
+        statusHtml = '<span style="font-size:10px;color:#10B981;font-weight:700;">● 활성 (리워드)</span>';
+      }
       html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
             + '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">'
             +   '<div style="font-size:13px;font-weight:800;color:#172C58;flex:1;line-height:1.3;">' + pos.name + '</div>'
@@ -22888,7 +22906,7 @@ async function _admPcLoadAdPagesStats() {
             + '</div>'
             + '<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #E3E6EB;font-family:monospace;">'
             +   '<span style="font-size:10px;color:#6B7280;">' + pos.context + '</span>'
-            +   '<span style="font-size:10px;color:#10B981;font-weight:700;">● 활성</span>'
+            +   statusHtml
             + '</div>'
             // ── 로컬 광고 섹션 (자체 광고 등록 가능) ──
             + (function(){
@@ -22904,6 +22922,23 @@ async function _admPcLoadAdPagesStats() {
     html += '</div></div>';
   });
   list.innerHTML = html;
+}
+
+/* 광고 위치 ON/OFF 토글 (인라인 위치 전용). app_config.adpos_<context> upsert → _FLAGS 갱신 → 카드 재렌더.
+   끄면 _injectAd 진입점에서 해당 context 슬롯을 비우고 숨김(전역 적용, 미설정=ON). */
+async function _admPcToggleAdPos(ctx) {
+  if (!_isAdmin || !_sb) { showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  var next = !((typeof featureRawOn === 'function') ? featureRawOn('adpos_' + ctx) : true);
+  try {
+    var res = await _sb.from('app_config').upsert(
+      { key:'adpos_' + ctx, enabled: next, note:'광고 위치 ON/OFF: ' + ctx },
+      { onConflict:'key' }
+    );
+    if (res.error) throw res.error;
+    window._FLAGS['adpos_' + ctx] = next;
+    showToast(next ? '✅ 광고 위치 ON' : '🚫 광고 위치 OFF');
+    if (typeof _admPcLoadAdPagesStats === 'function') _admPcLoadAdPagesStats(); // 카드 재렌더 → 토글 상태 반영
+  } catch(e) { showToast('저장 실패: ' + (e.message || e)); }
 }
 
 /* PC 어드민 활성 여부 — 드릴다운 모드 분기용 */
@@ -31106,7 +31141,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 645;
+window.__APP_BUILD__ = 646;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
