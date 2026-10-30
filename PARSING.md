@@ -75,7 +75,8 @@
 **다른 텍스트 전용 파서** `parseReceiptText(rawText)` (~12905) 도 존재(좌표 없는 경우 대비 멀티패턴 A/B/C). 현재 메인 흐름은 좌표→GPT.
 
 ### ④ 폴백: 하이브리드 GPT (~12150)
-- OCR 텍스트에 **행 번호를 붙여**(`numberedText`) 프롬프트에 포함 + 원본 이미지(base64, `detail:'high'`)를 함께 전달.
+- OCR 텍스트에 **행 번호를 붙여**(`numberedText`) 프롬프트에 포함 + 이미지(base64, `detail:'high'`)를 함께 전달.
+  - ⚡ **b637 성능개선**: GPT엔 **1280px로 축소한 이미지**(`_downscaleBase64Jpeg`)를 보냄 — 원본 4000px·detail:high 전송이 분석 지연 주원인이었음. Vision/좌표파서는 원본 4000px 그대로 사용(OCR 정확도 유지), GPT 이미지는 레이아웃 참고용이라 축소해도 정확도 영향 미미. 실패 시 원본 폴백.
 - 시스템 프롬프트(아래 §2) + 유저 메시지(텍스트+이미지).
 - 모델 2단 전략(§3).
 
@@ -160,7 +161,7 @@ JSONのみ出力。説明不要。
 유저 메시지(`userContent`):
 ```js
 [ {type:'text', text:'以下のレシートを解析してください。\n\n【OCRテキスト（行番号付き）】\n' + numberedText},
-  {type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+base64Image, detail:'high' }} ]
+  {type:'image_url', image_url:{ url:'data:image/jpeg;base64,'+_gptImage, detail:'high' }} ]  // _gptImage=1280px 축소본(b637)
 ```
 
 ---

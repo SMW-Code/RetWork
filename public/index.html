@@ -12440,7 +12440,31 @@ function _fixCouponDiscountedPrices(items, rawText){
   return items;
 }
 
-function parseWithGPTHybrid(rawText, base64Image) {
+// GPT 전송용 이미지 축소 헬퍼 (b637) — maxPx 넘으면 축소한 base64(jpeg) 반환. 실패/이미 작으면 원본 그대로.
+function _downscaleBase64Jpeg(base64, maxPx, quality){
+  return new Promise(function(resolve){
+    try {
+      var img = new Image();
+      img.onload = function(){
+        var w = img.naturalWidth, h = img.naturalHeight, m = Math.max(w, h);
+        if (!m || m <= maxPx) { resolve(base64); return; }
+        var s = maxPx / m, cw = Math.round(w*s), ch = Math.round(h*s);
+        var cv = document.createElement('canvas'); cv.width = cw; cv.height = ch;
+        cv.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        var out = cv.toDataURL('image/jpeg', quality || 0.75).split(',')[1];
+        resolve(out || base64);
+      };
+      img.onerror = function(){ resolve(base64); };
+      img.src = 'data:image/jpeg;base64,' + base64;
+    } catch(e){ resolve(base64); }
+  });
+}
+
+async function parseWithGPTHybrid(rawText, base64Image) {
+  // GPT 전송용 축소 이미지 (b637) — Vision/좌표파서는 원본 고해상도(4000) 유지, GPT엔 레이아웃 참고용
+  //   축소본(1280px)만 전송 → 분석 지연 감소(정확도 영향 미미). 4000px·detail:high 원본 전송이 지연 주원인이었음.
+  var _gptImage = base64Image;
+  try { _gptImage = await _downscaleBase64Jpeg(base64Image, 1280, 0.75); } catch(e){ _gptImage = base64Image; }
   // 줄 번호 붙이기 (GPT가 행 맥락을 파악할 수 있게)
   var numberedText = rawText.split('\n').map(function(line, i) {
     var num = i + 1;
@@ -12670,8 +12694,8 @@ JSONのみ出力。説明不要。`;
     {
       type: 'image_url',
       image_url: {
-        url: 'data:image/jpeg;base64,' + base64Image,
-        detail: 'high'  // 고해상도 분석 (선명한 글자 인식)
+        url: 'data:image/jpeg;base64,' + _gptImage,  // b637 — 1280px 축소본 전송(원본 4000 대신) → 지연 감소
+        detail: 'high'  // 축소본이라 타일 수 적음 (정확도 보존 위해 high 유지)
       }
     }
   ];
@@ -15701,6 +15725,7 @@ function applyLang(lang){
   try { if (typeof _updateTodayLabel === 'function') _updateTodayLabel(); } catch(e){}
   try { _paintPayChips(); } catch(e){}
   try { _paintCtCatChips(); } catch(e){}
+  try { if (typeof _syncHeaderModeToggles === 'function') _syncHeaderModeToggles(); } catch(e){} // b637 — 언어 변경 시 헤더 모드버튼 라벨 동기화
 }
 /* ══════════════════════════════
    i18n CMS — Supabase 어드민 편집 가능한 번역 override 레이어
@@ -17659,7 +17684,7 @@ function vote(btn,type){ var n=parseInt(btn.textContent.replace(/[^0-9]/g,'')); 
 function openOv(id){
   document.getElementById(id).classList.add('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); window._ovStack.push(id); // 뒤로가기 스택
-  if (window._ovStack.length === 1 && typeof _admobBannerPause === 'function') { try{ _admobBannerPause(); }catch(e){} } // b630 — 오버레이 열림 → 하단 배너 숨김(가림 방지)
+  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // b637 — 오버레이 열림 → 배너 재동기화(DOM 기준)
   try{ history.pushState({riqNav:1},''); }catch(e){} // 모달 열 때 히스토리 엔트리 미리 쌓음(뒤로가기 안정화)
   if (id === 'ov-settings') {
     renderThemeSwatches();
@@ -17757,7 +17782,7 @@ function closeOv(id){
   var _ovEl=document.getElementById(id); var _ovWasOpen=_ovEl&&_ovEl.classList.contains('open');
   if(_ovEl) _ovEl.classList.remove('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); // 뒤로가기 스택
-  if ((window._ovStack||[]).length === 0 && typeof _admobBannerResume === 'function') { try{ _admobBannerResume(); }catch(e){} } // b630 — 모든 오버레이 닫힘 → 배너 다시 표시
+  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // b637 — 오버레이 닫힘 → 배너 재동기화(stale 스택 자가치유)
   // UI(닫기 버튼)로 닫으면 열 때 쌓은 히스토리 엔트리를 회수. (뒤로가기로 닫힌 경우 _riqInPop=true → 회수 안 함)
   if(_ovWasOpen && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
   if (id === 'ov-settings') {
@@ -19200,9 +19225,9 @@ async function saveProfile() {
     var payload = {
       id: _currentUser.id,
       nickname: nick,
-      avatar_emoji: _userAvatar,
-      avatar_url: avatarUrlForDB
+      avatar_emoji: _userAvatar
     };
+    if (avatarUrlForDB) payload.avatar_url = avatarUrlForDB; // b637 — null이면 생략(동기화 전 기기에서 저장 시 DB 아바타가 지워지는 것 방지)
     var res = await _sb.from('profiles').upsert(payload, { onConflict: 'id' });
     if (res.error) {
       console.warn('[saveProfile] supabase upsert error:', res.error.message);
@@ -19587,6 +19612,7 @@ async function _admobShowBanner(){
     });
     _ADMOB_BANNER_SHOWN = true;
     document.body.classList.add('has-admob-banner');
+    if (typeof _admobSyncBanner === 'function') _admobSyncBanner(); // b637 — 표시 직후 이미 열린 오버레이 있으면 즉시 숨김(900ms 창 레이스 방지)
   }catch(e){ console.warn('[admob banner]', e); }
 }
 async function _admobHideBanner(){
@@ -19609,6 +19635,15 @@ async function _admobBannerResume(){
   var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
   if(!AdMob || !AdMob.resumeBanner) return;
   try{ await AdMob.resumeBanner(); }catch(e){}
+}
+/* b637 — 배너 표시 여부를 DOM 기준으로 재동기화 (개수 heuristic이 stale 스택으로 깨지던 문제 해결).
+   닫기 경로가 closeOv를 안 거쳐 _ovStack에 남은 stale id를 자가치유하고, 열린 오버레이 유무로 pause/resume. */
+function _admobSyncBanner(){
+  if(!_ADMOB_BANNER_SHOWN) return;
+  window._ovStack = (window._ovStack||[]).filter(function(id){
+    var el = document.getElementById(id); return el && el.classList.contains('open');
+  });
+  if (window._ovStack.length > 0) _admobBannerPause(); else _admobBannerResume();
 }
 
 function showAdModal(callback, context) {
@@ -25808,6 +25843,7 @@ function _admPcCloseAllAdminModals() {
     // 인라인 style 로 강제 표시된 경우도 정리 (showAdModal 같은 케이스 대비)
     if (modal.style.display === 'flex') modal.style.cssText = '';
   });
+  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // b637 — 일괄 닫기 후 배너 재동기화(stale 스택 정리)
 }
 
 function _admPcUnmountAll() {
@@ -31685,7 +31721,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 636;
+window.__APP_BUILD__ = 637;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
