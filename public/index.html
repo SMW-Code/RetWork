@@ -6634,15 +6634,17 @@ function _ccRenderGrid(){
   }
   var countLine = '<div style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:10px;">'+t('cc.count',{n:total})+'</div>';
   el.innerHTML = countLine + tiles + pager;
+  // 인라인 광고 슬롯 주입 (context 'mycard' — 캐스케이드)
+  if (typeof _injectAd === 'function') { el.querySelectorAll('[id^="cc-ad-"]').forEach(function(c){ try { _injectAd(c.id, 'mycard'); } catch(e){} }); }
 }
 function _ccGoPage(n){
   _ccPage = n; _ccRenderGrid();
   var sc = document.querySelector('#ct-screen-mycard .scroll'); if (sc) sc.scrollTop = 0;
 }
-// 메뉴카드 행과 동일 크기의 광고 카드 (AdSense 승인 후 실광고로 교체 가능)
+// 메뉴카드 사이 인라인 광고 — 컨테이너만. 그리드 렌더 후 _injectAd('cc-ad-*','mycard')로 채움
+// (캐스케이드: 어드민OFF→숨김 / 로컬광고 / 자체콘텐츠 가로카드). 빈 "📢 広告" 박스 제거.
 function _ccAdCardHtml(idx){
-  return '<div id="cc-ad-'+idx+'" style="display:flex;align-items:center;justify-content:center;gap:8px;background:var(--bg-2);border:1px dashed var(--border-mid);border-radius:16px;padding:12px;margin-bottom:10px;min-height:96px;box-sizing:border-box;color:var(--text-3);font-size:12px;font-weight:700;">'
-    + '<span style="font-size:22px;">📢</span><span>'+t('rw.ad')+'</span></div>';
+  return '<div id="cc-ad-'+idx+'" style="margin-bottom:10px;"></div>';
 }
 function _myCardDateStr(iso) {
   if (!iso) return '';
@@ -17585,7 +17587,7 @@ function _renderLocalAd(c, ad) {
 }
 
 /* 인라인 광고 위치 — 로컬·유료광고 없을 때 자체콘텐츠 가로카드로 채울 context 집합 */
-var _HOUSE_FALLBACK_CTX = { home:1, modal:1, map:1, store:1, feed:1 };
+var _HOUSE_FALLBACK_CTX = { home:1, modal:1, map:1, store:1, feed:1, mycard:1 };
 /* 광고 컨테이너에 광고 주입 — 캐스케이드: ①어드민OFF→숨김 ②로컬광고 ③유료광고(웹) ④자체콘텐츠(인라인)
    contextOverride: AD_POSITIONS.context 값 (예: 'save','chiri','attendance' 등) */
 function _injectAd(containerId, slotKey, contextOverride) {
@@ -18386,9 +18388,9 @@ function _adPosOn(ctx){ if (!ctx) return true; return featureRawOn('adpos_' + ct
 /* 플래그 로드 전에 렌더된 인라인 광고 슬롯을 사후 정리 — 끈 위치는 숨김(미설정/ON은 유지).
    끄기는 즉시 반영, 다시 켜기는 해당 화면 재렌더 필요. id 접두사로 context 매핑. */
 function _applyAdPosToDom(){
-  var MAP = [['ad-slot-home','home'],['ad-slot-hist','feed'],['ad-slot-feed','feed'],['ad-slot-map','feed'],['ad-slot-store','store'],['ct-store-ad','store'],['ct-map-ad','map']];
+  var MAP = [['ad-slot-home','home'],['ad-slot-hist','feed'],['ad-slot-feed','feed'],['ad-slot-map','feed'],['ad-slot-store','store'],['ct-store-ad','store'],['ct-map-ad','map'],['cc-ad','mycard']];
   try {
-    document.querySelectorAll('[id^="ad-slot-"],[id^="ct-store-ad"],#ct-map-ad').forEach(function(c){
+    document.querySelectorAll('[id^="ad-slot-"],[id^="ct-store-ad"],[id^="cc-ad"],#ct-map-ad').forEach(function(c){
       var ctx = null;
       for (var i=0;i<MAP.length;i++){ if (c.id.indexOf(MAP[i][0])===0){ ctx=MAP[i][1]; break; } }
       if (ctx && !_adPosOn(ctx)) { c.innerHTML=''; c.style.display='none'; }
@@ -22785,13 +22787,15 @@ var AD_POSITIONS = [
   { page:'attendance', name:'출석 완료 풀스크린',            context:'attendance',              type:'fullscreen', cpv:17,    desc:'+15치리 (출석 슬롯 1회당)' },
   { page:'attendance', name:'출석 화면 자동재생',            context:'attendance_auto',         type:'autoplay',   cpm:0.15,  desc:'출석 카드 상단 자동재생' },
   { page:'attendance', name:'출석 완료 모달 자동재생',       context:'attendance_modal_auto',   type:'autoplay',   cpm:0.15,  desc:'출석 완료 모달 내 자동재생' },
+  // 치리카드
+  { page:'mycard',     name:'치리카드 인라인 (가로형)',      context:'mycard',                  type:'inline',     cpm:0.15,  desc:'치리카드(메뉴카드) 목록 중간 인라인' },
   // 추천
   { page:'referral',   name:'추천 보상 청구 풀스크린',       context:'referral',                type:'fullscreen', cpv:17,    desc:'+200치리 청구 (1일 10회 상한)' },
 ];
 
 var AD_PAGE_LABELS = {
   all:'전체', home:'홈', receipt:'영수증', chirimap:'치리맵',
-  chiritalk:'치리톡', reward:'리워드', attendance:'출석', referral:'추천'
+  chiritalk:'치리톡', mycard:'치리카드', reward:'리워드', attendance:'출석', referral:'추천'
 };
 window._admPcAdPagesFilter = 'all';
 
@@ -22807,7 +22811,7 @@ function _admPcReloadAdPages() {
 function _admPcRenderAdPages() {
   var ct = document.getElementById('apc-content');
   if (!ct) return;
-  var pages = ['all','home','receipt','chirimap','chiritalk','reward','attendance','referral'];
+  var pages = ['all','home','receipt','chirimap','chiritalk','mycard','reward','attendance','referral'];
   var filter = window._admPcAdPagesFilter || 'all';
 
   var tabHtml = pages.map(function(p){
@@ -31193,7 +31197,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 649;
+window.__APP_BUILD__ = 650;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
