@@ -1386,7 +1386,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 <!-- ══ HOME ══ -->
 <div class="screen active" id="screen-home">
   <div class="hdr">
-    <div style="display:flex;align-items:baseline;gap:0;"><div class="hdr-title">RetWork</div><div class="hdr-date" id="today-label">2025年 5月 4日 (日)</div></div>
+    <div><div class="hdr-title">RetWork</div><div class="hdr-date" id="today-label" style="margin-left:0;margin-top:2px;">2025年 5月 4日 (日)</div></div>
     <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
       <!-- 가격/절약 알림 벨 (build 532) — 인앱 재확인 + NEW 점 -->
       <div id="home-alert-bell" onclick="openAlertInbox()" style="position:relative;width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
@@ -31682,7 +31682,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 634;
+window.__APP_BUILD__ = 635;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
