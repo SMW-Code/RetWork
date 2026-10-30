@@ -3979,6 +3979,8 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
           </label>
         </div>
         <div id="adm-flag-chiri-reward-status" style="font-size:11px;font-weight:800;margin-top:8px;"></div>
+        <button onclick="openAdminChiriUsers()" style="width:100%;margin-top:10px;padding:9px;border:none;border-radius:8px;background:var(--navy);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">👥 치리워드 사용자별 관리 (베타 테스터 개별 ON)</button>
+        <div style="font-size:10px;color:var(--text-3);margin-top:6px;line-height:1.5;">전역 OFF여도 여기서 <b>개별 ON</b> 한 유저는 치리워드가 보여요. (유저는 재접속 시 반영)</div>
       </div>
 
       <!-- 표 1: 바우처 ↔ 필요 치리 -->
@@ -4134,6 +4136,25 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
         <div onclick="closeOv('ov-admin-banned-users')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
       </div>
       <div id="adm-bu-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 어드민: 치리워드 사용자별 관리 (베타 테스터 개별 ON/OFF) ══ -->
+<div class="overlay" id="ov-admin-chiri-users" style="z-index:965;" onclick="if(event.target===this)closeOv('ov-admin-chiri-users')">
+  <div class="sheet" onclick="event.stopPropagation()" style="max-width:520px;width:100%;max-height:90vh;overflow-y:auto;">
+    <div class="sheet-handle"></div>
+    <div style="padding:8px 20px 28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div>
+          <div style="font-size:17px;font-weight:900;color:var(--text-1);">🎁 치리워드 사용자 관리</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px;line-height:1.5;">ON 한 유저만 치리워드(탭·적립)가 보여요. 전역 OFF라도 개별 ON이 우선.</div>
+        </div>
+        <div onclick="closeOv('ov-admin-chiri-users')" style="cursor:pointer;font-size:18px;color:var(--text-3);padding:6px;">✕</div>
+      </div>
+      <input id="adm-cr-search" oninput="_renderAdminChiriUsers()" placeholder="닉네임 / 이메일 검색" style="width:100%;padding:9px 12px;border:1px solid var(--border-mid);border-radius:10px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:8px;">
+      <div id="adm-cr-count" style="font-size:11px;font-weight:700;color:var(--text-3);margin-bottom:10px;"></div>
+      <div id="adm-cr-list" style="display:flex;flex-direction:column;gap:8px;"></div>
     </div>
   </div>
 </div>
@@ -18632,6 +18653,7 @@ var AVATAR_LIST = [
 
 var _userNickname  = localStorage.getItem('receiptiq_nickname')   || '사용자';
 var _isAdmin = false; // profiles.is_admin 캐시 (로그인 시 비동기 갱신)
+var _chiriRewardUser = false; // profiles.chiri_reward_enabled 캐시 — 유저별 치리워드 ON (어드민이 베타 테스터 개별 허용)
 
 // Supabase Realtime 구독 — DB 변경 시 모든 클라이언트 자동 갱신
 var _realtimeSetup = false;
@@ -18734,7 +18756,7 @@ async function _loadAppFlags() {
   } catch(e) { console.warn('[flags] load failed:', e.message); }
 }
 function featureRawOn(key){ var v = window._FLAGS[key]; return (v === undefined) ? true : v; } // 미설정=ON(안전)
-function isFeatureOn(key){ if (_isAdmin) return true; return featureRawOn(key); }
+function isFeatureOn(key){ if (_isAdmin) return true; if (key === 'chiri_reward' && _chiriRewardUser) return true; return featureRawOn(key); } // 치리워드는 유저별 ON이 전역 OFF를 우선
 
 // 치리 리워드 경제 ON/OFF 를 UI에 적용 (리워드 탭·치리 잔액·적립 표시)
 function _applyChiriRewardFlag(){
@@ -18761,13 +18783,16 @@ function _applyChiriRewardFlag(){
 // 어드민 권한 로드 — 로그인 직후 호출
 async function _loadAdminFlag() {
   _isAdmin = false;
+  _chiriRewardUser = false;
   if (!_sb || !_currentUser) { _applyAdminUI(); return; }
   try {
-    var res = await _sb.from('profiles').select('is_admin').eq('id', _currentUser.id).maybeSingle();
+    var res = await _sb.from('profiles').select('is_admin,chiri_reward_enabled').eq('id', _currentUser.id).maybeSingle();
     _isAdmin = !!(res.data && res.data.is_admin);
+    _chiriRewardUser = !!(res.data && res.data.chiri_reward_enabled);
   } catch(e) {
     console.warn('[admin] flag load error:', e.message);
     _isAdmin = false;
+    _chiriRewardUser = false;
   }
   await _loadAppFlags();   // 기능 플래그 로드 (관리자 판별 후 → 우회 정확히 적용)
   _applyAdminUI();
@@ -22243,6 +22268,67 @@ async function adminDeleteBan(id) {
   if (res.error) { showToast('삭제 실패: '+res.error.message); return; }
   showToast('🗑️ 차단 기록 삭제됨');
   await _loadAdminBannedUsers();
+}
+
+// ── 어드민: 치리워드 유저별 ON/OFF 관리 ──
+var _admChiriRows = [];
+async function openAdminChiriUsers() {
+  if (!_isAdmin) { showToast('⚠️ 운영자 권한이 필요해요'); return; }
+  openOv('ov-admin-chiri-users');
+  var s = document.getElementById('adm-cr-search'); if (s) s.value = '';
+  await _loadAdminChiriUsers();
+}
+async function _loadAdminChiriUsers() {
+  var wrap = document.getElementById('adm-cr-list');
+  if (!wrap || !_sb) return;
+  wrap.innerHTML = '<div style="text-align:center;padding:14px;font-size:12px;color:var(--text-3);">로딩 중...</div>';
+  var res = await _sb.from('profiles')
+    .select('id,nickname,email,chiri_reward_enabled')
+    .order('chiri_reward_enabled', { ascending:false })
+    .limit(500);
+  if (res.error) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--red);padding:10px;">로딩 실패: '+res.error.message+'</div>';
+    return;
+  }
+  _admChiriRows = res.data || [];
+  _renderAdminChiriUsers();
+}
+function _renderAdminChiriUsers() {
+  var wrap = document.getElementById('adm-cr-list');
+  if (!wrap) return;
+  var qEl = document.getElementById('adm-cr-search');
+  var q = (qEl && qEl.value ? qEl.value : '').trim().toLowerCase();
+  var onCount = _admChiriRows.filter(function(p){ return p.chiri_reward_enabled; }).length;
+  var cnt = document.getElementById('adm-cr-count');
+  if (cnt) cnt.textContent = '🎁 ON: ' + onCount + '명 · 전체 ' + _admChiriRows.length + '명';
+  var rows = _admChiriRows.filter(function(p){
+    if (!q) return true;
+    return ((p.nickname||'').toLowerCase().indexOf(q) >= 0) || ((p.email||'').toLowerCase().indexOf(q) >= 0);
+  });
+  if (rows.length === 0) {
+    wrap.innerHTML = '<div style="text-align:center;padding:18px;font-size:12px;color:var(--text-3);">유저가 없어요</div>';
+    return;
+  }
+  wrap.innerHTML = rows.map(function(p){
+    var on = !!p.chiri_reward_enabled;
+    var nick = p.nickname || '(닉네임 없음)';
+    var sub = p.email || ('UID ' + String(p.id).substring(0,8) + '...');
+    return '<div style="background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;">'
+      + '<div style="flex:1;min-width:0;">'
+      +   '<div style="font-size:13px;font-weight:800;color:var(--text-1);">'+(on?'🎁 ':'')+_esc(nick)+'</div>'
+      +   '<div style="font-size:10.5px;color:var(--text-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_esc(sub)+'</div>'
+      + '</div>'
+      + '<button onclick="adminToggleChiriRewardUser(\''+p.id+'\','+(!on)+')" style="flex-shrink:0;padding:6px 14px;border-radius:8px;border:none;background:'+(on?'var(--green-grad)':'var(--bg-2)')+';color:'+(on?'#fff':'var(--text-2)')+';font-size:11px;font-weight:800;cursor:pointer;font-family:var(--font);">'+(on?'ON':'OFF')+'</button>'
+      + '</div>';
+  }).join('');
+}
+async function adminToggleChiriRewardUser(uid, next) {
+  if (!_isAdmin || !_sb) return;
+  var res = await _sb.from('profiles').update({ chiri_reward_enabled: next }).eq('id', uid);
+  if (res.error) { showToast('변경 실패: '+res.error.message); return; }
+  _admChiriRows.forEach(function(p){ if (p.id === uid) p.chiri_reward_enabled = next; }); // 로컬 즉시 반영
+  _renderAdminChiriUsers();
+  showToast(next ? '🎁 치리워드 ON (해당 유저 재접속 시 반영)' : '⚪ 치리워드 OFF');
 }
 
 // 사용자 측 — 본인 차단 상태 체크 (로그인 후 호출)
@@ -31525,7 +31611,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 631;
+window.__APP_BUILD__ = 632;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
