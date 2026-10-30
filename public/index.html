@@ -8,7 +8,7 @@
 <meta name="keywords" content="家計簿,家計簿アプリ,レシート家計簿,レシートOCR,レシートスキャン,自動家計簿,AI家計簿,スマホ家計簿,無料家計簿,節約,節約アプリ,節約術,食費節約,一人暮らし節約,主婦節約,価格比較,価格比較アプリ,スーパー最安値,地域価格,お得情報,ポイ活,ポイントアプリ,家計管理,月予算,予算管理,支出管理,レシート撮影,口コミ,コミュニティ,チリつも,RetWork,日本,東京,大阪,名古屋,일본가계부,영수증가계부,절약앱">
 <meta name="author" content="RetWork 編集部">
 <meta name="robots" content="index,follow,max-image-preview:large">
-<!-- canonical = 루트(/). next.config rewrites(b488)로 / 가 200으로 index.html 콘텐츠를 서빙 →
+<!-- canonical = 루트(/). next.config rewrites로 / 가 200으로 index.html 콘텐츠를 서빙 →
      / 가 실제 색인 가능 URL. Google 도 / 를 표준으로 선호(이전 self-/index.html 은 Google이 / 로 재정의) -->
 <link rel="canonical" href="https://retwork.jp/">
 <!-- Google Search Console 소유권 인증 -->
@@ -51,13 +51,13 @@
      SEO canonical 은 위의 <link rel="canonical"> 로 별도 제공됨 -->
 <meta property="og:locale" content="ja_JP">
 <meta property="og:site_name" content="RetWork">
-<!-- b443 — og:image 추가: 링크 공유 시 프리뷰 카드에 이미지 표시 -->
+<!-- — og:image 추가: 링크 공유 시 프리뷰 카드에 이미지 표시 -->
 <meta property="og:image" content="https://retwork.jp/icons/icon-512.png?v=443">
 <meta property="og:image:width" content="512">
 <meta property="og:image:height" content="512">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://retwork.jp/icons/icon-512.png?v=443">
-<!-- b469 — 추천코드 최우선 캐치: 다른 초기화 코드가 URL 을 정리하기 전에 ?ref= 저장 -->
+<!-- — 추천코드 최우선 캐치: 다른 초기화 코드가 URL 을 정리하기 전에 ?ref= 저장 -->
 <script>
 (function(){ try {
   var m = (location.search || '').match(/[?&]ref=([A-Za-z0-9]{4,16})/);
@@ -70,7 +70,7 @@
 <!-- PWA manifest — 정적 link (PWA Builder/TWA 빌드 도구 인식용) + 동적 blob (Vercel 방화벽 fallback) -->
 <link rel="manifest" href="/manifest.json">
 
-<!-- (build 64 이후) Vercel 방화벽 우회용 inline blob — TWA 빌드 시엔 위 정적 link 가 우선
+<!-- ( 이후) Vercel 방화벽 우회용 inline blob — TWA 빌드 시엔 위 정적 link 가 우선
      blob 의 icons 정보도 정적 manifest.json 과 일치하게 갱신 -->
 <script>
 (function(){
@@ -129,7 +129,7 @@
 
 :root {
   --green:#16A87A; --green-dark:#0C6B52; --green-light:#E0F5EE; --green-mid:#A8E2CC;
-  /* b457 — 배경용 그라데이션 (applyTheme 에서 테마별 grad 로 갱신) */
+  /* — 배경용 그라데이션 (applyTheme 에서 테마별 grad 로 갱신) */
   --green-grad:linear-gradient(135deg,#22D3EE 0%,#3B82F6 25%,#7C3AED 50%,#D6409F 75%,#FB7185 100%);
   --gold-grad:linear-gradient(135deg,#22D3EE 0%,#3B82F6 25%,#7C3AED 50%,#D6409F 75%,#FB7185 100%);
   /* 테마 색 alpha 변형 — applyTheme() 에서 동적 갱신됨 (글로우/보더/배경 hint 용도) */
@@ -183,7 +183,7 @@ html,body{height:100%;height:100dvh;width:100%;background:radial-gradient(ellips
   }
 }
 
-/* b627~630 — 하단 AdMob 배너 가림 방지.
+/* ~630 — 하단 AdMob 배너 가림 방지.
    메인 화면/탭바: .phone 하단 패딩으로 올림(배너 위에서 끝나게).
    오버레이·바텀시트·팝업: 네이티브 배너가 항상 웹 콘텐츠 위에 떠서 CSS로 일괄 못 올림 →
    오버레이가 하나라도 열려있는 동안은 배너를 숨김(openOv/closeOv 훅). */
@@ -193,7 +193,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 .sbar{height:0;height:env(safe-area-inset-top,0px);background:var(--surface);flex-shrink:0;}
 .sbar-time,.sbar-r{display:none;}
 
-/* b605 — 전체화면 오버레이 세이프에어리어 (네이티브 상태바/네비바 침범 방지).
+/* — 전체화면 오버레이 세이프에어리어 (네이티브 상태바/네비바 침범 방지).
    .sbar 를 안 거치는 inset:0 전체화면들에 상·하 시스템 영역만큼 여백 확보. */
 #ov-month-report, #ov-year-report, #ov-ct-store-full, #ov-ct-post-detail, #ct-write-ov, #screen-reset-pw {
   padding-top: env(safe-area-inset-top, 0px);
@@ -368,7 +368,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 .hdr-date{font-size:11px;color:var(--text-3);font-weight:500;margin-left:8px;letter-spacing:.1px;}
 .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--green-light),var(--green-mid));border:1.5px solid var(--theme-a18);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--green);cursor:pointer;flex-shrink:0;box-shadow:var(--shadow-xs);transition:transform .15s;}
 .avatar:active{transform:scale(.9);}
-/* build 305→307: 헤더 아바타에 안 읽은 쪽지 수 빨간 배지
+/* →307: 헤더 아바타에 안 읽은 쪽지 수 빨간 배지
    - 아바타 원형 바깥(우측 상단)으로 확실히 튀어나오게
    - overflow:visible 명시 (부모 .hdr 의 잘림 방지)
    - z-index 로 헤더의 다른 요소 위에 보장
@@ -687,7 +687,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 /* ── 가게 상세 패널 ── */
 #ov-store-detail{z-index:980;}
-/* 가게 상세에서 띄우는 메뉴 사진 출처 바텀시트는 그 위에 표시 (b385) */
+/* 가게 상세에서 띄우는 메뉴 사진 출처 바텀시트는 그 위에 표시 */
 #ov-photo-source{z-index:1100;}
 #store-detail-panel{background:var(--surface);border-radius:0;height:100%;max-height:100%;overflow-y:auto;padding-bottom:48px;animation:slideUp .32s var(--anim);box-shadow:none;width:100%;display:flex;flex-direction:column;position:relative;}
 /* 섹션 순서: 공개 모드 기본 (사진 → 가게정보 → 광고 → 메뉴 → 댓글 → 비공개) */
@@ -972,7 +972,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 <body>
 
 <!-- ════════════════════════════════════════════════════════════════
-     랜딩 페이지 (b539) — 비로그인 방문자·크롤러에게 "보이는" 서비스 소개.
+ 랜딩 페이지 — 비로그인 방문자·크롤러에게 "보이는" 서비스 소개.
      AdSense 대응: 기존 숨김 텍스트(left:-9999px/aria-hidden=클로킹) 제거 → 실제 노출.
      비로그인 브라우저 진입 시 표시 → 「無料で始める」 클릭 시 로그인 화면(screen-auth).
      세션 있음 / PWA standalone 이면 부팅 라우팅이 display:none 처리.
@@ -1259,14 +1259,14 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 <div id="screen-auth" style="display:none;flex-direction:column;height:100%;background:var(--bg);overflow:hidden;">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px 24px;overflow-y:auto;scrollbar-width:none;-ms-overflow-style:none;">
 
-    <!-- 로고 (b437 — 투명 배경, RW 핀 로고만) -->
+    <!-- 로고 ( — 투명 배경, RW 핀 로고만) -->
     <div style="width:132px;height:132px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;">
       <img src="/icons/splash-logo.png?v=437" alt="RetWork" style="width:100%;height:100%;object-fit:contain;display:block;">
     </div>
     <div style="font-size:24px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;margin-bottom:6px;">RetWork</div>
     <div style="font-size:13px;color:var(--text-3);margin-bottom:26px;text-align:center;line-height:1.6;" data-i18n="onb.start">支出を記録して、消費習慣を把握しよう。<br>今日のレシートが明日のインサイトに。</div>
 
-    <!-- 탭 전환 — 이메일 직접 로그인/회원가입 (b550 재활성화) -->
+    <!-- 탭 전환 — 이메일 직접 로그인/회원가입 ( 재활성화) -->
     <div style="display:flex;width:100%;background:var(--surface);border-radius:12px;padding:3px;margin-bottom:20px;border:0.5px solid var(--border);">
       <button id="auth-tab-login" onclick="switchAuthTab('login')"
         style="flex:1;padding:9px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);background:var(--green-grad);color:#fff;transition:all .2s;" data-i18n="auth.login">
@@ -1281,7 +1281,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     <!-- 에러 메시지 -->
     <div id="auth-error" style="font-size:12px;color:var(--red);margin-bottom:10px;text-align:center;display:none;width:100%;padding:8px 12px;background:var(--surface);border-radius:10px;border:0.5px solid var(--border);box-sizing:border-box;"></div>
 
-    <!-- ▼▼▼ 이메일 직접 로그인/회원가입 영역 (b550 재활성화) ▼▼▼ -->
+    <!-- ▼▼▼ 이메일 직접 로그인/회원가입 영역 ( 재활성화) ▼▼▼ -->
     <div id="auth-manual-block" style="display:block;width:100%;">
     <!-- 공통: 이메일 / 비밀번호 -->
     <input id="auth-email" type="email" placeholder="メールアドレス" data-i18n-placeholder="auth.email" autocomplete="email"
@@ -1360,7 +1360,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   <div style="text-align:center;font-size:11px;color:var(--text-3);padding:12px 24px 28px;">RetWork <span class="app-version-text"></span> · © 2026</div>
 </div>
 
-<!-- 비밀번호 재설정 화면 (b552) — recovery 메일 링크로 복귀 시 노출 -->
+<!-- 비밀번호 재설정 화면 — recovery 메일 링크로 복귀 시 노출 -->
 <div id="screen-reset-pw" style="display:none;flex-direction:column;height:100%;background:var(--bg);overflow:hidden;position:fixed;inset:0;z-index:320;">
   <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;">
     <div style="font-size:48px;margin-bottom:14px;">🔑</div>
@@ -1388,7 +1388,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   <div class="hdr">
     <div><div class="hdr-title">RetWork</div><div class="hdr-date" id="today-label" style="margin-left:0;margin-top:2px;">2025年 5月 4日 (日)</div></div>
     <div style="display:flex;align-items:center;gap:10px;margin-left:auto;">
-      <!-- 가격/절약 알림 벨 (build 532) — 인앱 재확인 + NEW 점 -->
+      <!-- 가격/절약 알림 벨 — 인앱 재확인 + NEW 점 -->
       <div id="home-alert-bell" onclick="openAlertInbox()" style="position:relative;width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;cursor:pointer;">
         <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="var(--text-2)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span id="home-alert-dot" class="js-alert-dot" style="display:none;position:absolute;top:5px;right:6px;width:9px;height:9px;border-radius:50%;background:var(--red);border:1.5px solid var(--surface);"></span>
@@ -1549,7 +1549,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <!-- 결제수단 랭킹 -->
       <div id="report-pay-ranking" style="padding:4px 16px 0;"></div>
 
-      <!-- ⭐ build 325: 미구독 유저 잠금 가능 섹션 시작 (cat-breakdown 부터 물가 레이더까지) -->
+      <!-- ⭐ : 미구독 유저 잠금 가능 섹션 시작 (cat-breakdown 부터 물가 레이더까지) -->
       <!-- 더보기 (광고 시청 후 펼치기) — 미구독만 노출 -->
       <div id="rep-more-btn" style="display:none;margin:8px 16px 12px;background:linear-gradient(135deg,var(--gold-light),var(--surface));border:1.5px dashed var(--gold);border-radius:14px;padding:18px 16px;text-align:center;cursor:pointer;" onclick="_unlockReport()">
         <div style="font-size:20px;margin-bottom:6px;">📊</div>
@@ -1692,14 +1692,14 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
         <div id="price-compare-content"></div>
       </div>
       <div id="pc-nearby" style="display:none;">
-        <!-- 중심 기준 토글: 현재 GPS / 내 영수증 위치 (build 579) -->
+        <!-- 중심 기준 토글: 현재 GPS / 내 영수증 위치 -->
         <div style="display:flex;gap:6px;margin-bottom:10px;">
           <button id="commctr-gps" onclick="setCommCenterMode('gps')" data-i18n="comm.center_gps" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--green);color:#fff;font-family:var(--font);">📡 現在地</button>
           <button id="commctr-receipt" onclick="setCommCenterMode('receipt')" data-i18n="comm.center_receipt" style="flex:1;padding:6px 0;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:var(--bg-2);color:var(--text-2);font-family:var(--font);">🧾 レシート位置</button>
         </div>
         <div id="price-community-content"><div style="color:var(--text-3);font-size:12px;text-align:center;padding:20px 0;" data-i18n="rmap.loading">読み込み中...</div></div>
       </div>
-      <!-- 상품 가성비 검색 (build 585) — 커뮤니티 전체에서 최저가 가게 -->
+      <!-- 상품 가성비 검색 — 커뮤니티 전체에서 최저가 가게 -->
       <div id="pc-search" style="display:none;">
         <div data-i18n="rmap.pcs_info" style="font-size:11px;color:var(--text-3);background:var(--bg-2);border-radius:10px;padding:9px 12px;margin-bottom:10px;line-height:1.6;">🔍 <strong style="color:var(--text-2);">상품 가성비 검색</strong> — 상품명을 검색하면 커뮤니티에 모인 가격 중 <strong style="color:var(--text-2);">싼 가게</strong>를 알려드려요.</div>
         <input class="pc-search" id="pcs-input" placeholder="例: 牛乳・卵・トイレットペーパー" data-i18n-placeholder="rmap.pcs_ph" oninput="_pcsOnInput(this.value)">
@@ -2055,7 +2055,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <div class="avatar hdr-avatar" onclick="openOv('ov-settings')">😊</div>
     </div>
   </div>
-  <!-- 관리자 전용: 치리 리워드 OFF 상태 안내 (b599) — 일반 유저에겐 이 탭 자체가 숨겨짐 -->
+  <!-- 관리자 전용: 치리 리워드 OFF 상태 안내 — 일반 유저에겐 이 탭 자체가 숨겨짐 -->
   <div id="adm-flag-notice-reward" style="display:none;margin:10px 16px 0;background:rgba(239,68,68,.12);border:1px solid var(--red);border-radius:12px;padding:10px 14px;font-size:11.5px;font-weight:700;color:var(--red);line-height:1.5;">🔴 치리 리워드 <b>OFF</b> 상태 · 일반 유저에겐 리워드 탭·치리 잔액·적립이 모두 숨겨져 있어요 (관리자만 표시됨)</div>
   <!-- 포인트 내역 아코디언 패널 -->
   <div id="ct-coin-panel-reward" style="overflow:hidden;max-height:0;transition:max-height .35s cubic-bezier(0.4,0,0.2,1);background:var(--surface);border-bottom:0.5px solid var(--border);flex-shrink:0;">
@@ -2350,7 +2350,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 <!-- ══ 광고 모달 (비구독 유저) ══ -->
 <div class="confirm-overlay" id="ov-saveconfirm" onclick="if(event.target===this)closeAdModal()">
   <div class="confirm-sheet" style="padding:0;overflow:hidden;position:relative;">
-    <!-- 닫기 X (build 333) — 광고 안 보고 나가기 -->
+ <!-- 닫기 X — 광고 안 보고 나가기 -->
     <div onclick="closeAdModal()" style="position:absolute;top:10px;right:10px;z-index:20;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;font-weight:700;line-height:1;box-shadow:0 2px 8px rgba(0,0,0,.3);">✕</div>
 
     <!-- 자동재생 광고 미리보기 -->
@@ -2471,7 +2471,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 가격/절약 알림함 (build 532) ══ -->
+<!-- ══ 가격/절약 알림함 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-alert-inbox" onclick="closeOvOutside(event,'ov-alert-inbox')">
   <div class="sheet" style="max-height:75%;">
     <div class="sheet-handle"></div>
@@ -2484,7 +2484,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 달력 년/월 선택 (b597) ══ -->
+<!-- ══ 달력 년/월 선택 ══ -->
 <div class="overlay" id="ov-calpick" onclick="closeOvOutside(event,'ov-calpick')">
   <div class="sheet" style="align-self:flex-end;">
     <div class="sheet-handle"></div>
@@ -2581,7 +2581,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
             <button class="fs-opt" data-fs="1.2" onclick="applyFontScale('1.2')" style="flex:1;padding:8px 0;border-radius:9px;border:1px solid var(--border-mid);background:var(--surface);color:var(--text-2);font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);" data-i18n="settings.fs_xl">特大</button>
           </div>
         </div>
-        <!-- 푸시 알림 토글 (build 306) — 운영팀 쪽지 + 공지 알림 -->
+ <!-- 푸시 알림 토글 — 운영팀 쪽지 + 공지 알림 -->
         <div class="si" style="flex-direction:column;align-items:stretch;gap:4px;padding-bottom:6px;">
           <div style="display:flex;align-items:center;width:100%;">
             <span class="lico" data-lico="bell" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span>
@@ -2590,13 +2590,13 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
           </div>
           <div id="settings-push-hint" style="font-size:10px;color:var(--text-3);font-weight:600;padding-left:22px;"></div>
         </div>
-        <!-- 출석 알림 토글 (build 317) — 푸시 ON 일 때만 표시 -->
+ <!-- 출석 알림 토글 — 푸시 ON 일 때만 표시 -->
         <div id="settings-att-push-row" class="si" style="display:none;align-items:center;width:100%;">
           <span class="lico" data-lico="clock" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span>
           <span class="si-lbl" data-i18n="settings.att_push">출석 알림</span>
           <div id="settings-att-push-toggle" class="toggle off" onclick="toggleAttendancePush()" style="margin-left:auto;"></div>
         </div>
-        <!-- 가격 변동 알림 토글 (build 531) — 푸시 ON 일 때만 표시 -->
+ <!-- 가격 변동 알림 토글 — 푸시 ON 일 때만 표시 -->
         <div id="settings-pw-push-row" class="si" style="display:none;align-items:flex-start;width:100%;">
           <span class="lico" data-lico="alert" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;margin-top:1px;"></span>
           <div style="flex:1;min-width:0;">
@@ -2605,7 +2605,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
           </div>
           <div id="settings-pw-push-toggle" class="toggle off" onclick="togglePriceWatchPush()" style="margin-left:auto;align-self:center;"></div>
         </div>
-        <!-- 기록 리마인더 토글 (build 583) — 푸시 ON 일 때만 표시 -->
+ <!-- 기록 리마인더 토글 — 푸시 ON 일 때만 표시 -->
         <div id="settings-logrem-push-row" class="si" style="display:none;align-items:flex-start;width:100%;">
           <span class="lico" data-lico="receipt" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;margin-top:1px;"></span>
           <div style="flex:1;min-width:0;">
@@ -2634,7 +2634,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
           <div id="theme-swatches" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px 0;width:100%;"></div>
         </div>
       </div>
-      <!-- 받은 쪽지함 — 모든 사용자 공통 (build 311 분리, build 341 mail 아이콘 추가) -->
+ <!-- 받은 쪽지함 — 모든 사용자 공통 ( 분리, mail 아이콘 추가) -->
       <div class="sg">
         <div class="si" onclick="openUserInbox()" style="cursor:pointer;">
           <span class="lico" data-lico="mail" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span>
@@ -2816,7 +2816,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <div onclick="setBudgetQuick(100000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥100,000</div>
       <div onclick="setBudgetQuick(150000)" style="padding:7px 14px;background:var(--green-light);border-radius:20px;font-size:12px;font-weight:700;color:var(--green-dark);cursor:pointer;">¥150,000</div>
     </div>
-    <!-- 카테고리별 예산 (build 584) — 접이식, 설정한 카테고리만 진행바·초과 경고 -->
+ <!-- 카테고리별 예산 — 접이식, 설정한 카테고리만 진행바·초과 경고 -->
     <div style="border-top:1px solid var(--border);padding-top:12px;margin-bottom:14px;">
       <div onclick="_toggleCatBudget()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;">
         <div style="min-width:0;"><div style="font-size:12px;font-weight:800;color:var(--text-2);" data-i18n="budget.cat_title">카테고리별 예산</div>
@@ -2861,7 +2861,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 스캔 선택 모달 (build 332: 카메라 / 갤러리 / 수동기입 3개로 정리) ══ -->
+<!-- ══ 스캔 선택 모달 (: 카메라 / 갤러리 / 수동기입 3개로 정리) ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-scan" onclick="closeOvOutside(event,'ov-scan')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -2884,7 +2884,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <span class="scan-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></span>
       <input type="file" accept="image/*" style="display:none;" onchange="handleImageFile(this)">
     </label>
-    <!-- 3. 수동 기입 (build 332 신규) -->
+ <!-- 3. 수동 기입 ( 신규) -->
     <div class="scan-opt" onclick="closeOv('ov-scan');setTimeout(openManualEntry,150);">
       <div class="scan-ic" style="background:linear-gradient(135deg,var(--gold-light),rgba(212,160,23,.18));">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4z"/></svg>
@@ -2896,7 +2896,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 카메라 sub-옵션 (build 332): 한 장 vs 긴 영수증 여러 장 ══ -->
+<!-- ══ 카메라 sub-옵션 : 한 장 vs 긴 영수증 여러 장 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-scan-camera" onclick="closeOvOutside(event,'ov-scan-camera')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -3015,7 +3015,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   <div id="mr-body" style="flex:1;overflow-y:auto;padding:14px 16px 36px;color:var(--text-1);"></div>
 </div>
 
-<!-- ══ 연간 리포트 (build 587) ══ -->
+<!-- ══ 연간 리포트 ══ -->
 <div id="ov-year-report" style="display:none;position:absolute;inset:0;z-index:381;flex-direction:column;background:var(--bg);">
   <div style="background:var(--surface);padding:12px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;border-bottom:.5px solid var(--border);">
     <div onclick="closeYearReport()" style="width:34px;height:34px;border-radius:10px;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text-2);cursor:pointer;flex-shrink:0;">←</div>
@@ -3114,7 +3114,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 </div>
 
 <!-- ══ 가게 상세 모달 ══ -->
-<!-- ══ 사진 전체화면 뷰어 (build 358) ══ -->
+<!-- ══ 사진 전체화면 뷰어 ══ -->
 <div class="overlay" id="ov-sd-photo-viewer" style="z-index:99999;background:rgba(0,0,0,.96);" onclick="if(event.target===this)closeOv('ov-sd-photo-viewer')">
   <!-- 이미지 -->
   <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:60px 20px;">
@@ -3553,13 +3553,13 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
         </div>
       </div>
 
-      <!-- ✉️ 쪽지 보내기 (build 304) -->
+ <!-- ✉️ 쪽지 보내기 -->
       <div style="background:linear-gradient(135deg,rgba(91,155,213,.10),var(--surface));border:1px solid #5B9BD5;border-radius:12px;padding:12px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-3);">✉️ 이 사용자에게 쪽지 보내기</div>
         </div>
         <button onclick="admOpenSendMsg()" style="width:100%;padding:9px;border:none;border-radius:8px;background:#5B9BD5;color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);margin-bottom:10px;">✉️ 새 쪽지 작성</button>
-        <!-- 보낸 쪽지 이력 (build 319, 320 — 전체 삭제 추가) -->
+ <!-- 보낸 쪽지 이력 (, 320 — 전체 삭제 추가) -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;margin-top:4px;gap:4px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-3);flex:1;">📨 보낸 쪽지 이력 <span id="adm-msg-history-cnt" style="color:var(--text-3);font-weight:600;"></span></div>
           <button onclick="_admLoadUserMsgHistory()" style="background:transparent;border:.5px solid var(--border);color:var(--text-3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">🔄 새로고침</button>
@@ -3638,7 +3638,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 어드민: 쪽지 발송 모달 (build 304) ══ -->
+<!-- ══ 어드민: 쪽지 발송 모달 ══ -->
 <div class="overlay" id="ov-admin-send-msg" style="z-index:10003;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeOv('ov-admin-send-msg')">
   <div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:18px;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:fadeInScale .25s var(--anim);">
     <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
@@ -3693,7 +3693,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 사용자: 받은 쪽지함 모달 (build 304) ══ -->
+<!-- ══ 사용자: 받은 쪽지함 모달 ══ -->
 <div class="overlay" id="ov-user-inbox" style="z-index:945;align-items:center;justify-content:center;padding:24px;" onclick="if(event.target===this)closeOv('ov-user-inbox')">
   <div onclick="event.stopPropagation()" style="background:var(--surface);border-radius:18px;max-width:480px;width:100%;max-height:82vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.35);animation:fadeInScale .25s var(--anim);">
     <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
@@ -3734,7 +3734,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
         <div style="font-size:10px;color:var(--text-3);margin-top:4px;line-height:1.4;">💡 Google 지도에서 정확한 가게 찾아서 공유 링크 복사·붙여넣기. <b>링크에 좌표가 포함되어 있으면 마커도 자동 이동</b>됩니다.</div>
       </div>
 
-      <!-- 가게 사진 관리 (build 350) -->
+ <!-- 가게 사진 관리 -->
       <div style="font-size:11px;font-weight:800;color:var(--text-2);margin-bottom:6px;">📷 가게 사진</div>
       <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;">
         <label style="display:block;background:var(--green-grad);color:#fff;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:700;cursor:pointer;text-align:center;font-family:var(--font);margin-bottom:8px;">
@@ -3763,7 +3763,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 어드민: 메뉴 카드 수정 — 전체화면 페이지 (build 352) ══ -->
+<!-- ══ 어드민: 메뉴 카드 수정 — 전체화면 페이지 ══ -->
 <div class="overlay" id="ov-admin-edit-menu-card" style="z-index:10002;background:var(--bg);padding:0;">
   <div style="width:100%;height:100%;max-width:none;display:flex;flex-direction:column;background:var(--bg);">
 
@@ -3895,7 +3895,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:10px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:6px;">
           <div style="font-size:11px;font-weight:700;color:var(--text-3);">가게명</div>
-          <!-- build 328→329 — 가게 위치 수정 (stores 테이블 매칭 → 풀스크린 맵 드래그 모달) -->
+ <!-- →329 — 가게 위치 수정 (stores 테이블 매칭 → 풀스크린 맵 드래그 모달) -->
           <button type="button" onclick="event.stopPropagation();event.preventDefault();_admRecOpenStoreLocation();return false;" style="padding:4px 10px;border:none;border-radius:7px;background:rgba(91,155,213,.15);color:#5B9BD5;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);">🗺 위치 수정</button>
         </div>
         <input id="adm-rec-store" type="text" maxlength="100" style="width:100%;padding:9px;border:1px solid var(--border-mid);border-radius:8px;background:var(--bg);color:var(--text-1);font-size:13px;font-family:var(--font);box-sizing:border-box;margin-bottom:8px;">
@@ -3940,7 +3940,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
         <span id="adm-rec-total" style="font-size:18px;font-weight:900;color:var(--green);">¥0</span>
       </div>
 
-      <!-- build 363 — 저장 + 영수증 삭제 버튼 -->
+ <!-- 저장 + 영수증 삭제 버튼 -->
       <div style="display:flex;gap:8px;">
         <button onclick="admSaveReceipt()" style="flex:1;padding:13px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 수정 저장</button>
         <button onclick="admDeleteReceiptFromEdit()" style="padding:13px 18px;border:1px solid #FEE2E2;border-radius:12px;background:#fff;color:#991B1B;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);">🗑️ 삭제</button>
@@ -3976,7 +3976,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
         <button onclick="admSavePricing()" style="width:100%;padding:9px;border:none;border-radius:8px;background:var(--green-grad);color:#fff;font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">💾 저장 (대시보드 추정값에 즉시 반영)</button>
       </div>
 
-      <!-- 치리 리워드 시스템 ON/OFF (b599) — 수익 검증 전 리워드 경제 일시중단용 -->
+ <!-- 치리 리워드 시스템 ON/OFF — 수익 검증 전 리워드 경제 일시중단용 -->
       <div style="background:var(--surface);border:.5px solid var(--border);border-radius:12px;padding:12px;margin-bottom:14px;">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
           <div style="flex:1;">
@@ -4674,12 +4674,12 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 광고 시청 풀스크린 페이지 (build 334) ══
+<!-- ══ 광고 시청 풀스크린 페이지 ══
      출석체크 스타일 — 상단 ← 뒤로 + 설명 카드 + 자동재생 광고 카드 + 하단 큰 버튼.
      monthreport / report_unlock 등 컨텍스트에서 사용 (영수증 저장은 기존 바텀시트 유지). -->
 <div class="overlay" id="ov-watch-ad-page" style="z-index:10004;background:var(--bg);">
   <div style="width:100%;height:100%;display:flex;flex-direction:column;">
-    <!-- 헤더 (build 336 — SVG 라인 아이콘) -->
+ <!-- 헤더 ( — SVG 라인 아이콘) -->
     <div style="background:var(--bg);padding:14px 16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;">
       <div onclick="closeWatchAdPage()" class="lico" data-lico="arrow_left" data-size="22" data-color="var(--text-1)" style="cursor:pointer;padding:4px 8px;display:flex;align-items:center;"></div>
       <div id="watch-ad-title" style="font-size:17px;font-weight:900;color:var(--text-1);">광고 시청</div>
@@ -4687,7 +4687,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 
     <!-- 스크롤 영역 -->
     <div style="flex:1;overflow-y:auto;padding:14px 16px 20px;">
-      <!-- 카드 1: 설명문 (build 336 — SVG 아이콘) -->
+ <!-- 카드 1: 설명문 ( — SVG 아이콘) -->
       <div style="background:var(--surface);border-radius:14px;padding:18px 16px;margin-bottom:12px;box-shadow:var(--shadow-sm);border:.5px solid var(--border);">
         <div id="watch-ad-desc-icon" style="margin-bottom:10px;display:flex;align-items:center;"></div>
         <div id="watch-ad-desc-title" style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:5px;">광고 보고 내용 확인하기</div>
@@ -5023,7 +5023,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ PDF 내보내기 시트 (build 580) — 내용 선택: 사진+데이터 / 데이터 / 원본사진 ══ -->
+<!-- ══ PDF 내보내기 시트 — 내용 선택: 사진+데이터 / 데이터 / 원본사진 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-pdf-export" onclick="closeOvOutside(event,'ov-pdf-export')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -5040,7 +5040,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
-<!-- ══ 정기지출 관리 (build 582) ══ -->
+<!-- ══ 정기지출 관리 ══ -->
 <div class="overlay bottom-sheet-overlay" id="ov-recurring" onclick="closeOvOutside(event,'ov-recurring')">
   <div class="sheet">
     <div class="sheet-handle"></div>
@@ -5329,7 +5329,7 @@ var gptKey  = '';  // OpenAI API 키 — 백엔드 /api/gpt 경유 (Vercel 환�
 /* ══════════════════════════════
    モード切替 (ReceiptIQ ↔ チリつも)
 ══════════════════════════════ */
-/* 헤더 모드전환 버튼 (b634) — 각 헤더의 프로필 아이콘 앞에 삽입. 설정에 숨은 토글을 헤더로 노출. */
+/* 헤더 모드전환 버튼 — 각 헤더의 프로필 아이콘 앞에 삽입. 설정에 숨은 토글을 헤더로 노출. */
 function _toggleAppMode(){
   var sw = document.getElementById('mode-toggle-sw');
   var cur = (sw && sw.dataset.mode) || 'receipt';
@@ -5399,7 +5399,7 @@ function switchMode(mode) {
     s.style.display = (!isReceipt && s.classList.contains('active')) ? 'flex' : 'none';
   });
   document.getElementById('ct-tabbar').style.display = isReceipt ? 'none' : '';
-  if (typeof _syncHeaderModeToggles === 'function') _syncHeaderModeToggles(); // b634 — 헤더 모드버튼 라벨 동기화
+  if (typeof _syncHeaderModeToggles === 'function') _syncHeaderModeToggles(); // 헤더 모드버튼 라벨 동기화
 
   // チリつも 진입 시 코인 잔액 갱신 + 지도 초기화/리사이즈 + 치리스토어 로드
   if (!isReceipt) {
@@ -5489,7 +5489,7 @@ function _ctDetectCoinType(desc){
   return 'bonus';
 }
 function ctAddCoin(amount, desc, type) {
-  // b599 — 치리 리워드 OFF 시 적립/차감 전면 중단 (관리자는 isFeatureOn=true 라 정상 동작)
+  // 치리 리워드 OFF 시 적립/차감 전면 중단 (관리자는 isFeatureOn=true 라 정상 동작)
   if (!isFeatureOn('chiri_reward')) return;
   // 낙관적 로컬 적립 (UX 빠르게)
   _ctCoinBalance += amount;
@@ -5671,7 +5671,7 @@ function ctCloseAttendance(){
   closeOv('ov-attendance');
 }
 
-// build 315 — 출석 화면 열려있는 동안 슬롯 전환 자동 감지 + 재렌더
+// 출석 화면 열려있는 동안 슬롯 전환 자동 감지 + 재렌더
 var _ctAttCurSlotSnapshot = null;
 var _ctAttAutoRefreshTimer = null;
 function _ctAttStartAutoRefresh(){
@@ -5770,7 +5770,7 @@ function _ctRenderAttendance(){
     + '</div>';
 
   // ─── 카드2.5: 추가 광고 보상 (출석 슬롯당 2회까지) ───
-  // build 315 — 슬롯 명시 + 메시지 명확화
+  // 슬롯 명시 + 메시지 명확화
   var bonusUsed = _ctBonusCurSlotCount();
   var bonusLeft = BONUS_PER_SLOT - bonusUsed;
   var _bypass = (typeof _BYPASS_ADS !== 'undefined' && _BYPASS_ADS);
@@ -5926,7 +5926,7 @@ function ctOpenBonusAd(){
       return;
     }
   }
-  // build 327 — ov-attendance (풀스크린) 안에서 호출 시 stacking context 충돌
+  // ov-attendance (풀스크린) 안에서 호출 시 stacking context 충돌
   //   → ov-att-bonus-ad 를 body 로 이동 + 명시적 inline z-index 강제
   var ov = document.getElementById('ov-att-bonus-ad');
   if (ov) {
@@ -5941,7 +5941,7 @@ function bonusAcCloseOutside(e){
 }
 function bonusAcSkip(){
   closeOv('ov-att-bonus-ad');
-  // build 327 — 인라인 강제 스타일 리셋 (다음 호출 시 깨끗하게)
+  // 인라인 강제 스타일 리셋 (다음 호출 시 깨끗하게)
   var ov = document.getElementById('ov-att-bonus-ad');
   if (ov) ov.style.cssText = '';
 }
@@ -6051,7 +6051,7 @@ function ctStartRewardAd() {
 
 function ctResetRewardAd()  { ctCloseFullscreenAd(); }
 
-// (b573) 레거시·비원자적 교환 함수 → 안전한 원자적 RPC 경로로 위임 (만약 어딘가 아직 호출돼도 안전).
+// 레거시·비원자적 교환 함수 → 안전한 원자적 RPC 경로로 위임 (만약 어딘가 아직 호출돼도 안전).
 function ctStoreExchange(id, name, cost) {
   if (typeof ctStoreExchangeDB === 'function') { ctStoreExchangeDB(id); return; }
 }
@@ -6127,7 +6127,7 @@ async function _ctStoreLoadItems() {
 }
 
 /* ══════════════════════════════
-   치리츠모 드로우 — 유저 측 슬라이드 카드 (b432)
+ 치리츠모 드로우 — 유저 측 슬라이드 카드 
    draws 테이블에서 is_active=true 로드 → 좌우 슬라이드.
    카드 탭 → ctOpenDrawDetail (상세 모달, 추후 업데이트 예정).
 ══════════════════════════════ */
@@ -6239,7 +6239,7 @@ function _drawSchedule(d) {
   return e || s || '';
 }
 
-// 드로우 상세 모달 — 참여 가능 / 치리 부족 두 케이스 (b447)
+// 드로우 상세 모달 — 참여 가능 / 치리 부족 두 케이스 
 async function ctOpenDrawDetail(id) {
   var d = _ctDrawsCache.find(function(x){ return x.id === id; });
   if (!d) return;
@@ -6364,7 +6364,7 @@ function ctGoRewardAd() {
 }
 
 /* ════════════════════════════════════════════════════════════
-   치리카드 — 내가 등록한 메뉴 카드 모음 (b448)
+ 치리카드 — 내가 등록한 메뉴 카드 모음 
    created_by = 본인인 store_menu_cards. 각 카드에 확인수(view_count) 표시.
 ═══════════════════════════════════════════════════════════════ */
 var _myCardsCache = [];
@@ -6841,7 +6841,7 @@ async function ctStoreExchangeDB(itemId) {
   }
   if (!confirm('「' + it.name + '」と交換しますか？\n' + it.cost_chiri + ' チリを消費します。')) return;
 
-  // ── 원자적 교환 RPC (b554) ──
+  // ── 원자적 교환 RPC ──
   //   잔액검사 + 코인차감 + 재고차감 + exchange_requests 생성을 서버 트랜잭션 1건으로 처리.
   //   기존: ctAddCoin(fire-and-forget) + 별도 insert/update 가 분리돼 "공짜 상품/코인만 날림" 사고 가능.
   var rr = await _sb.rpc('client_redeem_item', { p_item_id: itemId });
@@ -7141,7 +7141,7 @@ function ctInitMap() {
   /* 즉시 기본 위치로 핀 로드 (위치 권한 대기 없이 바로 표시) */
   ctLoadPricePins(defaultPos.lat, defaultPos.lng);
 
-  /* 내 위치 — build 303: race condition fix (가성비맵과 동일) */
+  /* 내 위치 — race condition fix (가성비맵과 동일) */
   window._ctMapUserInteracted = false;
   _ctMap.addListener('dragstart',    function(){ window._ctMapUserInteracted = true; });
   _ctMap.addListener('zoom_changed', function(){ window._ctMapUserInteracted = true; });
@@ -7171,7 +7171,7 @@ function ctInitMap() {
     document.getElementById('ct-area-btn').style.display = '';
   });
 
-  /* 줌 변경 시 클러스터 ↔ 개별 핀 전환 (b616)
+  /* 줌 변경 시 클러스터 ↔ 개별 핀 전환 
      — zoom_changed 는 핀치 중 초당 수십번 발화 → 매번 전체 마커 삭제/재생성이
        제스처 도중 메인스레드를 막아 구글맵 제스처 인식이 틀어짐(세계지도로 튕김).
        핀 위에 손가락이 있으면 재생성 마커가 터치를 가로채 더 잘 발생.
@@ -7602,7 +7602,7 @@ async function ctLoadPosts() {
 
   var posts = res.data || [];
 
-  // b431 — 댓글 수는 ct_comments 에서 실제 집계 (ct_posts.comments 컬럼이 stale 일 수 있어
+  // 댓글 수는 ct_comments 에서 실제 집계 (ct_posts.comments 컬럼이 stale 일 수 있어
   //         최초 로드 시 0 으로 보이고 상세를 열어야 갱신되던 버그 해결).
   //         집계 실패 시에만 컬럼 값으로 fallback.
   var _ctCommentCounts = {};
@@ -8565,7 +8565,7 @@ async function ctSubmitPost() {
 var _cpStarRating = 0;
 var _mpStarRating = 0;
 
-// dual-write 헬퍼(b557): store_name → store_id 1회 조회(name 유니크 전제) + 세션 캐시.
+// dual-write 헬퍼: store_name → store_id 1회 조회(name 유니크 전제) + 세션 캐시.
 //   #6 Phase 2b — 커뮤니티 데이터 저장 시 store_id 동반 기록(읽기는 아직 store_name).
 var _storeIdByName = {};
 async function _resolveStoreId(name){
@@ -8588,7 +8588,7 @@ function _storeOr(q, sid, sname){
 }
 // 가게 행 find-or-create(2e-1): 있으면 좌표 안 건드리고 id 반환, 없으면 insert.
 //   커뮤니티 쓰기/pending 핀에 store_id 를 미리 확보하기 위함(좌표 덮어쓰기 churn 방지).
-// 가게명 → Google place_id+좌표 (Promise 래퍼, 5s 타임아웃). _searchByPlaces(b556) 재사용.
+// 가게명 → Google place_id+좌표 (Promise 래퍼, 5s 타임아웃). _searchByPlaces 재사용.
 function _geocodeStore(name){
   return new Promise(function(res){
     if (!name || typeof _searchByPlaces !== 'function') { res(null); return; }
@@ -8718,7 +8718,7 @@ function switchTab(name) {
   if (name==='home') renderHome();
   if (name==='history') { updateHistMonthLabel(); renderHistory(currentFilter||'all'); renderBars('week'); renderCatBreakdown(); renderReportSummary(); }
   if (name==='calendar') renderCalendar(calYear, calMonth);
-  if (name==='map') { if (_mapInitialized && _map && typeof renderMapPins === 'function') { try { renderMapPins(); } catch(e){} } setTimeout(initGoogleMap, 100); }  // build 578 — 재진입 시 목록 갱신
+  if (name==='map') { if (_mapInitialized && _map && typeof renderMapPins === 'function') { try { renderMapPins(); } catch(e){} } setTimeout(initGoogleMap, 100); }  // 재진입 시 목록 갱신
 }
 function switchSubtab(name) {
   ['history','report'].forEach(function(n){
@@ -8733,12 +8733,12 @@ function switchSubtab(name) {
     _reportPeriod = 'month';
     document.querySelectorAll('.period-bar .chip').forEach(function(c,i){c.classList.toggle('active',i===1);});
     renderReportSummary(); renderBars('month'); renderCatBreakdown(); renderRadar();
-    // build 325 — 미구독 잠금 적용
+    // 미구독 잠금 적용
     if (typeof _applyReportLock === 'function') { try { _applyReportLock(); } catch(e){} }
   }
 }
 
-/* build 325 — 미구독 유저: 도넛 차트 밑 콘텐츠 (카테고리 목록 / 아이템·결제 랭킹 / 물가 레이더) 잠금
+/* — 미구독 유저: 도넛 차트 밑 콘텐츠 (카테고리 목록 / 아이템·결제 랭킹 / 물가 레이더) 잠금
    → 광고 시청 후 펼침. 세션 동안만 unlock 유지. */
 window._isReportUnlocked = false;
 function _applyReportLock(){
@@ -8756,14 +8756,14 @@ function _applyReportLock(){
 function _unlockReport(){
   // 이미 풀려있으면 무시
   if (window._isReportUnlocked || _isPremium) { _applyReportLock(); return; }
-  // build 334 — 풀스크린 광고 시청 페이지 (출석체크 스타일)
+  // 풀스크린 광고 시청 페이지 (출석체크 스타일)
   if (typeof openWatchAdPage === 'function') {
     openWatchAdPage('report_unlock', function(){
       window._isReportUnlocked = true;
       _applyReportLock();
       try { renderCatBreakdown(); renderRadar(); } catch(e){}
     }, {
-      // build 337 — emoji 제거, ico 명시
+      // emoji 제거, ico 명시
       title: t('repunlock.title'),
       ico: 'chart',
       descTitle: t('repunlock.desc_title'),
@@ -8782,7 +8782,7 @@ var _radarFilter = 'up';
 var _radarSort   = 'desc'; // 'desc' = 변동 큰 순, 'asc' = 변동 작은 순
 var _radarDummyData = [];  // (레거시) — 실데이터는 _buildRadarData() 사용
 
-// 물가 레이더 실데이터 (build 536) — 내 영수증 이력(날짜별 단가)에서 품목별 최신가 vs 직전구매가 추이
+// 물가 레이더 실데이터 — 내 영수증 이력(날짜별 단가)에서 품목별 최신가 vs 직전구매가 추이
 //   ※ product_prices 는 upsert(최신가만)라 시계열 없음 → 내 구매이력이 유일한 시계열 원천
 function _buildRadarData(){
   var byItem = {};
@@ -8848,7 +8848,7 @@ function renderRadar() {
   var el = document.getElementById('radar-list');
   if (!el) return;
 
-  // 내 영수증 이력 기반 실데이터 (build 536). 2회+ 구매·변동 있는 품목만 → 없으면 빈 상태
+  // 내 영수증 이력 기반 실데이터 . 2회+ 구매·변동 있는 품목만 → 없으면 빈 상태
   var data = _buildRadarData().filter(function(d) {
     var diff = d.now - d.old;
     if (_radarFilter === 'up')   return diff > 0;
@@ -8938,7 +8938,7 @@ var _SAVING_KONBINI_RE = /コンビニ|セブン[\-\s]?イレブン|セブン|�
 function _isSavingGrocery(cat, store){
   return cat === 'food' || _SAVING_KONBINI_RE.test(store || '');
 }
-// 節約チャンス分析 (Phase 2, b499) — 커뮤니티 위치기반 실분석.
+// 節約チャンス分析 (Phase 2, ) — 커뮤니티 위치기반 실분석.
 //   ① 내 구매(로컬 DB, 최근3개월) → 상품별 내 평균단가·월구매수량
 //   ② 상품을 products_master(product_id)로 정규화 → 공개 product_prices 조회
 //   ③ 내 위치(_ctUserPos) 반경 5km 내 '같은 상품 최저가'(타 유저 가게 포함) 찾기
@@ -9055,7 +9055,7 @@ async function _computeSavings(){
   results = results.slice(0, 5);
   var totalMonthly = results.reduce(function(a,r){ return a + r.monthlySaving; }, 0);
 
-  // ── 알뜰지수(동네 가격 벤치마크, b538) — 같은 데이터로 "커뮤니티 중앙값 대비 내 단가" ──
+  // ── 알뜰지수(동네 가격 벤치마크, ) — 같은 데이터로 "커뮤니티 중앙값 대비 내 단가" ──
   //   節約=최저가, 알뜰지수=중앙값 비교. 자기 행 제외 + 품목당 최소 VI_MIN_PEERS 관측(k-익명·통계신뢰).
   //   +%면 동네 평균보다 쌈. 지출액 가중 평균. 좌표 없으면 전국 비교 폴백.
   var valueIndex = null;
@@ -9152,7 +9152,7 @@ async function renderSavingAnalysis(){
   el.innerHTML = h;
 }
 
-// ── 가격/절약 알림함 (build 532) — price_alerts_sent(본인읽기) 기반 인앱 재확인 + 7일 NEW ──
+// ── 가격/절약 알림함 — price_alerts_sent(본인읽기) 기반 인앱 재확인 + 7일 NEW ──
 //   푸시는 1회만(서버 쿨다운). 사용자는 헤더 벨/절약찬스 NEW 로 7일간 재확인. 새 알림 발동 시 자동 재발동.
 window._priceAlerts = [];
 async function _refreshPriceAlertState(){
@@ -9198,7 +9198,7 @@ function openAlertInbox(){
   }
   openOv('ov-alert-inbox');
 }
-// 푸시를 탭해서 열림(?from=pricewatch) → engagement 기록(관심) → 적응형 캡이 '자주'로 (build 534)
+// 푸시를 탭해서 열림(?from=pricewatch) → engagement 기록(관심) → 적응형 캡이 '자주'로 
 async function _checkPriceEngagementFlag(){
   try {
     var sp = new URLSearchParams(location.search || '');
@@ -9216,7 +9216,7 @@ async function _checkPriceEngagementFlag(){
 }
 
 function renderHome() {
-  // build 322 — 새 달 진입 시 예산 자동 리셋 (체크만, 클라우드 fetch 는 로그인 hook 에서)
+  // 새 달 진입 시 예산 자동 리셋 (체크만, 클라우드 fetch 는 로그인 hook 에서)
   if (typeof _budgetCheckMonthReset === 'function') { try { _budgetCheckMonthReset(); } catch(e){} }
   var now   = new Date();
   var m     = now.getMonth()+1;
@@ -9225,7 +9225,7 @@ function renderHome() {
   var yest  = new Date(now); yest.setDate(now.getDate()-1);
   var yestStr  = yest.getFullYear()+'-'+String(yest.getMonth()+1).padStart(2,'0')+'-'+String(yest.getDate()).padStart(2,'0');
 
-  // build 575 — '이번 달'을 월 시작일(급여 주기) 기준으로 계산. 시작일=1이면 기존 1일~말일과 동일.
+  // '이번 달'을 월 시작일(급여 주기) 기준으로 계산. 시작일=1이면 기존 1일~말일과 동일.
   var _curRange = _periodRange(now);
   var _prevRef  = new Date(_curRange.start.getTime() - 86400000);  // 직전 주기의 임의 날짜(주기 시작 하루 전)
   var monthReceipts = _periodReceipts(DB, now);
@@ -9240,7 +9240,7 @@ function renderHome() {
 
   // 절약 배너 갱신 (내 영수증 이력 기반 실데이터)
   if (typeof _updateSavingBanner === 'function') { try { _updateSavingBanner(); } catch(e){} }
-  // 가격/절약 알림 상태(벨 점 + 절약찬스 NEW) 갱신 (build 532)
+  // 가격/절약 알림 상태(벨 점 + 절약찬스 NEW) 갱신 
   if (typeof _refreshPriceAlertState === 'function') { try { _refreshPriceAlertState(); } catch(e){} }
 
   // ── 1. 절약 명언 + 오늘 지출 (언어별 세트) ──
@@ -9273,7 +9273,7 @@ function renderHome() {
         : '<span style="color:var(--text-3);">'+t('home.no_record')+'</span>'
       )
       +'</div>'
-      + _streakNudgeHtml()   // build 583 — 연속 기록 스트릭 + 오늘 미기록 넛지
+      + _streakNudgeHtml()   // 연속 기록 스트릭 + 오늘 미기록 넛지
       +'</div>';
   }
 
@@ -9362,7 +9362,7 @@ function renderHome() {
   var budget=parseInt(localStorage.getItem('receiptiq_budget')||'0');
   var budgetEl=document.getElementById('home-budget');
   if(budgetEl){
-    // build 606 — 카테고리 예산 초과 경고를 예산 카드 '안'(구분선 아래)에 통합
+    // 카테고리 예산 초과 경고를 예산 카드 '안'(구분선 아래)에 통합
     var _cwChips = (typeof _catBudgetWarnHtml==='function') ? _catBudgetWarnHtml(monthReceipts) : '';
     var _cwInner = _cwChips ? '<div style="margin-top:10px;padding-top:9px;border-top:0.5px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;align-items:center;">'+_cwChips+'</div>' : '';
     if(budget<=0){
@@ -9799,7 +9799,7 @@ function openEditReceipt(id) {
   // offset 은 단가 변환 *후* 의 합산 기준으로 계산 → 반올림 손실(¥1~2)까지
   //  offset 에 흡수돼 원본 합계가 그대로 유지됨 (세금 + 반올림 손실 동시 보존)
   var convertedSum = _editItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
-  // b609 — 음수 offset = 쿠폰/할인 보존 (0 clamp 시 합계가 품목합으로 부풀려짐)
+  // 음수 offset = 쿠폰/할인 보존 (0 clamp 시 합계가 품목합으로 부풀려짐)
   _editTaxOffset = (r.total || 0) - convertedSum;
 
   document.getElementById('edit-store').value = r.store || '';
@@ -9871,7 +9871,7 @@ function updateEditTotal() {
     else el.textContent = '¥' + total.toLocaleString();
   }
 }
-// b603 — 저장된 영수증 편집에서도 합계 직접 수정 → offset 재계산
+// 저장된 영수증 편집에서도 합계 직접 수정 → offset 재계산
 function onEditTotalEdit() {
   var el = document.getElementById('edit-total-disp');
   if (!el) return;
@@ -10399,7 +10399,7 @@ function getReportPeriodReceipts() {
   });
 }
 
-// (제거됨 b529) computeItemRankings / buildRankListHtml — 비활성 랭킹 기능 잔재(데드코드, 호출처 0).
+// (제거됨 ) computeItemRankings / buildRankListHtml — 비활성 랭킹 기능 잔재(데드코드, 호출처 0).
 
 function renderRanking() {
   // 자주 구매한 상품/메뉴 TOP 5 섹션 제거됨 (사용자 요청)
@@ -10491,7 +10491,7 @@ function buildCalData() {
 }
 function renderCalendar(y,m) {
   calYear=y; calMonth=m;
-  var _calLab = _periodLabelForMonth(y, m);   // build 576 — 커스텀 시작일이면 '6/25~7/24'
+  var _calLab = _periodLabelForMonth(y, m);   // 커스텀 시작일이면 '6/25~7/24'
   document.getElementById('cal-label').textContent = _calLab ? _calLab : t('hist.month',{y:y,m:m,mon:_monName(m)});
   // 설정의 주 시작 요일 동기화
   var wsSel = document.getElementById('week-start-select');
@@ -10508,7 +10508,7 @@ function renderCalendar(y,m) {
     }).join('');
   }
   var calMap = buildCalData();
-  // build 576 — 월 시작일(급여 주기) 기준 달력. 시작일=1이면 기존 1일~말일과 동일.
+  // 월 시작일(급여 주기) 기준 달력. 시작일=1이면 기존 1일~말일과 동일.
   //   주기가 두 달에 걸칠 수 있어 날짜를 start~endExcl 로 순회하고, 각 셀에 실제 (yy,mm,dd) 사용.
   var rg = _periodForMonth(y, m);          // [start, endExcl)
   var lenDays = _periodLen(rg);
@@ -10541,7 +10541,7 @@ function renderCalendar(y,m) {
 }
 function changeMonth(dir){ calMonth+=dir; if(calMonth<1){calMonth=12;calYear--;} if(calMonth>12){calMonth=1;calYear++;} renderCalendar(calYear,calMonth); }
 
-// ── 년/월 빠른 선택 팝업 (b597) ──
+// ── 년/월 빠른 선택 팝업 ──
 var _cpYear = 2026; // 팝업에서 편집 중인 연도(임시)
 function _cpYearSuffix(){ return (_currentLang==='ko')?'년':(_currentLang==='en')?'':'年'; }
 function _cpMonLabel(m){ return (_currentLang==='en') ? _monName(m) : (m + (_currentLang==='ko'?'월':'月')); }
@@ -10566,7 +10566,7 @@ function pickCalMonth(m){ closeOv('ov-calpick'); renderCalendar(_cpYear, m); }
 function calGoToday(){ var d=new Date(); closeOv('ov-calpick'); renderCalendar(d.getFullYear(), d.getMonth()+1); }
 
 function openMonthDetail() {
-  // build 576 — 달력과 동일하게 월 시작일(급여 주기) 기준
+  // 달력과 동일하게 월 시작일(급여 주기) 기준
   var _mdRg = _periodForMonth(calYear, calMonth);
   var _mdS = _ymd(_mdRg.start), _mdE = _ymd(_mdRg.endExcl);
   var monthReceipts = DB.filter(function(r) { return r.date >= _mdS && r.date < _mdE; });
@@ -10672,9 +10672,9 @@ var MR_SUPER_CATS  = ['food','life','shop','med','beauty','other','fuel'];
 var MR_DINING_CATS = ['eat','cafe','drink'];
 
 function openMonthReport(){
-  // build 324 → 334 — 미구독 유저는 풀스크린 광고 시청 페이지 (출석체크 스타일)
+  // → 334 — 미구독 유저는 풀스크린 광고 시청 페이지 (출석체크 스타일)
   if (!_isPremium && typeof openWatchAdPage === 'function') {
-    // build 337 — emoji 제거, ico 명시 (헤더에 SVG 라인 아이콘 자동 표시)
+    // emoji 제거, ico 명시 (헤더에 SVG 라인 아이콘 자동 표시)
     openWatchAdPage('monthreport', function(){ _openMonthReportInner(); }, {
       title: t('wad.monthreport.t'),
       ico: 'receipt',
@@ -10702,7 +10702,7 @@ function closeMonthReport() {
 function mrChangeMonth(dir){
   var now = new Date();
   _mrM += dir; if(_mrM<1){_mrM=12;_mrY--;} if(_mrM>12){_mrM=1;_mrY++;}
-  if(_periodForMonth(_mrY,_mrM).start > now){   // build 576 — 아직 시작 안 된 미래 주기 차단(주기 기준)
+  if(_periodForMonth(_mrY,_mrM).start > now){   // 아직 시작 안 된 미래 주기 차단(주기 기준)
     _mrM-=dir; if(_mrM<1){_mrM=12;_mrY--;} if(_mrM>12){_mrM=1;_mrY++;} return;
   }
   renderMonthReport();
@@ -10909,7 +10909,7 @@ function _mrLbl(txt){ return '<div style="font-size:11px;font-weight:800;color:v
 function renderMonthReport(){
   var el = document.getElementById('mr-body'); if(!el) return;
   var y=_mrY, m=_mrM, now=new Date();
-  // build 576 — 달력과 동일하게 월 시작일(급여 주기) 기준
+  // 달력과 동일하게 월 시작일(급여 주기) 기준
   var curRg = _periodForMonth(y, m);
   var _pmM = m===1?12:m-1, _pmY = m===1?y-1:y;
   var prevRg = _periodForMonth(_pmY, _pmM);
@@ -10956,7 +10956,7 @@ function renderMonthReport(){
   var catBars=catSorted.map(function(c){
     var pct=total>0?Math.round(cc[c]/total*100):0;
     var color=(typeof CAT_COLOR!=='undefined'&&CAT_COLOR[c])||'#888';
-    var cb=(typeof _catBudgets!=='undefined'&&_catBudgets[c])||0;   // build 584 — 카테고리 예산 대비
+    var cb=(typeof _catBudgets!=='undefined'&&_catBudgets[c])||0;   // 카테고리 예산 대비
     var budgetTag='', barColor=color, barW=Math.max(pct,2);
     if(cb>0){
       var bpct=Math.round(cc[c]/cb*100), over=cc[c]>cb;
@@ -10996,7 +10996,7 @@ function renderMonthReport(){
   function storeAgg(cats){var s={};cur.forEach(function(r){if(cats.indexOf(r.cat)<0)return;if(!s[r.store])s[r.store]={cnt:0,sum:0};s[r.store].cnt++;s[r.store].sum+=r.total;});return Object.keys(s).map(function(n){return {n:n,cnt:s[n].cnt,sum:s[n].sum,avg:Math.round(s[n].sum/s[n].cnt)};}).sort(function(a,b){return b.cnt-a.cnt||b.sum-a.sum;});}
   var supers=storeAgg(MR_SUPER_CATS).slice(0,3), dinings=storeAgg(MR_DINING_CATS).slice(0,3);
   function storeBody(arr){var medal=['🥇','🥈','🥉'];return arr.map(function(st,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(st.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.visit_n',{n:st.cnt,avg:st.avg.toLocaleString()})+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+st.sum.toLocaleString()+'</div></div>';}).join('');}
-  // 지출 많은 가게 TOP5 (전 카테고리, 금액순) — b592
+  // 지출 많은 가게 TOP5 (전 카테고리, 금액순) — 
   var _allSt={}; cur.forEach(function(r){ if(!_allSt[r.store])_allSt[r.store]={cnt:0,sum:0}; _allSt[r.store].cnt++; _allSt[r.store].sum+=r.total; });
   var spendStores=Object.keys(_allSt).map(function(n){return {n:n,cnt:_allSt[n].cnt,sum:_allSt[n].sum,avg:Math.round(_allSt[n].sum/_allSt[n].cnt)};}).sort(function(a,b){return b.sum-a.sum||b.cnt-a.cnt;}).slice(0,5);
   if(supers.length||dinings.length||spendStores.length){
@@ -11032,16 +11032,16 @@ function renderMonthReport(){
   html+=_mrLbl(t('mr.sec_weekday'))+'<div class="card" style="margin-bottom:14px;"><div style="display:flex;align-items:flex-end;justify-content:space-between;height:90px;gap:6px;">'+wk+'</div><div style="font-size:11px;color:var(--text-2);text-align:center;margin-top:10px;">'+t('mr.most_dow',{dow:dows[maxIdx]})+'</div></div>';
 
   // 예측 (현재 달일 때만)
-  if(_periodContainsToday(curRg)){var dom=_periodElapsedDays(curRg);var fc=Math.round(total/dom*daysInMonth);var fOk=budget>0?fc<=budget:true;  // build 576 — 주기 기준 예측
+  if(_periodContainsToday(curRg)){var dom=_periodElapsedDays(curRg);var fc=Math.round(total/dom*daysInMonth);var fOk=budget>0?fc<=budget:true;  // 주기 기준 예측
     html+='<div style="background:#FFF6E9;border-radius:14px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;margin-bottom:14px;"><span style="font-size:18px;">🔮</span><div style="font-size:12.5px;font-weight:600;color:#8a6d1f;line-height:1.5;">'+t('mr.forecast',{amt:fc.toLocaleString()})+(budget>0?'<br>'+(fOk?t('mr.forecast_ok'):t('mr.forecast_over')):'')+'</div></div>';
   }
 
-  // 커뮤니티 비교 — 동네 알뜰지수 (b538, 렌더 후 async 채움)
+  // 커뮤니티 비교 — 동네 알뜰지수 (, 렌더 후 async 채움)
   html+=_mrLbl(t('mr.sec_community'))+'<div id="mr-value-index" class="card" style="margin-bottom:14px;text-align:center;padding:22px 16px;color:var(--text-3);font-size:12px;line-height:1.6;">'+_esc(t('common.loading'))+'</div>';
 
   // 공유
   html+='<button onclick="mrShare()" style="width:100%;padding:14px;border:none;border-radius:14px;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);">'+t('mr.share')+'</button>';
-  // 이 기간 영수증 전부 PDF (build 580)
+  // 이 기간 영수증 전부 PDF 
   html+='<button onclick="openPeriodPdf()" style="width:100%;margin-top:8px;padding:14px;border:1px solid var(--border-mid);border-radius:14px;background:var(--surface);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);cursor:pointer;">'+t('pdf.period_btn')+'</button>';
   html+='<button onclick="exportPeriodCsv()" style="width:100%;margin-top:8px;padding:14px;border:1px solid var(--border-mid);border-radius:14px;background:var(--surface);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);cursor:pointer;">'+t('csv.period_btn')+'</button>';
   html+='<button onclick="openYearReport('+y+')" style="width:100%;margin-top:8px;padding:14px;border:none;border-radius:14px;background:var(--green-light);color:var(--green-dark);font-size:14px;font-weight:800;font-family:var(--font);cursor:pointer;">'+t('yr.open_btn',{y:y})+'</button>';
@@ -11050,7 +11050,7 @@ function renderMonthReport(){
   _mrRenderValueIndex();
 }
 
-// 동네 알뜰지수 카드 — 커뮤니티 중앙값 대비 내 단가 (b538)
+// 동네 알뜰지수 카드 — 커뮤니티 중앙값 대비 내 단가 
 async function _mrRenderValueIndex(){
   var box = document.getElementById('mr-value-index'); if(!box) return;
   var vi = null;
@@ -11085,7 +11085,7 @@ async function _mrRenderValueIndex(){
 
 function selectDay(el,y,m,d){
   document.querySelectorAll('.cal-day').forEach(function(c){c.classList.remove('sel');});
-  if(el && el.classList) el.classList.add('sel');   // build 576 — 주기가 두 달 걸칠 수 있어 인덱스 계산 대신 클릭 요소 직접 사용
+  if(el && el.classList) el.classList.add('sel');   // 주기가 두 달 걸칠 수 있어 인덱스 계산 대신 클릭 요소 직접 사용
   var calMap=buildCalData();
   var entries=((calMap[y+'-'+m])||{})[d]||[];
   var detail=document.getElementById('cal-detail');
@@ -11126,12 +11126,12 @@ function selectDay(el,y,m,d){
 var multiPages = []; // 각 장 { base64, previewSrc, rawText }
 
 // 분할 촬영 시작 - ov-scan 닫고 ov-multi 열기
-/* build 332 — 카메라 옵션 클릭 시 sub-모달 (한 장 vs 여러 장) */
+/* — 카메라 옵션 클릭 시 sub-모달 (한 장 vs 여러 장) */
 function _openScanCameraChoice(){
   closeOv('ov-scan');
   setTimeout(function(){ openOv('ov-scan-camera'); }, 150);
 }
-/* build 332 — 한 장 촬영 완료 후 sub-모달 닫고 handleImageFile 호출 */
+/* — 한 장 촬영 완료 후 sub-모달 닫고 handleImageFile 호출 */
 function _scanCameraSingleDone(inputEl){
   closeOv('ov-scan-camera');
   if (typeof handleImageFile === 'function') handleImageFile(inputEl);
@@ -11140,7 +11140,7 @@ function _scanCameraSingleDone(inputEl){
 function startMultiScan() {
   multiPages = []; // 초기화
   closeOv('ov-scan');
-  closeOv('ov-scan-camera');  // build 332 — sub-모달도 닫기
+  closeOv('ov-scan-camera');  // sub-모달도 닫기
   updateMultiUI();
   openOv('ov-multi');
 }
@@ -11695,7 +11695,7 @@ async function preprocessReceiptImage(file, opts){
 async function handleImageFile(input) {
   if (!input.files || !input.files[0]) return;
   var file = input.files[0];
-  // build 577 — 같은 파일 재선택 시 onchange 미발생 방지: 파일 참조 확보 후 value 초기화.
+  // 같은 파일 재선택 시 onchange 미발생 방지: 파일 참조 확보 후 value 초기화.
   //   (촬영/업로드 → 파싱 → 캔슬 → 같은 사진 재선택 시 분석 안 되던 문제)
   try { input.value = ''; } catch(e){}
   closeOv('ov-scan');
@@ -12410,7 +12410,7 @@ async function _standardizeItemWithGPT(rawName) {
   }
 }
 
-// b613 — 「値引後/割引後」 금액을 품목가로 오인식한 경우 원문에서 원가를 찾아 결정적 교정
+// 「値引後/割引後」 금액을 품목가로 오인식한 경우 원문에서 원가를 찾아 결정적 교정
 //   (GPT가 프롬프트 S-7을 확률적으로 무시하는 것 대비. 마츠키요 등 per-item 쿠폰 영수증)
 function _fixCouponDiscountedPrices(items, rawText){
   if (!items || !items.length || !rawText) return items;
@@ -12440,7 +12440,7 @@ function _fixCouponDiscountedPrices(items, rawText){
   return items;
 }
 
-// GPT 전송용 이미지 축소 헬퍼 (b637) — maxPx 넘으면 축소한 base64(jpeg) 반환. 실패/이미 작으면 원본 그대로.
+// GPT 전송용 이미지 축소 헬퍼 — maxPx 넘으면 축소한 base64(jpeg) 반환. 실패/이미 작으면 원본 그대로.
 function _downscaleBase64Jpeg(base64, maxPx, quality){
   return new Promise(function(resolve){
     try {
@@ -12461,7 +12461,7 @@ function _downscaleBase64Jpeg(base64, maxPx, quality){
 }
 
 async function parseWithGPTHybrid(rawText, base64Image) {
-  // GPT 전송용 축소 이미지 (b637) — Vision/좌표파서는 원본 고해상도(4000) 유지, GPT엔 레이아웃 참고용
+  // GPT 전송용 축소 이미지 — Vision/좌표파서는 원본 고해상도(4000) 유지, GPT엔 레이아웃 참고용
   //   축소본(1280px)만 전송 → 분석 지연 감소(정확도 영향 미미). 4000px·detail:high 원본 전송이 지연 주원인이었음.
   var _gptImage = base64Image;
   try { _gptImage = await _downscaleBase64Jpeg(base64Image, 1280, 0.75); } catch(e){ _gptImage = base64Image; }
@@ -12665,7 +12665,7 @@ RES-4. 小計/合計/消費税/内税対象/お預り/お釣り/電子マネー/
 4. 가격: ¥/\\/*/#/円/JP¥/末尾- 엔화. 점(.)은 천단위 (¥21.911=21911)
 5. 할인줄은 discount에 음수, 독립할인은 discount_total에 합산
 6. 합계는 마지막 合計. 現金/クレジット行은 합계 아님
-7. 날짜 (build 346 — 원본 형식 그대로 반환):
+7. 날짜 ( — 원본 형식 그대로 반환):
    ★ date 필드는 영수증에 적힌 원본 표기를 그대로 반환.
      절대로 元号 → 西暦 환산을 GPT 단에서 하지 말 것.
      클라이언트가 알아서 처리한다.
@@ -12694,7 +12694,7 @@ JSONのみ出力。説明不要。`;
     {
       type: 'image_url',
       image_url: {
-        url: 'data:image/jpeg;base64,' + _gptImage,  // b637 — 1280px 축소본 전송(원본 4000 대신) → 지연 감소
+ url: 'data:image/jpeg;base64,' + _gptImage, // 1280px 축소본 전송(원본 4000 대신) → 지연 감소
         detail: 'high'  // 축소본이라 타일 수 적음 (정확도 보존 위해 high 유지)
       }
     }
@@ -12753,7 +12753,7 @@ JSONのみ出力。説明不要。`;
     // 일본 영수증: 품목 가격은 세전(税抜), 합계는 세포함(税込) → 8~10% 차이 정상
     // sum > total: 명백한 오버카운트 (5% 이상이면 실패)
     //   단, 원문에 割引/値引/クーポン이 있으면 품목합(원가) > 합계(할인 후)가 정상(S-7)
-    //   → 50%까지 허용 (b615. 아니면 쿠폰 영수증마다 mini 실패→4o 재호출로 비용 낭비)
+    // → 50%까지 허용 (. 아니면 쿠폰 영수증마다 mini 실패→4o 재호출로 비용 낭비)
     // sum < total: 소비세 포함 가능성 → 최대 12%까지 허용 (10% 세 + 여유)
     if (sum > total) {
       var overPct = (sum - total) / total;
@@ -12787,7 +12787,7 @@ JSONのみ出力。説明不要。`;
         };
       }).filter(function(it){ return it.price > 0; });
 
-      items = _fixCouponDiscountedPrices(items, rawText);   // b613 — 「値引後」 오인식 → 원가로 결정적 교정
+      items = _fixCouponDiscountedPrices(items, rawText);   // 「値引後」 오인식 → 원가로 결정적 교정
 
       var subtotal = items.reduce(function(a, it){ return a + it.price; }, 0);
       var total    = toNum(result.total) || subtotal;
@@ -13453,7 +13453,7 @@ function getDemoResult() {
 }
 
 // OCR 결과 화면 — 품목 수정/삭제/추가 + 전체 카테고리 선택
-// b610 — 쿠폰/할인 영수증: 품목합(쿠폰 전) > 실결제액(合計)이면 차액을 마이너스 '쿠폰·할인' 품목으로 자동추가
+// 쿠폰/할인 영수증: 품목합(쿠폰 전) > 실결제액(合計)이면 차액을 마이너스 '쿠폰·할인' 품목으로 자동추가
 //   → 小計(품목합)이 合計와 일치. 음수 품목은 상품공유·자주산품목·물가비교에서 자동 제외됨(각 필터 price>0).
 function _appendDiscountItem(result){
   if (!result || !Array.isArray(result.items) || !result.items.length) return result;
@@ -13472,7 +13472,7 @@ function _appendDiscountItem(result){
 
 function showOcrResult(previewSrc, result) {
   // result.items를 window에 복사해서 수정 추적
-  _appendDiscountItem(result);   // b610 — 쿠폰/할인이면 마이너스 품목 자동추가 → 小計=合計
+  _appendDiscountItem(result);   // 쿠폰/할인이면 마이너스 품목 자동추가 → 小計=合計
   window._ocrItems = (result.items || []).map(function(it){ return {name:it.name, qty:it.qty||1, price:it.price}; });
 
   // ── 품목 목록 HTML 빌더 (삭제/추가 후 재사용) ──
@@ -13531,7 +13531,7 @@ function showOcrResult(previewSrc, result) {
     +'<div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;">'+t('ocr.store_name')+'</div>'
     +'<div style="font-size:15px;font-weight:800;color:var(--text-1);" contenteditable="true" id="ocr-store">'+_esc(result.store)+'</div>'
     +'</div>'
-    // build 345 — 영수증 날짜 편집 카드 (GPT 오역 시 사용자 즉시 수정 가능)
+    // 영수증 날짜 편집 카드 (GPT 오역 시 사용자 즉시 수정 가능)
     +'<div style="background:var(--bg);border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;">'
     +'<div style="flex:1;"><div style="font-size:11px;color:var(--text-3);font-weight:600;margin-bottom:4px;" data-i18n="ocr.date">날짜</div>'
     +'<div style="display:flex;align-items:center;gap:4px;">'
@@ -13630,13 +13630,13 @@ function syncOcrItems() {
   // - 품목 합(itemsSum)은 세전 (예: ¥21,911)
   // - 사용자가 품목 수정해도 세금 비율을 유지하기 위해 세금 offset을 보존
   if (window._taxOffset === undefined && window._originalTotal) {
-    // b609 — 음수 offset = 쿠폰/할인(품목합 > 실결제액). 0으로 clamp 하면 합계가 품목합으로 부풀려짐 → 그대로 보존
+    // 음수 offset = 쿠폰/할인(품목합 > 실결제액). 0으로 clamp 하면 합계가 품목합으로 부풀려짐 → 그대로 보존
     window._taxOffset = window._originalTotal - itemsSum;
   }
   var displayTotal = itemsSum + (window._taxOffset || 0);
   var totEl = document.getElementById('ocr-total-disp');
   if (totEl) {
-    // b603 — 합계는 입력 필드. 유저가 지금 그 칸을 편집 중이면 덮어쓰지 않음
+    // 합계는 입력 필드. 유저가 지금 그 칸을 편집 중이면 덮어쓰지 않음
     if (totEl.tagName === 'INPUT') { if (document.activeElement !== totEl) totEl.value = displayTotal; }
     else totEl.textContent = '¥' + displayTotal.toLocaleString();
   }
@@ -13647,7 +13647,7 @@ function syncOcrItems() {
   window._ocrResult.items = items;
 }
 
-// b603 — 유저가 합계를 직접 수정 → offset 재계산 (파서 오독/카드전표/세금없음 대응)
+// 유저가 합계를 직접 수정 → offset 재계산 (파서 오독/카드전표/세금없음 대응)
 //   이후 품목 합(itemsSum)과의 차이를 offset 으로 잡아 "입력한 합계"가 유지되게 함.
 function onOcrTotalEdit() {
   var el = document.getElementById('ocr-total-disp');
@@ -13686,7 +13686,7 @@ function addOcrItem() {
   if (newEl) { newEl.focus(); document.execCommand('selectAll', false, null); }
 }
 
-/* build 323 — 영수증 날짜 sanitize:
+/* — 영수증 날짜 sanitize:
    GPT 가 元号(平成 26) 으로 오역하거나 2자리 연도(26) 를 잘못 처리한 경우를 마지막 방어선에서 보정.
    - "YYYY-MM-DD" 표준 그대로
    - "YY-MM-DD" 2자리 연도는 60 기준 20xx/19xx
@@ -13711,7 +13711,7 @@ function _checkAndFormatYMD(y, mo, d, raw){
   }
   var diffYears = (now.getTime() - dt.getTime()) / (365 * 24 * 3600 * 1000);
 
-  // build 345 — 자동 보정 제거 (잘못 보정 위험 — 진짜 과거 영수증 무시함)
+  // 자동 보정 제거 (잘못 보정 위험 — 진짜 과거 영수증 무시함)
   //   대신 OCR 결과 화면에서 사용자가 날짜를 직접 확인/수정할 수 있는 input 제공.
   //   여기는 경고 토스트만 띄움 (사용자 주의 환기).
   if (diffYears > 5) {
@@ -13801,7 +13801,7 @@ async function _uploadReceiptImage(receiptId, dataUrl) {
   } catch (e) { console.warn('[receipt img]', e); }
 }
 
-// ── Phase 1 (b498): 커뮤니티 가격 풀 기여 ──
+// ── Phase 1 : 커뮤니티 가격 풀 기여 ──
 //   영수증 식료품의 (정규화상품 product_id · 가게명 · 단가 · 좌표)를 공개 product_prices 에 upsert.
 //   유저당 (상품,가게) 1행(최신가). 위치기반 「節約チャンス」 분석의 원천 데이터.
 //   외식/메뉴는 제외(cat==='food' 만). ★ product_prices.sql 실행 필요.
@@ -13856,7 +13856,7 @@ function _doSaveOcrResult() {
     var _pmins = _parseParkingMins(window._rawOcrText);
     if (_pmins) finalItems.forEach(function(it){ if (_isParkingItem(it.name, r.cat)) it.mins = _pmins; });
   }
-  // b549 — 화면에 보이는 합계(r.total = syncOcrItems 가 품목편집+세금offset 반영해 갱신)를 우선 저장.
+  // 화면에 보이는 합계(r.total = syncOcrItems 가 품목편집+세금offset 반영해 갱신)를 우선 저장.
   //   기존: _originalTotal(GPT 원본 合計) 우선 → 사용자가 품목 편집해도 원본이 저장되는 WYSIWYG 불일치 버그.
   //   미편집 시 r.total === _originalTotal 이라 영향 없음. 카테고리/지불 편집은 r.total 안 건드림.
   var finalTotal = (r.total != null ? r.total
@@ -13896,7 +13896,7 @@ function _doSaveOcrResult() {
   // Supabase에 저장 — INSERT 완료 후 위치 검색 순차 실행
   var _storeAddress = r.address || null;
   var _uid = _currentUser ? _currentUser.id : null;
-  // b463 — 세션 끊김 가드: user_id 없이 저장하면 본인 내역에 안 잡힘(RLS)
+  // 세션 끊김 가드: user_id 없이 저장하면 본인 내역에 안 잡힘(RLS)
   if (!_uid) {
     console.warn('[save] 세션 없음 — user_id null 로 저장됨, 본인 내역에 안 보일 수 있음');
     showToast('⚠️ ' + t('toast.login_required'));
@@ -13909,10 +13909,10 @@ function _doSaveOcrResult() {
     payment_method: r.pay || null,
     user_id: _uid
   }).select().then(function(res) {
-    // b463 — 저장 실패를 사용자에게도 알림(기존엔 console.warn 만 → 조용히 누락)
+    // 저장 실패를 사용자에게도 알림(기존엔 console.warn 만 → 조용히 누락)
     if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); showToast(t('toast.save_fail',{msg:res.error.message})); return; }
     var receiptId = res.data && res.data[0] && res.data[0].id;
-    // b463 — receiptId 를 못 받으면 품목/이미지가 통째로 누락됨 → 명시적 경고 + 진단 로그
+    // receiptId 를 못 받으면 품목/이미지가 통째로 누락됨 → 명시적 경고 + 진단 로그
     if (!receiptId) {
       console.warn('[save] receiptId 미수신 — 품목/이미지 저장 스킵됨. user_id=', _uid, 'res=', res.data);
       showToast(t('save.header_only'));
@@ -14214,7 +14214,7 @@ function cpOnPhotoPicked(input){
 // store-photos 버킷 업로드 → public URL 반환
 async function _cpUploadPhoto(file, subdir){
   try {
-    // b603 — 업로드 속도 개선: 메뉴/가게 사진은 1280px/0.72 로도 충분 (파일 크기 ~절반)
+    // 업로드 속도 개선: 메뉴/가게 사진은 1280px/0.72 로도 충분 (파일 크기 ~절반)
     if (typeof _compressImage === 'function') file = await _compressImage(file, 1280, 0.72);
     var ext = ((file.name && file.name.split('.').pop()) || 'jpg').toLowerCase() || 'jpg';
     var base = (typeof _sdAsciiName==='function') ? _sdAsciiName(window._cpStore||'store') : 'store';
@@ -14465,7 +14465,7 @@ async function submitChiriPublish() {
   // 공개 캐시 갱신 → 맵 카드 "공개됨" 버튼 즉시 반영
   _loadChiriPublishedCache(true).then(function(){ try { if (typeof renderMapPins === 'function' && _map) renderMapPins(); } catch(e){} });
 
-  // build 343 — 가계부 저장 보장 (광고 콜백 의존 제거)
+  // 가계부 저장 보장 (광고 콜백 의존 제거)
   //   기존: 광고 콜백 안에서 _doSaveOcrResult() 호출 → 광고 차단/중단 시 가계부 미저장
   //   변경: 광고 모달 표시 전에 가계부를 동기적으로 저장 → 광고 결과와 무관하게 저장 보장
   // 맵에서 공개(openChiriFromMapCard)한 경우 영수증은 이미 가계부에 저장돼 있음 → 중복 저장 방지
@@ -14494,7 +14494,7 @@ async function submitChiriPublish() {
     if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
     if (_currentUser && _sb) {
       _sb.from('stores').update({ lat: lat, lng: lng }).eq(_cpStoreId?'id':'name', _cpStoreId||store).then(function(){});
-      // place_id 백필 — 아직 비어있는 가게만, UNIQUE 충돌 시 무시. (b572: 동명 분리 위해 store_id 기준)
+      // place_id 백필 — 아직 비어있는 가게만, UNIQUE 충돌 시 무시. (: 동명 분리 위해 store_id 기준)
       if (placeId) {
         _sb.from('stores').update({ place_id: placeId }).eq(_cpStoreId?'id':'name', _cpStoreId||store).is('place_id', null)
           .then(function(r){ if (r && r.error) console.log('[place_id backfill skip]', r.error.message); });
@@ -14752,7 +14752,7 @@ var I18N = {
     'rw.draw':'チリつもドロー','rw.attendance':'出席チェック','rw.checkin_btn':'出席する',
     'rw.streak':'連続出席','rw.day':'日','rw.reward_3':'3日','rw.reward_7':'7日','rw.reward_15':'15日','rw.reward_30':'30日',
     'rw.invite':'👥 友達を招待して✨チリもらう','rw.invite_sub':'友達が登録完了で 200チリ',
-    // 設定 → 友達招待カード (build 302)
+    // 設定 → 友達招待カード 
     'inv.title':'友達招待','inv.my_code':'マイ紹介コード','inv.copy':'コピー',
     'inv.stat_friends':'紹介した友達','inv.stat_earned':'獲得チリ','inv.stat_pending':'待機報酬',
     'inv.desc':'友達がこのコードで登録すると <strong style="color:var(--gold-dark);">+200チリ</strong> もらえます（広告視聴後請求）',
@@ -14760,7 +14760,7 @@ var I18N = {
     'inv.reward_sub_can':'広告を見て200チリずつ受け取る（本日 {n}件可能）',
     'inv.reward_sub_capped':'本日の上限（{n}件）到達 · 明日また受け取る',
     'inv.reward_btn':'📺 受け取る','inv.code_placeholder':'— — — —',
-    // 受信ボックス (build 304)
+    // 受信ボックス 
     'settings.inbox':'受信ボックス','inbox.empty':'まだメッセージはありません','inbox.from_admin':'運営から','inbox.read_all':'✅ すべて既読にする',
     'settings.push':'プッシュ通知','settings.att_push':'⏰ 出席リマインダー','settings.pw_push':'💰 価格変動アラート','settings.pw_push_hint':'よく買う商品が近所で安くなったらお知らせします','pw.on':'💰 価格アラート ON','pw.off':'💰 価格アラート OFF','alertinbox.title':'🔔 価格アラート','alertinbox.sub':'過去7日間に届いた価格・節約のお知らせ','alertinbox.empty':'まだお知らせはありません。\nよく買う商品が近くで安くなるとここに表示されます。','alertinbox.today':'今日','alertinbox.days_ago':'{n}日前',
     'rw.store':'チリストア','rw.store_sub':'チリで商品に交換しよう','rw.join':'参加する',
@@ -15019,7 +15019,7 @@ var I18N = {
     'rw.draw':'치리츠모 드로우','rw.attendance':'출석 체크','rw.checkin_btn':'출석하기',
     'rw.streak':'연속 출석','rw.day':'일','rw.reward_3':'3일','rw.reward_7':'7일','rw.reward_15':'15일','rw.reward_30':'30일',
     'rw.invite':'👥 친구 초대하고 ✨치리 받기','rw.invite_sub':'친구가 가입 완료하면 200치리',
-    // 설정 → 친구 초대 카드 (build 302)
+    // 설정 → 친구 초대 카드 
     'inv.title':'친구 초대','inv.my_code':'내 추천 코드','inv.copy':'복사',
     'inv.stat_friends':'추천 친구','inv.stat_earned':'받은 치리','inv.stat_pending':'대기 보상',
     'inv.desc':'친구가 이 코드로 가입하면 <strong style="color:var(--gold-dark);">+200치리</strong> 받아요 (광고 시청 후 청구)',
@@ -15027,7 +15027,7 @@ var I18N = {
     'inv.reward_sub_can':'광고 보고 200치리씩 받기 (오늘 {n}건 가능)',
     'inv.reward_sub_capped':'오늘 한도({n}건) 도달 · 내일 다시 받기',
     'inv.reward_btn':'📺 받기','inv.code_placeholder':'— — — —',
-    // 받은 쪽지함 (build 304)
+    // 받은 쪽지함 
     'settings.inbox':'받은 쪽지함','inbox.empty':'아직 메시지가 없어요','inbox.from_admin':'운영진으로부터','inbox.read_all':'✅ 모두 읽음 처리',
     'settings.push':'푸시 알림','settings.att_push':'⏰ 출석 알림','settings.pw_push':'💰 가격 변동 알림','settings.pw_push_hint':'자주 사는 상품이 내 동네에서 더 싸지면 알려드려요','pw.on':'💰 가격 알림 ON','pw.off':'💰 가격 알림 OFF','alertinbox.title':'🔔 가격 알림','alertinbox.sub':'최근 7일간 받은 가격·절약 알림','alertinbox.empty':'아직 받은 알림이 없어요.\n자주 사는 상품이 내 동네에서 더 싸지면 여기에 표시돼요.','alertinbox.today':'오늘','alertinbox.days_ago':'{n}일 전',
     'rw.store':'치리스토어','rw.store_sub':'치리로 상품과 교환하세요','rw.join':'참여하기',
@@ -15281,7 +15281,7 @@ var I18N = {
     'rw.draw':'Chiri Draw','rw.attendance':'Check-in','rw.checkin_btn':'Check in',
     'rw.streak':'Streak','rw.day':'d','rw.reward_3':'3d','rw.reward_7':'7d','rw.reward_15':'15d','rw.reward_30':'30d',
     'rw.invite':'👥 Invite friends, earn ✨chiri','rw.invite_sub':'200 chiri when a friend signs up',
-    // Settings → Invite friends card (build 302)
+    // Settings → Invite friends card 
     'inv.title':'Invite Friends','inv.my_code':'My Referral Code','inv.copy':'Copy',
     'inv.stat_friends':'Referred','inv.stat_earned':'Earned','inv.stat_pending':'Pending',
     'inv.desc':'Get <strong style="color:var(--gold-dark);">+200 chiri</strong> when a friend signs up with this code (claim after watching an ad)',
@@ -15289,7 +15289,7 @@ var I18N = {
     'inv.reward_sub_can':'Watch an ad to claim 200 chiri each ({n} claimable today)',
     'inv.reward_sub_capped':'Daily cap ({n}) reached · try again tomorrow',
     'inv.reward_btn':'📺 Claim','inv.code_placeholder':'— — — —',
-    // Inbox (build 304)
+    // Inbox 
     'settings.inbox':'Inbox','inbox.empty':'No messages yet','inbox.from_admin':'From admin','inbox.read_all':'✅ Mark all read',
     'settings.push':'Push notifications','settings.att_push':'⏰ Attendance reminders','settings.pw_push':'💰 Price drop alerts','settings.pw_push_hint':'Get notified when items you buy get cheaper nearby','pw.on':'💰 Price alerts ON','pw.off':'💰 Price alerts OFF','alertinbox.title':'🔔 Price alerts','alertinbox.sub':'Price & savings alerts from the last 7 days','alertinbox.empty':'No alerts yet.\nWhen items you buy get cheaper nearby, they show up here.','alertinbox.today':'Today','alertinbox.days_ago':'{n}d ago',
     'rw.store':'Chiri Store','rw.store_sub':'Exchange chiri for items','rw.join':'Join',
@@ -15543,7 +15543,7 @@ var I18N = {
     'rw.draw':'Chiri 抽奖','rw.attendance':'签到','rw.checkin_btn':'签到',
     'rw.streak':'连续签到','rw.day':'天','rw.reward_3':'3天','rw.reward_7':'7天','rw.reward_15':'15天','rw.reward_30':'30天',
     'rw.invite':'👥 邀请好友领✨积分','rw.invite_sub':'好友注册完成得 200 积分',
-    // 设置 → 邀请好友卡片 (build 302)
+    // 设置 → 邀请好友卡片 
     'inv.title':'邀请好友','inv.my_code':'我的推荐码','inv.copy':'复制',
     'inv.stat_friends':'推荐好友','inv.stat_earned':'已获塵积','inv.stat_pending':'待领奖励',
     'inv.desc':'好友用此码注册即可获得 <strong style="color:var(--gold-dark);">+200塵积</strong>（观看广告后领取）',
@@ -15551,7 +15551,7 @@ var I18N = {
     'inv.reward_sub_can':'观看广告每次领200塵积（今日还可 {n} 次）',
     'inv.reward_sub_capped':'今日上限（{n}件）已达 · 明日再领',
     'inv.reward_btn':'📺 领取','inv.code_placeholder':'— — — —',
-    // 收件箱 (build 304)
+    // 收件箱 
     'settings.inbox':'收件箱','inbox.empty':'还没有消息','inbox.from_admin':'来自管理员','inbox.read_all':'✅ 全部标为已读',
     'settings.push':'推送通知','settings.att_push':'⏰ 签到提醒','settings.pw_push':'💰 降价提醒','settings.pw_push_hint':'常买的商品在附近变便宜时通知您','pw.on':'💰 降价提醒 ON','pw.off':'💰 降价提醒 OFF','alertinbox.title':'🔔 降价提醒','alertinbox.sub':'最近7天收到的价格·节约提醒','alertinbox.empty':'还没有提醒。\n常买的商品在附近变便宜时会显示在这里。','alertinbox.today':'今天','alertinbox.days_ago':'{n}天前',
     'rw.store':'Chiri 商店','rw.store_sub':'用积分兑换商品','rw.join':'参加',
@@ -15713,7 +15713,7 @@ function applyLang(lang){
   if (sel) sel.value = lang;
   // 테마 스와치 이름(JS 생성)도 즉시 재렌더 (data-i18n 아님)
   if (typeof renderThemeSwatches === 'function') { try { renderThemeSwatches(); } catch(e){} }
-  // 월 시작일 셀렉트(JS 생성 옵션) 언어별 재렌더 (build 576)
+  // 월 시작일 셀렉트(JS 생성 옵션) 언어별 재렌더 
   if (typeof _refreshMonthStartUI === 'function') { try { _refreshMonthStartUI(); } catch(e){} }
   // JS로 동적 생성된 본문도 즉시 재렌더 (data-i18n 아님)
   try { if (typeof updateHistMonthLabel === 'function') updateHistMonthLabel(); } catch(e){}
@@ -15725,7 +15725,7 @@ function applyLang(lang){
   try { if (typeof _updateTodayLabel === 'function') _updateTodayLabel(); } catch(e){}
   try { _paintPayChips(); } catch(e){}
   try { _paintCtCatChips(); } catch(e){}
-  try { if (typeof _syncHeaderModeToggles === 'function') _syncHeaderModeToggles(); } catch(e){} // b637 — 언어 변경 시 헤더 모드버튼 라벨 동기화
+  try { if (typeof _syncHeaderModeToggles === 'function') _syncHeaderModeToggles(); } catch(e){} // 언어 변경 시 헤더 모드버튼 라벨 동기화
 }
 /* ══════════════════════════════
    i18n CMS — Supabase 어드민 편집 가능한 번역 override 레이어
@@ -15849,7 +15849,7 @@ function initGoogleMap() {
   _mapInitialized = true;
   var defaultPos = { lat: 34.9700, lng: 136.6220 }; // 四日市 기본값
 
-  // ⚡ build 303 — geolocation 늦게 도착해서 사용자 액션 덮어쓰는 race 방지
+  // ⚡ — geolocation 늦게 도착해서 사용자 액션 덮어쓰는 race 방지
   //    사용자가 가게 탭/드래그/줌 했으면 이후 geolocation pan 무시
   window._mapUserInteracted = false;
 
@@ -15900,7 +15900,7 @@ function switchPcTab(tab) {
   });
   if (tab === 'nearby') {
     fetchAndRenderCommunity().then(function(){
-      // build 380 — 가성비 맵에도 주변 미방문 가게 마커 표시
+      // 가성비 맵에도 주변 미방문 가게 마커 표시
       if (typeof _ctShowUnvisitedMarkers === 'function') _ctShowUnvisitedMarkers();
     });
   } else {
@@ -15910,7 +15910,7 @@ function switchPcTab(tab) {
 }
 
 /* ══════════════════════════════
-   build 380 — 가성비 맵의 '주변 미방문' 마커 (가격 비교 nearby 탭 활성 시)
+ — 가성비 맵의 '주변 미방문' 마커 (가격 비교 nearby 탭 활성 시)
    - _commCache 의 가게 중 내가 방문하지 않은 가게만
    - stores 테이블에서 lat/lng 별도 fetch (RPC 가 좌표 안 줄 수도 있음 대비)
    - 점선 보더 + 📡 아이콘 으로 시각적 구분
@@ -15960,7 +15960,7 @@ async function _ctShowUnvisitedMarkers() {
   console.log('[ctShowUnvisited] 미방문 가게 수:', names.length);
   if (names.length === 0) return;
 
-  // build 381 — 모든 미방문 마커가 한 번에 보이도록 fitBounds 사용
+  // 모든 미방문 마커가 한 번에 보이도록 fitBounds 사용
   var bounds = new google.maps.LatLngBounds();
 
   // 마커 일괄 생성 (한 번에 표시)
@@ -16030,7 +16030,7 @@ function _ctMakeUnvisitedSVG() {
 var _commCache = null;      // 마지막 조회 결과 캐시
 var _commCacheKey = '';     // 캐시 키 (centerLat,centerLng)
 
-/* build 579 — 주변 미방문 중심 기준: 'gps'(현재 위치) / 'receipt'(내 영수증 위치) 토글 */
+/* — 주변 미방문 중심 기준: 'gps'(현재 위치) / 'receipt'(내 영수증 위치) 토글 */
 var _commCenterMode = (localStorage.getItem('riq_comm_center') === 'receipt') ? 'receipt' : 'gps';
 function _updateCommCenterToggleUI(){
   var g = document.getElementById('commctr-gps'), r = document.getElementById('commctr-receipt');
@@ -16055,7 +16055,7 @@ async function fetchAndRenderCommunity() {
   if (!el) return;
   _updateCommCenterToggleUI();
 
-  // ── 중심 좌표 계산 — 토글(gps/receipt) 기준 (build 578·579) ──
+  // ── 중심 좌표 계산 — 토글(gps/receipt) 기준 (·579) ──
   var centerLat, centerLng;
   if (_commCenterMode === 'receipt') {
     // 내 영수증 좌표 평균 = 생활권 기준
@@ -16182,7 +16182,7 @@ function _buildStoreCard(s, myItemMap, isVisited) {
   var cardId = 'stitem-' + encodeURIComponent(s.store_name).replace(/%/g,'_');
   html += '<div id="' + cardId + '" style="display:none;margin-bottom:8px;"></div>';
   html += '<div style="display:flex;gap:6px;">';
-  // b386 — onclick attribute 안전 escape (가게명에 따옴표 들어가면 SyntaxError 나는 버그 픽스)
+  // onclick attribute 안전 escape (가게명에 따옴표 들어가면 SyntaxError 나는 버그 픽스)
   var _attrArgs = function(){
     return Array.prototype.slice.call(arguments)
       .map(function(a){return JSON.stringify(a);})
@@ -16353,7 +16353,7 @@ var _pcFilter = '';
 
 // ── 주차요금 등 시간기반 품목: 단순 총액 대신 ¥/시간(시간당 단가)으로 비교 ──
 var _PARKING_RE = /駐車|駐輪|パーキング|コインパーキング|タイムズ|times\s*24|リパーク|repark|parking|時間貸|時間料金/i;
-// 주유 품목 — 수량이 리터수라 '回'(횟수)가 아니라 'L·리터당 단가'로 표기 (b590)
+// 주유 품목 — 수량이 리터수라 '回'(횟수)가 아니라 'L·리터당 단가'로 표기 
 var _FUEL_RE = /軽油|ガソリン|レギュラー|ハイオク|給油|燃料|gasoline|diesel|petrol|경유|휘발유|주유/i;
 function _isParkingItem(name, cat){
   if (cat === 'park') return true;
@@ -16539,7 +16539,7 @@ function buildStoreInfoContent(s, fullscreen) {
   var itemMap = {};
   recs.forEach(function(r){
     (r.items||[]).forEach(function(it){
-      if (!it.name || !(it.price > 0)) return;   // b610 — 음수(쿠폰·할인) 품목 제외
+      if (!it.name || !(it.price > 0)) return;   // 음수(쿠폰·할인) 품목 제외
       if (!itemMap[it.name]) itemMap[it.name]={count:0,total:0};
       itemMap[it.name].count++;
       itemMap[it.name].total+=Math.round((it.price||0)/(it.qty||1));
@@ -16695,7 +16695,7 @@ function openReceiptStoreDetail(storeName){
   var itemMap = {};
   recs.forEach(function(r){
     (r.items||[]).forEach(function(it){
-      if (!it.name || !(it.price > 0)) return;   // b610 — 음수(쿠폰·할인) 품목 제외
+      if (!it.name || !(it.price > 0)) return;   // 음수(쿠폰·할인) 품목 제외
       if (!itemMap[it.name]) itemMap[it.name] = { count:0, total:0 };
       itemMap[it.name].count += (it.qty||1);
       itemMap[it.name].total += (it.price||0);
@@ -16887,7 +16887,7 @@ function renderMapPins() {
           var _border = _isDark ? 'rgba(255,255,255,.13)' : '#E5E5E5';
           // 테마색 — 어두운 테마 + 다크모드 조합이면 mid 색상으로 보정 (배경에 묻히지 않게)
           var _themeC = _themeAccentFor(_isDark);
-          // build 321 — 명시적 닫기 X 버튼 (Google InfoWindow 기본 X 가 작아서 사용자가 못 찾는 케이스 보완)
+          // 명시적 닫기 X 버튼 (Google InfoWindow 기본 X 가 작아서 사용자가 못 찾는 케이스 보완)
           var _bgCloseIw = _isDark ? '#2A2A3D' : '#F0F0F0';
           var _bdCloseIw = _isDark ? 'rgba(255,255,255,.18)' : '#E0E0E0';
           var closeBtnIw = '<div onclick="if(window._activeInfoWindow){window._activeInfoWindow.close();window._activeInfoWindow=null;}" '
@@ -17010,7 +17010,7 @@ function flyToStoreFromHistory(address, name, lat, lng, isCommunity) {
         flyToStore(parseFloat(lat), parseFloat(lng), name);
       } else {
         // 커뮤니티 가게 — 작은 임시 핀 표시
-        window._mapUserInteracted = true; // build 303: 늦게 도착한 geolocation pan 차단
+        window._mapUserInteracted = true; // 늦게 도착한 geolocation pan 차단
         _map.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
         _map.setZoom(16);
         placeCommunityPin(parseFloat(lat), parseFloat(lng), name);
@@ -17023,7 +17023,7 @@ function flyToStoreFromHistory(address, name, lat, lng, isCommunity) {
       geocoder.geocode({ address: address }, function(results, status) {
         if (status === 'OK' && results[0]) {
           var loc = results[0].geometry.location;
-          window._mapUserInteracted = true; // build 303
+          window._mapUserInteracted = true; // 
           _map.panTo(loc);
           _map.setZoom(16);
           placeCommunityPin(loc.lat(), loc.lng(), name);
@@ -17095,7 +17095,7 @@ function placeCommunityPin(lat, lng, name) {
 
 function flyToStore(lat, lng, name) {
   if (!_map) return;
-  window._mapUserInteracted = true; // build 303: 늦게 도착한 geolocation pan 차단
+  window._mapUserInteracted = true; // 늦게 도착한 geolocation pan 차단
   _map.panTo({ lat: parseFloat(lat), lng: parseFloat(lng) });
   _map.setZoom(16);
   var marker = _mapMarkers.find(function(m) { return m.getTitle() === name; });
@@ -17346,8 +17346,8 @@ async function submitManualPin() {
 
   newPins.forEach(function(p) { _ctPins.unshift(p); _ctPendingPins.unshift(p); });
   if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins();
-  // 2e-2: store_id 확보는 **논블로킹 백그라운드**로 (첫 렌더를 막지 않음 — b561 회귀 교훈).
-  //   수동핀은 유저가 찍은 위치가 정답 → geocode 없는 _storeByNameOrCreate 사용(b567, 위치 이동 방지).
+  // 2e-2: store_id 확보는 **논블로킹 백그라운드**로 (첫 렌더를 막지 않음 — 회귀 교훈).
+  // 수동핀은 유저가 찍은 위치가 정답 → geocode 없는 _storeByNameOrCreate 사용(, 위치 이동 방지).
   if (_currentUser) _storeByNameOrCreate(storeName, pos.lat, pos.lng, _mpCategory).then(function(_id){
     if (_id) { _storeIdByName[storeName] = _id; newPins.forEach(function(p){ p.stores.id = _id; }); }
   });
@@ -17367,7 +17367,7 @@ async function submitManualPin() {
   _mpManualLat = null; _mpManualLng = null;
   closeOv('ov-manual-pin');
   showToast(t('toast.pin_added'));
-  // b563: 모달이 지도를 덮은 채 첫 렌더가 돼 즉시 안 보이던 문제 → 모달 닫힌 뒤 재렌더로 즉시표시 보장
+  // 모달이 지도를 덮은 채 첫 렌더가 돼 즉시 안 보이던 문제 → 모달 닫힌 뒤 재렌더로 즉시표시 보장
   setTimeout(function(){ if (_ctMap && typeof ctRenderPricePins === 'function') ctRenderPricePins(); }, 120);
 
   // Supabase 저장
@@ -17377,7 +17377,7 @@ async function submitManualPin() {
   var _mpSP = window._mpStorePhotoFile || null;
   if (_currentUser) _mpPersistPhotosAndCards(storeName, validItems, _mpCategory, _mpSP);
   window._mpStorePhotoFile = null;
-  // (b568) 끝부분 searchAndPinStore geocode 제거 — 수동핀은 유저가 찍은 pos 가 정답(저장도 pos).
+  // 끝부분 searchAndPinStore geocode 제거 — 수동핀은 유저가 찍은 pos 가 정답(저장도 pos).
   //   geocode 가 로컬 핀을 구글 검색 위치로 옮겨 "찍은 자리에 안 뜸" 유발하던 문제 해소.
 }
 
@@ -17388,7 +17388,7 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
   if (hasPhotos) showToast('🔄 写真をアップロード中…');
   window._cpStore = store;   // _cpUploadPhoto 경로 base
   try {
-    // b603 — 사진들을 병렬로 먼저 업로드 (순차 → 병렬, 여러 장일수록 크게 빨라짐)
+    // 사진들을 병렬로 먼저 업로드 (순차 → 병렬, 여러 장일수록 크게 빨라짐)
     var storePhotoUrl = null;
     var itemUrls = new Array(items.length).fill(null);
     var _ups = [];
@@ -17477,7 +17477,7 @@ async function _persistPinToSupabase(pin) {
       return;
     }
     if (!storeData.id) storeData.id = _sid;   // 핀 객체에 반영(맵 그룹핑 일관성)
-    // upsert(b555): 같은 (store_id,user_id,item_name) 재등록 시 가격/코멘트만 갱신 → 중복행 방지
+    // upsert: 같은 (store_id,user_id,item_name) 재등록 시 가격/코멘트만 갱신 → 중복행 방지
     var pinRes = await _sb.from('price_pins').upsert({
       store_id:  _sid,
       item_name: pin.item_name,
@@ -17684,21 +17684,21 @@ function vote(btn,type){ var n=parseInt(btn.textContent.replace(/[^0-9]/g,'')); 
 function openOv(id){
   document.getElementById(id).classList.add('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); window._ovStack.push(id); // 뒤로가기 스택
-  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // b637 — 오버레이 열림 → 배너 재동기화(DOM 기준)
+  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // 오버레이 열림 → 배너 재동기화(DOM 기준)
   try{ history.pushState({riqNav:1},''); }catch(e){} // 모달 열 때 히스토리 엔트리 미리 쌓음(뒤로가기 안정화)
   if (id === 'ov-settings') {
     renderThemeSwatches();
     loadProfileToSettings();
     loadReferralCodeToSettings(); // 레퍼럴 코드 로드
-    // 받은 쪽지함 배지 갱신 (build 304)
+    // 받은 쪽지함 배지 갱신 
     if (typeof _refreshInboxBadge === 'function') { try { _refreshInboxBadge(); } catch(e){} }
-    // 푸시 알림 토글 상태 동기화 (build 306)
+    // 푸시 알림 토글 상태 동기화 
     if (typeof _syncPushToggleUI === 'function') { try { _syncPushToggleUI(); } catch(e){} }
-    // 출석 알림 토글 상태 동기화 (build 317)
+    // 출석 알림 토글 상태 동기화 
     if (typeof _syncAttendancePushUI === 'function') { try { _syncAttendancePushUI(); } catch(e){} }
-    // 가격 변동 알림 토글 상태 동기화 (build 531)
+    // 가격 변동 알림 토글 상태 동기화 
     if (typeof _syncPriceWatchPushUI === 'function') { try { _syncPriceWatchPushUI(); } catch(e){} }
-    // 기록 리마인더 토글 상태 동기화 (build 583)
+    // 기록 리마인더 토글 상태 동기화 
     if (typeof _syncLogReminderPushUI === 'function') { try { _syncLogReminderPushUI(); } catch(e){} }
     // 저장된 GPT 키 상태 표시
     var inp = document.getElementById('gpt-key-input');
@@ -17782,7 +17782,7 @@ function closeOv(id){
   var _ovEl=document.getElementById(id); var _ovWasOpen=_ovEl&&_ovEl.classList.contains('open');
   if(_ovEl) _ovEl.classList.remove('open');
   window._ovStack = (window._ovStack||[]).filter(function(x){return x!==id;}); // 뒤로가기 스택
-  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // b637 — 오버레이 닫힘 → 배너 재동기화(stale 스택 자가치유)
+  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // 오버레이 닫힘 → 배너 재동기화(stale 스택 자가치유)
   // UI(닫기 버튼)로 닫으면 열 때 쌓은 히스토리 엔트리를 회수. (뒤로가기로 닫힌 경우 _riqInPop=true → 회수 안 함)
   if(_ovWasOpen && !window._riqInPop){ window._riqExpectPop=(window._riqExpectPop||0)+1; try{ history.back(); }catch(e){ window._riqExpectPop--; } }
   if (id === 'ov-settings') {
@@ -17909,10 +17909,10 @@ async function loadFromSupabase() {
   renderReportSummary();
   var now = new Date();
   renderCalendar(now.getFullYear(), now.getMonth()+1);
-  // build 578 — DB 로드 완료 후 지도 가게목록도 재렌더 (PTR 전체 새로고침 시 init 가 DB 로드 전에 1회만
+  // DB 로드 완료 후 지도 가게목록도 재렌더 (PTR 전체 새로고침 시 init 가 DB 로드 전에 1회만
   //   그려 목록이 빈 채 남던 race 수정). _map 준비됐을 때만.
   if (typeof renderMapPins === 'function' && _map) { try { renderMapPins(); } catch(e){} }
-  _initRecurring();   // build 582 — 정기지출 이번 주기 도래분 자동 생성
+  _initRecurring();   // 정기지출 이번 주기 도래분 자동 생성
 }
 
 /* ══════════════════════════════
@@ -18187,7 +18187,7 @@ function applyTheme(key, silent) {
   r.style.setProperty('--green-light', _isDark ? (th.color + '25') : th.light);
   r.style.setProperty('--green-mid',   _isDark ? (th.color + '45') : th.mid);
   r.style.setProperty('--shadow-green','0 6px 24px '+th.dark+'4D, 0 2px 8px '+th.dark+'26');
-  // b457 — 배경용 그라데이션 변수 (grad 있으면 그라데이션, 없으면 단색)
+  // 배경용 그라데이션 변수 (grad 있으면 그라데이션, 없으면 단색)
   var _grad = th.grad || th.color;
   r.style.setProperty('--green-grad', _grad);
   r.style.setProperty('--gold-grad',  _grad);
@@ -18452,8 +18452,8 @@ function _updateMobileBarColor(){
 /* ══════════════════════════════
    예산 설정
 ══════════════════════════════ */
-/* build 322 — 이달 예산: Supabase 동기화 + 매달 1일 자동 리셋 */
-/* build 575 — 월 시작일(급여 주기) 설정. 1=기본(1일~말일). 25=매월 25일~다음달 24일 등.
+/* — 이달 예산: Supabase 동기화 + 매달 1일 자동 리셋 */
+/* — 월 시작일(급여 주기) 설정. 1=기본(1일~말일). 25=매월 25일~다음달 24일 등.
    예산 + 홈 지출 합계에만 적용(달력·리포트는 일반 달력월 유지). */
 function _monthStartDay(){
   var d = parseInt(localStorage.getItem('riq_month_start_day')||'1',10);
@@ -18483,7 +18483,7 @@ function _periodLabel(ref){
   var endIncl = new Date(rg.endExcl.getTime() - 86400000);
   return (rg.start.getMonth()+1)+'/'+rg.start.getDate()+'~'+(endIncl.getMonth()+1)+'/'+endIncl.getDate();
 }
-/* build 576 — (시작월 y,m) 기준 주기 헬퍼 (달력·월별리포트용). 시작일=1이면 해당 달력월과 동일. */
+/* — (시작월 y,m) 기준 주기 헬퍼 (달력·월별리포트용). 시작일=1이면 해당 달력월과 동일. */
 function _periodForMonth(y, m){ return _periodRange(new Date(y, m-1, _monthStartDay())); }
 function _periodLen(rg){ return Math.round((rg.endExcl - rg.start) / 86400000); }
 function _periodElapsedDays(rg){
@@ -18553,7 +18553,7 @@ async function _budgetSaveToCloud(amount){
   if (res.error) console.warn('[budget cloud save]', res.error);
 }
 
-/* build 575/576 — 월 시작일(급여 주기) 저장/동기화. 설정 화면에서 지정(예산 모달 아님). */
+/* /576 — 월 시작일(급여 주기) 저장/동기화. 설정 화면에서 지정(예산 모달 아님). */
 function _refreshMonthStartUI(){
   var sel = document.getElementById('month-start-select');
   if (!sel) return;
@@ -18602,7 +18602,7 @@ async function _monthStartLoadFromCloud(){
   } catch(e){}
 }
 
-/* ══ 카테고리별 예산 (build 584) — 인앱 진행바·초과 경고 (서버 푸시 없음) ══ */
+/* ══ 카테고리별 예산 — 인앱 진행바·초과 경고 (서버 푸시 없음) ══ */
 var _catBudgets = (function(){ try{ return JSON.parse(localStorage.getItem('receiptiq_cat_budgets')||'{}')||{}; }catch(e){ return {}; } })();
 var _CAT_BUDGET_CATS = ['food','eat','cafe','life','shop','tra','fixed','ent','hobby','beauty','med','edu','drink','snack','travel','fuel','park','other'];
 function _renderCatBudgetInputs(){
@@ -18667,7 +18667,7 @@ function _catBudgetWarnHtml(periodReceipts){
       +_esc(f.lbl)+' <span style="font-weight:900;">¥'+f.s.toLocaleString()+'</span>'
       +'<span style="opacity:.65;font-weight:600;"> / ¥'+f.b.toLocaleString()+'</span></span>';
   }).join('');
-  return label + chips;   // b607 — 라벨 + 카테고리별 사용금액 칩 (예산 카드 안에 삽입)
+  return label + chips;   // 라벨 + 카테고리별 사용금액 칩 (예산 카드 안에 삽입)
 }
 
 function openBudgetSet() {
@@ -18693,8 +18693,8 @@ function saveBudget() {
   }
   if (val > 0) {
     localStorage.setItem('receiptiq_budget', val);
-    localStorage.setItem('receiptiq_budget_month', _budgetYMKey());  // build 322
-    _budgetSaveToCloud(val);                                          // build 322
+    localStorage.setItem('receiptiq_budget_month', _budgetYMKey());  // 
+    _budgetSaveToCloud(val);                                          // 
     showToast(t('toast.budget_saved', {amount: val.toLocaleString()}));
   } else if (Object.keys(_catBudgets).length) {
     showToast(t('budget.cat_saved'));
@@ -18704,10 +18704,10 @@ function saveBudget() {
 }
 function clearBudget() {
   localStorage.removeItem('receiptiq_budget');
-  localStorage.removeItem('receiptiq_budget_month');  // build 322
-  localStorage.removeItem('receiptiq_cat_budgets');   // build 584 — 카테고리 예산도 해제
+  localStorage.removeItem('receiptiq_budget_month');  // 
+  localStorage.removeItem('receiptiq_cat_budgets');   // 카테고리 예산도 해제
   _catBudgets = {};
-  _budgetSaveToCloud(0);                              // build 322 — 클라우드도 클리어
+  _budgetSaveToCloud(0);                              // 클라우드도 클리어
   _catBudgetSaveToCloud({});
   closeOv('ov-budget');
   renderHome();
@@ -18816,7 +18816,7 @@ function _setupRealtimeSubscriptions() {
   }
 }
 
-// ══ 원격 기능 플래그 (b599) — 어드민에서 ON/OFF, 앱이 Supabase app_config 에서 로드 ══
+// ══ 원격 기능 플래그 — 어드민에서 ON/OFF, 앱이 Supabase app_config 에서 로드 ══
 //   isFeatureOn(): 관리자는 항상 ON(우회) — 추가개발/업데이트 즉시 확인용.
 //   featureRawOn(): 실제 설정값 (관리자 우회 무시) — 'OFF 상태' 표시용.
 window._FLAGS = window._FLAGS || {};
@@ -19227,7 +19227,7 @@ async function saveProfile() {
       nickname: nick,
       avatar_emoji: _userAvatar
     };
-    if (avatarUrlForDB) payload.avatar_url = avatarUrlForDB; // b637 — null이면 생략(동기화 전 기기에서 저장 시 DB 아바타가 지워지는 것 방지)
+    if (avatarUrlForDB) payload.avatar_url = avatarUrlForDB; // null이면 생략(동기화 전 기기에서 저장 시 DB 아바타가 지워지는 것 방지)
     var res = await _sb.from('profiles').upsert(payload, { onConflict: 'id' });
     if (res.error) {
       console.warn('[saveProfile] supabase upsert error:', res.error.message);
@@ -19394,15 +19394,15 @@ var _rvAdMode    = 'save'; // 'save' | 'reward'
 /* 바텀시트 열기 (영수증 저장 시)
    context: 'save'  = 영수증 결과 화면에서 가계부 저장 흐름 (기본)
             'chiri' = 이미 치리 모달을 거친 흐름 (저장+공개 한 번에) */
-/* build 334→335 — 풀스크린 광고 시청 페이지 (출석체크 스타일)
+/* →335 — 풀스크린 광고 시청 페이지 (출석체크 스타일)
    모든 광고 컨텍스트 통일 적용 */
 var _watchAdCallback = null;
 var _watchAdRetCtx = null;
 var _watchAdSecondaryCb = null;
 
-/* build 335 — 컨텍스트 별 설명 자동 매트릭스 */
+/* — 컨텍스트 별 설명 자동 매트릭스 */
 function _getWatchAdOptsByContext(ctx){
-  // build 336 — emoji → SVG 라인 아이콘. ico 는 라인 아이콘 이름.
+  // emoji → SVG 라인 아이콘. ico 는 라인 아이콘 이름.
   var map = {
     save:          { title:t('wad.save.t'),         ico:'receipt',  descTitle:t('wad.save.dt'),         descSub:t('wad.save.ds') },
     chiri:         { title:t('wad.chiri.t'),        ico:'send',     descTitle:t('wad.chiri.dt'),        descSub:t('wad.chiri.ds') },
@@ -19417,7 +19417,7 @@ function _getWatchAdOptsByContext(ctx){
 
 function openWatchAdPage(context, callback, opts){
   opts = opts || {};
-  // build 597 — 네이티브 앱이면 중간 시청 페이지 없이 바로 AdMob 리워드로 처리
+  // 네이티브 앱이면 중간 시청 페이지 없이 바로 AdMob 리워드로 처리
   //   (report_unlock / monthreport 등 showAdModal 안 거치는 직접 호출도 커버)
   if (_isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) {
     _tryNativeRewarded(callback);
@@ -19428,7 +19428,7 @@ function openWatchAdPage(context, callback, opts){
   _watchAdCallback = callback;
   _watchAdRetCtx = context;
   _watchAdSecondaryCb = opts.secondaryCallback || null;
-  // build 337 — 헤더에 ico SVG + 텍스트 (왼쪽 ← 옆에 통일된 아이콘)
+  // 헤더에 ico SVG + 텍스트 (왼쪽 ← 옆에 통일된 아이콘)
   var icoName = opts.ico || base.ico || 'play';
   var titleEl = document.getElementById('watch-ad-title');
   if (titleEl) {
@@ -19494,7 +19494,7 @@ function watchAdPageStartSecondary(){
   _watchAdRetCtx = null;
 }
 
-/* build 333 — 광고 모달 닫기 (콜백 실행 X, 광고 안 보고 나가기)
+/* — 광고 모달 닫기 (콜백 실행 X, 광고 안 보고 나가기)
    - monthreport / report_unlock 컨텍스트에서 명시 닫기 가능
    - 영수증 저장 등에서도 닫으면 저장 안 됨 (사용자 의도 그대로) */
 function closeAdModal() {
@@ -19508,16 +19508,16 @@ function closeAdModal() {
   _adContext = 'save';
 }
 
-/* ══ 네이티브(AdMob) 리워드 광고 (build 594) — Capacitor 앱에서만. 웹은 기존 광고 페이지. ══
+/* ══ 네이티브(AdMob) 리워드 광고 — Capacitor 앱에서만. 웹은 기존 광고 페이지. ══
    구조: "광고 시청 완료 → 콜백(영수증 저장 등)". 스캔 원가를 광고 수익으로 상쇄.
    현재 Google 공식 "테스트" 리워드 단위. AdMob 계정 발급 후 _ADMOB_REWARD_ID / isTesting 교체. */
-var _ADMOB_REWARD_ID = 'ca-app-pub-6495876616577319/1298194826'; // 실제 보상형 광고단위(b595)
-var _ADMOB_BANNER_ID = 'ca-app-pub-6495876616577319/6731432361'; // 하단 배너 광고단위(b627)
-var _ADMOB_TESTING   = false;                                    // b621 — Play 정식출시 완료 → 실광고 ON (2026-10-28)
+var _ADMOB_REWARD_ID = 'ca-app-pub-6495876616577319/1298194826'; // 실제 보상형 광고단위
+var _ADMOB_BANNER_ID = 'ca-app-pub-6495876616577319/6731432361'; // 하단 배너 광고단위
+var _ADMOB_TESTING   = false;                                    // Play 정식출시 완료 → 실광고 ON (2026-10-28)
 var _admobInited = false;
 function _isNativeApp(){ try{ return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()); }catch(e){ return false; } }
 
-// ══ 네이티브 GPS (b600) — navigator.geolocation 을 Capacitor Geolocation 플러그인으로 라우팅 ══
+// ══ 네이티브 GPS — navigator.geolocation 을 Capacitor Geolocation 플러그인으로 라우팅 ══
 //   네이티브 WebView 는 런타임 위치권한을 스스로 요청 못 함 → 플러그인이 권한요청+위치제공.
 //   기존 모든 navigator.geolocation.getCurrentPosition 호출부가 자동으로 이 경로를 탐(수정 불필요).
 //   웹/PWA 는 패치 안 함(기존 브라우저 geolocation 그대로).
@@ -19582,7 +19582,7 @@ async function _tryNativeRewarded(callback){
   }
 }
 
-/* ══ 하단 AdMob 배너 (b627) ══
+/* ══ 하단 AdMob 배너 ══
    화면 맨 아래 고정 띠. 콘텐츠(탭바 포함)는 CSS(.has-admob-banner)로 배너 높이만큼 위로 밀어 안 가림.
    ⚠️ 리스트 중간 "인라인" 배너는 현 플러그인 미지원 → 추후 Capawesome 교체 시 전환. */
 var _ADMOB_BANNER_SHOWN = false;
@@ -19612,7 +19612,7 @@ async function _admobShowBanner(){
     });
     _ADMOB_BANNER_SHOWN = true;
     document.body.classList.add('has-admob-banner');
-    if (typeof _admobSyncBanner === 'function') _admobSyncBanner(); // b637 — 표시 직후 이미 열린 오버레이 있으면 즉시 숨김(900ms 창 레이스 방지)
+    if (typeof _admobSyncBanner === 'function') _admobSyncBanner(); // 표시 직후 이미 열린 오버레이 있으면 즉시 숨김(900ms 창 레이스 방지)
   }catch(e){ console.warn('[admob banner]', e); }
 }
 async function _admobHideBanner(){
@@ -19623,7 +19623,7 @@ async function _admobHideBanner(){
   try{ await AdMob.removeBanner(); }catch(e){}
 }
 /* 오버레이/팝업 열려있는 동안 배너 잠깐 숨김 (네이티브 배너는 항상 웹 위에 떠서 하단 버튼을 가림).
-   hideBanner/resumeBanner 는 광고를 유지한 채 표시만 토글 → 리로드·비용 없음. b630 */
+ hideBanner/resumeBanner 는 광고를 유지한 채 표시만 토글 → 리로드·비용 없음. */
 async function _admobBannerPause(){
   if(!_ADMOB_BANNER_SHOWN) return;
   var AdMob = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob;
@@ -19636,7 +19636,7 @@ async function _admobBannerResume(){
   if(!AdMob || !AdMob.resumeBanner) return;
   try{ await AdMob.resumeBanner(); }catch(e){}
 }
-/* b637 — 배너 표시 여부를 DOM 기준으로 재동기화 (개수 heuristic이 stale 스택으로 깨지던 문제 해결).
+/* — 배너 표시 여부를 DOM 기준으로 재동기화 (개수 heuristic이 stale 스택으로 깨지던 문제 해결).
    닫기 경로가 closeOv를 안 거쳐 _ovStack에 남은 stale id를 자가치유하고, 열린 오버레이 유무로 pause/resume. */
 function _admobSyncBanner(){
   if(!_ADMOB_BANNER_SHOWN) return;
@@ -19647,11 +19647,11 @@ function _admobSyncBanner(){
 }
 
 function showAdModal(callback, context) {
-  // build 335 — 풀스크린 광고 시청 페이지로 통일 (출석체크 스타일)
+  // 풀스크린 광고 시청 페이지로 통일 (출석체크 스타일)
   // 영수증 저장 + chiri 공개 옵션 같이 있는 경우 (eat/cafe/drink 카테고리) → 보조 버튼
   _adCallback = callback;
   _adContext = context || 'save';
-  // build 594 — 네이티브 앱이면 AdMob 리워드로 처리(원가 상쇄), 웹은 아래 기존 흐름
+  // 네이티브 앱이면 AdMob 리워드로 처리(원가 상쇄), 웹은 아래 기존 흐름
   if (_isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) {
     _tryNativeRewarded(callback);
     return;
@@ -19692,11 +19692,11 @@ function showAdModal(callback, context) {
     if (mainLabel) mainLabel.textContent = '광고 보고 메뉴 사진 등록';
     if (pubBtn)    pubBtn.style.display = 'none';
   } else if (_adContext === 'monthreport') {
-    // build 324 — 달력 자세히 보기 (월별 리포트) 진입 광고
+    // 달력 자세히 보기 (월별 리포트) 진입 광고
     if (mainLabel) mainLabel.textContent = '광고 보고 내용 확인하기';
     if (pubBtn)    pubBtn.style.display = 'none';
   } else if (_adContext === 'report_unlock') {
-    // build 325 — 리포트 잠금 해제 광고
+    // 리포트 잠금 해제 광고
     if (mainLabel) mainLabel.textContent = '📊 광고 보고 리포트 펼치기';
     if (pubBtn)    pubBtn.style.display = 'none';
   } else {
@@ -19771,7 +19771,7 @@ function adComplete() {
          'reward' → チリ 지급
    ──────────────────────────────────────── */
 function ctOpenFullscreenAd(mode, callback) {
-  // build 597 — 네이티브 앱이면 모든 동영상 광고를 AdMob 리워드로 통일
+  // 네이티브 앱이면 모든 동영상 광고를 AdMob 리워드로 통일
   //   (테스트 중엔 test 광고, Play 출시 후 _ADMOB_TESTING=false → 실광고).
   //   웹은 아래 기존 풀스크린 영상 흐름 그대로.
   if (_isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.AdMob) {
@@ -19872,10 +19872,10 @@ function ctOpenFullscreenAd(mode, callback) {
       } else if (_adContext === 'menu_photo') {
         iconTxt = '📸'; titleTxt = t('adc.menu_title'); toastTxt = t('adc.menu_toast');
       } else if (_adContext === 'monthreport') {
-        // build 326 — 달력 자세히 보기 (월별 리포트)
+        // 달력 자세히 보기 (월별 리포트)
         iconTxt = '🧾'; titleTxt = t('adc.mr_title'); toastTxt = t('adc.mr_toast');
       } else if (_adContext === 'report_unlock') {
-        // build 326 — 리포트 카테고리 분석 펼침
+        // 리포트 카테고리 분석 펼침
         iconTxt = '📊'; titleTxt = t('adc.ru_title'); toastTxt = t('adc.ru_toast');
       } else {
         iconTxt = '✅'; titleTxt = t('adc.saved_title'); toastTxt = t('adc.saved_toast');
@@ -19909,7 +19909,7 @@ function openPremium() {
 
 var _showAppDeferCount = 0;
 function showApp() {
-  // ★ 핵심 버그 수정 (build 414):
+  // ★ 핵심 버그 수정 :
   //   getSession() 의 마이크로태스크가 nav 복원 함수(_loadSavedNav 등)를 정의하는
   //   하단 <script> 블록보다 먼저 실행돼서, showApp 이 복원 함수 없이 호출됨
   //   → _savedNav=null → 복원 안 하고 home 저장 → 새로고침 시 항상 홈.
@@ -19925,7 +19925,7 @@ function showApp() {
   if (window._appShownOnce) return;
   window._appShownOnce = true;
   document.getElementById('screen-auth').style.display = 'none';
-  // 푸시 탭으로 열렸으면 engagement 기록 + 알림함 오픈 (build 534) — UI 안정 후
+  // 푸시 탭으로 열렸으면 engagement 기록 + 알림함 오픈 — UI 안정 후
   setTimeout(function(){ if (typeof _checkPriceEngagementFlag === 'function') { try { _checkPriceEngagementFlag(); } catch(e){} } }, 700);
   // 1) display:flex 전에 마지막 탭의 active 클래스만 즉시 적용 → 홈 깜빡임 방지
   var _savedNav = (typeof window._loadSavedNav === 'function') ? window._loadSavedNav() : null;
@@ -19952,11 +19952,11 @@ function showApp() {
   if (typeof window.loadReferralStatus === 'function') setTimeout(window.loadReferralStatus, 700);
   // 어드민 권한 로드 (비동기, UI에 자동 반영됨)
   _loadAdminFlag();
-  // 네이티브 앱: 이미 알림 허용된 기기면 FCM 토큰 갱신 (b601)
+  // 네이티브 앱: 이미 알림 허용된 기기면 FCM 토큰 갱신 
   if (typeof _registerNativePush === 'function') { try { _registerNativePush(); } catch(e){} }
-  // 네이티브 앱: 하단 AdMob 배너 표시 (b627) — UI 안정 후
+  // 네이티브 앱: 하단 AdMob 배너 표시 — UI 안정 후
   if (typeof _admobShowBanner === 'function') setTimeout(function(){ try{ _admobShowBanner(); }catch(e){} }, 900);
-  // 헤더 모드전환 버튼 삽입 (b634)
+  // 헤더 모드전환 버튼 삽입 
   if (typeof _injectHeaderModeToggles === 'function') { try{ _injectHeaderModeToggles(); }catch(e){} }
   // 활성 공지 로드 → 상단 배너 표시
   if (typeof _loadActiveAnnouncement === 'function') _loadActiveAnnouncement();
@@ -19964,10 +19964,10 @@ function showApp() {
   if (typeof _checkSelfBanned === 'function') _checkSelfBanned();
   // 프로필 동기화 (다른 디바이스에서 저장한 닉네임·아바타 가져오기)
   if (typeof _syncProfileFromSupabase === 'function') _syncProfileFromSupabase();
-  // 받은 쪽지함 realtime 구독 시작 + 헤더 아바타 배지 즉시 갱신 (build 305)
+  // 받은 쪽지함 realtime 구독 시작 + 헤더 아바타 배지 즉시 갱신 
   if (typeof _startInboxRealtime === 'function') setTimeout(_startInboxRealtime, 800);
-  // 이달 예산 클라우드 동기화 (build 322) — Supabase 의 budget_amount/month 복원
-  // ⚠️ 월 시작일을 먼저 복원해야 _budgetYMKey() 키가 맞아 예산 복원이 정확함 (build 575)
+  // 이달 예산 클라우드 동기화 — Supabase 의 budget_amount/month 복원
+  // ⚠️ 월 시작일을 먼저 복원해야 _budgetYMKey 키가 맞아 예산 복원이 정확함 
   if (typeof _monthStartLoadFromCloud === 'function') setTimeout(_monthStartLoadFromCloud, 550);
   if (typeof _catBudgetLoadFromCloud === 'function') setTimeout(_catBudgetLoadFromCloud, 620);
   if (typeof _budgetLoadFromCloud === 'function') setTimeout(_budgetLoadFromCloud, 650);
@@ -20020,7 +20020,7 @@ function showAuthError(msg) {
   el.style.display = 'block';
 }
 
-// ── 비밀번호 찾기 (b552) ──
+// ── 비밀번호 찾기 ──
 // 로그인 탭의 "비밀번호를 잊으셨나요?" → 재설정 메일 발송 (Resend SMTP)
 async function authForgotPassword() {
   var emailEl = document.getElementById('auth-email');
@@ -20255,7 +20255,7 @@ async function authSignup() {
 }
 
 // ════════════════════════════════════════════════════════════════════════════
-// 네이티브 앱(Capacitor) OAuth — 딥링크 방식 (b596)
+// 네이티브 앱(Capacitor) OAuth — 딥링크 방식 
 //   웹: signInWithOAuth 가 전체 리다이렉트 → 외부 브라우저에서 세션 생김 → 앱 복귀 X (버그)
 //   네이티브: 인앱 브라우저(Custom Tab)로 로그인 → jp.retwork.app://login-callback 딥링크로 복귀
 //             → appUrlOpen 리스너가 code/token 을 받아 앱(WebView) 안에서 세션 확립
@@ -20335,7 +20335,7 @@ async function authGoogle() {
   }
   // 루트로 복귀. standalone이면 URL에 ?pwaret=1 표식 (크롬 탭이 저장소 없이도 인식)
   var redirectTo = window.location.origin + '/' + (isStandalone ? '?pwaret=1' : '');
-  // b467 — 보류 추천코드를 콜백 URL 에 실어 OAuth 중 유실 방지 (복귀 시 재캐치)
+  // 보류 추천코드를 콜백 URL 에 실어 OAuth 중 유실 방지 (복귀 시 재캐치)
   try { var _prefG = localStorage.getItem('pending_ref'); if (_prefG) redirectTo += (redirectTo.indexOf('?')>=0?'&':'?') + 'ref=' + encodeURIComponent(_prefG); } catch(e){}
   await _sb.auth.signInWithOAuth({
     provider: 'google',
@@ -20362,7 +20362,7 @@ async function authLine() {
   }
   // retwork.jp 루트로 복귀. standalone이면 URL에 ?pwaret=1 표식 (크롬 탭이 저장소 없이도 인식)
   var redirectTo = window.location.origin + '/' + (isStandalone ? '?pwaret=1' : '');
-  // b467 — 보류 추천코드를 콜백 URL 에 실어 OAuth 중 유실 방지 (복귀 시 재캐치)
+  // 보류 추천코드를 콜백 URL 에 실어 OAuth 중 유실 방지 (복귀 시 재캐치)
   try { var _prefL = localStorage.getItem('pending_ref'); if (_prefL) redirectTo += (redirectTo.indexOf('?')>=0?'&':'?') + 'ref=' + encodeURIComponent(_prefL); } catch(e){}
   // Supabase Custom Provider (OIDC) 로 LINE 등록됨 → provider identifier: 'custom:line-v2'
   // (기존 'custom:line'은 Supabase Dashboard 버그로 수정/삭제 불가하여 'line-v2'로 재생성)
@@ -20383,7 +20383,7 @@ async function authLogout() {
   try { await _sb.removeAllChannels(); } catch(e){}           // realtime 채널 정리 (이전 유저 id 고정 필터·누수 방지)
   _realtimeSetup = false;                                     // 재로그인 시 채널 재구독 허용
   window._appShownOnce = false; // 재로그인 시 showApp 본문 다시 실행되도록 가드 리셋
-  if (typeof _admobHideBanner === 'function') { try{ _admobHideBanner(); }catch(e){} } // b627 — 로그아웃 시 하단 배너 제거
+  if (typeof _admobHideBanner === 'function') { try{ _admobHideBanner(); }catch(e){} } // 로그아웃 시 하단 배너 제거
   // 이전 OAuth 토큰 hash 제거 (재로그인 오염 방지)
   history.replaceState(null, '', window.location.pathname);
   document.getElementById('screen-main').style.display = 'none';
@@ -20405,7 +20405,7 @@ var _sdCmtPage   = {};   // {cardId: 댓글 현재 페이지 (0부터)}
 var SD_CMT_PER_PAGE = 5; // 댓글 페이지당 개수
 var _sdCards     = [];   // 현재 가게의 메뉴카드 리스트 (모달용)
 var _mdCardId    = null; // 현재 열린 메뉴 상세 모달의 cardId
-var _mdPhotos    = []; // build 359 — 메뉴 카드 사진 캐시 (legacy + store_menu_photos)
+var _mdPhotos    = []; // 메뉴 카드 사진 캐시 (legacy + store_menu_photos)
 var _mdComments  = [];   // 현재 모달의 댓글 캐시
 
 /* ── 메뉴 카테고리 (대분류 → 소분류) ── */
@@ -20439,7 +20439,7 @@ async function openStoreDetail(sData) {
   if (!_sdStoreId) { try { _sdStoreId = await _resolveStoreId(sData.name); } catch(e){ _sdStoreId = null; } }
   _sdExpandId = null;
   _sdNewImgFile = null;
-  window._sdPlaceCur = null; // build 439 — 이전 가게 Places 정보 잔존 방지
+  window._sdPlaceCur = null; // 이전 가게 Places 정보 잔존 방지
 
   // 모달 먼저 열기 (렌더 오류와 무관하게 패널 표시 보장)
   openOv('ov-store-detail');
@@ -20636,7 +20636,7 @@ function _buildLocalizedHours(periods) {
 }
 
 function _sdRenderPlacesInfo(place, sData) {
-  window._sdPlaceCur = place; // build 439 — 공유 카드(영업시간/전화)용 캐시
+  window._sdPlaceCur = place; // 공유 카드(영업시간/전화)용 캐시
   var wrap = document.getElementById('sd-places-info');
   if (!wrap) return;
   var openNow = place.opening_hours && place.opening_hours.isOpen ? place.opening_hours.isOpen() : null;
@@ -20687,7 +20687,7 @@ function _sdRenderPlacesInfo(place, sData) {
   }
 
   wrap.innerHTML = '<div style="background:var(--surface);border:.5px solid var(--border);border-radius:14px;padding:12px 14px;">'
-    // 첫 줄: 📍 Google 정보 + 평점 + 영업 중 + 전화 (build 369 — SVG)
+    // 첫 줄: 📍 Google 정보 + 평점 + 영업 중 + 전화 ( — SVG)
     + '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;'+(hoursTodayHtml?'margin-bottom:8px;':'')+'">'
     +   '<div style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--text-1);flex-shrink:0;">'
     +     icon('map_pin', 14, 'var(--text-1)')
@@ -20763,7 +20763,7 @@ function _sdRenderHeader(ratingAvg, ratingCount) {
 function sdToggleDotMenu() {
   var ex=document.getElementById('sd-dot-popup'); if(ex){ex.remove();return;}
   var m=document.createElement('div'); m.id='sd-dot-popup'; m.className='sd-dot-popup';
-  // build 367 — 공유는 사이드 액션 영역(웹사이트 아래)으로 이동. 점점점에는 수정 요청 + 닫기만.
+  // 공유는 사이드 액션 영역(웹사이트 아래)으로 이동. 점점점에는 수정 요청 + 닫기만.
   m.innerHTML='<div class="sd-dot-item" onclick="sdReqEdit()">'+t('sd.req_edit')+'</div>'
     +'<div class="sd-dot-item" onclick="closeStoreDetail()">'+t('sd.close')+'</div>';
   document.getElementById('sd-header').appendChild(m);
@@ -20835,7 +20835,7 @@ async function submitStoreEditReq(){
   } catch(e){ console.warn('[edit req]', e); showToast(t('ser.send_fail2')); }
   if(btn){ btn.disabled=false; btn.textContent=t('ser.submit'); }
 }
-/* build 439 — 가게 공유 v2: 공유 카드 이미지(캔버스) + チリつも 링크
+/* — 가게 공유 v2: 공유 카드 이미지(캔버스) + チリつも 링크
    카드 구성: 대표사진 히어로 + 가게명/평점 → 営業時間·電話 → 代表メニュー(사진·가격·★)
              → クチコミ TOP3 (가게 리뷰 + 대표메뉴 리뷰 통합, 최대 3건) → retwork.jp
    이미지 공유 미지원/실패 시: 기존 텍스트 공유로 폴백 */
@@ -21044,7 +21044,7 @@ async function sdShareStore(){
     var recs = (typeof DB !== 'undefined') ? DB.filter(function(r){ return r.store === name; }) : [];
     for (var i = 0; i < recs.length; i++) { if (recs[i].address) { addr = recs[i].address; break; } }
   } catch(_){}
-  // b444 — 레퍼럴 코드 미리 조회 (클릭 전: 공유 user-gesture 유지)
+  // 레퍼럴 코드 미리 조회 (클릭 전: 공유 user-gesture 유지)
   var refCode = await _getMyRefCode();
   var refLink = _getMyRefLink_fromCode(refCode);
   // 이미지 카드 공유 텍스트 (레퍼럴 기본 링크 포함)
@@ -21055,7 +21055,7 @@ async function sdShareStore(){
   // 링크 공유용 lead (URL 은 _shareAsLink 가 /s 링크로 붙임)
   var lead = '🏪 ' + name + (addr ? '\n📍 ' + addr : '');
 
-  // b442 — 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
+  // 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
   _shareChooser(
     async function(){
       if (typeof showToast === 'function') showToast(t('share.making'));
@@ -21072,7 +21072,7 @@ async function sdShareStore(){
   );
 }
 
-/* b443 — 내 레퍼럴 코드 조회/생성 (ctInviteShare 와 동일 규칙) */
+/* — 내 레퍼럴 코드 조회/생성 (ctInviteShare 와 동일 규칙) */
 async function _getMyRefCode(){
   try {
     if (_sb && _currentUser) {
@@ -21089,7 +21089,7 @@ async function _getMyRefCode(){
 }
 function _getMyRefLink_fromCode(code){ return code ? 'https://retwork.jp?ref=' + code : 'https://retwork.jp'; }
 
-/* b444 — 공유 카드 캔버스를 store-photos 버킷 share/ 에 업로드 → 경로 반환
+/* — 공유 카드 캔버스를 store-photos 버킷 share/ 에 업로드 → 경로 반환
    결정적 파일명(가게/메뉴 키) + upsert 로 재공유 시 덮어쓰기 */
 function _shareKeyHash(s){
   var h = 0; s = String(s||'');
@@ -21120,7 +21120,7 @@ async function _shareAsLink(canvas, key, title, lead, refCode){
   await _shareLinkOnly(title, text);
 }
 
-/* b442 — 공유 방식 선택 시트
+/* — 공유 방식 선택 시트
    카카오톡 등은 이미지 파일 공유 시 텍스트/URL 을 버림 → 링크 카드가 안 생김
    → 링크 공유(터치 가능한 OG 프리뷰)와 이미지 카드 공유를 사용자가 선택 */
 function _shareChooser(onLink, onImage){
@@ -21141,7 +21141,7 @@ function _shareChooser(onLink, onImage){
   document.getElementById('shc-cancel').onclick = function(){ ov.remove(); };
 }
 /* 링크만 공유 — 메신저가 OG 프리뷰 카드(터치 가능)를 생성
-   b443 — URL 은 text 안에만 1회 포함 (url 필드 동시 전달 시 카톡에서 중복 노출) */
+ — URL 은 text 안에만 1회 포함 (url 필드 동시 전달 시 카톡에서 중복 노출) */
 async function _shareLinkOnly(title, shareText){
   if (navigator.share) {
     try { await navigator.share({ title: title, text: shareText }); return; }
@@ -21158,7 +21158,7 @@ async function _shareLinkOnly(title, shareText){
 }
 
 /* 공유 카드 공통 플로우 — 이미지+텍스트(링크 포함) → 폴백: 다운로드/텍스트/클립보드
-   b443 — url 필드 제거 (URL 은 shareText 안에만 1회, 카톡 중복 노출 방지) */
+ — url 필드 제거 (URL 은 shareText 안에만 1회, 카톡 중복 노출 방지) */
 async function _shareCardFlow(canvas, title, shareText, fname){
   if (canvas) {
     var blob = await new Promise(function(res){ canvas.toBlob(res, 'image/jpeg', 0.9); });
@@ -21197,7 +21197,7 @@ async function _shareCardFlow(canvas, title, shareText, fname){
   try { window.prompt('복사하세요:', shareText); } catch(_){}
 }
 
-/* build 440 — 메뉴 카드 공유: 메뉴 사진 히어로 + 가게·영업정보 + 메뉴 리뷰 TOP3 */
+/* — 메뉴 카드 공유: 메뉴 사진 히어로 + 가게·영업정보 + 메뉴 리뷰 TOP3 */
 async function _mdBuildShareCanvas(card){
   var FONT='"DM Sans","Noto Sans JP","Apple SD Gothic Neo","Malgun Gothic",sans-serif';
   var root = getComputedStyle(document.documentElement);
@@ -21300,7 +21300,7 @@ async function _mdBuildShareCanvas(card){
 async function mdShareMenu(){
   var card = (_sdCards||[]).find(function(cd){ return cd.id===_mdCardId; });
   if(!card){ if(typeof showToast==='function') showToast(t('share.menu_not_found')); return; }
-  // b444 — 레퍼럴 코드 미리 조회
+  // 레퍼럴 코드 미리 조회
   var refCode = await _getMyRefCode();
   var refLink = _getMyRefLink_fromCode(refCode);
   var mTitle = card.menu_name || 'RetWork';
@@ -21313,7 +21313,7 @@ async function mdShareMenu(){
   // 링크 공유용 lead
   var lead = mLeadName + (_sdName ? '\n🏪 '+_sdName : '');
 
-  // b442 — 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
+  // 링크 카드(프리뷰 풀카드) / 이미지 카드 선택
   _shareChooser(
     async function(){
       if (typeof showToast==='function') showToast(t('share.making'));
@@ -21330,7 +21330,7 @@ async function mdShareMenu(){
   );
 }
 
-/* ── 사진 (build 358 — store_photos + community_photos 통합 + 전체화면 뷰어) ── */
+/* ── 사진 ( — store_photos + community_photos 통합 + 전체화면 뷰어) ── */
 async function _sdLoadPhotos() {
   if(!_sb) return;
   // 1) 어드민이 등록한 store_photos (is_primary 우선, sort_order 다음)
@@ -21357,9 +21357,9 @@ async function _sdLoadPhotos() {
 
 function _sdRenderPhotos(photos) {
   var wrap=document.getElementById('sd-photos-wrap'); if(!wrap) return;
-  var H=244; // 사진 영역 높이 (build 371 — 4 버튼이 균형있게 보이도록 확대: 244 = 50*4 + 6*3 + 22)
+  var H=244; // 사진 영역 높이 ( — 4 버튼이 균형있게 보이도록 확대: 244 = 50*4 + 6*3 + 22)
 
-  // build 358 — 전체화면 뷰어용 글로벌 캐시 (photo_url 만)
+  // 전체화면 뷰어용 글로벌 캐시 (photo_url 만)
   window._sdPhotoList = photos.map(function(p){ return p.photo_url; });
 
   var h='<div style="padding:0 16px 12px;display:flex;gap:8px;align-items:stretch;">';
@@ -21400,7 +21400,7 @@ function _sdRenderPhotos(photos) {
   _sdRenderSideActions();
 }
 
-/* build 358 — 전체화면 사진 뷰어 */
+/* — 전체화면 사진 뷰어 */
 window._sdPhotoList = [];
 window._sdPhotoIdx  = 0;
 
@@ -21408,7 +21408,7 @@ function sdOpenPhotoViewer(idx) {
   if (!window._sdPhotoList || !window._sdPhotoList.length) return;
   window._sdPhotoIdx = Math.max(0, Math.min(idx||0, window._sdPhotoList.length - 1));
   _sdPhotoViewerRender();
-  // build 360 — 가게 상세 모달의 stacking context 안에 갇히지 않도록
+  // 가게 상세 모달의 stacking context 안에 갇히지 않도록
   //   뷰어를 document.body 로 강제 이동 후 open
   var ov = document.getElementById('ov-sd-photo-viewer');
   if (ov && ov.parentElement !== document.body) {
@@ -21456,7 +21456,7 @@ document.addEventListener('keydown', function(e){
 function _sdRenderSideActions() {
   var wrap = document.getElementById('sd-side-actions');
   if (!wrap) return;
-  // build 368/373 — 사진 H 와 사이드 wrap H 가 정확히 일치하도록 직접 px 지정.
+  // /373 — 사진 H 와 사이드 wrap H 가 정확히 일치하도록 직접 px 지정.
   //   '100%' 는 부모가 명시적 height 없어 작동 안 함 → 사진 H 와 같은 px 로 inline 설정
   //   (라인 16888 의 sd-side-actions 마크업에 height:H px 이미 포함됨)
   var s = _sdSData || {};
@@ -21471,7 +21471,7 @@ function _sdRenderSideActions() {
   }
   var website = s.website || '';
 
-  // build 371 — 카드 사이즈 사진 H(244)에 맞춰 확대: 아이콘 26, 글자 12, gap 6
+  // 카드 사이즈 사진 H(244)에 맞춰 확대: 아이콘 26, 글자 12, gap 6
   var btnBase = 'flex:1;min-height:0;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;cursor:pointer;';
   var ICO_SIZE = 26;
   var TXT = 'font-size:12px;font-weight:700;';
@@ -21508,7 +21508,7 @@ function _sdRenderSideActions() {
 }
 /* Supabase Storage는 path에 ASCII만 허용 → 한글/일본어/특수문자 제거 + 빈 경우 hash 사용 */
 /* ══════════════════════════════
-   build 383 — 업로드 전 이미지 압축 (canvas 리사이즈)
+ — 업로드 전 이미지 압축 (canvas 리사이즈)
      큰 사진(10MB+) 을 1600px 이내 + JPEG 0.82 로 줄임 → 보통 200-600KB
      모달 진입 시 로딩 시간 단축. JPG/PNG/WEBP 만 처리 (SVG/GIF 는 원본 보존)
 ══════════════════════════════ */
@@ -21581,7 +21581,7 @@ function sdHandlePhotoInput(input){
 }
 async function _sdDoPhotoUpload(file){
   try {
-    file = await _compressImage(file, 1600, 0.82);  // build 383 — 업로드 전 압축
+    file = await _compressImage(file, 1600, 0.82);  // 업로드 전 압축
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
     var path = 'community/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
     var up = await _sb.storage.from('store-photos').upload(path, file, { upsert:false, contentType:file.type||'image/jpeg' });
@@ -21655,7 +21655,7 @@ async function _sdLoadMenuCards(){
 
   _sdCards = cards;
   _sdRenderMenus(_sdCards,true);
-  // build 383 — 백그라운드 prefetch: 메뉴 카드 image_url 미리 로드 (브라우저 캐시에 적재)
+  // 백그라운드 prefetch: 메뉴 카드 image_url 미리 로드 (브라우저 캐시에 적재)
   //   사용자가 카드 클릭 → 모달 진입 시 바로 표시됨
   try {
     setTimeout(function(){
@@ -21708,7 +21708,7 @@ async function _sdLoadStoreComments(){
       wrap.innerHTML = '';
       return;
     }
-    // build 376 — profiles 의 최신 닉네임 fetch 후 덮어쓰기
+    // profiles 의 최신 닉네임 fetch 후 덮어쓰기
     //   store_comments.user_name 은 댓글 등록 시점의 닉네임(스냅샷)이라 변경 반영 X
     //   메뉴 댓글과 일관된 방식으로 profiles.nickname (현재 닉네임) 으로 표시
     try {
@@ -21773,7 +21773,7 @@ function _sdRenderMenus(cards,loaded){
     var photoBtn = (!c.image_url && !c._isPricePinOnly)
       ? '<button onclick="event.stopPropagation();sdStartCardPhoto(\''+c.id+'\')" class="sd-photo-upload-btn" title="이 가게 근처에서만 가능">📸 <span class="badge">+10チリ</span></button>'
       : '';
-    // build 366 — 가게 상세 페이지는 어드민도 일반 유저 뷰로 통일
+    // 가게 상세 페이지는 어드민도 일반 유저 뷰로 통일
     //   메뉴 카드 순서 조정은 어드민 PC '가게 편집' 영역에서만 처리
     //   ⭐ 대표 뱃지는 모두에게 노출
     var featBadge = c.is_featured ? '<span style="position:absolute;top:8px;left:8px;background:var(--gold-grad);color:#fff;font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;z-index:3;">⭐ '+t('badge.featured')+'</span>' : '';
@@ -22223,7 +22223,7 @@ async function adminProcessReport(reportId, commentTable, commentId, action, use
   }[action];
   if (confirmMsg && !confirm(confirmMsg)) return;
 
-  // build 318 — 신고자 정보 미리 조회 (push 발송용)
+  // 신고자 정보 미리 조회 (push 발송용)
   var reporterRes = await _sb.from('comment_reports')
     .select('reporter_id')
     .eq('id', reportId)
@@ -22273,7 +22273,7 @@ async function adminProcessReport(reportId, commentTable, commentId, action, use
   };
   showToast(msgMap[action] || '처리됨');
 
-  // build 318 — 신고자에게 처리 결과 푸시
+  // 신고자에게 처리 결과 푸시
   if (reporterRes && reporterRes.data && reporterRes.data.reporter_id) {
     var pushMsg = {
       remove:         '신고하신 댓글이 삭제되었어요',
@@ -22674,7 +22674,7 @@ async function adminDeleteItem(id) {
 }
 
 /* ══════════════════════════════
-   치리츠모 드로우 (draws) — 어드민 CRUD (b432)
+ 치리츠모 드로우 (draws) — 어드민 CRUD 
    store_items 패턴과 동일. draws 테이블 사용.
 ══════════════════════════════ */
 var _admEditDrawId = null;
@@ -22726,7 +22726,7 @@ async function _loadAdminDrawList() {
 }
 
 /* ════════════════════════════════════════════════════════════
-   어드민: 치리카드(메뉴카드) 관리 — 조회·삭제 + 중복 표시 (b449)
+ 어드민: 치리카드(메뉴카드) 관리 — 조회·삭제 + 중복 표시 
 ═══════════════════════════════════════════════════════════════ */
 var _admMyCardsCache = [];
 async function openAdminMenuCards() {
@@ -22991,7 +22991,7 @@ async function adminCreateAnnouncement() {
     showToast('공지 발송 실패: ' + res.error.message);
     return;
   }
-  // ─── build 306 — 모든 사용자에게 푸시 broadcast (구독자만 받음) ───
+  // ─── — 모든 사용자에게 푸시 broadcast (구독자만 받음) ───
   try {
     var sess = await _sb.auth.getSession();
     var tok  = sess.data && sess.data.session && sess.data.session.access_token;
@@ -23918,7 +23918,7 @@ async function _admPcExrSetStatus(id, status) {
   if (!_sb || !_currentUser) return;
   if (status === 'cancelled' && !confirm('취소하시겠어요? (치리 환불은 별도 처리 필요)')) return;
 
-  // build 318 — 신청자 정보 미리 조회 (push 발송용)
+  // 신청자 정보 미리 조회 (push 발송용)
   var fetchRes = await _sb.from('exchange_requests')
     .select('user_id, item_name')
     .eq('id', id)
@@ -23933,7 +23933,7 @@ async function _admPcExrSetStatus(id, status) {
   if (res.error) { showToast('변경 실패: ' + res.error.message); return; }
   showToast('✅ ' + (EXR_STATUS_META[status] || {label:status}).label + ' 으로 변경');
 
-  // build 318 — 신청자에게 상태 변경 푸시
+  // 신청자에게 상태 변경 푸시
   if (fetchRes && fetchRes.data && fetchRes.data.user_id) {
     var itemName = fetchRes.data.item_name || '상품';
     var pushTitleMap = {
@@ -24103,7 +24103,7 @@ function _downloadBlob(blob, filename) {
   document.body.appendChild(a); a.click();
   setTimeout(function(){ try { document.body.removeChild(a); } catch(e){} URL.revokeObjectURL(url); }, 1500);
 }
-/* 파일 저장/공유 공통 (b618) — 네이티브 앱/모바일: 공유 시트(→"ファイルに保存" 등으로 실제 저장).
+/* 파일 저장/공유 공통 — 네이티브 앱/모바일: 공유 시트(→"ファイルに保存" 등으로 실제 저장).
    데스크톱 등 파일 공유 미지원: 기존 <a download>. (WebView 는 <a download>·blob 다운로드가
    동작하지 않아 "저장됨" 토스트만 뜨고 파일이 안 생기는 문제를 해결)
    반환: 'shared' | 'downloaded' | 'canceled' */
@@ -24116,7 +24116,7 @@ function _blobToBase64(blob){
   });
 }
 async function _saveOrShareBlob(blob, filename, mime, title) {
-  // 1) 네이티브 앱 (b620~) — Capacitor Filesystem 으로 캐시에 쓰고 Share 로 공유(→"ファイルに保存" 등).
+  // 1) 네이티브 앱 (~) — Capacitor Filesystem 으로 캐시에 쓰고 Share 로 공유(→"ファイルに保存" 등).
   //    WebView 는 <a download>·navigator.share(files) 둘 다 막혀 있어 네이티브 플러그인이 유일한 확실 경로.
   //    (플러그인 미설치 구버전에선 P.Filesystem 이 없어 아래 웹 경로로 자동 폴백)
   if (_isNativeApp()){
@@ -25843,7 +25843,7 @@ function _admPcCloseAllAdminModals() {
     // 인라인 style 로 강제 표시된 경우도 정리 (showAdModal 같은 케이스 대비)
     if (modal.style.display === 'flex') modal.style.cssText = '';
   });
-  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // b637 — 일괄 닫기 후 배너 재동기화(stale 스택 정리)
+  if (typeof _admobSyncBanner === 'function') { try{ _admobSyncBanner(); }catch(e){} } // 일괄 닫기 후 배너 재동기화(stale 스택 정리)
 }
 
 function _admPcUnmountAll() {
@@ -26010,7 +26010,7 @@ function renderEditReqCard(r){
 async function markEditReqDone(id, done){
   if(!_isAdmin||!_sb) return;
   try {
-    // build 318 — 신청자 정보 미리 조회 (push 발송용)
+    // 신청자 정보 미리 조회 (push 발송용)
     var fetchRes = await _sb.from('store_edit_requests')
       .select('user_id, store_name')
       .eq('id', id)
@@ -26023,7 +26023,7 @@ async function markEditReqDone(id, done){
     if(res.error){ showToast('처리 실패: '+res.error.message); return; }
     showToast(done?'✅ 처리완료로 표시했어요':'↩ 미처리로 되돌렸어요');
 
-    // build 318 — 처리완료 시 신청자에게 푸시
+    // 처리완료 시 신청자에게 푸시
     if (done && fetchRes.data && fetchRes.data.user_id) {
       _sendSocialPush(
         fetchRes.data.user_id,
@@ -26602,7 +26602,7 @@ async function _loadAdminDetailData(type) {
         if (p.price < g.minPrice) g.minPrice = p.price;
         if (p.price > g.maxPrice) g.maxPrice = p.price;
         if ((p.created_at||'') > g.latestAt) g.latestAt = p.created_at;
-        // (b572) 핀 코멘트/품목명 집계 → 코멘트 필터 + 검색 동작
+        // 핀 코멘트/품목명 집계 → 코멘트 필터 + 검색 동작
         if (p.comment && p.comment.trim()) g.hasComment = true;
         g._search = (g._search || '') + ' ' + (p.item_name||'') + ' ' + (p.comment||'');
       });
@@ -26615,7 +26615,7 @@ async function _loadAdminDetailData(type) {
   }
   _admDetailData = res.data || [];
   _admDetailPage = 0;
-  // build 320 — 사용자 타입이면 admin_messages 의 receipient 셋 미리 채워서 ✉️ 배지 표시
+  // 사용자 타입이면 admin_messages 의 receipient 셋 미리 채워서 ✉️ 배지 표시
   if (_admDetailType === 'users') {
     try {
       await _admPreloadMsgRecipients();
@@ -26624,7 +26624,7 @@ async function _loadAdminDetailData(type) {
   _renderAdminDetail();
 }
 
-/* build 320 — 어드민이 쪽지 보낸 적 있는 유저 ID 셋 캐시 */
+/* — 어드민이 쪽지 보낸 적 있는 유저 ID 셋 캐시 */
 window._admMsgRecipientIds = null;
 async function _admPreloadMsgRecipients() {
   if (!_sb) return;
@@ -26682,7 +26682,7 @@ function _renderAdminDetail() {
     pins:     _renderPinRow
   }[_admDetailType];
 
-  // build 362 — 영수증 중복 의심 자동 마킹
+  // 영수증 중복 의심 자동 마킹
   //   같은 (store_name + receipt_date + total_amount + user_id) 2개 이상 → _isDup=true
   var dupBanner = '';
   if (_admDetailType === 'receipts') {
@@ -26716,7 +26716,7 @@ function _renderAdminDetail() {
     }
   }
 
-  // b455 — 가게 중복 의심 마킹: 「이름 정규화 일치」 OR 「이름 유사(편집거리) AND 위치 근접(~60m)」
+  // 가게 중복 의심 마킹: 「이름 정규화 일치」 OR 「이름 유사(편집거리) AND 위치 근접(~60m)」
   //   좌표만으로는 같은 동네 다른 가게를 오판 → 이름 유사도와 거리를 함께 본다.
   if (_admDetailType === 'stores') {
     var _normStore = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC').toLowerCase(); };
@@ -26794,7 +26794,7 @@ function _renderUserRow(u) {
   var date = (u.created_at||'').slice(0,10);
   var adminBadge = u.is_admin ? '<span style="background:var(--gold-light);color:var(--gold-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;">🛡️ ADMIN</span>' : '';
   var refCode = u.referral_code ? ('<span style="font-family:monospace;background:var(--bg-2);color:var(--text-2);font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;">🎟️ '+_esc(u.referral_code)+'</span>') : '';
-  // build 320 — 어드민이 쪽지 보낸 적 있으면 ✉️ 배지 (직관적 표시)
+  // 어드민이 쪽지 보낸 적 있으면 ✉️ 배지 (직관적 표시)
   var msgBadge = (window._admMsgRecipientIds && window._admMsgRecipientIds.has(u.id))
     ? '<span title="어드민이 쪽지 보낸 사용자" style="background:rgba(91,155,213,.15);color:#5B9BD5;font-size:11px;font-weight:800;padding:1px 6px;border-radius:8px;">✉️</span>'
     : '';
@@ -26916,7 +26916,7 @@ async function openAdminUserDetail(userId) {
   } else {
     openOv('ov-admin-user-detail');
   }
-  // build 319 — 보낸 쪽지 이력 자동 로드
+  // 보낸 쪽지 이력 자동 로드
   if (typeof _admLoadUserMsgHistory === 'function') { try { _admLoadUserMsgHistory(); } catch(e){} }
 }
 
@@ -27128,7 +27128,7 @@ async function admUnsuspendUser() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   ✉️ 어드민 → 특정 유저 쪽지 발송 (build 304)
+ ✉️ 어드민 → 특정 유저 쪽지 발송 
    ══════════════════════════════════════════════════════════════════════ */
 function admOpenSendMsg() {
   if (!_isAdmin || !_admEditUserId) return;
@@ -27147,7 +27147,7 @@ function admOpenSendMsg() {
   setTimeout(function(){ document.getElementById('adm-msg-title').focus(); }, 200);
 }
 
-/* build 319 — 사용자 상세에서 어드민이 그 유저에게 보낸 쪽지 이력 + 삭제 */
+/* — 사용자 상세에서 어드민이 그 유저에게 보낸 쪽지 이력 + 삭제 */
 async function _admLoadUserMsgHistory() {
   if (!_isAdmin || !_admEditUserId || !_sb) return;
   var listEl = document.getElementById('adm-msg-history-list');
@@ -27215,14 +27215,14 @@ async function _admDeleteUserMsg(msgId) {
   if (res.error) { showToast('삭제 실패: ' + res.error.message); return; }
   showToast('🗑 쪽지가 삭제됐어요');
   await _admLoadUserMsgHistory();
-  // build 320 — 마지막 1개였으면 Set 에서 제거 (사용자 카드 ✉️ 배지 사라짐)
+  // 마지막 1개였으면 Set 에서 제거 (사용자 카드 ✉️ 배지 사라짐)
   var cntEl = document.getElementById('adm-msg-history-cnt');
   if (cntEl && cntEl.textContent === '(0건)') {
     if (window._admMsgRecipientIds) window._admMsgRecipientIds.delete(_admEditUserId);
   }
 }
 
-/* build 320 — 이 유저에게 보낸 모든 쪽지 일괄 삭제 */
+/* — 이 유저에게 보낸 모든 쪽지 일괄 삭제 */
 async function _admDeleteAllUserMsgs() {
   if (!_isAdmin || !_admEditUserId || !_sb) return;
   if (!confirm('⚠️ 이 사용자에게 보낸 모든 쪽지를 삭제할까요?\n\n(수신자 측에서도 즉시 사라집니다. 이 작업은 되돌릴 수 없어요)')) return;
@@ -27263,7 +27263,7 @@ async function admSendMessage() {
   if (res.error) { showToast('발송 실패: ' + res.error.message); return; }
   var data = res.data || {};
   if (!data.ok) { showToast('발송 실패: ' + (data.err || 'unknown')); return; }
-  // ─── build 306 — 푸시 알림 동시 발송 (Vercel API) ───
+  // ─── — 푸시 알림 동시 발송 (Vercel API) ───
   try {
     var sess = await _sb.auth.getSession();
     var tok  = sess.data && sess.data.session && sess.data.session.access_token;
@@ -27277,7 +27277,7 @@ async function admSendMessage() {
           body: body,
           url: linkUrl || '/',
           tag: 'admin-msg-' + Date.now(),
-          priority: priority   // build 310 — urgent/high 면 SW 가 헤즈업 강화
+          priority: priority   // urgent/high 면 SW 가 헤즈업 강화
         })
       });
       var pj = await prRes.json();
@@ -27294,19 +27294,19 @@ async function admSendMessage() {
     showToast('📤 쪽지 발송 완료 (' + (data.sent || 1) + '건) · 푸시 발송 실패');
   }
   closeOv('ov-admin-send-msg');
-  // build 319 — 발송 직후 이력 갱신
+  // 발송 직후 이력 갱신
   if (typeof _admLoadUserMsgHistory === 'function') { try { _admLoadUserMsgHistory(); } catch(e){} }
-  // build 320 — Set 에 추가 (사용자 카드 ✉️ 배지 즉시 반영)
+  // Set 에 추가 (사용자 카드 ✉️ 배지 즉시 반영)
   if (window._admMsgRecipientIds) window._admMsgRecipientIds.add(_admEditUserId);
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   📩 사용자 → 받은 쪽지함 (build 304)
+ 📩 사용자 → 받은 쪽지함 
    ══════════════════════════════════════════════════════════════════════ */
 async function openUserInbox() {
   openOv('ov-user-inbox');
   await _loadInboxMessages();
-  // 헤더 아바타 배지 즉시 동기화 (build 305)
+  // 헤더 아바타 배지 즉시 동기화 
   if (typeof _refreshInboxBadge === 'function') _refreshInboxBadge();
 }
 
@@ -27388,7 +27388,7 @@ async function markAllInboxRead() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   소셜 푸시 헬퍼 (build 314) — 좋아요/댓글 시 상대방에게 시스템 푸시
+ 소셜 푸시 헬퍼 — 좋아요/댓글 시 상대방에게 시스템 푸시
    ══════════════════════════════════════════════════════════════════════ */
 async function _sendSocialPush(recipientId, title, body, options) {
   try {
@@ -27415,14 +27415,14 @@ async function _sendSocialPush(recipientId, title, body, options) {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   🔔 푸시 알림 (Web Push) — build 306
+ 🔔 푸시 알림 (Web Push) — 
    ══════════════════════════════════════════════════════════════════════ */
 
 // VAPID Public Key — Vercel 환경변수와 일치해야 함 (사용자가 NEXT_PUBLIC_VAPID_PUBLIC_KEY 로 등록 후 빌드 타임에 주입)
 // 임시: HTML 안에 직접 박을 수 있도록 window 에서 읽기. 미설정 시 푸시 기능 비활성화.
 window.__VAPID_PUBLIC_KEY__ = window.__VAPID_PUBLIC_KEY__ || '';
 
-// ══ 네이티브 푸시 (FCM, b601) — Capacitor Push Notifications. 웹은 아래 web-push 유지. ══
+// ══ 네이티브 푸시 (FCM, ) — Capacitor Push Notifications. 웹은 아래 web-push 유지. ══
 //   네이티브 앱은 WebView 라 web-push 미지원 → FCM 토큰을 native_push_tokens 에 저장,
 //   서버(/api/push·크론)가 네이티브 토큰엔 FCM 으로 발송(웹은 web-push).
 window._nativeFcmToken = window._nativeFcmToken || null;
@@ -27435,7 +27435,7 @@ function _pushOptinTable(){ return _isNativeApp() ? 'native_push_tokens' : 'push
 async function _saveNativeToken(token){
   if (!token || !_sb || !_currentUser) return;
   window._nativeFcmToken = token;
-  // b615 — RPC(claim_push_token) 우선: 같은 폰에서 계정을 바꿔 로그인하면 토큰 행이
+  // RPC(claim_push_token) 우선: 같은 폰에서 계정을 바꿔 로그인하면 토큰 행이
   //   이전 유저 소유라 RLS 에 막혀 upsert 실패 → 알림이 이전 계정으로 감.
   //   security definer RPC 가 토큰을 현재 유저로 재귀속. (SQL 미실행 환경은 upsert 폴백)
   try {
@@ -27450,7 +27450,7 @@ async function _saveNativeToken(token){
     }, { onConflict: 'token' });
   } catch(e){ console.warn('[native-push] token save failed', e); }
 }
-// 고중요도 알림 채널 생성 (b602) — 헤즈업 배너(대기/잠금화면에서 위로 쓱)
+// 고중요도 알림 채널 생성 — 헤즈업 배너(대기/잠금화면에서 위로 쓱)
 function _ensurePushChannel(){
   var Push = _nativePushPlugin();
   if (!Push || !Push.createChannel) return;
@@ -27678,13 +27678,13 @@ async function _syncPushToggleUI() {
   }
 }
 
-/** build 317 — 출석 알림 옵트인 토글 */
+/** — 출석 알림 옵트인 토글 */
 async function _syncAttendancePushUI() {
   var row = document.getElementById('settings-att-push-row');
   var tg  = document.getElementById('settings-att-push-toggle');
   if (!row || !tg || !_currentUser) return;
 
-  // build 382 — DB fetch 전에 마지막 상태를 즉시 적용 (OFF→ON 깜빡임 방지)
+  // DB fetch 전에 마지막 상태를 즉시 적용 (OFF→ON 깜빡임 방지)
   //   토글 HTML 초기값이 항상 'off' 라서 비동기 fetch 끝나야 정상값 반영됨.
   //   localStorage 캐시로 설정창 열리는 즉시 정확한 토글 상태 표시.
   try {
@@ -27733,12 +27733,12 @@ async function toggleAttendancePush() {
     showToast('변경 실패: ' + res.error.message);
     return;
   }
-  // build 382 — 캐시 즉시 갱신
+  // 캐시 즉시 갱신
   try { localStorage.setItem('att_push_optin', newVal ? '1' : '0'); } catch(_){}
   showToast(newVal ? '⏰ 출석 알림 ON' : '⏰ 출석 알림 OFF');
 }
 
-/** build 531 — 가격 변동 알림 옵트인 토글 (출석 패턴 미러) */
+/** — 가격 변동 알림 옵트인 토글 (출석 패턴 미러) */
 async function _syncPriceWatchPushUI() {
   var row = document.getElementById('settings-pw-push-row');
   var tg  = document.getElementById('settings-pw-push-toggle');
@@ -27786,7 +27786,7 @@ async function togglePriceWatchPush() {
   showToast(newVal ? t('pw.on') : t('pw.off'));
 }
 
-/** build 583 — 기록 리마인더 옵트인 토글 (가격알림 패턴 미러) */
+/** — 기록 리마인더 옵트인 토글 (가격알림 패턴 미러) */
 async function _syncLogReminderPushUI() {
   var row = document.getElementById('settings-logrem-push-row');
   var tg  = document.getElementById('settings-logrem-push-toggle');
@@ -27845,7 +27845,7 @@ async function togglePushNotifications() {
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   build 305 — 헤더 아바타 배지 + 설정 메뉴 우선순위 칩 + realtime 구독
+ — 헤더 아바타 배지 + 설정 메뉴 우선순위 칩 + realtime 구독
    ══════════════════════════════════════════════════════════════════════ */
 
 /** 모든 .hdr-avatar 에 빨간 동그라미 배지 적용/해제 (CSS ::after data-badge) */
@@ -27961,7 +27961,7 @@ async function admMarkUserDeleted() {
 function _renderReceiptRow(r) {
   var date = r.receipt_date || (r.created_at||'').slice(0,10);
   var total = (r.total_amount||0).toLocaleString();
-  // build 362 — 중복 의심 / 원본 뱃지
+  // 중복 의심 / 원본 뱃지
   var dupBadge = '';
   var borderColor = 'var(--border)';
   var bgColor = 'var(--surface)';
@@ -27972,7 +27972,7 @@ function _renderReceiptRow(r) {
   } else if (r._isOrigin) {
     dupBadge = '<span style="background:#DCFCE7;color:#166534;font-size:9px;font-weight:800;padding:1px 6px;border-radius:6px;margin-left:4px;">원본 (그룹 '+r._dupGroupSize+')</span>';
   }
-  // build 362 — 어드민 직접 삭제 버튼 (중복 의심에만 표시)
+  // 어드민 직접 삭제 버튼 (중복 의심에만 표시)
   var delBtn = r._isDup
     ? '<button onclick="event.stopPropagation();_admDeleteReceipt(\''+r.id+'\')" style="background:#fff;color:#991B1B;border:1px solid #FEE2E2;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:800;cursor:pointer;font-family:var(--font);flex-shrink:0;margin-left:6px;">🗑️ 삭제</button>'
     : '';
@@ -27988,7 +27988,7 @@ function _renderReceiptRow(r) {
     + '</div>';
 }
 
-/* build 363 — 영수증 수정 페이지에서 삭제 (모달 닫고 목록 갱신) */
+/* — 영수증 수정 페이지에서 삭제 (모달 닫고 목록 갱신) */
 async function admDeleteReceiptFromEdit() {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   if (!_admEditReceiptId) { showToast('영수증 ID 없음'); return; }
@@ -28014,7 +28014,7 @@ async function admDeleteReceiptFromEdit() {
   }
 }
 
-/* build 362 — 어드민 영수증 단건 삭제 */
+/* — 어드민 영수증 단건 삭제 */
 async function _admDeleteReceipt(receiptId) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   if (!confirm('이 영수증을 삭제할까요?\n(연결된 items 도 cascade 로 같이 삭제)')) return;
@@ -28034,7 +28034,7 @@ async function _admDeleteReceipt(receiptId) {
   }
 }
 
-/* build 362 — 중복 의심 일괄 삭제 */
+/* — 중복 의심 일괄 삭제 */
 async function _admDeleteAllDupReceipts() {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   var dupIds = (_admDetailData || []).filter(function(r){ return r._isDup; }).map(function(r){ return r.id; });
@@ -28093,7 +28093,7 @@ async function openAdminReceiptDetail(receiptId) {
   }
 }
 
-/* build 328 → 329 — 영수증 수정 모달 '🗺 위치 수정' 버튼
+/* → 329 — 영수증 수정 모달 '🗺 위치 수정' 버튼
    1. 현재 입력된 가게명으로 stores 테이블 매칭
    2. 영수증 수정 모달 먼저 닫고 (충돌 방지)
    3. 어드민 가게 수정 모달 (풀스크린 맵 + 드래그 핀) 열기 */
@@ -28127,7 +28127,7 @@ async function _admRecOpenStoreLocation() {
   }
 
   if (rows.length === 0) {
-    // build 330 — stores 미등록 시 즉시 가게 신규 등록 모달 (lat/lng 자동 검색)
+    // stores 미등록 시 즉시 가게 신규 등록 모달 (lat/lng 자동 검색)
     if (confirm('⚠️ 이 가게가 stores 테이블에 없어요\n\n' + name + '\n\n[확인] 누르면 신규 가게로 등록 후 위치 수정 가능')) {
       var newStore = { name: name, category: 'other', lat: null, lng: null };
       var insRes = await _sb.from('stores').insert(newStore).select().maybeSingle();
@@ -28157,7 +28157,7 @@ async function _admRecOpenStoreLocation() {
     return;
   }
 
-  // build 329 — 영수증 수정 모달 먼저 닫기 (z-index 충돌 / drilldown 충돌 방지)
+  // 영수증 수정 모달 먼저 닫기 (z-index 충돌 / drilldown 충돌 방지)
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
     // PC 어드민: 이미 mount된 영수증 시트 unmount
     if (typeof _admPcUnmountAll === 'function') { try { _admPcUnmountAll(); } catch(e){} }
@@ -28251,7 +28251,7 @@ async function admSaveReceipt() {
 
 function _renderStoreRow(s) {
   var locStr = (s.lat && s.lng) ? '📍 '+parseFloat(s.lat).toFixed(4)+', '+parseFloat(s.lng).toFixed(4) : '위치 없음';
-  // b454 — 중복 배지(자동판정) + 삭제 버튼(모든 가게 노출)
+  // 중복 배지(자동판정) + 삭제 버튼(모든 가게 노출)
   var inDupGroup = s._dupGroupSize > 1;
   var badge = '';
   if (inDupGroup) {
@@ -28270,7 +28270,7 @@ function _renderStoreRow(s) {
     + '<div style="font-size:10px;color:var(--text-3);">'+locStr+(s.receipt_count?' · '+s.receipt_count+'장':'')+'</div>'
     + '</div>';
 }
-// b453 — 가게 목록에서 직접 삭제 (자식 데이터 일괄 제거, _admPcDeleteStore 와 동일 규칙)
+// 가게 목록에서 직접 삭제 (자식 데이터 일괄 제거, _admPcDeleteStore 와 동일 규칙)
 async function adminDeleteStoreFromList(id) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   var sr = await _sb.from('stores').select('name').eq('id', id).maybeSingle();
@@ -28406,7 +28406,7 @@ async function _admPcOpenPinStoreView(storeName) {
       html += '<div style="background:#F4F5F8;border-radius:12px;padding:32px;text-align:center;color:#6B7280;font-size:12px;">등록된 가격 핀이 없어요.</div>';
     } else {
       html += '<div style="display:flex;flex-direction:column;gap:8px;">';
-      // build 347 — storeName 을 globals에 캐싱 후 핀 ID 만 onclick 으로 전달
+      // storeName 을 globals에 캐싱 후 핀 ID 만 onclick 으로 전달
       //   (storeName 안의 따옴표/특수문자 escape 신경 안 써도 됨)
       window._admPcCurrentStoreName = storeName;
       pins.forEach(function(p){
@@ -28434,7 +28434,7 @@ async function _admPcOpenPinStoreView(storeName) {
       html += '</div>';
     }
 
-    // build 355 — 메뉴 카드 영역 (가격 핀 아래)
+    // 메뉴 카드 영역 (가격 핀 아래)
     html += '<div id="apc-pinstore-menus" style="margin-top:24px;">'
           + '<div style="font-size:14px;font-weight:800;color:#172C58;margin-bottom:10px;">🍽️ 메뉴 카드 (로딩 중...)</div>'
           + '<div id="apc-pinstore-menus-list" style="font-size:12px;color:#6B7280;">로딩...</div>'
@@ -28451,13 +28451,13 @@ async function _admPcOpenPinStoreView(storeName) {
   }
 }
 
-/* build 355 — 가게핀 페이지에 메뉴 카드 영역 표시 (어드민) */
+/* — 가게핀 페이지에 메뉴 카드 영역 표시 (어드민) */
 async function _admPcLoadStoreMenuCards(storeName) {
   var hdr  = document.querySelector('#apc-pinstore-menus > div:first-child');
   var wrap = document.getElementById('apc-pinstore-menus-list');
   if (!wrap || !_sb || !storeName) return;
 
-  // 정확 매칭 + fuzzy (build 354 패턴)
+  // 정확 매칭 + fuzzy ( 패턴)
   var res = await _sb.from('store_menu_cards')
     .select('id,menu_name,price,category,is_featured,image_url,rating_avg,rating_count,sort_order,created_at')
     .eq('store_name', storeName)
@@ -28489,7 +28489,7 @@ async function _admPcLoadStoreMenuCards(storeName) {
 
   wrap.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px;">' + rows.map(function(m) {
     var rating = m.rating_count > 0 ? '★' + parseFloat(m.rating_avg||0).toFixed(1) + ' (' + m.rating_count + ')' : '평점 없음';
-    // build 356 — 이미지 로드 실패 시 placeholder 로 graceful fallback (img onerror)
+    // 이미지 로드 실패 시 placeholder 로 graceful fallback (img onerror)
     var thumb = m.image_url
       ? '<div style="width:48px;height:48px;border-radius:8px;flex-shrink:0;border:1px solid #E3E6EB;overflow:hidden;background:#F4F5F8;display:flex;align-items:center;justify-content:center;">'
         + '<img src="'+_esc(m.image_url)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<span style=&quot;color:#9CA3AF;font-size:18px;&quot;>🍽️</span>\';">'
@@ -28542,7 +28542,7 @@ async function _admPcDeleteStore() {
   }
 }
 
-/* 가게핀 화면에서 직접 핀 삭제 (build 351 — RLS 진단 강화)
+/* 가게핀 화면에서 직접 핀 삭제 ( — RLS 진단 강화)
    PostgREST .delete() 는 RLS 차단 시 error 없이 0 rows 반환.
    .select() 로 삭제된 행을 받아 0 이면 RLS 문제로 안내. */
 async function _admPcDeletePinFromList(pinId) {
@@ -28588,11 +28588,11 @@ async function _admPcClearPinComment(pinId) {
   } catch(e) { showToast('실패: ' + (e.message||'')); }
 }
 
-/* build 351 — 어드민 메뉴 카드 편집 모달 (사진 / 댓글 / 평점 / 대표 메뉴) */
+/* — 어드민 메뉴 카드 편집 모달 (사진 / 댓글 / 평점 / 대표 메뉴) */
 var _admEditMenuCardId   = null;
 var _admEditMenuStoreName = null;
 
-// build 352 — 카테고리 select 채우기 (CT_PUB_CATS)
+// 카테고리 select 채우기 (CT_PUB_CATS)
 function _admFillMenuCatSelect(currentValue) {
   var sel = document.getElementById('amc-category');
   if (!sel) return;
@@ -28639,7 +28639,7 @@ async function openAdminEditMenuCard(menuCardId) {
   await _admLoadMenuPhotos(menuCardId);
   await _admLoadMenuComments(menuCardId);
 
-  // build 355 — PC 어드민 모드면 풀스크린 drilldown, 모바일은 일반 오버레이
+  // PC 어드민 모드면 풀스크린 drilldown, 모바일은 일반 오버레이
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
     _admPcDrilldownTo('ov-admin-edit-menu-card', {
       backMenuKey:'pins',
@@ -28656,7 +28656,7 @@ async function openAdminEditMenuCard(menuCardId) {
   }
 }
 
-/* build 355 — 메뉴 카드 수정 화면의 ← 뒤로 버튼
+/* — 메뉴 카드 수정 화면의 ← 뒤로 버튼
    PC 어드민: 가게핀 상세 페이지로 복귀 (시트 unmount + ct 재렌더)
    모바일: 일반 closeOv */
 function _admPcBackFromMenuCard() {
@@ -28679,7 +28679,7 @@ async function _admLoadMenuPhotos(menuCardId) {
   if (!wrap || !_sb) return;
   wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:16px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
 
-  // build 353 — 사용자측 화면에는 보이는데 어드민에는 안 보이는 케이스 대응
+  // 사용자측 화면에는 보이는데 어드민에는 안 보이는 케이스 대응
   //   같은 store_name + menu_name 의 다른 (중복) 카드들의 image_url 도 통합 표시
   var cardRes = await _sb.from('store_menu_cards')
     .select('store_name,menu_name,image_url').eq('id', menuCardId).maybeSingle();
@@ -28720,7 +28720,7 @@ async function _admLoadMenuPhotos(menuCardId) {
 
   var html = '';
 
-  // build 353 — sibling URL 글로벌 캐시 (onclick escape 단순화)
+  // sibling URL 글로벌 캐시 (onclick escape 단순화)
   window._admSiblingImageMap = {};
   siblingUrls.forEach(function(s){ window._admSiblingImageMap[s.id] = s.image_url; });
 
@@ -28809,7 +28809,7 @@ async function _admUploadMenuPhotos(input) {
     if (!f.type || f.type.indexOf('image/') !== 0) continue;
     if (f.size > 5 * 1024 * 1024) { showToast('5MB 초과: '+f.name); continue; }
     try {
-      f = await _compressImage(f, 1600, 0.82);  // build 383 — 업로드 전 압축
+      f = await _compressImage(f, 1600, 0.82);  // 업로드 전 압축
       var extMatch = f.name.match(/\.([a-zA-Z0-9]{1,5})$/);
       var ext = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
       var path = 'menus/' + _admEditMenuCardId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.' + ext;
@@ -28912,7 +28912,7 @@ async function _admClearMenuLegacyImage() {
   _admLoadMenuPhotos(_admEditMenuCardId);
 }
 
-/* build 353 — 같은 메뉴명의 다른(중복) 카드 image_url 을 현재 카드로 마이그레이션
+/* — 같은 메뉴명의 다른(중복) 카드 image_url 을 현재 카드로 마이그레이션
    - 사용자가 다른 row 에 사진 올렸을 때 어드민이 한 카드로 통합하기 위함
    - store_menu_photos 에 추가 (store_menu_cards.image_url 대신, 여러 장 보존)
 */
@@ -29018,8 +29018,8 @@ async function admDeleteMenuCard() {
   } catch(e) { console.error(e); }
 }
 
-/* build 347/351 — 가격 핀의 메뉴 카드 편집
-   build 351: prompt 흐름 제거, 전용 모달 사용 */
+/* /351 — 가격 핀의 메뉴 카드 편집
+ : prompt 흐름 제거, 전용 모달 사용 */
 async function _admPcEditMenuCardFromPin(pinId) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   try {
@@ -29032,7 +29032,7 @@ async function _admPcEditMenuCardFromPin(pinId) {
     var storeName = (pin.stores && pin.stores.name) || window._admPcCurrentStoreName;
     if (!storeName) { showToast('가게명 확인 실패'); return; }
 
-    // 2) 매칭 store_menu_cards 찾기 (build 348 — maybeSingle 제거, 중복행/공백 대응)
+    // 2) 매칭 store_menu_cards 찾기 ( — maybeSingle 제거, 중복행/공백 대응)
     var itemName = (pin.item_name || '').trim();
     // 2-a) 정확 매칭 (limit 1)
     var cRes = await _sb.from('store_menu_cards')
@@ -29093,7 +29093,7 @@ async function _admPcEditMenuCardFromPin(pinId) {
       showToast('✨ 메뉴 카드 생성됨 — 이어서 편집');
     }
 
-    // 3) build 351 — prompt 흐름 제거, 전용 모달 열기
+    // 3) — prompt 흐름 제거, 전용 모달 열기
     openAdminEditMenuCard(card.id);
   } catch(e) {
     console.error('[admPcEditMenuCard] exception:', e);
@@ -29299,11 +29299,11 @@ async function openAdminStoreDetail(storeId) {
   document.getElementById('adm-store-lat').value = s.lat || '';
   document.getElementById('adm-store-lng').value = s.lng || '';
   document.getElementById('adm-store-gmap').value = s.google_maps_url || '';
-  _admGmapLastExtractedKey = '';  // b387 — 새 가게 편집 시 좌표 추출 캐시 초기화
+  _admGmapLastExtractedKey = '';  // 새 가게 편집 시 좌표 추출 캐시 초기화
   _admGmapShortResolvedFor = '';
   document.getElementById('adm-store-meta').textContent = '평균가: ¥'+(s.avg_price||0).toLocaleString()+' · 영수증: '+(s.receipt_count||0)+'장';
   _admLoadStoreMenus(s.name);
-  _admLoadStorePhotos(s.name);  // build 350 — 가게 사진 로드
+  _admLoadStorePhotos(s.name);  // 가게 사진 로드
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
     _admPcDrilldownTo('ov-admin-edit-store', { backMenuKey:'stores', backLabel:'가게 목록', title:'가게 편집' });
   } else {
@@ -29358,7 +29358,7 @@ function _admStoreSyncFromInputs() {
   if (_admStoreMap) _admStoreMap.panTo(pos);
 }
 
-// b387 — Google Maps URL 에서 좌표 자동 추출 → 마커 동기화
+// Google Maps URL 에서 좌표 자동 추출 → 마커 동기화
 // 지원 패턴:
 //   /@lat,lng[,zoom]              ← 가장 일반적 (place URL)
 //   !3dlat!4dlng                  ← data param 내장 좌표
@@ -29470,7 +29470,7 @@ async function _admLoadStoreMenus(storeName) {
   if (!wrap || !_sb || !storeName) return;
   wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:8px;text-align:center;">메뉴 로딩 중...</div>';
 
-  // build 353 — 정확 매칭 후 누락 의심 시 fuzzy 매칭 보강
+  // 정확 매칭 후 누락 의심 시 fuzzy 매칭 보강
   //   원인: store_name 에 전각/반각 공백, NFKC 차이 등으로 정확 매칭에서 일부 누락
   //         (例: 'きたかた食堂 神保町店' vs 'きたかた食堂　神保町店')
   var res = await _sb.from('store_menu_cards')
@@ -29532,7 +29532,7 @@ async function _admLoadStoreMenus(storeName) {
 }
 
 /* ──────────────────────────────────────────────────────────────────
-   build 350 — 가게 사진 관리 (어드민 전용)
+ — 가게 사진 관리 (어드민 전용)
    - store_photos 테이블 (store_name, photo_url, is_primary, sort_order)
    - Supabase Storage bucket: store-photos
    ────────────────────────────────────────────────────────────────── */
@@ -29543,7 +29543,7 @@ async function _admLoadStorePhotos(storeName) {
     return;
   }
   wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">로딩 중...</div>';
-  // b430 — store_photos (어드민 등록) + store_community_photos (유저 등록) 통합 조회
+  // store_photos (어드민 등록) + store_community_photos (유저 등록) 통합 조회
   try {
     var p1 = _sb.from('store_photos')
       .select('id,photo_url,is_primary,created_at')
@@ -29617,7 +29617,7 @@ async function _admUploadStorePhotos(input) {
     if (!f.type || f.type.indexOf('image/') !== 0) { console.warn('not image, skip:', f.name); continue; }
     if (f.size > 5 * 1024 * 1024) { showToast('5MB 초과: ' + f.name); continue; }
     try {
-      f = await _compressImage(f, 1600, 0.82);  // build 383 — 업로드 전 압축
+      f = await _compressImage(f, 1600, 0.82);  // 업로드 전 압축
       var extMatch = f.name.match(/\.([a-zA-Z0-9]{1,5})$/);
       var ext = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
       var path = 'stores/' + _admEditStoreId + '/' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) + '.' + ext;
@@ -29655,7 +29655,7 @@ async function _admTogglePrimaryPhoto(photoId, source) {
   var storeName = document.getElementById('adm-store-name').value.trim();
   if (!storeName) return;
   var _apSid = await _resolveStoreId(storeName);   // 동명 분리: 대표사진 리셋을 store_id 로 스코프
-  // b430 — 커뮤니티 사진(유저 등록)을 대표로 지정 → store_photos 로 자동 복사 후 대표 표시
+  // 커뮤니티 사진(유저 등록)을 대표로 지정 → store_photos 로 자동 복사 후 대표 표시
   if (source === 'community') {
     try {
       var c = await _sb.from('store_community_photos').select('photo_url,uploaded_by').eq('id', photoId).maybeSingle();
@@ -29733,7 +29733,7 @@ async function _admDeleteStorePhoto(photoId, source) {
   if (!_sb || !_isAdmin) { showToast('어드민 권한 필요'); return; }
   if (!confirm('이 사진을 삭제할까요?\n(Supabase Storage 의 원본 파일도 함께 삭제)')) return;
   var storeName = document.getElementById('adm-store-name').value.trim();
-  // b430 — 출처에 따라 다른 테이블에서 삭제
+  // 출처에 따라 다른 테이블에서 삭제
   var table = source === 'community' ? 'store_community_photos' : 'store_photos';
   try {
     var cur = await _sb.from(table).select('photo_url').eq('id', photoId).maybeSingle();
@@ -29788,7 +29788,7 @@ async function admSaveStore() {
   if (!isNaN(lat) && !isNaN(lng)) { payload.lat = lat; payload.lng = lng; }
   var res = await _sb.from('stores').update(payload).eq('id', _admEditStoreId);
   if (res.error) { showToast('저장 실패: '+res.error.message); return; }
-  // build 331 — 명확한 피드백 + 가게 목록 자동 복귀
+  // 명확한 피드백 + 가게 목록 자동 복귀
   showToast('✅ 가게 정보 수정 완료 — 가게 목록으로 이동');
   // PC 어드민 vs 일반 모달 분기
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
@@ -29823,7 +29823,7 @@ async function openAdminPinDetail(pinId) {
   if (res.error || !res.data) { showToast('핀 로드 실패'); return; }
   var p = res.data;
   _admEditPinStoreId = p.store_id;
-  window._admEditPinOldItem = p.item_name || '';   // b617 — 이름 변경 시 매칭 메뉴카드 rename 용
+  window._admEditPinOldItem = p.item_name || '';   // 이름 변경 시 매칭 메뉴카드 rename 용
   document.getElementById('adm-pin-item').value = p.item_name || '';
   document.getElementById('adm-pin-price').value = p.price || '';
   document.getElementById('adm-pin-comment').value = p.comment || '';
@@ -29853,7 +29853,7 @@ async function admSavePin() {
     item_name: item, price: price, comment: comment
   }).eq('id', _admEditPinId);
   if (res.error) { showToast('저장 실패: '+res.error.message); return; }
-  // b617 — 메뉴명이 바뀌면 매칭되는 store_menu_cards(사진·평점 보존)도 함께 rename.
+  // 메뉴명이 바뀌면 매칭되는 store_menu_cards(사진·평점 보존)도 함께 rename.
   //   가게상세 fallback 은 '정확한 이름'으로 중복판단하므로, 안 바꾸면 이름 어긋난
   //   빈 fallback 카드가 새로 생김. store_id 로만 매칭(동명 다른 지점 오염 방지).
   var _oldItem = window._admEditPinOldItem || '';
@@ -29916,11 +29916,11 @@ function openAdminPricing() {
       return '<tr><td style="padding:7px 8px;">'+r.action+'</td><td style="padding:7px 8px;text-align:right;font-weight:700;color:var(--gold-dark);">+'+r.chiri+' チリ</td><td style="padding:7px 8px;text-align:right;color:var(--text-3);">≈ ¥'+val+'</td></tr>';
     }).join('');
   }
-  _admRenderFlagToggle();   // b599 — 치리 리워드 ON/OFF 토글 상태 반영
+  _admRenderFlagToggle();   // 치리 리워드 ON/OFF 토글 상태 반영
   openOv('ov-admin-pricing');
 }
 
-// ── b599 — 치리 리워드 ON/OFF 토글 (어드민) ──
+// ── — 치리 리워드 ON/OFF 토글 (어드민) ──
 function _admRenderFlagToggle(){
   var on = featureRawOn('chiri_reward');
   var chk   = document.getElementById('adm-flag-chiri-reward');
@@ -30089,7 +30089,7 @@ function sdStartCardPhoto(cardId) {
       showToast('📍 가게에서 약 '+Math.round(dist)+'m 떨어져 있어요. ' + SD_PHOTO_MAX_M + 'm 이내에서만 사진을 올릴 수 있어요');
       return;
     }
-    // 통과 → 사진 출처 바텀시트 (b385: stacking context 갇히지 않게 body 끝으로 이동)
+    // 통과 → 사진 출처 바텀시트 (: stacking context 갇히지 않게 body 끝으로 이동)
     var ps = document.getElementById('ov-photo-source');
     if (ps && ps.parentElement !== document.body) document.body.appendChild(ps);
     openOv('ov-photo-source');
@@ -30142,7 +30142,7 @@ async function _sdDoCardPhotoUpload(file) {
   var cardId = _sdPhotoCardId;
   _sdPhotoCardId = null; // 즉시 클리어 (중복 방지)
   try {
-    file = await _compressImage(file, 1600, 0.82);  // build 383 — 업로드 전 압축
+    file = await _compressImage(file, 1600, 0.82);  // 업로드 전 압축
     var ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
     var path = 'menu-card/' + cardId + '/' + Date.now() + '.' + ext;
     var up = await _sb.storage.from('store-photos').upload(path, file, {
@@ -30181,7 +30181,7 @@ async function _sdDoCardPhotoUpload(file) {
 var _ucCallback = null;
 function showUploadConfirm(onConfirm){
   _ucCallback = onConfirm;
-  // build 360 — 가게 상세 모달의 stacking context 회피 → document.body 로 이동
+  // 가게 상세 모달의 stacking context 회피 → document.body 로 이동
   var ov = document.getElementById('ov-upload-confirm');
   if (ov && ov.parentElement !== document.body) {
     document.body.appendChild(ov);
@@ -30210,15 +30210,15 @@ async function openMenuDetail(cardId){
   _sdCmtPage[cardId] = 0;
   _mdComments = [];
   _mdPhotos = [];
-  _mdLiked = false; _mdLikeCount = (card.like_count||0); // b451 — 좋아요 초기값
-  // build 361 — 가게 상세 모달의 stacking context 회피 → body 로 이동
+  _mdLiked = false; _mdLikeCount = (card.like_count||0); // 좋아요 초기값
+  // 가게 상세 모달의 stacking context 회피 → body 로 이동
   var ov = document.getElementById('ov-menu-detail');
   if (ov && ov.parentElement !== document.body) {
     document.body.appendChild(ov);
   }
   openOv('ov-menu-detail');
   _mdRender(); // 즉시 스켈레톤 표시
-  // b462 — 확인수 +1: 본인 카드는 클라에서 제외(자기 조회 안 셈), 그 외엔 무조건 +1
+  // 확인수 +1: 본인 카드는 클라에서 제외(자기 조회 안 셈), 그 외엔 무조건 +1
   if (_sb && cardId) {
     var _vcCard = _sdCards.find(function(c){ return c.id === cardId; });
     var _isMyCard = _vcCard && _currentUser && _vcCard.created_by && _vcCard.created_by === _currentUser.id;
@@ -30237,7 +30237,7 @@ async function openMenuDetail(cardId){
   _mdComments = results[0] || [];
   _mdRender();
 }
-// b451 — 메뉴 카드 좋아요 상태/수 로드
+// 메뉴 카드 좋아요 상태/수 로드
 var _mdLiked = false, _mdLikeCount = 0;
 async function _mdLoadLike(cardId){
   _mdLiked = false; _mdLikeCount = 0;
@@ -30291,7 +30291,7 @@ function closeMenuDetail(){
   _mdPhotos = [];
 }
 
-/* build 359 — 메뉴 카드 사진 로드 (legacy image_url + store_menu_photos) */
+/* — 메뉴 카드 사진 로드 (legacy image_url + store_menu_photos) */
 async function _mdLoadPhotos(cardId) {
   _mdPhotos = [];
   if (!cardId || !_sb) return;
@@ -30322,7 +30322,7 @@ async function _mdLoadPhotos(cardId) {
   }
 }
 
-/* build 359 — 메뉴 상세 사진 클릭 → 가게 상세와 동일 뷰어 재사용 */
+/* — 메뉴 상세 사진 클릭 → 가게 상세와 동일 뷰어 재사용 */
 function mdOpenPhotoViewer(idx) {
   if (!_mdPhotos || _mdPhotos.length === 0) return;
   window._sdPhotoList = _mdPhotos.map(function(p){ return p.photo_url; });
@@ -30396,7 +30396,7 @@ function _mdRender(){
       +'<div onclick="closeMenuDetail()" style="width:34px;height:34px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text-2);">✕</div>'
     +'</div></div>';
 
-  // 카드 hero 이미지 (build 359 — 슬라이드 + 전체화면 뷰어)
+  // 카드 hero 이미지 ( — 슬라이드 + 전체화면 뷰어)
   var photos = _mdPhotos || [];
   if (photos.length === 0 && card.image_url) {
     // 사진 캐시 아직 로드 안 됨 → 일단 legacy 1장 임시 표시 (캐시 로드 후 _mdRender 다시 호출됨)
@@ -30436,7 +30436,7 @@ function _mdRender(){
     +'<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:4px;">'
       +'<div style="font-size:22px;font-weight:800;color:var(--text-1);letter-spacing:-.5px;flex:1;min-width:0;">'+(card.menu_name||'')+'</div>'
       +'<div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">'
-        // b451 — 좋아요 버튼 (공유 옆)
+        // 좋아요 버튼 (공유 옆)
         +'<div onclick="mdToggleLike()" id="md-like-btn" style="height:36px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:999px;border:1px solid '+(_mdLiked?'#E0245E':'var(--border)')+';background:'+(_mdLiked?'#FDE2EC':'var(--bg-2)')+';cursor:pointer;">'
           +'<span style="font-size:16px;">'+(_mdLiked?'❤️':'🤍')+'</span>'
           +'<span style="font-size:14px;font-weight:800;color:'+(_mdLiked?'#E0245E':'var(--text-2)')+';">'+_mdLikeCount+'</span>'
@@ -30474,7 +30474,7 @@ function _mdRender(){
   }
 
   // 댓글 페이지네이션
-  // build 365 — 댓글 리스트는 content 있는 row 만 (별점만 등록된 row 는 위 평점 분포에만 카운트)
+  // 댓글 리스트는 content 있는 row 만 (별점만 등록된 row 는 위 평점 분포에만 카운트)
   //   치리 공개 흐름에서 같은 영수증의 모든 메뉴에 commentText 복제됐던 케이스를
   //   화면 단에서 즉시 차단 — DB 정리 SQL 미실행 환경에서도 안전
   var displayComments = comments.filter(function(c){
@@ -30640,7 +30640,7 @@ async function sdSubmitComment(cardId,existingId){
     var upd=await _sb.from('store_menu_comments').update({rating:st,content:tx,updated_at:new Date().toISOString()}).eq('id',existingId);
     if(upd.error){ alert(t('toast.edit_fail',{msg:upd.error.message})); return; }
 
-    // build 370/374 — 가게 단위 방문자 리뷰(store_comments) 도 동기화
+    // /374 — 가게 단위 방문자 리뷰(store_comments) 도 동기화
     //   사용자 한 명당 한 가게에 댓글 하나라는 관점에서
     //   메뉴 댓글 수정 시 같은 user_id + 같은 store_name 의 store_comments 도 같이 update
     //   (없으면 신규 insert — 메뉴에 평점 + 텍스트가 있다는 건 가게 리뷰로도 의미 있음)
@@ -30659,7 +30659,7 @@ async function sdSubmitComment(cardId,existingId){
 
         if (existing.length > 0) {
           // 기존 row 들 일괄 update (.select() 로 RLS 차단 검증)
-          //   build 375 — store_comments 에 updated_at 컬럼 없음 → content/rating 만 update
+          // store_comments 에 updated_at 컬럼 없음 → content/rating 만 update
           var updIds = existing.map(function(r){ return r.id; });
           var upd2 = await _sb.from('store_comments').update({
             content: tx,
@@ -30716,7 +30716,7 @@ async function sdSubmitComment(cardId,existingId){
   await _sdUpdateCardRating(cardId);
   await _sdLoadCardDetail(cardId);
   await _sdLoadMenuCards();
-  // build 370 — 가게 단위 방문자 리뷰 영역도 다시 그리기
+  // 가게 단위 방문자 리뷰 영역도 다시 그리기
   if (typeof _sdLoadStoreComments === 'function') {
     try { await _sdLoadStoreComments(); } catch(e) { console.warn('[sdSubmitComment] _sdLoadStoreComments 실패:', e); }
   }
@@ -30857,7 +30857,7 @@ function sdSubmitNewCard(){
   }
 }
 async function _sdDoSubmitNewCard(p){
-  // b449 — 중복 방지: 같은 가게에 같은(정규화) 메뉴명 카드가 이미 있으면
+  // 중복 방지: 같은 가게에 같은(정규화) 메뉴명 카드가 이미 있으면
   //   새 카드 생성 대신 기존 카드에 평점/코멘트/사진만 추가 (치리 공개와 동일 규칙)
   var _normMenu = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
   var _existCard = null;
@@ -30870,7 +30870,7 @@ async function _sdDoSubmitNewCard(p){
   var imgUrl=null;
   if(p.imgFile){
     try {
-      p.imgFile = await _compressImage(p.imgFile, 1600, 0.82);  // build 383 — 업로드 전 압축
+      p.imgFile = await _compressImage(p.imgFile, 1600, 0.82);  // 업로드 전 압축
       var ext=(p.imgFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'') || 'jpg';
       var path='menu-cards/'+_sdAsciiName(_sdName)+'/'+Date.now()+'.'+ext;
       var up=await _sb.storage.from('store-photos').upload(path,p.imgFile,{upsert:false,contentType:p.imgFile.type||'image/jpeg'});
@@ -30917,7 +30917,7 @@ async function _sdDoSubmitNewCard(p){
 var _isStandalone  = window.matchMedia('(display-mode: standalone)').matches ||
                      window.navigator.standalone === true;
 var _hasOAuthToken = !!(window.location.hash && window.location.hash.indexOf('access_token') !== -1);
-// 비밀번호 재설정 메일 링크 복귀 감지 (b552) — #...type=recovery → 새 비번 입력 화면으로
+// 비밀번호 재설정 메일 링크 복귀 감지 — #...type=recovery → 새 비번 입력 화면으로
 window._isPwRecovery = (((window.location.hash||'') + (window.location.search||'')).indexOf('type=recovery') !== -1);
 // PWA에서 시작한 OAuth 표식: URL(?pwaret=1) 우선, 저장소 플래그는 보조 (저장소 미공유 기기 대비)
 var _hasReturnMark = (window.location.search.indexOf('pwaret=1') !== -1) ||
@@ -30965,13 +30965,13 @@ if (_isOAuthReturnTab) {
 } else {
   // ── 정상 앱 시작: 세션 먼저 확인 후 화면 분기 (로그인 화면 플래시 방지) ──
   (async function() {
-    // 비번 재설정 복귀(b552): recovery 토큰이면 세션→showApp 분기보다 먼저 가로채 새 비번 화면 표시
+    // 비번 재설정 복귀: recovery 토큰이면 세션→showApp 분기보다 먼저 가로채 새 비번 화면 표시
     if (window._isPwRecovery) {
       try { await _sb.auth.getSession(); } catch(e) {}   // URL hash → recovery 세션 확립 대기
       _showResetPwScreen();
       return;
     }
-    // 랜딩 분기 (b541): 플래시 방지 위해 동기적으로 먼저 판단 — 토큰 있거나 PWA면 랜딩 절대 노출 X.
+    // 랜딩 분기 : 플래시 방지 위해 동기적으로 먼저 판단 — 토큰 있거나 PWA면 랜딩 절대 노출 X.
     var _standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
     var _hasToken = false;
     try { for (var i=0;i<localStorage.length;i++){ var k=localStorage.key(i); if (k && k.indexOf('sb-')===0 && k.indexOf('-auth-token')>-1){ _hasToken=true; break; } } } catch(e){}
@@ -30998,7 +30998,7 @@ if (_isOAuthReturnTab) {
   })();
 }
 
-// ── 랜딩 표시 헬퍼 (b539) — 비로그인 방문자·크롤러용 보이는 랜딩 ──
+// ── 랜딩 표시 헬퍼 — 비로그인 방문자·크롤러용 보이는 랜딩 ──
 function _hideLanding(){ var l=document.getElementById('seo-landing'); if(l) l.style.display='none'; }
 function _showLanding(){ var l=document.getElementById('seo-landing'); if(l) l.style.display=''; }
 function landingEnter(){ _hideLanding(); var a=document.getElementById('screen-auth'); if(a) a.style.display='flex'; try{ window.scrollTo(0,0); }catch(e){} }
@@ -31050,7 +31050,7 @@ document.addEventListener('visibilitychange', async function() {
       }
     }
   } catch(e) { console.warn('[visibility] session check failed', e); }
-  // b636 — 포그라운드 복귀 시 어드민·유저별 플래그까지 재로드 (어드민이 치리워드 켠/끈 걸 근실시간 반영)
+  // 포그라운드 복귀 시 어드민·유저별 플래그까지 재로드 (어드민이 치리워드 켠/끈 걸 근실시간 반영)
   try { if (_sb && _currentUser) { await _loadAdminFlag(); } } catch(e){}
 });
 
@@ -31079,7 +31079,7 @@ if (!_isOAuthReturnTab && !window._isPwRecovery && window.location.hash && windo
 // PWA 서비스 워커 등록
 // 사용자 노출용 시맨틱 버전 (인증화면·설정창 푸터에 표시)
 // ════════════════════════════════════════════════════════════════════════════
-// SVG 라인 아이콘 셋 (build 336) — Lucide 스타일 인라인 SVG
+// SVG 라인 아이콘 셋 — Lucide 스타일 인라인 SVG
 //   사용: icon('receipt', 24, '#172C58') → SVG string 반환
 //   클래스: <span class="lico" data-lico="receipt"></span> + _renderLicos() 자동 변환
 // ════════════════════════════════════════════════════════════════════════════
@@ -31127,7 +31127,7 @@ window.__LICO_SET__ = {
   minus:        '<line x1="5" y1="12" x2="19" y2="12"/>',
   external:     '<path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>',
   ad:           '<path d="M3 11l18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/>',
-  // build 337 Phase 2 — 설정창 추가 아이콘
+  // Phase 2 — 설정창 추가 아이콘
   moon:         '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>',
   clock:        '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
   globe:        '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>',
@@ -31135,7 +31135,7 @@ window.__LICO_SET__ = {
   ticket:       '<path d="M2 9a3 3 0 010 6v2a2 2 0 002 2h16a2 2 0 002-2v-2a3 3 0 010-6V7a2 2 0 00-2-2H4a2 2 0 00-2 2z"/><path d="M13 5v2M13 17v2M13 11v2"/>',
   logout:       '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>',
   copy:         '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>',
-  // build 369 — 가게 상세 SVG 보강
+  // 가게 상세 SVG 보강
   share:        '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
   more:         '<circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>',
 };
@@ -31183,7 +31183,7 @@ function ctOpenSns(key){
 }
 
 /* ══════════════════════════════
-   영수증 PDF 내보내기 (build 580) — 외부 라이브러리 없이 캔버스→JPEG→PDF
+ 영수증 PDF 내보내기 — 외부 라이브러리 없이 캔버스→JPEG→PDF
    · 내용 선택: data(정리본) / photo(원본사진) / both
    · 범위: 1건(single, 편집모달) / 기간 묶음(period, 월별리포트)
    · 원본사진은 비공개 버킷 → signed URL → blob URL 로 로드(canvas taint 회피) → JPEG 정규화
@@ -31191,7 +31191,7 @@ function ctOpenSns(key){
 var _pdfContent = 'both';   // 'data' | 'photo' | 'both'
 var _pdfCtx = null;         // { scope, receipts:[r], label }
 
-// _downloadBlob 은 기존 정의(어드민 데이터셋 다운로드) 재사용 — 중복 정의 제거(b588)
+// _downloadBlob 은 기존 정의(어드민 데이터셋 다운로드) 재사용 — 중복 정의 제거
 function _jpegBytesFromDataUrl(durl){
   var b64 = durl.split(',')[1] || '';
   var bin = atob(b64), u8 = new Uint8Array(bin.length);
@@ -31372,7 +31372,7 @@ async function runPdfExport(){
 }
 
 /* ══════════════════════════════
-   정기지출 (build 582) — 등록한 고정비(구독·월세·통신비 등)를 매월 자동으로 가계부에 기록
+ 정기지출 — 등록한 고정비(구독·월세·통신비 등)를 매월 자동으로 가계부에 기록
    · recurring_expenses 테이블(recurring_expenses.sql) · 클라 생성(앱 로드 시 도래분 idempotent)
    · 생성 = 일반 영수증 1건 insert → 가계부/달력/예산/리포트에 자동 반영
 ══════════════════════════════ */
@@ -31494,7 +31494,7 @@ async function deleteRecur(){
   showToast(t('recur.deleted'));
 }
 
-/* ══ 기록 스트릭 + 오늘 미기록 넛지 (build 583) ══ */
+/* ══ 기록 스트릭 + 오늘 미기록 넛지 ══ */
 function _loggedToday(){ var ts=_ymd(new Date()); return DB.some(function(r){ return r.date===ts; }); }
 function _logStreak(){
   // 연속 기록 일수. 오늘 기록 있으면 오늘부터, 없으면 어제부터 거슬러 셈(오늘 안엔 아직 유지).
@@ -31515,7 +31515,7 @@ function _streakNudgeHtml(){
 }
 
 /* ══════════════════════════════
-   상품 가성비 검색 (build 585) — 커뮤니티 product_prices 전체에서 최저가 가게
+ 상품 가성비 검색 — 커뮤니티 product_prices 전체에서 최저가 가게
    · 상품명(products_master.canonical ilike) → product_prices 조회
    · 신선도 컷(180일 초과 제외) + 이상치 컷(중앙값 3배 초과 제외) + 용량 단가
    · 현재 GPS/치리 위치 있으면 거리 표시, 단가 오름차순
@@ -31584,7 +31584,7 @@ function _pcsAge(ts){
 }
 
 /* ══════════════════════════════
-   CSV 내보내기 (build 586) — 가계부 데이터를 엑셀/스프레드시트용 CSV로
+ CSV 내보내기 — 가계부 데이터를 엑셀/스프레드시트용 CSV로
    · 품목 단위 행(분석·세금·백업용) · Excel 한글/일본어 위해 UTF-8 BOM
 ══════════════════════════════ */
 function _csvCell(v){
@@ -31628,7 +31628,7 @@ function exportPeriodCsv(){
 }
 
 /* ══════════════════════════════
-   연간 리포트 (build 587) — 올해 총정리(월별리포트 미러). 달력연도 기준.
+ 연간 리포트 — 올해 총정리(월별리포트 미러). 달력연도 기준.
 ══════════════════════════════ */
 var _yrY = (new Date()).getFullYear();
 function openYearReport(yr){
@@ -31674,7 +31674,7 @@ function renderYearReport(){
     +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">¥'+total.toLocaleString()+'</div>'+deltaHtml
     +'<div style="margin-top:14px;font-size:12px;opacity:.85;">'+t('yr.month_avg',{v:monAvg.toLocaleString()})+'</div>'
     +'</div>';
-  // build 589 — 월별 추이: 가로 막대 + 금액 직접 표기(직관적). 현재 연도는 이번 달까지만.
+  // 월별 추이: 가로 막대 + 금액 직접 표기(직관적). 현재 연도는 이번 달까지만.
   var mlabels=t('yr.months').split(',');
   var lastIdx=(y===now.getFullYear())?now.getMonth():11;
   var rows='';
@@ -31691,7 +31691,7 @@ function renderYearReport(){
   var catSorted=Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];});
   var catBars=catSorted.map(function(c){var pct=total>0?Math.round(cc[c]/total*100):0;var color=(typeof CAT_COLOR!=='undefined'&&CAT_COLOR[c])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">¥'+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
   html+=_mrLbl(t('yr.sec_category'))+'<div class="card" style="margin-bottom:14px;">'+catBars+'</div>';
-  // build 591 — 가게: ① 자주 간(방문횟수순) ② 지출 많은(금액순) 두 섹션, 각 TOP10
+  // 가게: ① 자주 간(방문횟수순) ② 지출 많은(금액순) 두 섹션, 각 TOP10
   var st={}; cur.forEach(function(r){ if(!st[r.store])st[r.store]={cnt:0,sum:0}; st[r.store].cnt++; st[r.store].sum+=r.total; });
   var stArr=Object.keys(st).map(function(n){ return {n:n,cnt:st[n].cnt,sum:st[n].sum}; });
   var _yrMedal=['🥇','🥈','🥉'];
@@ -31721,11 +31721,11 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 637;
+window.__APP_BUILD__ = 638;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
-//   b537: ret-work 서버의 기존 키페어(15일 전 생성)에 맞춰 복구.
+// ret-work 서버의 기존 키페어(15일 전 생성)에 맞춰 복구.
 window.__VAPID_PUBLIC_KEY__ = 'BLbeE-rgbHXgwam9fEA3WCb0k8bPvos0J1kyTi7rvHwFTMODEA9S9xwj_C8EeTEucRZ1Uh2VPWZePmDW5h179kM';
 console.log('%c[ReceiptIQ] loaded version:', 'color:#7A3FE8;font-weight:bold', window.__APP_VERSION__ + ' (build ' + window.__APP_BUILD__ + ')');
 // 푸터의 버전 표시 자동 갱신 (인증 화면 + 설정창 공통)
@@ -31805,7 +31805,7 @@ if ('serviceWorker' in navigator) {
 window._redeemPendingRef = async function _redeemPendingRef(){
   var code = (function(){ try{return localStorage.getItem('pending_ref');}catch(e){return null;} })();
   if (!code) return;
-  // b468 — 세션(_currentUser) 아직 준비 안 됐으면 최대 8회(약 6초) 폴링 재시도
+  // 세션(_currentUser) 아직 준비 안 됐으면 최대 8회(약 6초) 폴링 재시도
   if (!_sb || !_currentUser) {
     window._refRetry = (window._refRetry || 0) + 1;
     if (window._refRetry <= 8) { setTimeout(window._redeemPendingRef, 800); }
@@ -31826,7 +31826,7 @@ window._redeemPendingRef = async function _redeemPendingRef(){
     if (d.ok){
       try{localStorage.removeItem('pending_ref');}catch(e){}
       if (typeof showToast === 'function') showToast(t('ref.done'));
-      // build 316 — 추천자에게 푸시 알림 (친구 가입 알림)
+      // 추천자에게 푸시 알림 (친구 가입 알림)
       if (d.referrer) {
         var myName = (document.getElementById('sp-nickname-display') || {}).textContent || t('common.guest');
         _sendSocialPush(
@@ -31881,7 +31881,7 @@ window.renderReferralRewardUI = function renderReferralRewardUI(){
   if (sE) sE.textContent = totalEarned.toLocaleString();
   if (sP) sP.textContent = pending;
 
-  // 설정창 청구 배너 (대기 건이 있으면 표시) — build 302: 다국어 지원
+  // 설정창 청구 배너 (대기 건이 있으면 표시) — 다국어 지원
   var spB = document.getElementById('sp-ref-reward-banner');
   if (spB) {
     if (pending > 0) {
