@@ -2542,7 +2542,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       </div>
       <div class="sg">
         <div class="si"><span class="lico" data-lico="globe" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.lang">언어</span><select id="lang-select" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;" onchange="changeLang(this.value)"><option value="ko">한국어</option><option value="ja">日本語</option><option value="en">English</option><option value="zh">中文</option></select></div>
-        <div class="si"><span class="lico" data-lico="coin" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.currency">통화</span><span class="si-val">¥ JPY</span></div>
+        <div class="si" onclick="toggleCurrency()" style="cursor:pointer;"><span class="lico" data-lico="coin" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.currency">통화</span><span class="si-val" id="cur-val">¥ JPY</span><span style="font-size:11px;color:var(--text-3);margin-left:4px;">⇄</span></div>
         <div class="si"><span class="lico" data-lico="calendar" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="settings.week_start">주 시작 요일</span><select id="week-start-select" onchange="setWeekStart(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;"><option value="0" data-i18n="week.sun">일요일</option><option value="1" data-i18n="week.mon">월요일</option></select></div>
         <div class="si" style="align-items:flex-start;"><span class="lico" data-lico="calendar" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;margin-top:1px;"></span><div style="flex:1;min-width:0;"><div class="si-lbl" data-i18n="settings.month_start">월 시작일</div><div style="font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;line-height:1.4;" data-i18n="settings.month_start_hint">급여일 기준으로 한 달을 잡으려면 변경하세요 (예: 25일)</div></div><select id="month-start-select" onchange="setMonthStartDay(this.value)" style="border:none;background:transparent;font-size:12px;color:var(--text-3);font-weight:600;font-family:var(--font);outline:none;cursor:pointer;align-self:center;margin-left:auto;"></select></div>
         <div class="si" onclick="openRecurring()" style="cursor:pointer;"><span class="lico" data-lico="refresh" data-size="18" data-color="var(--text-2)" style="width:22px;display:flex;justify-content:center;"></span><span class="si-lbl" data-i18n="recur.menu">정기지출 관리</span><span class="si-val" id="recur-count-badge" style="margin-left:auto;"></span><span style="font-size:12px;color:var(--text-3);margin-left:8px;">›</span></div>
@@ -5117,6 +5117,26 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
    console.log → _dbg 로 래핑(부수효과 인자 없음 확인됨). 버전배너·[SW] 로그는 console.log 그대로 유지. */
 window._DEBUG = false;
 function _dbg(){ if(window._DEBUG){ try{ console.log.apply(console, arguments); }catch(e){} } }
+/* 통화 표기 토글 (b643) — 환율 변환 없이 기호만(¥/₩). 한국 유저용 ₩ 표기.
+   유저 지출 금액만 _cursym()로 토글. 구독료 등 회사 고정가격은 정적 ¥ 유지(미변경). */
+var _CUR = (function(){ try{ return localStorage.getItem('riq_currency') === '₩' ? '₩' : '¥'; }catch(e){ return '¥'; } })();
+function _cursym(){ return _CUR; }
+function toggleCurrency(){ setCurrency(_CUR === '¥' ? '₩' : '¥'); }
+function setCurrency(sym){
+  _CUR = (sym === '₩') ? '₩' : '¥';
+  try{ localStorage.setItem('riq_currency', _CUR); }catch(e){}
+  applyCurrency();
+}
+function applyCurrency(){
+  var cv = document.getElementById('cur-val');
+  if (cv) cv.textContent = (_CUR === '₩') ? '₩ KRW' : '¥ JPY';
+  // 동적 금액 표시 재렌더 (applyLang과 동일 세트)
+  try { if (typeof renderHome === 'function') renderHome(); } catch(e){}
+  try { if (typeof renderHistory === 'function') renderHistory(typeof currentFilter !== 'undefined' ? currentFilter : 'all'); } catch(e){}
+  try { if (typeof renderReportSummary === 'function') renderReportSummary(); } catch(e){}
+  try { if (typeof renderCatBreakdown === 'function') renderCatBreakdown(); } catch(e){}
+  try { if (typeof renderBars === 'function') renderBars(typeof _reportPeriod !== 'undefined' ? _reportPeriod : 'week'); } catch(e){}
+}
 /* ══════════════════════════════
    Supabase 초기화
 ══════════════════════════════ */
@@ -6484,7 +6504,7 @@ function _ccSheetPrice(val){
 function _ccUpdatePriceLabel(v){
   var el = document.getElementById('cc-price-label');
   if (!el) return;
-  el.textContent = (v>=CC_PRICE_MAX) ? ('¥0 〜 ¥'+CC_PRICE_MAX.toLocaleString()+'+') : ('¥0 〜 ¥'+parseInt(v,10).toLocaleString());
+  el.textContent = (v>=CC_PRICE_MAX) ? ('¥0 〜 '+_cursym()+CC_PRICE_MAX.toLocaleString()+'+') : ('¥0 〜 '+_cursym()+parseInt(v,10).toLocaleString());
 }
 function _ccSheetCat(el){
   document.querySelectorAll('#cc-cat-chips .ct-cat-chip').forEach(function(c){ c.classList.remove('active'); });
@@ -6652,7 +6672,7 @@ function _myCardItemHtml(c) {
     +   '<div style="font-size:15px;font-weight:800;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_esc(c.menu_name||'')+'</div>'
     +   '<div style="font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 5px;">🏪 '+_esc(c.store_name||'')+'</div>'
     +   '<div style="display:flex;align-items:center;gap:12px;font-size:12px;margin-bottom:4px;">'
-    +     (c.price ? '<span style="font-weight:800;color:var(--text-1);">¥'+Number(c.price).toLocaleString()+'</span>' : '')
+    +     (c.price ? '<span style="font-weight:800;color:var(--text-1);">'+_cursym()+Number(c.price).toLocaleString()+'</span>' : '')
     +     '<span>'+rating+'</span>'
     +   '</div>'
     +   (dateStr ? '<div style="font-size:10px;color:var(--text-3);">🕐 '+dateStr+'</div>' : '')
@@ -7337,7 +7357,7 @@ function ctMakePinSVG(icon, price, isTop, multi, hasPrivateNote) {
   var borderColor = hasPrivateNote ? '#C8B273' : themeColor;
   var bg          = hasPrivateNote ? '#FAF6E8' : '#ffffff';
   var textColor   = '#1A1A2E';
-  var priceStr    = '¥' + price.toLocaleString() + (multi ? '~' : '');
+  var priceStr    = _cursym()+ price.toLocaleString() + (multi ? '~' : '');
   var w = hasPrivateNote ? 112 : 100, h = 34;
   var strokeW = hasPrivateNote ? 2.5 : 1.8;
   var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
@@ -7372,7 +7392,7 @@ function ctResetFilter() {
 }
 function ctUpdatePriceFilter(val) {
   _ctPriceMax = parseInt(val);
-  document.getElementById('ct-price-range-label').textContent = '¥0 〜 ¥' + parseInt(val).toLocaleString();
+  document.getElementById('ct-price-range-label').textContent = '¥0 〜 '+_cursym()+ parseInt(val).toLocaleString();
   document.getElementById('ct-filter-label').textContent = parseInt(val).toLocaleString();
 }
 function ctSelectCat(el) {
@@ -7420,7 +7440,7 @@ function ctRenderRanking(type) {
       + '<div style="font-size:11px;color:var(--text-3);margin-top:2px;">' + (p.item_name||'') + '</div>'
       + '</div>'
       + '<div style="text-align:right;">'
-      + '<div style="font-size:14px;font-weight:800;color:#E8A020;">¥' + p.price.toLocaleString() + '</div>'
+      + '<div style="font-size:14px;font-weight:800;color:#E8A020;">'+_cursym()+ p.price.toLocaleString() + '</div>'
       + '<div style="font-size:10px;color:var(--text-3);margin-top:2px;">📋' + (p.stores.receipt_count||0) + '枚</div>'
       + '</div>'
       + '<div style="font-size:16px;color:var(--text-3);padding-left:4px;">›</div>'
@@ -8804,10 +8824,10 @@ function renderRadar() {
         + '</div>'
         // 가격 변동
         + '<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px;">'
-          + '<span style="font-size:12px;color:var(--text-3);text-decoration:line-through;">¥' + d.old + '</span>'
+          + '<span style="font-size:12px;color:var(--text-3);text-decoration:line-through;">'+_cursym()+ d.old + '</span>'
           + '<span style="font-size:11px;color:var(--text-3);">→</span>'
-          + '<span style="font-size:14px;font-weight:800;color:var(--text-1);">¥' + d.now + '</span>'
-          + '<span style="font-size:11px;font-weight:700;color:' + color + ';">(' + sign + '¥' + Math.abs(diff) + ')</span>'
+          + '<span style="font-size:14px;font-weight:800;color:var(--text-1);">'+_cursym()+ d.now + '</span>'
+          + '<span style="font-size:11px;font-weight:700;color:' + color + ';">(' + sign + _cursym()+ Math.abs(diff) + ')</span>'
         + '</div>'
         // 스택 바 (기준가 + 변동분 반짝)
         + '<div style="display:flex;align-items:center;gap:8px;">'
@@ -9027,22 +9047,22 @@ async function renderSavingAnalysis(){
     h += '<div class="saving-item">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">'
       +   '<div style="font-size:14px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(it.name)+'</div>'
-      +   '<div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0;">¥'+it.monthlySaving.toLocaleString()+t('saving.per_month')+'</div>'
+      +   '<div style="background:var(--green-grad);color:#fff;font-size:10px;font-weight:700;padding:3px 8px;border-radius:8px;flex-shrink:0;">'+_cursym()+it.monthlySaving.toLocaleString()+t('saving.per_month')+'</div>'
       + '</div>'
       + '<div style="font-size:11px;color:var(--text-2);margin-top:4px;">'+t('saving.buy_basis',{n:it.monthlyQty})+'</div>'
       + '<div class="saving-stores">'
       + it.stores.map(function(s){
           return '<div class="saving-store"><div class="saving-store-name">'+_esc(s.store)+(s.cheapest?' ✓':'')+'</div>'
-            + '<div class="saving-price'+(s.cheapest?' cheap':'')+'">¥'+s.price.toLocaleString()+'<span style="font-size:9px;font-weight:500;opacity:.7;">'+(it.unitLabel||'')+'</span></div>'
-            + (s.cheapest ? '<div class="saving-badge">-¥'+it.perUnitSaving.toLocaleString()+'</div>' : '')
+            + '<div class="saving-price'+(s.cheapest?' cheap':'')+'">'+_cursym()+s.price.toLocaleString()+'<span style="font-size:9px;font-weight:500;opacity:.7;">'+(it.unitLabel||'')+'</span></div>'
+            + (s.cheapest ? '<div class="saving-badge">-'+_cursym()+it.perUnitSaving.toLocaleString()+'</div>' : '')
             + '</div>';
         }).join('')
       + '</div></div>';
   });
   h += '<div class="saving-total">'
     + '<div><div style="font-size:12px;font-weight:800;color:var(--text-1);">'+t('saving.total')+'</div>'
-    +   '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">'+t('saving.annual')+': ¥'+data.annual.toLocaleString()+'</div></div>'
-    + '<div style="font-size:28px;font-weight:900;color:var(--green);">¥'+data.totalMonthly.toLocaleString()+'<span style="font-size:13px;font-weight:600;">'+t('saving.per_month')+'</span></div>'
+    +   '<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:2px;">'+t('saving.annual')+': '+_cursym()+data.annual.toLocaleString()+'</div></div>'
+    + '<div style="font-size:28px;font-weight:900;color:var(--green);">'+_cursym()+data.totalMonthly.toLocaleString()+'<span style="font-size:13px;font-weight:600;">'+t('saving.per_month')+'</span></div>'
     + '</div>';
   el.innerHTML = h;
 }
@@ -9164,7 +9184,7 @@ function renderHome() {
       +'<div style="font-size:13px;font-weight:700;color:var(--text-1);line-height:1.45;">'+_esc(quote.q)+'</div>'
       +'<div style="font-size:12px;font-weight:600;color:var(--text-2);">'+t('home.today_label')+' : '
       +(todayAmt>0
-        ? '<span style="color:var(--green);font-weight:800;">¥'+todayAmt.toLocaleString()+'</span>'
+        ? '<span style="color:var(--green);font-weight:800;">'+_cursym()+todayAmt.toLocaleString()+'</span>'
         : '<span style="color:var(--text-3);">'+t('home.no_record')+'</span>'
       )
       +'</div>'
@@ -9174,9 +9194,9 @@ function renderHome() {
 
   // ── 2. 메인 카드 ──
   document.getElementById('home-total').textContent = '¥ '+totalAmt.toLocaleString();
-  document.getElementById('home-food').textContent  = '¥'+foodAmt.toLocaleString();
-  document.getElementById('home-eat').textContent   = '¥'+eatAmt.toLocaleString();
-  document.getElementById('home-other').textContent = '¥'+(totalAmt-foodAmt-eatAmt).toLocaleString();
+  document.getElementById('home-food').textContent  = _cursym()+foodAmt.toLocaleString();
+  document.getElementById('home-eat').textContent   = _cursym()+eatAmt.toLocaleString();
+  document.getElementById('home-other').textContent = _cursym()+(totalAmt-foodAmt-eatAmt).toLocaleString();
   var labelEl = document.getElementById('home-label');
   if (labelEl) {
     var _plabel = _periodLabel(now);   // 커스텀 시작일이면 '6/25~7/24' 범위 표시
@@ -9277,13 +9297,13 @@ function renderHome() {
         +'<div style="font-size:12px;font-weight:700;color:var(--text-2);">'+t('home.budget_this')+(_periodLabel(now)?' <span style="font-weight:600;color:var(--text-3);">('+_periodLabel(now)+')</span>':'')+'</div>'
         +'<div style="display:flex;align-items:baseline;gap:6px;">'
         +'<span style="font-size:12px;font-weight:700;color:'+(remain>=0?'var(--green)':'var(--red)')+';">'
-        +(remain>=0?'¥'+remain.toLocaleString()+' '+t('home.budget_remain'):'¥'+Math.abs(remain).toLocaleString()+' '+t('home.budget_over'))
+        +(remain>=0?_cursym()+remain.toLocaleString()+' '+t('home.budget_remain'):_cursym()+Math.abs(remain).toLocaleString()+' '+t('home.budget_over'))
         +'</span>'
         +'<span style="font-size:18px;font-weight:800;color:'+(isWarn?'var(--orange)':'var(--green)')+';letter-spacing:-1px;">'+pct+'%</span>'
         +'</div></div>'
         +'<div class="budget-track"><div class="budget-fill" style="width:'+pct+'%;background:linear-gradient(90deg,'+(isWarn?'#F07340,#E8894A':'var(--green-dark),var(--green)')+');"></div></div>'
         +'<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-3);font-weight:600;">'
-        +'<span>¥'+totalAmt.toLocaleString()+' '+t('home.budget_spent')+'</span><span>'+t('home.budget_goal')+' ¥'+budget.toLocaleString()+'</span>'
+        +'<span>'+_cursym()+totalAmt.toLocaleString()+' '+t('home.budget_spent')+'</span><span>'+t('home.budget_goal')+' '+_cursym()+budget.toLocaleString()+'</span>'
         +'</div>'
         + _cwInner
         +'</div>';
@@ -9311,7 +9331,7 @@ function renderHome() {
         +'<div style="width:7px;height:7px;border-radius:50%;background:'+dotClr+';flex-shrink:0;"></div>'
         +'<div style="font-size:10px;font-weight:700;color:'+(isToday?'var(--green)':'var(--text-3)')+';letter-spacing:.3px;text-transform:uppercase;">'+dayLbl+'</div>'
         +'<div style="flex:1;height:.5px;background:var(--border);"></div>'
-        +'<div style="font-size:10px;font-weight:700;color:var(--text-3);">¥'+dayTotal.toLocaleString()+'</div>'
+        +'<div style="font-size:10px;font-weight:700;color:var(--text-3);">'+_cursym()+dayTotal.toLocaleString()+'</div>'
         +'</div>';
       recs.forEach(function(r){
         homeCardCnt++;
@@ -9325,7 +9345,7 @@ function renderHome() {
           +(r.pay?'<span style="font-size:10px;font-weight:700;padding:1px 6px;border-radius:20px;background:'+PAY_BG[r.pay]+';color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>':'')
           +'</div></div>'
           +'<div style="text-align:right;flex-shrink:0;">'
-          +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
+          +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">'+_cursym()+r.total.toLocaleString()+'</div>'
           +'<div style="font-size:10px;color:var(--text-3);">'+t('home.item_count',{n:r.items.length})+'</div>'
           +'</div></div>';
       });
@@ -9422,7 +9442,7 @@ function renderHistory(cat) {
         +(r.pay ? '<span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;background:'+PAY_BG[r.pay]+';color:'+PAY_COLOR[r.pay]+';">'+PAY_ICON[r.pay]+' '+PAY_LABEL[r.pay]+'</span>' : '')
         +'</div></div>'
         +'<div class="h-amt" style="text-align:right;flex-shrink:0;">'
-        +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
+        +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">'+_cursym()+r.total.toLocaleString()+'</div>'
         +'</div>'
         +'<span class="arr" style="font-size:13px;color:var(--text-3);margin-left:6px;">›</span>'
         +'</div>'
@@ -9435,9 +9455,9 @@ function renderHistory(cat) {
           +'</div>';
       }
       r.items.forEach(function(item){
-        html += '<div class="d-row"><span>'+_esc(item.name)+(item.qty>1?' ×'+item.qty:'')+'</span><span>¥'+item.price.toLocaleString()+'</span></div>';
+        html += '<div class="d-row"><span>'+_esc(item.name)+(item.qty>1?' ×'+item.qty:'')+'</span><span>'+_cursym()+item.price.toLocaleString()+'</span></div>';
       });
-      html += '<div class="d-row" style="font-weight:800;border-top:0.5px solid var(--border);padding-top:6px;margin-top:2px;"><span>'+t('common.total')+'</span><span style="color:var(--green);">¥'+r.total.toLocaleString()+'</span></div>';
+      html += '<div class="d-row" style="font-weight:800;border-top:0.5px solid var(--border);padding-top:6px;margin-top:2px;"><span>'+t('common.total')+'</span><span style="color:var(--green);">'+_cursym()+r.total.toLocaleString()+'</span></div>';
       if (r.pay) {
         html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:7px 10px;background:'+PAY_BG[r.pay]+';border-radius:10px;">'
           +'<span style="font-size:11px;font-weight:600;color:var(--text-3);">'+t('rcpt.pay_label')+'</span>'
@@ -9759,7 +9779,7 @@ function updateEditTotal() {
   var el = document.getElementById('edit-total-disp');
   if (el) {
     if (el.tagName === 'INPUT') { if (document.activeElement !== el) el.value = total; }
-    else el.textContent = '¥' + total.toLocaleString();
+    else el.textContent = _cursym()+ total.toLocaleString();
   }
 }
 // 저장된 영수증 편집에서도 합계 직접 수정 → offset 재계산
@@ -9996,7 +10016,7 @@ function buildCatDetailHtml(cat) {
       +'<div style="font-size:10px;color:var(--text-3);margin-top:1px;">'+dateStr+' · '+t('home.item_count',{n:r.items.length})+'</div>'
       +'</div>'
       +'<div style="text-align:right;flex-shrink:0;">'
-      +'<div style="font-size:13px;font-weight:800;color:var(--text-1);">¥'+r.total.toLocaleString()+'</div>'
+      +'<div style="font-size:13px;font-weight:800;color:var(--text-1);">'+_cursym()+r.total.toLocaleString()+'</div>'
       +'<div style="font-size:9px;color:var(--green);font-weight:700;margin-top:2px;">'+t('rep.detail_view')+'</div>'
       +'</div>'
       +'</div>';
@@ -10041,7 +10061,7 @@ function renderReportSummary() {
   el.innerHTML = '<div style="background:var(--green-grad);border-radius:20px;padding:18px 20px 16px;color:#fff;box-shadow:var(--shadow-green);position:relative;overflow:hidden;">'
     + '<div style="position:absolute;right:-30px;top:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none;"></div>'
     + '<div style="font-size:10px;font-weight:700;opacity:.7;letter-spacing:.5px;text-transform:uppercase;">' + t('rep.book_title',{y:y,m:m}) + '</div>'
-    + '<div style="font-size:32px;font-weight:800;letter-spacing:-2px;margin-top:6px;line-height:1;">¥' + monthTotal.toLocaleString() + '</div>'
+    + '<div style="font-size:32px;font-weight:800;letter-spacing:-2px;margin-top:6px;line-height:1;">'+_cursym()+ monthTotal.toLocaleString() + '</div>'
     + '<div style="font-size:11px;opacity:.65;margin-top:5px;">' + t('rep.month_spent',{n:monthCnt}) + '</div>'
     + '<div style="display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.15);">'
     + '<div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 8px;text-align:center;">'
@@ -10050,7 +10070,7 @@ function renderReportSummary() {
     + '</div>'
     + '<div style="flex:1;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 8px;text-align:center;">'
     + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">' + t('rep.daily_avg') + '</div>'
-    + '<div style="font-size:15px;font-weight:800;line-height:1;">¥' + dayAvg.toLocaleString() + '</div>'
+    + '<div style="font-size:15px;font-weight:800;line-height:1;">'+_cursym()+ dayAvg.toLocaleString() + '</div>'
     + '</div>'
     + '<div style="flex:1.5;background:rgba(255,255,255,.12);border-radius:12px;padding:10px 8px;text-align:center;">'
     + '<div style="font-size:9px;opacity:.7;font-weight:600;letter-spacing:.3px;margin-bottom:5px;">' + t('rep.top_cat') + '</div>'
@@ -10164,7 +10184,7 @@ function showBarTip(el, val) {
   var left     = elRect.left - wrapRect.left + elRect.width / 2;
   tip.style.left    = left + 'px';
   tip.style.display = 'block';
-  tip.textContent   = '¥' + val.toLocaleString();
+  tip.textContent   = _cursym()+ val.toLocaleString();
 }
 
 function switchPeriod(el,type) {
@@ -10205,7 +10225,7 @@ function renderCatBreakdown() {
   });
   var topCat = activeCats[0];
   var topPct = Math.round((catTotals[topCat]/grandTotal)*100);
-  var totalShort = grandTotal >= 100000 ? '¥'+Math.round(grandTotal/1000)+'k' : '¥'+grandTotal.toLocaleString();
+  var totalShort = grandTotal >= 100000 ? _cursym()+Math.round(grandTotal/1000)+'k' : _cursym()+grandTotal.toLocaleString();
   var svgHtml = '<svg viewBox="0 0 100 100" width="100" height="100">'
     +'<circle cx="50" cy="50" r="'+R+'" fill="none" stroke="var(--bg)" stroke-width="'+SW+'"/>'
     +segments
@@ -10242,7 +10262,7 @@ function renderCatBreakdown() {
       +'<div class="cat-bar-bg"><div class="cat-bar-fill" style="width:'+pct+'%;background:'+(CAT_COLOR[cat]||'#ccc')+'"></div></div>'
       +'</div>'
       +'<div style="text-align:right;">'
-      +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">¥'+catTotals[cat].toLocaleString()+'</div>'
+      +'<div style="font-size:14px;font-weight:800;color:var(--text-1);">'+_cursym()+catTotals[cat].toLocaleString()+'</div>'
       +'<div style="font-size:10px;color:var(--text-3);margin-top:2px;">'+pct+'%</div>'
       +'</div>'
       +'<span class="cat-acc-arrow">›</span>'
@@ -10338,7 +10358,7 @@ function renderPayRanking() {
       +     rankBadge
       +   '</div>'
       +   '<div style="text-align:right;">'
-      +     '<span style="font-size:13px;font-weight:800;color:var(--text-1);">¥'+amt.toLocaleString()+'</span>'
+      +     '<span style="font-size:13px;font-weight:800;color:var(--text-1);">'+_cursym()+amt.toLocaleString()+'</span>'
       +     '<span style="font-size:11px;color:var(--text-3);margin-left:4px;">'+cnt+t('rep.unit_cnt')+' · '+pct+'%</span>'
       +   '</div>'
       + '</div>'
@@ -10567,13 +10587,13 @@ function _mrBuildCardCanvas(){
     // 총 지출 (큰 숫자)
     x.fillStyle = '#fff';
     x.font = '900 130px '+FONT;
-    x.fillText('¥' + total.toLocaleString(), PX, cy);
+    x.fillText(_cursym()+ total.toLocaleString(), PX, cy);
     cy += 60;
 
     // 부가 정보
     x.fillStyle = 'rgba(255,255,255,.78)';
     x.font = '500 30px '+FONT;
-    x.fillText(count + '건 · 일 평균 ¥' + avg.toLocaleString(), PX, cy);
+    x.fillText(count + '건 · 일 평균 '+_cursym()+ avg.toLocaleString(), PX, cy);
     cy += 70;
 
     // 구분선
@@ -10593,7 +10613,7 @@ function _mrBuildCardCanvas(){
       x.font = '700 38px '+FONT;
       x.fillText((i+1) + '.  ' + (CL[item.k] || item.k), PX, cy);
       x.font = '800 38px '+FONT;
-      var amt = '¥' + item.v.toLocaleString();
+      var amt = _cursym()+ item.v.toLocaleString();
       var aw = x.measureText(amt).width;
       x.fillText(amt, W-PX-aw, cy);
       cy += 60;
@@ -10607,7 +10627,7 @@ function _mrBuildCardCanvas(){
       cy += 55;
       x.fillStyle = 'rgba(255,255,255,.7)';
       x.font = '700 26px '+FONT;
-      x.fillText('이달 예산 ¥' + budget.toLocaleString(), PX, cy);
+      x.fillText('이달 예산 '+_cursym()+ budget.toLocaleString(), PX, cy);
       var pctTxt = budgetPct + '%';
       x.fillStyle = '#fff'; x.font = '800 36px '+FONT;
       var pw = x.measureText(pctTxt).width;
@@ -10723,13 +10743,13 @@ function renderMonthReport(){
   // 히어로
   var budget=parseInt(localStorage.getItem('receiptiq_budget')||'0');
   var deltaHtml='';
-  if(prevTotal>0){var d=total-prevTotal; deltaHtml='<div style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;background:rgba(255,255,255,.16);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;">'+(d<=0?'▼ ¥'+Math.abs(d).toLocaleString():'▲ ¥'+d.toLocaleString())+'</div>';}
+  if(prevTotal>0){var d=total-prevTotal; deltaHtml='<div style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;background:rgba(255,255,255,.16);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;">'+(d<=0?'▼ '+_cursym()+Math.abs(d).toLocaleString():'▲ '+_cursym()+d.toLocaleString())+'</div>';}
   html+='<div style="background:var(--green-grad);border-radius:20px;padding:20px;color:#fff;position:relative;overflow:hidden;margin-bottom:14px;">'
     +'<div style="position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.07);"></div>'
     +'<div style="font-size:10px;opacity:.7;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">'+t('mr.total_label')+' · '+t('rep.month_spent',{n:cur.length})+'</div>'
-    +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">¥'+total.toLocaleString()+'</div>'+deltaHtml;
+    +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">'+_cursym()+total.toLocaleString()+'</div>'+deltaHtml;
   if(budget>0){var pctLeft=Math.max(0,Math.round((budget-total)/budget*100)); var spentPct=Math.min(100,Math.round(total/budget*100));
-    html+='<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>¥'+budget.toLocaleString()+'</span><span>'+t('mr.budget_left',{n:pctLeft})+'</span></div><div style="height:8px;border-radius:5px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px;"><div style="height:100%;border-radius:5px;background:#fff;width:'+spentPct+'%;"></div></div></div>';
+    html+='<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.18);"><div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;"><span>'+_cursym()+budget.toLocaleString()+'</span><span>'+t('mr.budget_left',{n:pctLeft})+'</span></div><div style="height:8px;border-radius:5px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:8px;"><div style="height:100%;border-radius:5px;background:#fff;width:'+spentPct+'%;"></div></div></div>';
   }
   html+='</div>';
 
@@ -10749,10 +10769,10 @@ function renderMonthReport(){
     var budgetTag='', barColor=color, barW=Math.max(pct,2);
     if(cb>0){
       var bpct=Math.round(cc[c]/cb*100), over=cc[c]>cb;
-      budgetTag=' <small style="color:'+(over?'var(--red)':'var(--text-3)')+';font-size:9px;font-weight:700;">/ ¥'+cb.toLocaleString()+' '+bpct+'%'+(over?' ⚠️':'')+'</small>';
+      budgetTag=' <small style="color:'+(over?'var(--red)':'var(--text-3)')+';font-size:9px;font-weight:700;">/ '+_cursym()+cb.toLocaleString()+' '+bpct+'%'+(over?' ⚠️':'')+'</small>';
       if(over) barColor='var(--red)'; else if(bpct>=80) barColor='#E8894A';
     }
-    return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">¥'+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small>'+budgetTag+'</span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+barColor+';width:'+barW+'%;"></div></div></div>';
+    return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">'+_cursym()+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small>'+budgetTag+'</span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+barColor+';width:'+barW+'%;"></div></div></div>';
   }).join('');
   html+=_mrLbl(t('mr.sec_category'))+'<div class="card" style="margin-bottom:14px;">'+catBars+'</div>';
 
@@ -10761,7 +10781,7 @@ function renderMonthReport(){
   if(prev.length===0){ html+='<div class="card" style="margin-bottom:14px;text-align:center;color:var(--text-3);font-size:12px;padding:18px;">'+t('mr.no_prev')+'</div>'; }
   else{ function pctd(c,p){if(!p)return '';var d=Math.round((c-p)/p*100);return d<=0?'<span style="color:var(--green);">▼ '+Math.abs(d)+'%</span>':'<span style="color:var(--red);">▲ '+d+'%</span>';}
     var pAvg=Math.round(prevTotal/_periodLen(prevRg));
-    function col(h,v,dd){return '<div style="flex:1;text-align:center;background:var(--bg);border-radius:12px;padding:11px 6px;"><div style="font-size:10px;color:var(--text-3);font-weight:700;">'+h+'</div><div style="font-size:15px;font-weight:900;margin-top:4px;">¥'+v.toLocaleString()+'</div><div style="font-size:10px;font-weight:700;margin-top:3px;">'+dd+'</div></div>';}
+    function col(h,v,dd){return '<div style="flex:1;text-align:center;background:var(--bg);border-radius:12px;padding:11px 6px;"><div style="font-size:10px;color:var(--text-3);font-weight:700;">'+h+'</div><div style="font-size:15px;font-weight:900;margin-top:4px;">'+_cursym()+v.toLocaleString()+'</div><div style="font-size:10px;font-weight:700;margin-top:3px;">'+dd+'</div></div>';}
     html+='<div class="card" style="margin-bottom:14px;"><div style="display:flex;gap:8px;">'+col(t('mr.cmp_total'),total,pctd(total,prevTotal))+col(t('mr.cmp_eat'),cc.eat||0,pctd(cc.eat||0,pc.eat||0))+col(t('mr.cmp_food'),cc.food||0,pctd(cc.food||0,pc.food||0))+col(t('mr.cmp_avg'),avg,pctd(avg,pAvg))+'</div></div>';
   }
 
@@ -10772,19 +10792,19 @@ function renderMonthReport(){
   html+=_mrLbl(t('mr.sec_items'));
   var topItems=Object.keys(ci).map(function(k){return {n:k,cnt:ci[k].cnt,avg:Math.round(ci[k].sum/ci[k].cnt),sum:ci[k].sum,fuel:ci[k].fuel};}).sort(function(a,b){return b.cnt-a.cnt;}).slice(0,3);
   if(topItems.length){var medal=['🥇','🥈','🥉'];
-    var b1=topItems.map(function(it,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(it.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+(it.fuel?t('mr.buy_fuel',{n:it.cnt,avg:it.avg.toLocaleString()}):t('mr.buy_n',{n:it.cnt,avg:it.avg.toLocaleString()}))+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+it.sum.toLocaleString()+'</div></div>';}).join('');
+    var b1=topItems.map(function(it,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(it.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+(it.fuel?t('mr.buy_fuel',{n:it.cnt,avg:it.avg.toLocaleString()}):t('mr.buy_n',{n:it.cnt,avg:it.avg.toLocaleString()}))+'</div></div></div><div style="font-size:13px;font-weight:800;">'+_cursym()+it.sum.toLocaleString()+'</div></div>';}).join('');
     html+=_mrAcc(t('mr.top_items'), topItems.map(function(it){return _esc(it.n);}).join(' · ')+' …', b1);
   }
   var movers=[]; Object.keys(ci).forEach(function(k){if(pi[k]){var ca=Math.round(ci[k].sum/ci[k].cnt),pa=Math.round(pi[k].sum/pi[k].cnt);if(pa>0&&ca!==pa)movers.push({n:k,c:ca,p:pa,pct:Math.round((ca-pa)/pa*100)});}});
   movers.sort(function(a,b){return Math.abs(b.pct)-Math.abs(a.pct);});
-  if(movers.length){var b2=movers.slice(0,8).map(function(it){var up=it.pct>0;return '<div class="mr-irow"><div><div style="font-size:13px;font-weight:700;">'+_esc(it.n)+'</div><div style="font-size:10px;color:var(--text-3);">¥'+it.p.toLocaleString()+' → ¥'+it.c.toLocaleString()+'</div></div><span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;background:'+(up?'var(--red-bg)':'var(--green-light)')+';color:'+(up?'var(--red)':'var(--green)')+';">'+(up?'▲ +'+it.pct:'▼ '+it.pct)+'%</span></div>';}).join('');
+  if(movers.length){var b2=movers.slice(0,8).map(function(it){var up=it.pct>0;return '<div class="mr-irow"><div><div style="font-size:13px;font-weight:700;">'+_esc(it.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+_cursym()+it.p.toLocaleString()+' → '+_cursym()+it.c.toLocaleString()+'</div></div><span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:8px;background:'+(up?'var(--red-bg)':'var(--green-light)')+';color:'+(up?'var(--red)':'var(--green)')+';">'+(up?'▲ +'+it.pct:'▼ '+it.pct)+'%</span></div>';}).join('');
     html+=_mrAcc(t('mr.basket'), t('mr.basket_peek'), b2);
   }
 
   // 단골 가게
   function storeAgg(cats){var s={};cur.forEach(function(r){if(cats.indexOf(r.cat)<0)return;if(!s[r.store])s[r.store]={cnt:0,sum:0};s[r.store].cnt++;s[r.store].sum+=r.total;});return Object.keys(s).map(function(n){return {n:n,cnt:s[n].cnt,sum:s[n].sum,avg:Math.round(s[n].sum/s[n].cnt)};}).sort(function(a,b){return b.cnt-a.cnt||b.sum-a.sum;});}
   var supers=storeAgg(MR_SUPER_CATS).slice(0,3), dinings=storeAgg(MR_DINING_CATS).slice(0,3);
-  function storeBody(arr){var medal=['🥇','🥈','🥉'];return arr.map(function(st,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(st.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.visit_n',{n:st.cnt,avg:st.avg.toLocaleString()})+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+st.sum.toLocaleString()+'</div></div>';}).join('');}
+  function storeBody(arr){var medal=['🥇','🥈','🥉'];return arr.map(function(st,i){return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:16px;">'+medal[i]+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(st.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.visit_n',{n:st.cnt,avg:st.avg.toLocaleString()})+'</div></div></div><div style="font-size:13px;font-weight:800;">'+_cursym()+st.sum.toLocaleString()+'</div></div>';}).join('');}
   // 지출 많은 가게 TOP5 (전 카테고리, 금액순) — 
   var _allSt={}; cur.forEach(function(r){ if(!_allSt[r.store])_allSt[r.store]={cnt:0,sum:0}; _allSt[r.store].cnt++; _allSt[r.store].sum+=r.total; });
   var spendStores=Object.keys(_allSt).map(function(n){return {n:n,cnt:_allSt[n].cnt,sum:_allSt[n].sum,avg:Math.round(_allSt[n].sum/_allSt[n].cnt)};}).sort(function(a,b){return b.sum-a.sum||b.cnt-a.cnt;}).slice(0,5);
@@ -10799,7 +10819,7 @@ function renderMonthReport(){
   var dayT={}; cur.forEach(function(r){dayT[r.date]=(dayT[r.date]||0)+r.total;});
   var topDay=Object.keys(dayT).sort(function(a,b){return dayT[b]-dayT[a];})[0];
   var pointBody='';
-  if(topDay){var pp=topDay.split('-'); pointBody+='<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span>🔥</span><div><div style="font-size:13px;font-weight:700;">'+_dayLabel(parseInt(pp[1]),parseInt(pp[2]))+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.top_day')+'</div></div></div><div style="font-size:13px;font-weight:800;">¥'+dayT[topDay].toLocaleString()+'</div></div>';}
+  if(topDay){var pp=topDay.split('-'); pointBody+='<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span>🔥</span><div><div style="font-size:13px;font-weight:700;">'+_dayLabel(parseInt(pp[1]),parseInt(pp[2]))+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.top_day')+'</div></div></div><div style="font-size:13px;font-weight:800;">'+_cursym()+dayT[topDay].toLocaleString()+'</div></div>';}
   if(topItems.length){var tn=topItems[0].n; var dts=cur.filter(function(r){return (r.items||[]).some(function(it){return it.name===tn;});}).map(function(r){return r.date;}).sort();
     if(dts.length>=2){var g=0;for(var i=1;i<dts.length;i++){g+=(new Date(dts[i])-new Date(dts[i-1]))/86400000;}var cyc=Math.round(g/(dts.length-1));
       pointBody+='<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span>🔁</span><div><div style="font-size:13px;font-weight:700;">'+_esc(tn)+'</div><div style="font-size:10px;color:var(--text-3);">'+t('mr.repurchase')+'</div></div></div><span style="font-size:11px;font-weight:700;color:var(--green);">'+t('mr.cycle',{n:cyc})+'</span></div>';}
@@ -10809,7 +10829,7 @@ function renderMonthReport(){
   // 결제수단
   var payT={},payTotal=0; cur.forEach(function(r){var p=r.pay||'cash';payT[p]=(payT[p]||0)+r.total;payTotal+=r.total;});
   var paySorted=Object.keys(payT).sort(function(a,b){return payT[b]-payT[a];});
-  if(paySorted.length){var pb=paySorted.map(function(p){var pct=payTotal>0?Math.round(payT[p]/payTotal*100):0;var color=(typeof PAY_COLOR!=='undefined'&&PAY_COLOR[p])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(PAY_ICON[p]||'💳')+' '+(PAY_LABEL[p]||p)+'</span><span style="font-weight:800;">¥'+payT[p].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
+  if(paySorted.length){var pb=paySorted.map(function(p){var pct=payTotal>0?Math.round(payT[p]/payTotal*100):0;var color=(typeof PAY_COLOR!=='undefined'&&PAY_COLOR[p])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(PAY_ICON[p]||'💳')+' '+(PAY_LABEL[p]||p)+'</span><span style="font-weight:800;">'+_cursym()+payT[p].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
     html+=_mrLbl(t('rep.pay_breakdown'))+'<div class="card" style="margin-bottom:14px;">'+pb+'</div>';
   }
 
@@ -10887,11 +10907,11 @@ function selectDay(el,y,m,d){
         +'<div class="c-icon" style="background:rgba(130,130,150,.12);">'+CAT_ICON[r.cat]+'</div>'
         +'<div style="flex:1;"><div style="font-size:13px;font-weight:700;color:var(--text-1);">'+r.store+'</div>'
         +'<div style="display:flex;align-items:center;gap:5px;margin-top:2px;"><div style="width:6px;height:6px;border-radius:50%;background:'+CAT_COLOR[r.cat]+';"></div><span style="font-size:10px;font-weight:600;color:var(--text-3);">'+CAT_LABEL[r.cat]+'</span></div></div>'
-        +'<div style="text-align:right;"><div style="font-size:14px;font-weight:800;">¥'+r.total.toLocaleString()+'</div>'
+        +'<div style="text-align:right;"><div style="font-size:14px;font-weight:800;">'+_cursym()+r.total.toLocaleString()+'</div>'
         +'<div style="font-size:10px;color:var(--text-3);">'+t('cal.tap_go')+'</div></div></div>';
     });
     document.getElementById('cal-entries').innerHTML=html;
-    document.getElementById('cal-total').textContent='¥'+total.toLocaleString();
+    document.getElementById('cal-total').textContent=_cursym()+total.toLocaleString();
     detail.classList.add('show');
   } else { detail.classList.remove('show'); }
 }
@@ -11467,7 +11487,7 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
         if (anns && anns.length > 1) {
           var coord = parseReceiptByCoords(anns.slice(1), rawText);
           if (coord && coord._valid) {
-            _dbg('[parse] 좌표 파서 채택: ' + coord.items.length + '품목, 품목합 ¥' + (coord.subtotal||coord.total));
+            _dbg('[parse] 좌표 파서 채택: ' + coord.items.length + '품목, 품목합 '+_cursym()+ (coord.subtotal||coord.total));
             window._rawOcrText   = rawText;
             window._parsedResult = coord;
             window._previewSrc   = previewSrc;
@@ -13169,7 +13189,7 @@ function showOcrResult(previewSrc, result) {
         +'<span style="font-size:11px;color:var(--green);font-weight:700;">¥</span>'
         +'<input type="number" id="in-price-'+idx+'" value="'+item.price+'" '+(item.price<0?'':'min="0" ')+'style="width:75px;font-size:14px;font-weight:800;color:'+(item.price<0?'var(--red)':'var(--green)')+';border:0.5px solid rgba(29,158,117,.3);border-radius:8px;padding:4px 6px;text-align:right;background:var(--green-light);" oninput="syncOcrItems()">'
         +'</div>'
-        +((item.qty||1) > 1 ? '<div style="font-size:10px;color:var(--text-3);margin-top:1px;text-align:right;">@¥'+Math.round(item.price/(item.qty||1)).toLocaleString()+' × '+(item.qty||1)+'</div>' : '')
+        +((item.qty||1) > 1 ? '<div style="font-size:10px;color:var(--text-3);margin-top:1px;text-align:right;">@'+_cursym()+Math.round(item.price/(item.qty||1)).toLocaleString()+' × '+(item.qty||1)+'</div>' : '')
         +'</div>'
         +'</div>';
     }).join('');
@@ -13232,11 +13252,11 @@ function showOcrResult(previewSrc, result) {
   +(result.subtotal > 0 ?
     '<div style="background:var(--bg);border-radius:12px;padding:10px 14px;margin-bottom:10px;border:0.5px solid var(--border);">'
     + '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);padding:4px 0;font-weight:600;">'
-    +   '<span>'+t('ocr.subtotal')+'</span><span>¥'+result.subtotal.toLocaleString()+'</span></div>'
+    +   '<span>'+t('ocr.subtotal')+'</span><span>'+_cursym()+result.subtotal.toLocaleString()+'</span></div>'
     + (result.tax8 > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);padding:4px 0;">'
-    +   '<span>消費税 8%</span><span>¥'+result.tax8.toLocaleString()+'</span></div>' : '')
+    +   '<span>消費税 8%</span><span>'+_cursym()+result.tax8.toLocaleString()+'</span></div>' : '')
     + (result.tax10 > 0 ? '<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text-3);padding:4px 0;">'
-    +   '<span>消費税 10%</span><span>¥'+result.tax10.toLocaleString()+'</span></div>' : '')
+    +   '<span>消費税 10%</span><span>'+_cursym()+result.tax10.toLocaleString()+'</span></div>' : '')
     + '</div>' : '')
   +'<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--green-light);border-radius:12px;margin-bottom:4px;border:0.5px solid rgba(29,158,117,.2);">'
     +'<div><span style="font-size:13px;font-weight:700;color:var(--green-dark);">'+t('ocr.total')+'</span>'
@@ -13314,7 +13334,7 @@ function syncOcrItems() {
   if (totEl) {
     // 합계는 입력 필드. 유저가 지금 그 칸을 편집 중이면 덮어쓰지 않음
     if (totEl.tagName === 'INPUT') { if (document.activeElement !== totEl) totEl.value = displayTotal; }
-    else totEl.textContent = '¥' + displayTotal.toLocaleString();
+    else totEl.textContent = _cursym()+ displayTotal.toLocaleString();
   }
   var cntEl = document.getElementById('item-count');
   if (cntEl) cntEl.textContent = items.length;
@@ -13832,7 +13852,7 @@ function updateCpPreview() {
     return '<div style="padding:8px 0;border-bottom:0.5px solid rgba(29,158,117,.15);">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'
       +   '<span style="font-size:12px;font-weight:700;color:var(--text-1);flex:1;margin-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + _esc(it.name) + '</span>'
-      +   '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥' + it.price.toLocaleString() + '</span>'
+      +   '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">'+_cursym()+ it.price.toLocaleString() + '</span>'
       + '</div>'
       + '<div style="display:flex;align-items:center;gap:10px;">'
       +   '<div style="display:flex;gap:1px;flex:1;">'+stars+'</div>'
@@ -13896,7 +13916,7 @@ function _cpCatLabel(key){
 }
 
 function _buildCpChip(it, i, selected) {
-  var priceLabel = it.qty > 1 ? '@¥'+it.price.toLocaleString() : '¥'+it.price.toLocaleString();
+  var priceLabel = it.qty > 1 ? '@'+_cursym()+it.price.toLocaleString() : _cursym()+it.price.toLocaleString();
   // 이미 치리츠모에 공개된 메뉴 — 선택 불가(중복 등록 방지)
   if (it._published) {
     return '<div id="cp-chip-wrap-'+i+'" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;cursor:not-allowed;user-select:none;border:1.5px solid var(--border);background:var(--bg-2);opacity:.65;">'
@@ -15901,7 +15921,7 @@ function _renderItemStats(el, items) {
       + '<div style="flex:1;min-width:0;">'
       + '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;">'
       + '<span style="font-size:11px;font-weight:600;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + it.item_name + '</span>'
-      + '<span style="font-size:11px;font-weight:800;color:var(--green);white-space:nowrap;margin-left:6px;">¥' + Number(it.avg_unit_price).toLocaleString() + '</span>'
+      + '<span style="font-size:11px;font-weight:800;color:var(--green);white-space:nowrap;margin-left:6px;">'+_cursym()+ Number(it.avg_unit_price).toLocaleString() + '</span>'
       + '</div>'
       + '<div style="height:3px;background:var(--border);border-radius:2px;">'
       + '<div style="height:3px;width:' + barW + '%;background:var(--green-grad);border-radius:2px;"></div></div>'
@@ -15942,9 +15962,9 @@ async function _loadMyVsAvg() {
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);">'
       + '<div style="font-size:12px;font-weight:600;color:var(--text-1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + d.item_name + '</div>'
       + '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">'
-      + '<span style="font-size:11px;color:var(--text-3);">' + t('comm.mine_label') + ': ¥' + Number(d.my_avg_price).toLocaleString() + '</span>'
+      + '<span style="font-size:11px;color:var(--text-3);">' + t('comm.mine_label') + ': '+_cursym()+ Number(d.my_avg_price).toLocaleString() + '</span>'
       + '<span style="font-size:11px;font-weight:800;color:' + (isCheap?'var(--green)':'var(--orange)') + ';">'
-      + (isCheap ? '▼' : '▲') + ' ¥' + Math.abs(d.diff).toLocaleString() + '</span>'
+      + (isCheap ? '▼' : '▲') + ' '+_cursym()+ Math.abs(d.diff).toLocaleString() + '</span>'
       + '</div></div>';
   });
   html += '</div>';
@@ -16151,9 +16171,9 @@ function renderPriceComparison(filter) {
       var diff   = s.avg - minPrice;
       html += '<div class="pc-row">';
       html += '<span class="pc-store">' + s.store + '</span>';
-      html += '<span class="pc-price">¥' + s.avg.toLocaleString() + '<span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:2px;">' + unitLbl + '</span></span>';
+      html += '<span class="pc-price">'+_cursym()+ s.avg.toLocaleString() + '<span style="font-size:9px;font-weight:400;color:var(--text-3);margin-left:2px;">' + unitLbl + '</span></span>';
       if (isBest) html += '<span class="pc-badge-best">'+t('pc.best')+'</span>';
-      else        html += '<span class="pc-badge-pct">+¥' + diff.toLocaleString() + '</span>';
+      else        html += '<span class="pc-badge-pct">+'+_cursym()+ diff.toLocaleString() + '</span>';
       html += '</div>';
     });
     html += '<div class="pc-savings">💰 ' + t('pc.savings', {amt: savings.toLocaleString(), pct: savePct}) + '</div>';
@@ -16290,8 +16310,8 @@ function openReceiptStoreDetail(storeName){
     + '<div class="rsd-card-title">'+t('rsd.stats')+'</div>'
     + '<div class="rsd-stat-grid">'
       + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.visits')+'</div><div class="rsd-stat-val">'+t('rsd.times',{n:recs.length})+'</div></div>'
-      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.total_spend')+'</div><div class="rsd-stat-val">¥'+Number(total).toLocaleString()+'</div></div>'
-      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.avg_spend')+'</div><div class="rsd-stat-val" style="color:var(--green);">¥'+Number(avg).toLocaleString()+'</div></div>'
+      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.total_spend')+'</div><div class="rsd-stat-val">'+_cursym()+Number(total).toLocaleString()+'</div></div>'
+      + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.avg_spend')+'</div><div class="rsd-stat-val" style="color:var(--green);">'+_cursym()+Number(avg).toLocaleString()+'</div></div>'
       + '<div class="rsd-stat"><div class="rsd-stat-lbl">'+t('rsd.last_visit')+'</div><div class="rsd-stat-val" style="font-size:13px;">'+lastStr+'</div></div>'
     + '</div></div>';
 
@@ -16315,7 +16335,7 @@ function openReceiptStoreDetail(storeName){
   months.forEach(function(m){
     if (m.total > 0) {
       var pct = Math.round((m.total / maxMonth) * 100);
-      h += '<div class="rsd-bar" style="height:'+pct+'%;" title="¥'+Number(m.total).toLocaleString()+'"></div>';
+      h += '<div class="rsd-bar" style="height:'+pct+'%;" title="'+_cursym()+Number(m.total).toLocaleString()+'"></div>';
     } else {
       h += '<div class="rsd-bar-empty"></div>';
     }
@@ -16333,7 +16353,7 @@ function openReceiptStoreDetail(storeName){
     h += '<div class="rsd-rcpt-row" onclick="rsdOpenReceipt(\''+r.id+'\')">'
       + '<div><div class="rsd-rcpt-date">📅 '+dateStr+'</div>'
       + '<div class="rsd-rcpt-cnt">'+t('rsd.item_count',{n:itemCnt})+'</div></div>'
-      + '<span class="rsd-rcpt-amt">¥'+Number(r.total||0).toLocaleString()+'</span>'
+      + '<span class="rsd-rcpt-amt">'+_cursym()+Number(r.total||0).toLocaleString()+'</span>'
     + '</div>';
   });
   if (sorted.length > 5) {
@@ -16430,8 +16450,8 @@ function renderMapPins() {
             + '<div style="font-size:14px;font-weight:800;color:'+_txt1+';margin-bottom:12px;padding-bottom:10px;border-bottom:.5px solid '+_border+';padding-right:30px;">'+emoji+' '+storeData.name+'</div>'
             + '<div style="display:flex;flex-direction:column;gap:8px;font-size:12px;color:'+_txt2+';margin-bottom:14px;">'
               + '<div style="display:flex;justify-content:space-between;align-items:center;"><span>'+t('rmap.iw_visit')+'</span><span style="font-weight:700;color:'+_txt1+';">'+t('rsd.times',{n:storeData.count})+'</span></div>'
-              + '<div style="display:flex;justify-content:space-between;align-items:center;"><span>'+t('rsd.total_spend')+'</span><span style="font-weight:700;color:'+_txt1+';">¥'+Number(storeData.total).toLocaleString()+'</span></div>'
-              + '<div style="display:flex;justify-content:space-between;align-items:center;"><span>'+t('rmap.iw_avg')+'</span><span style="font-weight:700;color:'+_themeC+';">¥'+Number(avg).toLocaleString()+'</span></div>'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;"><span>'+t('rsd.total_spend')+'</span><span style="font-weight:700;color:'+_txt1+';">'+_cursym()+Number(storeData.total).toLocaleString()+'</span></div>'
+              + '<div style="display:flex;justify-content:space-between;align-items:center;"><span>'+t('rmap.iw_avg')+'</span><span style="font-weight:700;color:'+_themeC+';">'+_cursym()+Number(avg).toLocaleString()+'</span></div>'
             + '</div>'
             + '<div onclick="openReceiptStoreDetail(\''+storeData.name.replace(/'/g,"\\'")+'\')" style="padding:10px 14px;border-radius:10px;background:'+_themeC+';color:#fff;font-size:12px;font-weight:800;text-align:center;cursor:pointer;margin-bottom:2px;">'+t('rmap.view_detail')+'</div>'
           + '</div>';
@@ -16466,7 +16486,7 @@ function renderMapPins() {
           var avg = Math.round(pair[1].total/pair[1].count);
           return '<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);">'
             +'<span style="font-size:11px;color:var(--text-2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+pair[0]+'</span>'
-            +'<span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap;margin-left:8px;">¥'+avg.toLocaleString()+t('rmap.per_unit')+'</span>'
+            +'<span style="font-size:11px;font-weight:700;color:var(--green);white-space:nowrap;margin-left:8px;">'+_cursym()+avg.toLocaleString()+t('rmap.per_unit')+'</span>'
             +'</div>';
         }).join('')
       : '<div style="font-size:11px;color:var(--text-3);">'+t('rmap.no_items')+'</div>';
@@ -16474,7 +16494,7 @@ function renderMapPins() {
       +'<div style="display:flex;gap:8px;margin-bottom:8px;">'
       +'<div style="background:var(--green-light);border-radius:8px;padding:7px 8px;flex:1;text-align:center;">'
       +'<div style="font-size:9px;color:var(--text-3);">'+t('rmap.avg_per')+'</div>'
-      +'<div style="font-size:14px;font-weight:800;color:var(--green);">¥'+sAvg.toLocaleString()+'</div>'
+      +'<div style="font-size:14px;font-weight:800;color:var(--green);">'+_cursym()+sAvg.toLocaleString()+'</div>'
       +'</div>'
       +(sLastStr?'<div style="background:var(--bg-2);border-radius:8px;padding:7px 8px;flex:1;text-align:center;">'
       +'<div style="font-size:9px;color:var(--text-3);">'+t('rsd.last_visit')+'</div>'
@@ -16512,7 +16532,7 @@ function renderMapPins() {
       + '<div style="display:flex;align-items:center;gap:12px;width:100%;">'
       + '<div class="shop-score" style="background:var(--green-light);color:var(--green);">' + t('rsd.times',{n:s.count}) + '</div>'
       + '<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + s.name + '</div>'
-      + '<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('rmap.total')+' ¥' + s.total.toLocaleString() + (hasPin ? ' · '+t('rmap.tap_go') : ' · '+t('rmap.no_pin')) + '</div></div>'
+      + '<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('rmap.total')+' '+_cursym()+ s.total.toLocaleString() + (hasPin ? ' · '+t('rmap.tap_go') : ' · '+t('rmap.no_pin')) + '</div></div>'
       + '<span id="'+sId+'-chev" style="font-size:10px;color:var(--text-3);flex-shrink:0;">▼</span>'
       + '</div>'
       + detailHtml
@@ -17180,6 +17200,7 @@ function openOv(id){
   if (id === 'ov-settings') {
     renderThemeSwatches();
     loadProfileToSettings();
+    (function(){ var cv=document.getElementById('cur-val'); if(cv) cv.textContent=(_CUR==='₩')?'₩ KRW':'¥ JPY'; })(); // b643 — 통화 표시 동기화
     loadReferralCodeToSettings(); // 레퍼럴 코드 로드
     // 받은 쪽지함 배지 갱신 
     if (typeof _refreshInboxBadge === 'function') { try { _refreshInboxBadge(); } catch(e){} }
@@ -18155,8 +18176,8 @@ function _catBudgetWarnHtml(periodReceipts){
   var chips=flags.slice(0,3).map(function(f){
     var col=f.over?'var(--red)':'#E8894A', bg=f.over?'var(--red-bg)':'rgba(232,137,74,.14)';
     return '<span style="font-size:10px;font-weight:700;color:'+col+';background:'+bg+';padding:3px 9px;border-radius:20px;white-space:nowrap;">'
-      +_esc(f.lbl)+' <span style="font-weight:900;">¥'+f.s.toLocaleString()+'</span>'
-      +'<span style="opacity:.65;font-weight:600;"> / ¥'+f.b.toLocaleString()+'</span></span>';
+      +_esc(f.lbl)+' <span style="font-weight:900;">'+_cursym()+f.s.toLocaleString()+'</span>'
+      +'<span style="opacity:.65;font-weight:600;"> / '+_cursym()+f.b.toLocaleString()+'</span></span>';
   }).join('');
   return label + chips;   // 라벨 + 카테고리별 사용금액 칩 (예산 카드 안에 삽입)
 }
@@ -20376,7 +20397,7 @@ async function _sdBuildShareCanvas(){
     tyy += 62;
     if (topCard.price) {
       x.fillStyle = themeDark; x.font = '900 48px '+FONT;
-      x.fillText('¥' + Number(topCard.price).toLocaleString(), tx, tyy);
+      x.fillText(_cursym()+ Number(topCard.price).toLocaleString(), tx, tyy);
       tyy += 56;
     }
     if (topCard.rating_count > 0) {
@@ -20633,7 +20654,7 @@ async function _mdBuildShareCanvas(card){
   x.fillStyle='#fff'; x.font='900 62px '+FONT;
   x.fillText(_sdShareEllip(x, card.menu_name||'', W-96), 48, HERO-100);
   var sub='';
-  if (card.price) sub += '¥'+Number(card.price).toLocaleString();
+  if (card.price) sub += _cursym()+Number(card.price).toLocaleString();
   if (card.rating_count>0) sub += (sub?'   ':'')+'★'+parseFloat(card.rating_avg||0).toFixed(1)+' ('+card.rating_count+')';
   if (sub){ x.fillStyle='#FFD75E'; x.font='800 44px '+FONT; x.fillText(sub,48,HERO-28); }
 
@@ -20682,7 +20703,7 @@ async function mdShareMenu(){
   var refCode = await _getMyRefCode();
   var refLink = _getMyRefLink_fromCode(refCode);
   var mTitle = card.menu_name || 'RetWork';
-  var mLeadName = '🍽 '+(card.menu_name||'')+(card.price?' — ¥'+Number(card.price).toLocaleString():'');
+  var mLeadName = '🍽 '+(card.menu_name||'')+(card.price?' — '+_cursym()+Number(card.price).toLocaleString():'');
   // 이미지 카드 공유 텍스트
   var imgLines = [mLeadName];
   if (_sdName) imgLines.push('🏪 '+_sdName);
@@ -21151,7 +21172,7 @@ function _sdRenderMenus(cards,loaded){
       +(c.category?'<div style="font-size:11px;color:var(--text-3);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+c.category+'</div>':'<div></div>')
       +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:6px;">'
       +'<span style="font-size:13px;font-weight:700;color:var(--star);">'+stars+ratingCnt+'</span>'
-      +'<span style="font-size:15px;font-weight:800;color:var(--text-1);">'+(c.price?'¥'+Number(c.price).toLocaleString():'')+'</span>'
+      +'<span style="font-size:15px;font-weight:800;color:var(--text-1);">'+(c.price?_cursym()+Number(c.price).toLocaleString():'')+'</span>'
       +'</div>'
       +'</div></div>';
   });
@@ -22151,7 +22172,7 @@ function _admMyCardItemHtml(c) {
   var dupBadge = c._isDup
     ? '<span style="display:inline-block;background:var(--red-bg);color:var(--red);font-size:9px;font-weight:800;padding:2px 7px;border-radius:8px;margin-left:6px;">🔴 중복</span>'
     : '';
-  var meta = (c.price ? '¥'+Number(c.price).toLocaleString() : '-')
+  var meta = (c.price ? _cursym()+Number(c.price).toLocaleString() : '-')
     + ' · 👁 ' + (c.view_count||0)
     + ' · ❤️ ' + (c.like_count||0)
     + ' · ★' + (c.rating_count||0)
@@ -22807,9 +22828,9 @@ async function _admPcLoadAdPagesStats() {
   function sumStats(map){ var s={views:0,revenue:0}; Object.keys(map).forEach(function(k){ s.views+=map[k].views; s.revenue+=map[k].revenue; }); return s; }
   var tot = sumStats(todayMap), totAll = sumStats(allMap);
   var setTxt = function(id, v){ var el=document.getElementById(id); if(el) el.textContent = v; };
-  setTxt('apc-adpages-revenue-today', '¥' + Math.round(tot.revenue).toLocaleString());
+  setTxt('apc-adpages-revenue-today', _cursym()+ Math.round(tot.revenue).toLocaleString());
   setTxt('apc-adpages-views-today',   tot.views.toLocaleString() + '회');
-  setTxt('apc-adpages-revenue-all',   '¥' + Math.round(totAll.revenue).toLocaleString());
+  setTxt('apc-adpages-revenue-all',   _cursym()+ Math.round(totAll.revenue).toLocaleString());
   setTxt('apc-adpages-views-all',     totAll.views.toLocaleString() + '회');
 
   // 위치 카드 렌더링
@@ -22835,7 +22856,7 @@ async function _admPcLoadAdPagesStats() {
       if (pos.type === 'fullscreen') { typeBg='#FEE2E2'; typeColor='#991B1B'; typeLbl='풀스크린'; }
       else if (pos.type === 'autoplay') { typeBg='#FEF3C7'; typeColor='#92400E'; typeLbl='자동재생'; }
       else { typeBg='#DBEAFE'; typeColor='#1E40AF'; typeLbl='인라인'; }
-      var unitPrice = pos.cpv ? ('¥' + pos.cpv + ' / 시청') : ('¥' + pos.cpm + ' / 노출');
+      var unitPrice = pos.cpv ? (_cursym()+ pos.cpv + ' / 시청') : (_cursym()+ pos.cpm + ' / 노출');
       html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;">'
             + '<div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;">'
             +   '<div style="font-size:13px;font-weight:800;color:#172C58;flex:1;line-height:1.3;">' + pos.name + '</div>'
@@ -22850,12 +22871,12 @@ async function _admPcLoadAdPagesStats() {
             +   '<div style="flex:1;background:#F4F5F8;border-radius:8px;padding:7px 9px;">'
             +     '<div style="font-size:9px;color:#6B7280;font-weight:700;margin-bottom:2px;">오늘</div>'
             +     '<div style="font-size:14px;font-weight:900;color:#172C58;line-height:1;">' + t.views + '회</div>'
-            +     '<div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">¥' + Math.round(t.revenue).toLocaleString() + '</div>'
+            +     '<div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">'+_cursym()+ Math.round(t.revenue).toLocaleString() + '</div>'
             +   '</div>'
             +   '<div style="flex:1;background:#F4F5F8;border-radius:8px;padding:7px 9px;">'
             +     '<div style="font-size:9px;color:#6B7280;font-weight:700;margin-bottom:2px;">누적</div>'
             +     '<div style="font-size:14px;font-weight:900;color:#172C58;line-height:1;">' + a.views + '회</div>'
-            +     '<div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">¥' + Math.round(a.revenue).toLocaleString() + '</div>'
+            +     '<div style="font-size:10px;color:#059669;font-weight:700;margin-top:2px;">'+_cursym()+ Math.round(a.revenue).toLocaleString() + '</div>'
             +   '</div>'
             + '</div>'
             + '<div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;padding-top:10px;border-top:1px solid #E3E6EB;font-family:monospace;">'
@@ -23052,7 +23073,7 @@ async function _admPcLoadChiriStats() {
     });
 
     var net = issued + spent; // spent 가 음수
-    var yen = function(c){ return '¥' + (c * 0.08).toLocaleString('en-US', {maximumFractionDigits:0}); };
+    var yen = function(c){ return _cursym()+ (c * 0.08).toLocaleString('en-US', {maximumFractionDigits:0}); };
     var setTxt = function(id, v){ var el=document.getElementById(id); if(el) el.textContent = v; };
     setTxt('apc-chiri-issued',     '+' + issued.toLocaleString() + ' 치리');
     setTxt('apc-chiri-issued-yen', yen(issued) + ' 환산');
@@ -23415,7 +23436,7 @@ async function _admPcLoadReceiptReview() {
       var itemsHtml = items.map(function(it){
         return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:12px;padding:4px 0;border-bottom:1px dashed #EEF0F4;">'
           + '<span>' + _esc(it.name || '') + (it.quantity > 1 ? ' ×' + it.quantity : '') + ' <span style="color:#9CA3AF;font-size:10px;">' + _esc(it.category || '') + '</span></span>'
-          + '<span style="font-weight:700;color:#172C58;">¥' + (it.price || 0).toLocaleString() + '</span>'
+          + '<span style="font-weight:700;color:#172C58;">'+_cursym()+ (it.price || 0).toLocaleString() + '</span>'
           + '</div>';
       }).join('');
       html += '<div style="background:#fff;border:1px solid #E3E6EB;border-radius:12px;padding:14px;display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">'
@@ -23429,7 +23450,7 @@ async function _admPcLoadReceiptReview() {
         +     '<span style="font-size:16px;font-weight:900;color:#172C58;">' + _esc(r.store_name || '(가게명 없음)') + '</span>'
         +     '<span style="font-size:11px;color:#6B7280;">' + (r.receipt_date || '') + '</span>'
         +   '</div>'
-        +   '<div style="font-size:12px;color:#374151;margin-bottom:8px;">👤 ' + _esc(name) + ' · 💴 합계 <strong>¥' + (r.total_amount || 0).toLocaleString() + '</strong> · 💳 ' + (r.payment_method ? _esc(r.payment_method) : '-') + '</div>'
+        +   '<div style="font-size:12px;color:#374151;margin-bottom:8px;">👤 ' + _esc(name) + ' · 💴 합계 <strong>'+_cursym()+ (r.total_amount || 0).toLocaleString() + '</strong> · 💳 ' + (r.payment_method ? _esc(r.payment_method) : '-') + '</div>'
         +   '<div style="font-size:11px;color:#6B7280;font-weight:700;margin-bottom:4px;">파싱 품목 (' + items.length + ')</div>'
         +   '<div style="background:#F9FAFB;border-radius:8px;padding:8px 12px;">' + (itemsHtml || '<span style="font-size:12px;color:#9CA3AF;">품목 없음</span>') + '</div>'
         + '</div>'
@@ -25473,18 +25494,18 @@ async function loadAdminAdStats() {
       var totalViews = rows.reduce(function(s,r){ return s + r.views; }, 0);
       el.innerHTML = '<div style="background:linear-gradient(135deg,#EFF6FF,#DBEAFE);border:1px solid #BFDBFE;border-radius:10px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;">'
                   + '<span style="font-size:11px;font-weight:800;color:#1E40AF;">총 ' + totalViews.toLocaleString() + '회 노출</span>'
-                  + '<span style="font-size:13px;font-weight:900;color:#1E40AF;">예상 ¥' + Math.round(total).toLocaleString() + '</span>'
+                  + '<span style="font-size:13px;font-weight:900;color:#1E40AF;">예상 '+_cursym()+ Math.round(total).toLocaleString() + '</span>'
                   + '</div>'
                   + rows.map(function(r){
-                      var unitLabel = (rateMap[r.context] === (r.rate)) ? ('¥'+r.rate+'/노출') : '';
+                      var unitLabel = (rateMap[r.context] === (r.rate)) ? (_cursym()+r.rate+'/노출') : '';
                       return '<div style="display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:8px 12px;">'
                         + '<div style="flex:1;min-width:0;">'
                         +   '<div style="font-size:12px;font-weight:800;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + r.label + '</div>'
-                        +   '<div style="font-size:9px;color:var(--text-3);font-family:monospace;margin-top:1px;">' + r.context + ' · ¥' + r.rate + '/회</div>'
+                        +   '<div style="font-size:9px;color:var(--text-3);font-family:monospace;margin-top:1px;">' + r.context + ' · '+_cursym()+ r.rate + '/회</div>'
                         + '</div>'
                         + '<div style="text-align:right;flex-shrink:0;">'
                         +   '<div style="font-size:12px;font-weight:800;color:var(--text-1);">' + r.views.toLocaleString() + '회</div>'
-                        +   '<div style="font-size:11px;font-weight:900;color:var(--green);margin-top:1px;">¥' + Math.round(r.revenue).toLocaleString() + '</div>'
+                        +   '<div style="font-size:11px;font-weight:900;color:var(--green);margin-top:1px;">'+_cursym()+ Math.round(r.revenue).toLocaleString() + '</div>'
                         + '</div>'
                         + '</div>';
                     }).join('');
@@ -25516,8 +25537,8 @@ async function loadAdRevenue() {
   var res = await _sb.from('ad_revenue').select('month,zone,source,amount_jpy').order('month',{ascending:false}).limit(12);
   if (res.error || !res.data || !res.data.length) { el.innerHTML = ''; return; }
   var total = res.data.reduce(function(s,r){ return s + Number(r.amount_jpy||0); }, 0);
-  el.innerHTML = '<div style="font-weight:800;color:var(--text-1);margin-bottom:4px;">최근 합계 ¥'+total.toLocaleString()+'</div>'
-    + res.data.map(function(r){ return '<div>'+r.month+' · '+(_ADZONE_LABEL[r.zone]||r.zone)+' · '+r.source+' — ¥'+Number(r.amount_jpy||0).toLocaleString()+'</div>'; }).join('');
+  el.innerHTML = '<div style="font-weight:800;color:var(--text-1);margin-bottom:4px;">최근 합계 '+_cursym()+total.toLocaleString()+'</div>'
+    + res.data.map(function(r){ return '<div>'+r.month+' · '+(_ADZONE_LABEL[r.zone]||r.zone)+' · '+r.source+' — '+_cursym()+Number(r.amount_jpy||0).toLocaleString()+'</div>'; }).join('');
 }
 
 async function adminSaveAdRevenue() {
@@ -27337,7 +27358,7 @@ function _renderReceiptRow(r) {
     + '<div onclick="openAdminReceiptDetail(\''+r.id+'\')" style="cursor:pointer;flex:1;min-width:0;">'
     +   '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;">'
     +     '<span style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;">'+_esc(r.store_name||'(가게명 없음)')+dupBadge+' ›'+_newBadgeIfRecent(r.created_at)+'</span>'
-    +     '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥'+total+'</span>'
+    +     '<span style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">'+_cursym()+total+'</span>'
     +   '</div>'
     +   '<div style="font-size:10px;color:var(--text-3);">'+date+' · UID: '+(r.user_id||'').substring(0,8)+'...</div>'
     + '</div>'
@@ -27551,7 +27572,7 @@ function _admRenderItems() {
 function _admUpdateTotal() {
   var total = _admEditItems.reduce(function(s, it){ return s + (it.price * (it.qty || 1)); }, 0);
   var el = document.getElementById('adm-rec-total');
-  if (el) el.textContent = '¥' + total.toLocaleString();
+  if (el) el.textContent = _cursym()+ total.toLocaleString();
 }
 
 function admRecAddItem() {
@@ -27653,11 +27674,11 @@ function _renderPinRow(p) {
     ? '<span style="background:var(--green-light);color:var(--green-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;flex-shrink:0;">🔗 링크</span>'
     : '<span style="background:var(--red-bg);color:var(--red);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;flex-shrink:0;">❌ 링크없음</span>';
   var featuredBadge = p.featured_price
-    ? '<span style="background:var(--gold-light);color:var(--gold-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;flex-shrink:0;">⭐ 대표 ¥'+p.featured_price.toLocaleString()+'</span>'
+    ? '<span style="background:var(--gold-light);color:var(--gold-dark);font-size:9px;font-weight:800;padding:1px 6px;border-radius:8px;flex-shrink:0;">⭐ 대표 '+_cursym()+p.featured_price.toLocaleString()+'</span>'
     : '<span style="background:var(--bg-2);color:var(--text-3);font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;flex-shrink:0;">대표 미지정</span>';
   var priceRange = p.minPrice === p.maxPrice
-    ? '¥'+p.minPrice.toLocaleString()
-    : '¥'+p.minPrice.toLocaleString()+'~¥'+p.maxPrice.toLocaleString();
+    ? _cursym()+p.minPrice.toLocaleString()
+    : _cursym()+p.minPrice.toLocaleString()+'~'+_cursym()+p.maxPrice.toLocaleString();
   var safeName = (p.name||'').replace(/'/g, "\\'");
   return '<div onclick="openAdminStoreFromPin(\''+safeName+'\','+(p.lat||'null')+','+(p.lng||'null')+',\''+(p.category||'')+'\')" style="cursor:pointer;background:var(--surface);border:.5px solid var(--border);border-radius:10px;padding:10px 12px;transition:transform .12s;">'
     + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;">'
@@ -27722,7 +27743,7 @@ async function _admPcOpenPinStoreView(storeName) {
       ? '<a href="'+s.google_maps_url+'" target="_blank" style="color:#172C58;text-decoration:underline;font-size:11px;font-weight:700;">🔗 Google 지도 열기</a>'
       : '<span style="font-size:11px;color:#991B1B;font-weight:700;">❌ Google 지도 링크 없음</span>';
     var featured = s && s.featured_price
-      ? '⭐ 대표: ' + (s.featured_menu_name || '') + ' ¥' + s.featured_price.toLocaleString()
+      ? '⭐ 대표: ' + (s.featured_menu_name || '') + ' '+_cursym()+ s.featured_price.toLocaleString()
       : '대표 메뉴 미지정';
 
     // 가게 삭제용 캐시 (따옴표/특수문자 escape 회피 — 버튼은 인자 없이 호출)
@@ -27774,7 +27795,7 @@ async function _admPcOpenPinStoreView(storeName) {
               +   '<div style="flex:1;min-width:0;">'
               +     '<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">'
               +       '<span style="font-size:14px;font-weight:800;color:#172C58;">' + _esc(p.item_name||'(이름 없음)') + '</span>'
-              +       '<span style="font-size:14px;font-weight:900;color:#10B981;">¥' + (p.price||0).toLocaleString() + '</span>'
+              +       '<span style="font-size:14px;font-weight:900;color:#10B981;">'+_cursym()+ (p.price||0).toLocaleString() + '</span>'
               +     '</div>'
               +     '<div style="font-size:10px;color:#6B7280;">👤 ' + _esc(_pinNick[p.user_id] || ('UID '+(p.user_id||'').substring(0,8)+'…')) + ' · ' + date + '</div>'
               +     comment
@@ -27864,7 +27885,7 @@ async function _admPcLoadStoreMenuCards(storeName) {
       +   '</div>'
       +   '<div style="font-size:10px;color:#6B7280;">' + (m.category ? _esc(m.category) + ' · ' : '') + rating + '</div>'
       + '</div>'
-      + '<span style="font-size:14px;font-weight:900;color:#10B981;flex-shrink:0;">¥' + (m.price||0).toLocaleString() + '</span>'
+      + '<span style="font-size:14px;font-weight:900;color:#10B981;flex-shrink:0;">'+_cursym()+ (m.price||0).toLocaleString() + '</span>'
       + '<span style="font-size:14px;color:#9CA3AF;flex-shrink:0;">›</span>'
       + '</div>';
   }).join('') + '</div>';
@@ -28422,7 +28443,7 @@ async function _admPcEditMenuCardFromPin(pinId) {
       if (!card) {
         if (allCards.length > 0) {
           var listMsg = '"' + itemName + '" 와 정확히 일치하는 메뉴 카드가 없어요.\n\n같은 가게의 메뉴 카드들:\n';
-          allCards.forEach(function(c, i){ listMsg += '  ' + (i+1) + '. ' + c.menu_name + ' (¥' + (c.price||0).toLocaleString() + ')\n'; });
+          allCards.forEach(function(c, i){ listMsg += '  ' + (i+1) + '. ' + c.menu_name + ' ('+_cursym()+ (c.price||0).toLocaleString() + ')\n'; });
           listMsg += '\n어느 카드를 편집할까요? 번호 입력 (취소=새로 생성):';
           var sel = window.prompt(listMsg, '1');
           if (sel === null) return;
@@ -28435,7 +28456,7 @@ async function _admPcEditMenuCardFromPin(pinId) {
     }
 
     if (!card) {
-      if (!confirm('해당 메뉴 카드가 없어요.\n핀("' + itemName + '" ¥' + (pin.price||0).toLocaleString() + ')으로 새 메뉴 카드를 생성할까요?')) return;
+      if (!confirm('해당 메뉴 카드가 없어요.\n핀("' + itemName + '" '+_cursym()+ (pin.price||0).toLocaleString() + ')으로 새 메뉴 카드를 생성할까요?')) return;
       var ins = await _sb.from('store_menu_cards').insert({
         store_name:   storeName,
         store_id:     await _resolveStoreId(storeName),
@@ -28658,7 +28679,7 @@ async function openAdminStoreDetail(storeId) {
   document.getElementById('adm-store-gmap').value = s.google_maps_url || '';
   _admGmapLastExtractedKey = '';  // 새 가게 편집 시 좌표 추출 캐시 초기화
   _admGmapShortResolvedFor = '';
-  document.getElementById('adm-store-meta').textContent = '평균가: ¥'+(s.avg_price||0).toLocaleString()+' · 영수증: '+(s.receipt_count||0)+'장';
+  document.getElementById('adm-store-meta').textContent = '평균가: '+_cursym()+(s.avg_price||0).toLocaleString()+' · 영수증: '+(s.receipt_count||0)+'장';
   _admLoadStoreMenus(s.name);
   _admLoadStorePhotos(s.name);  // 가게 사진 로드
   if (typeof _isAdminPcActive === 'function' && _isAdminPcActive()) {
@@ -28883,7 +28904,7 @@ async function _admLoadStoreMenus(storeName) {
       +   '<div style="font-size:12px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(m.menu_name||'')+'</div>'
       +   '<div style="font-size:10px;color:var(--text-3);margin-top:1px;">'+rating+'</div>'
       + '</div>'
-      + '<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">¥'+(m.price||0).toLocaleString()+'</div>'
+      + '<div style="font-size:13px;font-weight:800;color:var(--green);flex-shrink:0;">'+_cursym()+(m.price||0).toLocaleString()+'</div>'
       + '</div>';
   }).join('');
 }
@@ -29270,7 +29291,7 @@ function openAdminPricing() {
   if (tbody) {
     tbody.innerHTML = rewards.map(function(r){
       var val = (r.chiri * chVal).toFixed(2);
-      return '<tr><td style="padding:7px 8px;">'+r.action+'</td><td style="padding:7px 8px;text-align:right;font-weight:700;color:var(--gold-dark);">+'+r.chiri+' チリ</td><td style="padding:7px 8px;text-align:right;color:var(--text-3);">≈ ¥'+val+'</td></tr>';
+      return '<tr><td style="padding:7px 8px;">'+r.action+'</td><td style="padding:7px 8px;text-align:right;font-weight:700;color:var(--gold-dark);">+'+r.chiri+' チリ</td><td style="padding:7px 8px;text-align:right;color:var(--text-3);">≈ '+_cursym()+val+'</td></tr>';
     }).join('');
   }
   _admRenderFlagToggle();   // 치리 리워드 ON/OFF 토글 상태 반영
@@ -29381,7 +29402,7 @@ async function _loadAdminStats() {
     var adEl = document.getElementById('adm-stat-ads');
     if (adEl) adEl.textContent = adCount.toLocaleString() + '회';
     var revEl = document.getElementById('adm-stat-ads-revenue');
-    if (revEl) revEl.textContent = '≈ ¥' + revenue.toLocaleString();
+    if (revEl) revEl.textContent = '≈ '+_cursym()+ revenue.toLocaleString();
   } catch(e) {
     var adEl = document.getElementById('adm-stat-ads');
     if (adEl) adEl.textContent = '—';
@@ -29401,7 +29422,7 @@ async function _loadAdminStats() {
     var coinEl = document.getElementById('adm-stat-coins');
     if (coinEl) coinEl.textContent = totalIssued.toLocaleString() + 'チリ';
     var expEl = document.getElementById('adm-stat-coins-expense');
-    if (expEl) expEl.textContent = '≈ ¥' + expense.toLocaleString();
+    if (expEl) expEl.textContent = '≈ '+_cursym()+ expense.toLocaleString();
   } catch(e) {
     var coinEl = document.getElementById('adm-stat-coins');
     if (coinEl) coinEl.textContent = '—';
@@ -29806,7 +29827,7 @@ function _mdRender(){
     +(card.category?'<div style="font-size:13px;color:var(--text-3);font-weight:500;margin-bottom:10px;">'+card.category+'</div>':'')
     +'<div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;">'
       +'<span style="font-size:18px;font-weight:800;color:var(--star);">'+stars+ratingCnt+'</span>'
-      +'<span style="font-size:22px;font-weight:800;color:var(--text-1);">'+(card.price?'¥'+Number(card.price).toLocaleString():'')+'</span>'
+      +'<span style="font-size:22px;font-weight:800;color:var(--text-1);">'+(card.price?_cursym()+Number(card.price).toLocaleString():'')+'</span>'
     +'</div></div>';
 
   // 별점 분포
@@ -30617,14 +30638,14 @@ function _renderReceiptCanvas(r){
   items.forEach(function(it){
     var q = it.qty||1, nm = (it.name||'-') + (q>1? ' ×'+q : '');
     x.fillStyle=t1; x.textAlign='left'; x.fillText(_pdfClip(x, nm, W-pad*2-92), pad, cy);
-    x.textAlign='right'; x.fillText('¥'+Number(it.price||0).toLocaleString(), W-pad, cy);
+    x.textAlign='right'; x.fillText(_cursym()+Number(it.price||0).toLocaleString(), W-pad, cy);
     cy += rowH;
   });
   x.textAlign='left'; cy += 10;
   x.strokeStyle='#E5E7EB'; x.beginPath(); x.moveTo(pad,cy); x.lineTo(W-pad,cy); x.stroke();
   cy += 28;
   x.fillStyle=green; x.font='800 16px sans-serif'; x.textAlign='left'; x.fillText(t('ocr.total'), pad, cy);
-  x.textAlign='right'; x.font='900 22px sans-serif'; x.fillText('¥'+Number(r.total||0).toLocaleString(), W-pad, cy);
+  x.textAlign='right'; x.font='900 22px sans-serif'; x.fillText(_cursym()+Number(r.total||0).toLocaleString(), W-pad, cy);
   x.textAlign='left'; cy += 28;
   if (r.memo){ x.fillStyle=t3; x.font='500 11.5px sans-serif'; x.fillText(_pdfClip(x, '📝 '+r.memo, W-pad*2), pad, cy); }
   x.fillStyle=t3; x.font='600 10px sans-serif'; x.textAlign='center'; x.fillText('RetWork · retwork.jp', W/2, H-14); x.textAlign='left';
@@ -30799,7 +30820,7 @@ function renderRecurList(){
       +'<div style="font-size:18px;flex-shrink:0;">'+ico+'</div>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(rc.name)+'</div>'
       +'<div style="font-size:11px;color:var(--text-3);margin-top:2px;">'+t('recur.every_day',{d:rc.day_of_month})+' · '+_esc(cat)+'</div></div>'
-      +'<div style="font-size:14px;font-weight:800;color:var(--green);flex-shrink:0;">¥'+Number(rc.amount).toLocaleString()+'</div></div>';
+      +'<div style="font-size:14px;font-weight:800;color:var(--green);flex-shrink:0;">'+_cursym()+Number(rc.amount).toLocaleString()+'</div></div>';
   }).join('');
 }
 function openRecurEdit(id){
@@ -30923,7 +30944,7 @@ function _pcsRender(el, rows, nameById){
     var nm=nameById[r.product_id]||'';
     var best=(i===0);
     var distTxt=(r._dist!=null&&!isNaN(r._dist))?('・'+(r._dist>=1000?(Math.round(r._dist/100)/10)+'km':Math.round(r._dist)+'m')):'';
-    var unitTxt='¥'+Number(r.price).toLocaleString();
+    var unitTxt=_cursym()+Number(r.price).toLocaleString();
     return '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:0.5px solid '+(best?'var(--green)':'var(--border)')+';border-radius:12px;margin-bottom:8px;">'
       +'<div style="font-size:13px;font-weight:800;color:'+(best?'var(--green)':'var(--text-3)')+';width:20px;text-align:center;flex-shrink:0;">'+(i+1)+'</div>'
       +'<div style="flex:1;min-width:0;"><div style="font-size:13px;font-weight:700;color:var(--text-1);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+_esc(r.store_name)+(best?' <span style="font-size:9px;color:var(--green);font-weight:800;">'+t('rmap.pcs_best')+'</span>':'')+'</div>'
@@ -31024,11 +31045,11 @@ function renderYearReport(){
   var mmax=Math.max.apply(null,mon)||1;
   var html='';
   var deltaHtml='';
-  if(prevTotal>0){ var d=total-prevTotal; deltaHtml='<div style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;background:rgba(255,255,255,.16);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;">'+(d<=0?'▼ ¥'+Math.abs(d).toLocaleString():'▲ ¥'+d.toLocaleString())+' '+t('yr.vs_prev')+'</div>'; }
+  if(prevTotal>0){ var d=total-prevTotal; deltaHtml='<div style="display:inline-flex;align-items:center;gap:4px;margin-top:10px;background:rgba(255,255,255,.16);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;">'+(d<=0?'▼ '+_cursym()+Math.abs(d).toLocaleString():'▲ '+_cursym()+d.toLocaleString())+' '+t('yr.vs_prev')+'</div>'; }
   html+='<div style="background:var(--green-grad);border-radius:20px;padding:20px;color:#fff;position:relative;overflow:hidden;margin-bottom:14px;">'
     +'<div style="position:absolute;right:-40px;top:-40px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.07);"></div>'
     +'<div style="font-size:10px;opacity:.7;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">'+t('yr.total_label')+' · '+t('rep.month_spent',{n:cur.length})+'</div>'
-    +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">¥'+total.toLocaleString()+'</div>'+deltaHtml
+    +'<div style="font-size:36px;font-weight:900;letter-spacing:-1.5px;margin-top:4px;line-height:1;">'+_cursym()+total.toLocaleString()+'</div>'+deltaHtml
     +'<div style="margin-top:14px;font-size:12px;opacity:.85;">'+t('yr.month_avg',{v:monAvg.toLocaleString()})+'</div>'
     +'</div>';
   // 월별 추이: 가로 막대 + 금액 직접 표기(직관적). 현재 연도는 이번 달까지만.
@@ -31040,13 +31061,13 @@ function renderYearReport(){
     rows+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
       +'<span style="font-size:11px;font-weight:700;color:'+(isCur?'var(--green)':'var(--text-2)')+';width:30px;flex-shrink:0;">'+(mlabels[i]||(i+1))+'</span>'
       +'<div style="flex:1;height:14px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;width:'+(has?Math.max(hp,4):0)+'%;background:'+(isCur?'var(--green)':'var(--green-light)')+';"></div></div>'
-      +'<span style="font-size:11.5px;font-weight:800;color:'+(has?'var(--text-1)':'var(--text-3)')+';width:82px;text-align:right;flex-shrink:0;">¥'+mon[i].toLocaleString()+'</span>'
+      +'<span style="font-size:11.5px;font-weight:800;color:'+(has?'var(--text-1)':'var(--text-3)')+';width:82px;text-align:right;flex-shrink:0;">'+_cursym()+mon[i].toLocaleString()+'</span>'
       +'</div>';
   }
   html+=_mrLbl(t('yr.sec_trend'))+'<div class="card" style="margin-bottom:14px;">'+rows+'</div>';
   var cc={}; cur.forEach(function(r){ cc[r.cat]=(cc[r.cat]||0)+r.total; });
   var catSorted=Object.keys(cc).sort(function(a,b){return cc[b]-cc[a];});
-  var catBars=catSorted.map(function(c){var pct=total>0?Math.round(cc[c]/total*100):0;var color=(typeof CAT_COLOR!=='undefined'&&CAT_COLOR[c])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">¥'+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
+  var catBars=catSorted.map(function(c){var pct=total>0?Math.round(cc[c]/total*100):0;var color=(typeof CAT_COLOR!=='undefined'&&CAT_COLOR[c])||'#888';return '<div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:5px;"><span style="font-weight:700;">'+(CAT_ICON[c]||'📦')+' '+(CAT_LABEL[c]||c)+'</span><span style="font-weight:800;">'+_cursym()+cc[c].toLocaleString()+' <small style="color:var(--text-3);font-size:10px;">'+pct+'%</small></span></div><div style="height:8px;border-radius:5px;background:var(--bg);overflow:hidden;"><div style="height:100%;border-radius:5px;background:'+color+';width:'+Math.max(pct,2)+'%;"></div></div></div>';}).join('');
   html+=_mrLbl(t('yr.sec_category'))+'<div class="card" style="margin-bottom:14px;">'+catBars+'</div>';
   // 가게: ① 자주 간(방문횟수순) ② 지출 많은(금액순) 두 섹션, 각 TOP10
   var st={}; cur.forEach(function(r){ if(!st[r.store])st[r.store]={cnt:0,sum:0}; st[r.store].cnt++; st[r.store].sum+=r.total; });
@@ -31055,7 +31076,7 @@ function renderYearReport(){
   function _yrStoreRows(list, mode){   // mode: 'visit' | 'spend'
     return list.map(function(s,i){
       var rank=i<3?_yrMedal[i]:(i+1);
-      var rightTxt = mode==='visit' ? t('yr.visit_cnt',{n:s.cnt}) : ('¥'+s.sum.toLocaleString());
+      var rightTxt = mode==='visit' ? t('yr.visit_cnt',{n:s.cnt}) : (_cursym()+s.sum.toLocaleString());
       var subTxt   = mode==='visit' ? t('yr.total_spend',{v:s.sum.toLocaleString()}) : t('mr.visit_n',{n:s.cnt,avg:Math.round(s.sum/s.cnt).toLocaleString()});
       return '<div class="mr-irow"><div style="display:flex;align-items:center;gap:9px;"><span style="font-size:15px;width:22px;text-align:center;">'+rank+'</span><div><div style="font-size:13px;font-weight:700;">'+_esc(s.n)+'</div><div style="font-size:10px;color:var(--text-3);">'+subTxt+'</div></div></div><div style="font-size:13px;font-weight:800;'+(mode==='visit'?'color:var(--green);':'')+'">'+rightTxt+'</div></div>';
     }).join('');
@@ -31078,7 +31099,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 642;
+window.__APP_BUILD__ = 643;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
