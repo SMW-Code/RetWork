@@ -5329,6 +5329,41 @@ var gptKey  = '';  // OpenAI API 키 — 백엔드 /api/gpt 경유 (Vercel 환�
 /* ══════════════════════════════
    モード切替 (ReceiptIQ ↔ チリつも)
 ══════════════════════════════ */
+/* 헤더 모드전환 버튼 (b634) — 각 헤더의 프로필 아이콘 앞에 삽입. 설정에 숨은 토글을 헤더로 노출. */
+function _toggleAppMode(){
+  var sw = document.getElementById('mode-toggle-sw');
+  var cur = (sw && sw.dataset.mode) || 'receipt';
+  if (typeof switchMode === 'function') switchMode(cur === 'receipt' ? 'chiri' : 'receipt');
+}
+function _syncHeaderModeToggles(){
+  var sw = document.getElementById('mode-toggle-sw');
+  var isReceipt = ((sw && sw.dataset.mode) || 'receipt') === 'receipt';
+  var icon = isReceipt ? '🧾' : '🗺️';
+  var name = isReceipt
+    ? (typeof t==='function' ? t('mode.receipt') : 'ReceiptIQ')
+    : (typeof t==='function' ? t('mode.chiri')   : 'チリつも');
+  document.querySelectorAll('.hdr-mode-toggle').forEach(function(b){
+    b.innerHTML = '<span style="font-size:13px;line-height:1;">'+icon+'</span>'
+      + '<span style="font-size:11px;font-weight:800;">'+_esc(name)+'</span>'
+      + '<span style="font-size:12px;opacity:.55;margin-left:1px;">⇄</span>';
+  });
+}
+function _injectHeaderModeToggles(){
+  document.querySelectorAll('.hdr-avatar').forEach(function(av){
+    var prev = av.previousElementSibling;
+    if (prev && prev.classList && prev.classList.contains('hdr-mode-toggle')) return; // 중복 방지
+    if (!av.parentNode) return;
+    var btn = document.createElement('div');
+    btn.className = 'hdr-mode-toggle';
+    btn.setAttribute('role','button');
+    btn.setAttribute('aria-label','모드 전환');
+    btn.onclick = _toggleAppMode;
+    btn.style.cssText = 'display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:12px;background:var(--bg-2);border:0.5px solid var(--border);cursor:pointer;color:var(--text-1);white-space:nowrap;-webkit-tap-highlight-color:transparent;flex-shrink:0;';
+    av.parentNode.insertBefore(btn, av);
+  });
+  _syncHeaderModeToggles();
+}
+
 function switchMode(mode) {
   var isReceipt = mode === 'receipt';
 
@@ -5364,6 +5399,7 @@ function switchMode(mode) {
     s.style.display = (!isReceipt && s.classList.contains('active')) ? 'flex' : 'none';
   });
   document.getElementById('ct-tabbar').style.display = isReceipt ? 'none' : '';
+  if (typeof _syncHeaderModeToggles === 'function') _syncHeaderModeToggles(); // b634 — 헤더 모드버튼 라벨 동기화
 
   // チリつも 진입 시 코인 잔액 갱신 + 지도 초기화/리사이즈 + 치리스토어 로드
   if (!isReceipt) {
@@ -19885,6 +19921,8 @@ function showApp() {
   if (typeof _registerNativePush === 'function') { try { _registerNativePush(); } catch(e){} }
   // 네이티브 앱: 하단 AdMob 배너 표시 (b627) — UI 안정 후
   if (typeof _admobShowBanner === 'function') setTimeout(function(){ try{ _admobShowBanner(); }catch(e){} }, 900);
+  // 헤더 모드전환 버튼 삽입 (b634)
+  if (typeof _injectHeaderModeToggles === 'function') { try{ _injectHeaderModeToggles(); }catch(e){} }
   // 활성 공지 로드 → 상단 배너 표시
   if (typeof _loadActiveAnnouncement === 'function') _loadActiveAnnouncement();
   // 본인 차단 상태 체크 → 차단 시 상단 배너 표시
@@ -31644,7 +31682,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 633;
+window.__APP_BUILD__ = 634;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
