@@ -80,3 +80,27 @@ setTimeout(function() {
   }
 }, 200);
 ```
+
+---
+
+## 2. 미사용 전역 함수 25개 (build 640에서 제거)
+
+전부 **정의만 있고 호출·onclick·문자열 참조가 전혀 없던** 함수(검증: 각 이름 등장 1회).
+현재 어떤 기능과도 연결 안 됨 → 제거. 전체 코드는 **git 히스토리**(제거 직전 커밋)에 있음:
+`git show 2728a80:public/index.html` 로 복원 가능.
+
+| 함수 | 비고 |
+|---|---|
+| `ctStoreExchange` / `ctWatchAd` | 레거시 치리 교환·광고시청 (RPC/새 흐름으로 대체) |
+| `scrollToStoreCard` | 맵 InfoWindow→카드 스크롤 (주석에 "Legacy 미사용") |
+| `_globalToneFix` / `_localContrast` / `_unsharpMask` | 영수증 전처리(CLAHE/unsharp) — 전처리 개편으로 미사용 |
+| `buildStoreInfoContent` (99줄) | 옛 맵 마커 말풍선 빌더 (현재 바텀시트로 대체) |
+| `openMonthDetail` (98줄) | 옛 월 상세 뷰 |
+| `openShopDetail` / `openPlaceEmbed` / `_sdRenderGmaps` | 옛 가게/장소 상세·구글맵 |
+| `getDemoResult` | API키 없을 때 데모결과 (백엔드 키 상시 → 미사용) |
+| `filterHistory` / `goToCatHistory` | 옛 내역 필터·카테고리 이동 |
+| `cpSelectStar` / `toggleCpItem` | 옛 치리 공개모달 별점·항목 토글 |
+| `toggleInfoExpand` / `closeCatWheel` / `ctStartNoticeSlide` | 기타 UI 헬퍼 |
+| `_handleUserBannedError` / `showOnboarding` | 미연결 에러핸들러·온보딩 |
+| `_catLabel` / `_fmtMins` / `_admPcBackToUserList` | 트리비얼 미사용 헬퍼 |
+| `_radarDummyData` | 빈 레거시 배열 |
