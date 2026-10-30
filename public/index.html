@@ -5188,6 +5188,10 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 </div><!-- /app -->
 
 <script>
+/* 디버그 로그 토글 (b641) — 평소 OFF. 콘솔 디버깅 시 window._DEBUG=true 로 전부 켜짐.
+   console.log → _dbg 로 래핑(부수효과 인자 없음 확인됨). 버전배너·[SW] 로그는 console.log 그대로 유지. */
+window._DEBUG = false;
+function _dbg(){ if(window._DEBUG){ try{ console.log.apply(console, arguments); }catch(e){} } }
 /* ══════════════════════════════
    Supabase 초기화
 ══════════════════════════════ */
@@ -7232,7 +7236,7 @@ function ctRenderPricePins() {
   _ctMarkers.forEach(function(m) { m.setMap(null); });
   _ctMarkers = [];
   if (!_ctMap) return;
-  console.log('[ctRenderPricePins] mode=', _ctMapMode, 'privateNoteStores=', Object.keys(_privateNoteStores).length, 'pins=', _ctPins.length);
+  _dbg('[ctRenderPricePins] mode=', _ctMapMode, 'privateNoteStores=', Object.keys(_privateNoteStores).length, 'pins=', _ctPins.length);
 
   var zoom = _ctMap.getZoom() || 15;
 
@@ -9982,7 +9986,7 @@ function goToHistoryEntry(cat, id) {
     histYear  = parseInt(p[0]);
     histMonth = parseInt(p[1]);
     updateHistMonthLabel();
-    try { console.log('[goToHistoryEntry] id=' + id + ' date=' + entry.date + ' → ' + histYear + '/' + histMonth + ' cat=' + cat); } catch(e){}
+    try { _dbg('[goToHistoryEntry] id=' + id + ' date=' + entry.date + ' → ' + histYear + '/' + histMonth + ' cat=' + cat); } catch(e){}
   } else {
     try { console.warn('[goToHistoryEntry] entry not found for id=' + id); } catch(e){}
   }
@@ -11437,7 +11441,7 @@ async function preprocessReceiptImage(file, opts){
         data[j+2] = Math.min(255, Math.pow(data[j+2] / 255, gamma) * 255) | 0;
       }
       ctx.putImageData(imageData, 0, 0);
-      console.log('[preprocess] brightened: avg lum '+avgLum.toFixed(0)+' → gamma '+gamma);
+      _dbg('[preprocess] brightened: avg lum '+avgLum.toFixed(0)+' → gamma '+gamma);
     }
   } catch(e){ /* 픽셀 처리 실패해도 원본 사용 */ }
 
@@ -11458,7 +11462,7 @@ async function preprocessReceiptImage(file, opts){
   }
   var base64 = dataUrl.split(',')[1];
 
-  console.log('[preprocess] '+cw+'x'+ch+', q'+quality.toFixed(2)+', '+Math.round(base64.length/1024)+'KB, '+(Date.now()-t0)+'ms');
+  _dbg('[preprocess] '+cw+'x'+ch+', q'+quality.toFixed(2)+', '+Math.round(base64.length/1024)+'KB, '+(Date.now()-t0)+'ms');
   return { base64: base64, dataUrl: dataUrl, width: cw, height: ch, scale: scale };
 }
 
@@ -11475,7 +11479,7 @@ async function handleImageFile(input) {
   try {
     var t0 = Date.now();
     var pre = await preprocessReceiptImage(file);
-    console.log('[preprocess] '+pre.width+'x'+pre.height+', range '+pre.blackPt+'~'+pre.whitePt+', '+(Date.now()-t0)+'ms');
+    _dbg('[preprocess] '+pre.width+'x'+pre.height+', range '+pre.blackPt+'~'+pre.whitePt+', '+(Date.now()-t0)+'ms');
     preview = pre.dataUrl;
     base64 = pre.base64;
   } catch(e){
@@ -11538,14 +11542,14 @@ function callGoogleVisionAPI(base64Image, previewSrc) {
         if (anns && anns.length > 1) {
           var coord = parseReceiptByCoords(anns.slice(1), rawText);
           if (coord && coord._valid) {
-            console.log('[parse] 좌표 파서 채택: ' + coord.items.length + '품목, 품목합 ¥' + (coord.subtotal||coord.total));
+            _dbg('[parse] 좌표 파서 채택: ' + coord.items.length + '품목, 품목합 ¥' + (coord.subtotal||coord.total));
             window._rawOcrText   = rawText;
             window._parsedResult = coord;
             window._previewSrc   = previewSrc;
             _showDebugUI(previewSrc, rawText, coord, false);
             return;
           }
-          console.log('[parse] 좌표 파서 검증 실패 → GPT 폴백');
+          _dbg('[parse] 좌표 파서 검증 실패 → GPT 폴백');
         }
       } catch (e) { console.warn('[parse] 좌표 파서 오류 → GPT 폴백:', e.message); }
 
@@ -12004,7 +12008,7 @@ function _sdApplyLayoutForMode() {
     setOrder('sd-store-comments-wrap', 7);
     setOrder('sd-private-wrap', 8);
   }
-  console.log('[SD layout] mode=', _ctMapMode, 'display=', getComputedStyle(panel).display, 'privateW order=', document.getElementById('sd-private-wrap') && getComputedStyle(document.getElementById('sd-private-wrap')).order);
+  _dbg('[SD layout] mode=', _ctMapMode, 'display=', getComputedStyle(panel).display, 'privateW order=', document.getElementById('sd-private-wrap') && getComputedStyle(document.getElementById('sd-private-wrap')).order);
 }
 
 // 실제 모드 전환 (광고 통과 후 또는 공개 전환 시)
@@ -12476,7 +12480,7 @@ JSONのみ出力。説明不要。`;
      검증 기준: items.price 합 ≈ total (±5% 이내)
   */
   function _callGptModel(modelName){
-    console.log('[gpt] calling ' + modelName + '...');
+    _dbg('[gpt] calling ' + modelName + '...');
     var t0 = Date.now();
     return fetch('/api/gpt', {
       method: 'POST',
@@ -12510,7 +12514,7 @@ JSONのみ出力。説明不要。`;
         console.error('[gpt] '+modelName+' JSON 파싱 실패:', text.substring(0, 300));
         throw e;
       }
-      console.log('[gpt] '+modelName+' ✓ '+elapsed+'ms, items:'+(parsed.items?parsed.items.length:0)+', total:'+parsed.total);
+      _dbg('[gpt] '+modelName+' ✓ '+elapsed+'ms, items:'+(parsed.items?parsed.items.length:0)+', total:'+parsed.total);
       return parsed;
     });
   }
@@ -12538,7 +12542,7 @@ JSONのみ出力。説明不要。`;
     .then(function(result){
       // 검증: items 합 ≈ total
       if (_validateResult(result)) {
-        console.log('[parse] mini ✓ (verified)');
+        _dbg('[parse] mini ✓ (verified)');
         return { result: result, model: 'gpt-4o-mini' };
       }
       // 실패 → gpt-4o 폴백
@@ -13516,19 +13520,19 @@ function _sanitizeReceiptDate(s){
 }
 
 function saveOcrResult() {
-  console.log('[save] 저장 버튼 클릭됨');
+  _dbg('[save] 저장 버튼 클릭됨');
   syncOcrItems();
   var r = window._ocrResult;
-  console.log('[save] _ocrResult:', !!r, '| _ocrItems len:', (window._ocrItems||[]).length, '| _isPremium:', _isPremium);
+  _dbg('[save] _ocrResult:', !!r, '| _ocrItems len:', (window._ocrItems||[]).length, '| _isPremium:', _isPremium);
   if (!r) { console.warn('[save] _ocrResult 없음 — abort'); return; }
   if (!_isPremium) {
-    console.log('[save] showAdModal 호출');
+    _dbg('[save] showAdModal 호출');
     showAdModal(function() {
-      console.log('[save] ad callback — _doSaveOcrResult 실행');
+      _dbg('[save] ad callback — _doSaveOcrResult 실행');
       _doSaveOcrResult();
     });
   } else {
-    console.log('[save] 프리미엄 → 광고 스킵');
+    _dbg('[save] 프리미엄 → 광고 스킵');
     _doSaveOcrResult();
   }
 }
@@ -13701,17 +13705,17 @@ function _doSaveOcrResult() {
               }
             } catch(e) { /* 매칭 실패해도 무시 */ }
           }
-          console.log('[product-match] 완료:', insertedItems.length, '품목 처리');
+          _dbg('[product-match] 완료:', insertedItems.length, '품목 처리');
         })();
       }
       _sb.from('items').insert(rows).select('id,name').then(_afterItemsInsert);
     }
 
     // INSERT 완료 후 위치 검색 → receipt ID로 정확히 UPDATE
-    console.log('[ReceiptIQ] INSERT 완료, receiptId:', receiptId);
+    _dbg('[ReceiptIQ] INSERT 완료, receiptId:', receiptId);
     if (receiptId) {
       searchAndPinStore(store, _storeAddress, function(lat, lng) {
-        console.log('[ReceiptIQ] 위치 찾음 lat:', lat, 'lng:', lng, '→ UPDATE id:', receiptId);
+        _dbg('[ReceiptIQ] 위치 찾음 lat:', lat, 'lng:', lng, '→ UPDATE id:', receiptId);
         newEntry.lat = lat;
         newEntry.lng = lng;
         _sb.from('receipts').update({ lat: lat, lng: lng })
@@ -13720,7 +13724,7 @@ function _doSaveOcrResult() {
           .select()
           .then(function(res2) {
             if (res2.error) console.error('[ReceiptIQ] 위치 저장 실패:', res2.error.message);
-            else console.log('[ReceiptIQ] UPDATE 결과 행 수:', res2.data ? res2.data.length : 0, '| lat저장값:', res2.data && res2.data[0] ? res2.data[0].lat : 'N/A');
+            else _dbg('[ReceiptIQ] UPDATE 결과 행 수:', res2.data ? res2.data.length : 0, '| lat저장값:', res2.data && res2.data[0] ? res2.data[0].lat : 'N/A');
             renderMapPins();
           });
         // ★ Phase 1: 커뮤니티 가격 풀 기여 (식료품만) — product_prices 에 상품·가게·단가·좌표 upsert
@@ -14201,9 +14205,9 @@ async function submitChiriPublish() {
   //   변경: 광고 모달 표시 전에 가계부를 동기적으로 저장 → 광고 결과와 무관하게 저장 보장
   // 맵에서 공개(openChiriFromMapCard)한 경우 영수증은 이미 가계부에 저장돼 있음 → 중복 저장 방지
   if (_fromMap) {
-    console.log('[chiri-publish] 맵 경로 — 가계부 재저장 스킵 (이미 저장됨)');
+    _dbg('[chiri-publish] 맵 경로 — 가계부 재저장 스킵 (이미 저장됨)');
   } else {
-    console.log('[chiri-publish] 가계부 저장 시작 (광고 모달 전)');
+    _dbg('[chiri-publish] 가계부 저장 시작 (광고 모달 전)');
     _doSaveOcrResult();
   }
   // (전역 _cpFromMap 은 함수 진입 시 이미 리셋됨 — 여기선 지역 스냅샷 _fromMap 사용)
@@ -14228,7 +14232,7 @@ async function submitChiriPublish() {
       // place_id 백필 — 아직 비어있는 가게만, UNIQUE 충돌 시 무시. (: 동명 분리 위해 store_id 기준)
       if (placeId) {
         _sb.from('stores').update({ place_id: placeId }).eq(_cpStoreId?'id':'name', _cpStoreId||store).is('place_id', null)
-          .then(function(r){ if (r && r.error) console.log('[place_id backfill skip]', r.error.message); });
+          .then(function(r){ if (r && r.error) _dbg('[place_id backfill skip]', r.error.message); });
       }
     }
   });
@@ -15688,7 +15692,7 @@ async function _ctShowUnvisitedMarkers() {
   }
 
   var names = Object.keys(posMap);
-  console.log('[ctShowUnvisited] 미방문 가게 수:', names.length);
+  _dbg('[ctShowUnvisited] 미방문 가게 수:', names.length);
   if (names.length === 0) return;
 
   // 모든 미방문 마커가 한 번에 보이도록 fitBounds 사용
@@ -17171,7 +17175,7 @@ function searchAndPinStore(storeName, address, callback) {
   // 주소도 없으면 그냥 종료. 주소가 있으면 주소만으로 시도.
   var _unknownStore = !storeName || /^\s*(店舗名不明|不明|店名不明|店舗不明)\s*$/.test(storeName);
   if (_unknownStore && !address) {
-    console.log('[ReceiptIQ] 점포명 불명 + 주소 없음 → 위치 검색 생략');
+    _dbg('[ReceiptIQ] 점포명 불명 + 주소 없음 → 위치 검색 생략');
     return;
   }
   if (_unknownStore) {
@@ -17446,7 +17450,7 @@ async function loadFromSupabase() {
 
   // DB를 더미 데이터 없이 Supabase 데이터로 교체
   var s = res.data[0];
-  console.log('[ReceiptIQ] lat:', s.lat, '| lng:', s.lng, '| store:', s.store_name);
+  _dbg('[ReceiptIQ] lat:', s.lat, '| lng:', s.lng, '| store:', s.store_name);
   DB = res.data.map(function(r) {
     return {
       id: r.id,
@@ -18077,7 +18081,7 @@ function _budgetCheckMonthReset(){
   if (saved && saved !== _budgetYMKey()) {
     localStorage.removeItem('receiptiq_budget');
     localStorage.removeItem('receiptiq_budget_month');
-    console.log('[budget] new month → auto reset (' + saved + ' → ' + _budgetYMKey() + ')');
+    _dbg('[budget] new month → auto reset (' + saved + ' → ' + _budgetYMKey() + ')');
   }
 }
 
@@ -18298,7 +18302,7 @@ function _setupRealtimeSubscriptions() {
     // store_items: 상품 INSERT/UPDATE/DELETE → 치리스토어 + 어드민 리스트 즉시 새로고침
     _sb.channel('public:store_items')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'store_items' }, function(payload) {
-        console.log('[realtime] store_items', payload.eventType);
+        _dbg('[realtime] store_items', payload.eventType);
         _ctStoreCache = null;
         if (typeof renderCtStore === 'function') renderCtStore().then(function(){
           var ov = document.getElementById('ov-ct-store-full');
@@ -18314,7 +18318,7 @@ function _setupRealtimeSubscriptions() {
     // announcements: 공지 INSERT/UPDATE/DELETE → 배너 + 어드민 리스트 즉시 새로고침
     _sb.channel('public:announcements')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'announcements' }, function(payload) {
-        console.log('[realtime] announcements', payload.eventType);
+        _dbg('[realtime] announcements', payload.eventType);
         if (typeof _loadActiveAnnouncement === 'function') _loadActiveAnnouncement();
         var admOpen = document.getElementById('ov-admin-ann');
         if (admOpen && admOpen.classList.contains('open') && typeof _loadAdminAnnouncementList === 'function') {
@@ -18326,7 +18330,7 @@ function _setupRealtimeSubscriptions() {
     // banned_words: 어드민이 추가/변경 → 클라이언트 캐시 무효화 + 어드민 모달 갱신
     _sb.channel('public:banned_words')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'banned_words' }, function(payload) {
-        console.log('[realtime] banned_words', payload.eventType);
+        _dbg('[realtime] banned_words', payload.eventType);
         // 모든 클라이언트의 벤워드 캐시 무효화 → 즉시 새 차단어 반영
         _bannedWordsCache = null;
         _bannedWordsCacheAt = 0;
@@ -18342,7 +18346,7 @@ function _setupRealtimeSubscriptions() {
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'profiles', filter: 'id=eq.' + (_currentUser && _currentUser.id) },
         function(payload) {
-          console.log('[realtime] profiles UPDATE');
+          _dbg('[realtime] profiles UPDATE');
           if (typeof _syncProfileFromSupabase === 'function') _syncProfileFromSupabase();
         }
       )
@@ -18351,7 +18355,7 @@ function _setupRealtimeSubscriptions() {
     // banned_users: 차단 변경 → 본인 차단 상태 갱신 + 어드민 모달 갱신
     _sb.channel('public:banned_users')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'banned_users' }, function(payload) {
-        console.log('[realtime] banned_users', payload.eventType);
+        _dbg('[realtime] banned_users', payload.eventType);
         if (typeof _checkSelfBanned === 'function') _checkSelfBanned();
         var admOpen = document.getElementById('ov-admin-banned-users');
         if (admOpen && admOpen.classList.contains('open') && typeof _loadAdminBannedUsers === 'function') {
@@ -18363,7 +18367,7 @@ function _setupRealtimeSubscriptions() {
     // comment_reports: 새 신고 INSERT → 어드민 배지 + 리스트 새로고침
     _sb.channel('public:comment_reports')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'comment_reports' }, function(payload) {
-        console.log('[realtime] comment_reports', payload.eventType);
+        _dbg('[realtime] comment_reports', payload.eventType);
         if (_isAdmin && typeof _loadPendingReportCount === 'function') _loadPendingReportCount();
         var admOpen = document.getElementById('ov-admin-reports');
         if (admOpen && admOpen.classList.contains('open') && typeof _loadAdminReportList === 'function') {
@@ -18372,7 +18376,7 @@ function _setupRealtimeSubscriptions() {
       })
       .subscribe();
 
-    console.log('[realtime] subscriptions active');
+    _dbg('[realtime] subscriptions active');
   } catch(e) {
     console.warn('[realtime] setup error:', e.message);
   }
@@ -19114,7 +19118,7 @@ function _isNativeApp(){ try{ return !!(window.Capacitor && window.Capacitor.isN
     navigator.geolocation.getCurrentPosition = function(success, error, options){ nativeGet(success, error, options); };
     // watchPosition 은 앱에서 지속추적 미사용 → 1회성으로 대체
     navigator.geolocation.watchPosition = function(success, error, options){ nativeGet(success, error, options); return 0; };
-    console.log('[native-geo] geolocation → Capacitor Geolocation 플러그인 라우팅 완료');
+    _dbg('[native-geo] geolocation → Capacitor Geolocation 플러그인 라우팅 완료');
   }catch(e){ console.warn('[native-geo] patch failed', e); }
 })();
 
@@ -21025,7 +21029,7 @@ async function _compressImage(file, maxDim, quality) {
             if (blob.size > file.size * 0.95) { resolve(file); return; } // 이미 작으면 원본
             var newName = (file.name || 'upload').replace(/\.[^.]+$/, '') + '.jpg';
             var compressed = new File([blob], newName, { type: outType });
-            console.log('[compressImage] '+file.name+' '+Math.round(file.size/1024)+'KB → '+Math.round(blob.size/1024)+'KB ('+w+'×'+h+')');
+            _dbg('[compressImage] '+file.name+' '+Math.round(file.size/1024)+'KB → '+Math.round(blob.size/1024)+'KB ('+w+'×'+h+')');
             resolve(compressed);
           }, outType, quality);
         };
@@ -27563,7 +27567,7 @@ async function openAdminReceiptDetail(receiptId) {
    2. 영수증 수정 모달 먼저 닫고 (충돌 방지)
    3. 어드민 가게 수정 모달 (풀스크린 맵 + 드래그 핀) 열기 */
 async function _admRecOpenStoreLocation() {
-  console.log('[admRecOpenStoreLocation] 호출됨');
+  _dbg('[admRecOpenStoreLocation] 호출됨');
   if (!_isAdmin || !_sb) {
     showToast('⚠️ 권한 또는 DB 연결 문제');
     return;
@@ -27615,7 +27619,7 @@ async function _admRecOpenStoreLocation() {
   }
 
   var pick = rows[0];
-  console.log('[admRecOpenStoreLocation] 가게 선택:', pick);
+  _dbg('[admRecOpenStoreLocation] 가게 선택:', pick);
 
   if (typeof openAdminStoreDetail !== 'function') {
     showToast('⚠️ openAdminStoreDetail 함수 없음');
@@ -27632,7 +27636,7 @@ async function _admRecOpenStoreLocation() {
 
   // 잠시 대기 후 가게 수정 모달 열기
   setTimeout(function(){
-    console.log('[admRecOpenStoreLocation] openAdminStoreDetail 호출:', pick.id);
+    _dbg('[admRecOpenStoreLocation] openAdminStoreDetail 호출:', pick.id);
     openAdminStoreDetail(pick.id);
   }, 150);
 }
@@ -27944,7 +27948,7 @@ async function _admPcLoadStoreMenuCards(storeName) {
     }
   } catch(e) { console.warn('[apcLoadMenuCards] fuzzy failed', e); }
 
-  console.log('[apcLoadMenuCards] '+storeName+' → '+rows.length+'개');
+  _dbg('[apcLoadMenuCards] '+storeName+' → '+rows.length+'개');
   if (hdr) hdr.innerHTML = '🍽️ 메뉴 카드 (' + rows.length + '개)';
 
   if (rows.length === 0) {
@@ -28013,7 +28017,7 @@ async function _admPcDeleteStore() {
 async function _admPcDeletePinFromList(pinId) {
   if (!_sb) { console.warn('[admPcDeletePin] _sb 없음'); return; }
   if (!_isAdmin) { showToast('어드민 권한 필요'); return; }
-  console.log('[admPcDeletePin] pinId=', pinId);
+  _dbg('[admPcDeletePin] pinId=', pinId);
   if (!confirm('이 가격 핀을 삭제할까요?')) return;
   try {
     var res = await _sb.from('price_pins').delete().eq('id', pinId).select();
@@ -28022,7 +28026,7 @@ async function _admPcDeletePinFromList(pinId) {
       alert('삭제 실패: ' + res.error.message);
       return;
     }
-    console.log('[admPcDeletePin] 삭제된 행 수:', (res.data||[]).length);
+    _dbg('[admPcDeletePin] 삭제된 행 수:', (res.data||[]).length);
     if (!res.data || res.data.length === 0) {
       // RLS 가 막아 0 rows — 사용자에게 명확히 안내
       alert('삭제 실패 — DB 의 RLS 정책이 막고 있습니다.\n\n해결: Supabase SQL Editor 에서 아래 정책을 추가해주세요:\n\nCREATE POLICY "price_pins_admin_delete" ON price_pins\n  FOR DELETE TO authenticated\n  USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = TRUE));');
@@ -28165,7 +28169,7 @@ async function _admLoadMenuPhotos(menuCardId) {
       }
     });
   }
-  console.log('[admLoadMenuPhotos] legacy=', !!legacyUrl, '| siblings=', siblingUrls.length);
+  _dbg('[admLoadMenuPhotos] legacy=', !!legacyUrl, '| siblings=', siblingUrls.length);
 
   var photoRes = await _sb.from('store_menu_photos')
     .select('id,image_url,is_primary,sort_order,created_at')
@@ -28507,7 +28511,7 @@ async function _admPcEditMenuCardFromPin(pinId) {
       .order('created_at', { ascending:false })
       .limit(1);
     var card = (cRes.data && cRes.data[0]) || null;
-    console.log('[admPcEditMenuCard] 정확 매칭:', storeName, '|', itemName, '→', card ? 'id='+card.id : 'miss');
+    _dbg('[admPcEditMenuCard] 정확 매칭:', storeName, '|', itemName, '→', card ? 'id='+card.id : 'miss');
 
     // 2-b) 정확 매칭 실패 → 같은 가게의 카드 전체 목록 fetch (사용자 선택 또는 fuzzy)
     if (!card) {
@@ -28516,14 +28520,14 @@ async function _admPcEditMenuCardFromPin(pinId) {
         .eq('store_name', storeName)
         .order('created_at', { ascending:false });
       var allCards = allCardsRes.data || [];
-      console.log('[admPcEditMenuCard] 같은 가게 카드 수:', allCards.length);
+      _dbg('[admPcEditMenuCard] 같은 가게 카드 수:', allCards.length);
 
       if (allCards.length > 0) {
         // fuzzy: 트리밍/normalize 비교
         var normalize = function(s){ return String(s||'').replace(/\s+/g,'').normalize('NFKC'); };
         var target = normalize(itemName);
         card = allCards.find(function(c){ return normalize(c.menu_name) === target; });
-        if (card) console.log('[admPcEditMenuCard] fuzzy 매칭 성공: id='+card.id);
+        if (card) _dbg('[admPcEditMenuCard] fuzzy 매칭 성공: id='+card.id);
       }
 
       // 그래도 못 찾으면 → 같은 가게에 1개 이상 카드 있으면 목록 보여주고 선택
@@ -28950,7 +28954,7 @@ async function _admLoadStoreMenus(storeName) {
     return;
   }
   var rows = res.data || [];
-  console.log('[admLoadStoreMenus] 정확 매칭 store_name="'+storeName+'" → '+rows.length+'개');
+  _dbg('[admLoadStoreMenus] 정확 매칭 store_name="'+storeName+'" → '+rows.length+'개');
 
   // Fuzzy fallback: NFKC + 공백 제거 후 비교
   //   가게의 가격 핀에서 본 메뉴는 3개인데 정확 매칭으로 1개만 나오는 케이스
@@ -28965,7 +28969,7 @@ async function _admLoadStoreMenus(storeName) {
         .ilike('store_name', '%' + prefix + '%');
       var allRows = allRes.data || [];
       var fuzzyMatches = allRows.filter(function(r){ return normalize(r.store_name) === target; });
-      console.log('[admLoadStoreMenus] fuzzy(prefix="'+prefix+'") → 후보 '+allRows.length+'개, 일치 '+fuzzyMatches.length+'개');
+      _dbg('[admLoadStoreMenus] fuzzy(prefix="'+prefix+'") → 후보 '+allRows.length+'개, 일치 '+fuzzyMatches.length+'개');
 
       // 정확 매칭에 없던 row 들 추가 (id 기준 중복 제거)
       var seen = {};
@@ -28973,7 +28977,7 @@ async function _admLoadStoreMenus(storeName) {
       fuzzyMatches.forEach(function(r){
         if (!seen[r.id]) { rows.push(r); seen[r.id] = true; }
       });
-      console.log('[admLoadStoreMenus] 최종 표시 '+rows.length+'개');
+      _dbg('[admLoadStoreMenus] 최종 표시 '+rows.length+'개');
     }
   } catch(e) { console.warn('[admLoadStoreMenus] fuzzy fallback failed', e); }
 
@@ -29029,7 +29033,7 @@ async function _admLoadStorePhotos(storeName) {
       if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
       return (a.created_at < b.created_at) ? 1 : -1;
     });
-    console.log('[admLoadStorePhotos] '+storeName+' → 어드민 '+admRows.length+' / 커뮤니티 '+comRows.length+' = 총 '+rows.length+'장');
+    _dbg('[admLoadStorePhotos] '+storeName+' → 어드민 '+admRows.length+' / 커뮤니티 '+comRows.length+' = 총 '+rows.length+'장');
     if (rows.length === 0) {
       wrap.innerHTML = '<div style="font-size:11px;color:var(--text-3);padding:12px;text-align:center;grid-column:1/-1;">등록된 사진이 없어요</div>';
       return;
@@ -30111,7 +30115,7 @@ async function sdSubmitComment(cardId,existingId){
     //   (없으면 신규 insert — 메뉴에 평점 + 텍스트가 있다는 건 가게 리뷰로도 의미 있음)
     try {
       if (_sdName && _currentUser) {
-        console.log('[sdSubmitComment] store_comments 동기화 시도 store=', _sdName, 'user=', _currentUser.id);
+        _dbg('[sdSubmitComment] store_comments 동기화 시도 store=', _sdName, 'user=', _currentUser.id);
         // 같은 가게+사용자의 모든 store_comments 가져오기 (혹시 여러 개 있어도 다 처리)
         var scRes = await _sdStoreFilter(_sb.from('store_comments')
           .select('id,content,rating'))
@@ -30120,7 +30124,7 @@ async function sdSubmitComment(cardId,existingId){
           console.error('[sdSubmitComment] store_comments select error:', scRes.error);
         }
         var existing = scRes.data || [];
-        console.log('[sdSubmitComment] 기존 store_comments rows:', existing.length);
+        _dbg('[sdSubmitComment] 기존 store_comments rows:', existing.length);
 
         if (existing.length > 0) {
           // 기존 row 들 일괄 update (.select() 로 RLS 차단 검증)
@@ -30137,7 +30141,7 @@ async function sdSubmitComment(cardId,existingId){
             console.warn('[sdSubmitComment] store_comments update 0 rows — RLS 차단 의심');
             showToast(t('toast.review_sync_rls'));
           } else {
-            console.log('[sdSubmitComment] store_comments updated:', upd2.data.length);
+            _dbg('[sdSubmitComment] store_comments updated:', upd2.data.length);
           }
         } else if (tx) {
           // 신규 insert
@@ -30154,7 +30158,7 @@ async function sdSubmitComment(cardId,existingId){
             console.error('[sdSubmitComment] store_comments insert error:', ins2.error);
             showToast(t('toast.review_create_fail',{msg:ins2.error.message}));
           } else {
-            console.log('[sdSubmitComment] store_comments inserted:', ins2.data && ins2.data.length);
+            _dbg('[sdSubmitComment] store_comments inserted:', ins2.data && ins2.data.length);
           }
         }
       }
@@ -30474,7 +30478,7 @@ function landingClose(){ _hideLanding(); if (window._landingPreview){ window._la
 // OAuth 리다이렉트 / 다른 탭 로그인 변경 감지
 // INITIAL_SESSION 은 위 async IIFE에서 이미 처리 → 중복 방지
 _sb.auth.onAuthStateChange(function(event, session) {
-  console.log('[auth] event:', event, 'hasSession:', !!session);
+  _dbg('[auth] event:', event, 'hasSession:', !!session);
   if (_isOAuthReturnTab) return; // 크롬 복귀 탭: 앱 렌더 없이 닫기만 진행
   if (event === 'INITIAL_SESSION') return;
   if (event === 'PASSWORD_RECOVERY') { window._isPwRecovery = true; _showResetPwScreen(); return; } // 재설정 링크 복귀
@@ -30486,7 +30490,7 @@ _sb.auth.onAuthStateChange(function(event, session) {
     var mainEl = document.getElementById('screen-main');
     var authEl = document.getElementById('screen-auth');
     if (!mainEl || mainEl.style.display !== 'flex') {
-      console.log('[auth] SIGNED_IN → showApp() 호출');
+      _dbg('[auth] SIGNED_IN → showApp() 호출');
       if (authEl) authEl.style.display = 'none';
       showApp();
     }
@@ -30507,7 +30511,7 @@ document.addEventListener('visibilitychange', async function() {
       var mainEl = document.getElementById('screen-main');
       // 로그인 화면 표시 중인데 세션이 있으면 → 강제 전환
       if (!_currentUser || !mainEl || mainEl.style.display !== 'flex') {
-        console.log('[visibility] 세션 발견 → showApp()');
+        _dbg('[visibility] 세션 발견 → showApp()');
         _currentUser = sess.user;
         var authEl = document.getElementById('screen-auth');
         if (authEl) authEl.style.display = 'none';
@@ -30521,7 +30525,7 @@ document.addEventListener('visibilitychange', async function() {
 
 // PWA 시작 시 URL hash에 OAuth 토큰이 있으면 1초 후 한 번 더 세션 확인 (안전망)
 if (!_isOAuthReturnTab && !window._isPwRecovery && window.location.hash && window.location.hash.indexOf('access_token') !== -1) {
-  console.log('[auth] URL hash에 OAuth 토큰 발견 → 세션 재확인 예약');
+  _dbg('[auth] URL hash에 OAuth 토큰 발견 → 세션 재확인 예약');
   setTimeout(async function() {
     try {
       var res = await _sb.auth.getSession();
@@ -31186,7 +31190,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 640;
+window.__APP_BUILD__ = 641;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
@@ -31287,7 +31291,7 @@ window._redeemPendingRef = async function _redeemPendingRef(){
       return;
     }
     var d = res.data || {};
-    console.log('[ref redeem] result', d);
+    _dbg('[ref redeem] result', d);
     if (d.ok){
       try{localStorage.removeItem('pending_ref');}catch(e){}
       if (typeof showToast === 'function') showToast(t('ref.done'));
@@ -31528,7 +31532,7 @@ window._reassertNav = function _reassertNav(){
       ok = (swMode !== 'chiri') && (curRc === 'screen-' + (n.tab || 'home'));
     }
     if (!ok) {
-      console.log('[nav] 화면이 저장값과 불일치 → 재복원', n);
+      _dbg('[nav] 화면이 저장값과 불일치 → 재복원', n);
       window._restoreNav();
     }
   } catch(e){}
