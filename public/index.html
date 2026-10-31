@@ -294,7 +294,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 #ov-attendance.open{display:flex;flex-direction:column;}
 /* 출석 완료 바텀시트 — 풀스크린(z=700) 보다 위에 떠야 함 */
 #ov-att-complete{z-index:1200;}
-.att-hdr{background:var(--surface);padding:14px 16px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.att-hdr{background:var(--surface);padding:calc(14px + env(safe-area-inset-top,0px)) 16px 14px;border-bottom:.5px solid var(--border);display:flex;align-items:center;gap:10px;flex-shrink:0;}
 .att-back{width:36px;height:36px;border-radius:50%;background:var(--bg-2);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;color:var(--text-1);}
 .att-title{font-size:16px;font-weight:800;color:var(--text-1);letter-spacing:-.3px;}
 .att-body{flex:1;overflow-y:auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none;-ms-overflow-style:none;}
@@ -639,7 +639,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 [data-dark="1"] .apc-menu-section{color:#6B7280;}
 /* ── PC 어드민 모바일 반응형 (≤767px): 사이드바=상단 가로띠, 톱바 탭=가로스크롤 ── */
 @media screen and (max-width:767px){
-  #apc-topbar{ padding:0 12px !important; }
+  #apc-topbar{ padding:env(safe-area-inset-top,0px) 12px 0 !important; }
   #apc-logo{ font-size:13px !important; margin-right:12px !important; flex:none; }
   #apc-user-email{ display:none !important; }
   #apc-tabbar{ overflow-x:auto; overflow-y:hidden; -webkit-overflow-scrolling:touch; }
@@ -3217,7 +3217,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 <!-- ════ PC 어드민 풀스크린 (가로 1024px 이상 데스크탑 전용) ════ -->
 <div id="ov-admin-pc" style="display:none;position:fixed;inset:0;z-index:9500;background:#0E1218;flex-direction:column;font-family:var(--font);">
   <!-- 톱바 (인디고 #172C58) -->
-  <div id="apc-topbar" style="height:56px;background:#172C58;flex:none;display:flex;align-items:center;padding:0 20px;box-shadow:0 2px 12px rgba(0,0,0,.25);">
+  <div id="apc-topbar" style="height:56px;background:#172C58;flex:none;display:flex;align-items:center;padding:env(safe-area-inset-top,0px) 20px 0;box-shadow:0 2px 12px rgba(0,0,0,.25);">
     <div id="apc-logo" style="font-size:15px;font-weight:900;color:#fff;letter-spacing:.3px;margin-right:32px;">RetWork Admin</div>
     <div id="apc-tabbar" style="display:flex;height:100%;flex:1;">
       <button onclick="_admPcSwitchTab('overview')" id="apc-tab-overview" class="apc-tab apc-tab-active">RetWork (전체)</button>
@@ -31208,7 +31208,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 654;
+window.__APP_BUILD__ = 655;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
