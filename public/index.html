@@ -5146,6 +5146,37 @@ function _renderCurrencyOptions(){
   }).join('');
 }
 function pickCurrency(sym){ setCurrency(sym); try{ closeOv('ov-currency'); }catch(e){} }
+
+// ══ B: 영수증별 통화 (¥/₩ 혼용) ══
+var _CUR_SYMS = { JPY:'¥', KRW:'₩' };
+function _symOf(code){ return _CUR_SYMS[code] || '¥'; }
+function _codeOf(sym){ return sym === '₩' ? 'KRW' : 'JPY'; }
+function _userCurCode(){ return _codeOf(_CUR); }   // 유저 기본 통화(설정값)
+/* OCR 원문에서 영수증 통화 감지. ₩/원·한글 → KRW, ¥/円·가나 → JPY. 애매하면 유저 설정값. */
+function _detectCurrency(rawText){
+  var s = String(rawText||'');
+  var krwSym = /[₩]/.test(s) || /\d[\s,.]*원/.test(s);
+  var jpySym = /[¥￥円]/.test(s);
+  if (krwSym && !jpySym) return 'KRW';
+  if (jpySym && !krwSym) return 'JPY';
+  // 기호 없거나 둘 다 → 문자 체계로 추정 (한글=한국 전용, 가나=일본 전용)
+  var hangul = (s.match(/[가-힣]/g)||[]).length;
+  var kana   = (s.match(/[ぁ-ゖァ-ヺ]/g)||[]).length;
+  if (krwSym && jpySym) return (hangul > kana) ? 'KRW' : 'JPY';
+  if (hangul >= 3 && kana === 0) return 'KRW';
+  if (kana   >= 1 && hangul < 3) return 'JPY';
+  return _userCurCode(); // 최종 애매 → 유저 설정값
+}
+/* receipts INSERT — currency 컬럼 미적용(마이그레이션 전) 환경 대비: 컬럼 에러면 currency 빼고 재시도 */
+function _insertReceiptRow(payload){
+  return _sb.from('receipts').insert(payload).select().then(function(res){
+    if (res.error && /currency/i.test(res.error.message||'') && ('currency' in payload)){
+      var p2 = {}; for (var k in payload){ if (k!=='currency') p2[k]=payload[k]; }
+      return _sb.from('receipts').insert(p2).select();
+    }
+    return res;
+  });
+}
 /* ══════════════════════════════
    Supabase 초기화
 ══════════════════════════════ */
@@ -13590,6 +13621,8 @@ function _doSaveOcrResult() {
     dateStr = r.date || (now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0'));
     dateStr = _sanitizeReceiptDate(dateStr);
   }
+  // 영수증 통화 감지 (₩/₩표기·한글→KRW, ¥/円·가나→JPY, 애매→유저 설정값)
+  var _cur = r.currency || _detectCurrency(window._rawOcrText);
   // DB에 저장
   var newEntry = {
     id: nextId++,
@@ -13599,7 +13632,8 @@ function _doSaveOcrResult() {
     cat: r.cat,
     pay: r.pay || null,
     items: finalItems,
-    total: finalTotal
+    total: finalTotal,
+    currency: _cur
   };
   DB.unshift(newEntry);
 
@@ -13612,13 +13646,14 @@ function _doSaveOcrResult() {
     showToast('⚠️ ' + t('toast.login_required'));
   }
 
-  _sb.from('receipts').insert({
+  _insertReceiptRow({
     store_name: store,
     receipt_date: dateStr,
     total_amount: finalTotal,
     payment_method: r.pay || null,
-    user_id: _uid
-  }).select().then(function(res) {
+    user_id: _uid,
+    currency: _cur
+  }).then(function(res) {
     // 저장 실패를 사용자에게도 알림(기존엔 console.warn 만 → 조용히 누락)
     if (res.error) { console.warn('Supabase 저장 실패:', res.error.message); showToast(t('toast.save_fail',{msg:res.error.message})); return; }
     var receiptId = res.data && res.data[0] && res.data[0].id;
@@ -17438,7 +17473,8 @@ async function loadFromSupabase() {
         return { name: it.name, qty: it.quantity || 1, price: it.price || 0, mins: it.mins || null };
       }),
       total: r.total_amount || 0,
-      memo:  r.memo || ''
+      memo:  r.memo || '',
+      currency: r.currency || 'JPY'
     };
   });
   nextId = DB.length + 1;
@@ -31208,7 +31244,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 655;
+window.__APP_BUILD__ = 656;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
