@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<script>
+  /* FOUC 방지: 첫 페인트(부팅 스플래시) 전에 저장된 다크모드를 즉시 적용 → 앱 시작 시 흰색→다크 깜박임 제거 */
+  try { if (localStorage.getItem('riq_dark') === '1') document.documentElement.setAttribute('data-dark','1'); } catch(e){}
+</script>
 <title>RetWork（チリつも） — レシート家計簿で節約をスマートに</title>
 <meta name="description" content="レシートを撮るだけでAIが家計簿を自動作成。カテゴリ別の支出分析、地域の最安値マップ、ポイント獲得などで毎日の節約をスマートにサポートする無料の日本のレシート家計簿アプリ。スマホで簡単、一人暮らし・主婦・学生・節約家におすすめ。">
 <meta name="keywords" content="家計簿,家計簿アプリ,レシート家計簿,レシートOCR,レシートスキャン,自動家計簿,AI家計簿,スマホ家計簿,無料家計簿,節約,節約アプリ,節約術,食費節約,一人暮らし節約,主婦節約,価格比較,価格比較アプリ,スーパー最安値,地域価格,お得情報,ポイ活,ポイントアプリ,家計管理,月予算,予算管理,支出管理,レシート撮影,口コミ,コミュニティ,チリつも,RetWork,日本,東京,大阪,名古屋,일본가계부,영수증가계부,절약앱">
@@ -19401,7 +19405,8 @@ function showApp() {
   if (_savedNav && typeof window._applyNavClasses === 'function') window._applyNavClasses(_savedNav);
   // 2) 메인 표시
   document.getElementById('screen-main').style.display = 'flex';
-  if (typeof _hideBootSplash === 'function') _hideBootSplash();   // 부팅 스플래시 제거(앱 진입)
+  // 부팅 스플래시 제거 — 테마·언어·렌더가 끝나고 앱이 최소 한 번 그려진 뒤 페이드(더블 rAF) → 렌더 도중 리렌더 깜박임 방지
+  if (typeof _hideBootSplash === 'function') requestAnimationFrame(function(){ requestAnimationFrame(_hideBootSplash); });
   // 3) 정식 render (요소 사이즈 측정 후) — 클래스는 이미 맞춰진 상태라 깜빡임 없음
   if (_savedNav && typeof window._restoreNav === 'function') {
     setTimeout(window._restoreNav, 0);
@@ -31203,7 +31208,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 653;
+window.__APP_BUILD__ = 654;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
