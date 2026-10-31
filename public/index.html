@@ -611,6 +611,8 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 .toggle.off::after{right:20px;}
 
 .bottom-sheet-overlay{align-items:flex-end;justify-content:center;background:rgba(0,0,0,.85) !important;backdrop-filter:none !important;-webkit-backdrop-filter:none !important;}
+/* 엣지투엣지 기기(폴드6 등) 시스템 네비바에 하단 버튼 가림 방지 — 인라인 바텀시트(.sheet 미사용)에 safe-area 하단 패딩 추가 */
+.bottom-sheet-overlay > div:not(.sheet){padding-bottom:env(safe-area-inset-bottom,0px);}
 @keyframes fadeInScale{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
 
 /* ════════════════════════════════════════════════════════════
@@ -680,7 +682,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     display:none !important;
   }
 }
-.sheet{background:var(--surface);width:100%;border-radius:24px 24px 0 0;padding:18px 20px 36px;animation:slideUp .32s var(--anim);max-height:90%;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.12);}
+.sheet{background:var(--surface);width:100%;border-radius:24px 24px 0 0;padding:18px 20px calc(36px + env(safe-area-inset-bottom,0px));animation:slideUp .32s var(--anim);max-height:90%;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.12);}
 .sheet::-webkit-scrollbar{display:none;}
 #screen-auth::-webkit-scrollbar{display:none;}
 #screen-auth *::-webkit-scrollbar{display:none;}
@@ -31201,7 +31203,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 652;
+window.__APP_BUILD__ = 653;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
