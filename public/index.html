@@ -5117,7 +5117,7 @@ function _dbg(){ if(window._DEBUG){ try{ console.log.apply(console, arguments); 
 /* 통화 표기 토글 (b643) — 환율 변환 없이 기호만(¥/₩). 한국 유저용 ₩ 표기.
    유저 지출 금액만 _cursym()로 토글. 구독료 등 회사 고정가격은 정적 ¥ 유지(미변경). */
 var _CUR = (function(){ try{ return localStorage.getItem('riq_currency') === '₩' ? '₩' : '¥'; }catch(e){ return '¥'; } })();
-function _cursym(){ return (typeof _viewCur !== 'undefined') ? _symOf(_viewCur) : _CUR; } // 표시=뷰 통화 기호
+function _cursym(){ if (window._ocrCurOverride) return _symOf(window._ocrCurOverride); return (typeof _viewCur !== 'undefined') ? _symOf(_viewCur) : _CUR; } // OCR 결과 표시 중엔 그 영수증 통화, 아니면 뷰 통화
 function toggleCurrency(){ setCurrency(_CUR === '¥' ? '₩' : '¥'); }
 function setCurrency(sym){
   _CUR = (sym === '₩') ? '₩' : '¥';
@@ -9182,6 +9182,7 @@ async function _checkPriceEngagementFlag(){
 }
 
 function renderHome() {
+  window._ocrCurOverride = null;   // OCR 결과 통화 오버라이드 해제(앱 화면은 뷰 통화)
   // 새 달 진입 시 예산 자동 리셋 (체크만, 클라우드 fetch 는 로그인 hook 에서)
   if (typeof _budgetCheckMonthReset === 'function') { try { _budgetCheckMonthReset(); } catch(e){} }
   var now   = new Date();
@@ -9459,6 +9460,7 @@ function changeHistMonth(dir) {
 }
 
 function renderHistory(cat) {
+  window._ocrCurOverride = null;
   currentFilter = cat;
   try{ _renderCurSwitch('cur-switch-hist'); }catch(e){}
   // 선택된 년/월로 1차 필터 (+뷰 통화)
@@ -10096,6 +10098,7 @@ function _avgDivDays(y, m){
 }
 
 function renderReportSummary() {
+  window._ocrCurOverride = null;
   var el = document.getElementById('report-summary');
   if (!el) return;
   try{ _renderCurSwitch('cur-switch-hist'); }catch(e){}
@@ -13251,6 +13254,9 @@ function _appendDiscountItem(result){
 }
 
 function showOcrResult(previewSrc, result) {
+  // 이 영수증의 통화 감지 → 결과/편집 화면은 뷰 통화가 아니라 '이 영수증 통화'로 표시
+  result.currency = result.currency || _detectCurrency(window._rawOcrText || '');
+  window._ocrCurOverride = result.currency;
   // result.items를 window에 복사해서 수정 추적
   _appendDiscountItem(result);   // 쿠폰/할인이면 마이너스 품목 자동추가 → 小計=合計
   window._ocrItems = (result.items || []).map(function(it){ return {name:it.name, qty:it.qty||1, price:it.price}; });
@@ -13760,8 +13766,8 @@ function _doSaveOcrResult() {
             else _dbg('[ReceiptIQ] UPDATE 결과 행 수:', res2.data ? res2.data.length : 0, '| lat저장값:', res2.data && res2.data[0] ? res2.data[0].lat : 'N/A');
             renderMapPins();
           });
-        // ★ Phase 1: 커뮤니티 가격 풀 기여 (식료품만) — product_prices 에 상품·가게·단가·좌표 upsert
-        if (finalItems && finalItems.length) _contributeProductPrices(finalItems, store, lat, lng, r.cat);
+        // ★ Phase 1: 커뮤니티 가격 풀 기여 (식료품만, JPY 영수증만 — 한국 가격이 일본 풀 오염 방지)
+        if (_cur === 'JPY' && finalItems && finalItems.length) _contributeProductPrices(finalItems, store, lat, lng, r.cat);
         if (_storeAddress) {
           _sb.from('receipts').update({ store_address: _storeAddress })
             .eq('id', receiptId)
@@ -31284,7 +31290,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 658;
+window.__APP_BUILD__ = 659;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
