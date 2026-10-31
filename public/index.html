@@ -1421,6 +1421,8 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <span style="font-size:16px;color:rgba(255,255,255,.9);">›</span>
     </div>
 
+    <!-- 통화 전환 (¥/₩ 혼용 유저만 노출) -->
+    <div id="cur-switch-home" style="display:none;gap:8px;margin:0 16px 10px;"></div>
     <!-- 메인 지출 카드 -->
     <div class="summary-card">
       <div class="s-label" id="home-label">5月 합계 지출 · 0건</div>
@@ -1490,6 +1492,8 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     <div class="hist-mnav-lbl" id="hist-month-label">2026年 5月</div>
     <div class="hist-mnav-btn" onclick="changeHistMonth(1)">›</div>
   </div>
+  <!-- 통화 전환 (¥/₩ 혼용 유저만 노출) — 내역·리포트 공용 -->
+  <div id="cur-switch-hist" style="display:none;gap:8px;padding:0 16px 8px;justify-content:center;"></div>
   <div class="subtab-bar">
     <div class="subtab active" id="stab-history" onclick="switchSubtab('history')" data-i18n="subtab.history">支出履歴</div>
     <div class="subtab" id="stab-report" onclick="switchSubtab('report')" data-i18n="subtab.report">レポート</div>
@@ -5113,22 +5117,19 @@ function _dbg(){ if(window._DEBUG){ try{ console.log.apply(console, arguments); 
 /* 통화 표기 토글 (b643) — 환율 변환 없이 기호만(¥/₩). 한국 유저용 ₩ 표기.
    유저 지출 금액만 _cursym()로 토글. 구독료 등 회사 고정가격은 정적 ¥ 유지(미변경). */
 var _CUR = (function(){ try{ return localStorage.getItem('riq_currency') === '₩' ? '₩' : '¥'; }catch(e){ return '¥'; } })();
-function _cursym(){ return _CUR; }
+function _cursym(){ return (typeof _viewCur !== 'undefined') ? _symOf(_viewCur) : _CUR; } // 표시=뷰 통화 기호
 function toggleCurrency(){ setCurrency(_CUR === '¥' ? '₩' : '¥'); }
 function setCurrency(sym){
   _CUR = (sym === '₩') ? '₩' : '¥';
   try{ localStorage.setItem('riq_currency', _CUR); }catch(e){}
+  if (typeof _viewCur !== 'undefined') { _viewCur = _codeOf(_CUR); try{ localStorage.setItem('riq_viewcur', _viewCur); }catch(e){} } // 설정 변경 → 그 통화 뷰로
   applyCurrency();
 }
 function applyCurrency(){
   var cv = document.getElementById('cur-val');
   if (cv) cv.textContent = (_CUR === '₩') ? '₩ KRW' : '¥ JPY';
-  // 동적 금액 표시 재렌더 (applyLang과 동일 세트)
-  try { if (typeof renderHome === 'function') renderHome(); } catch(e){}
-  try { if (typeof renderHistory === 'function') renderHistory(typeof currentFilter !== 'undefined' ? currentFilter : 'all'); } catch(e){}
-  try { if (typeof renderReportSummary === 'function') renderReportSummary(); } catch(e){}
-  try { if (typeof renderCatBreakdown === 'function') renderCatBreakdown(); } catch(e){}
-  try { if (typeof renderBars === 'function') renderBars(typeof _reportPeriod !== 'undefined' ? _reportPeriod : 'week'); } catch(e){}
+  // 동적 금액 표시 재렌더 (달력·전환칩 포함)
+  try { if (typeof _rerenderMoney === 'function') _rerenderMoney(); } catch(e){}
 }
 /* 통화 선택 바텀시트 — 토글 대신 눌러서 목록에서 선택 */
 function openCurrencyPicker(){ _renderCurrencyOptions(); try{ openOv('ov-currency'); }catch(e){} }
@@ -5177,6 +5178,35 @@ function _insertReceiptRow(payload){
     return res;
   });
 }
+// ── 뷰 통화(현재 보는 통화). 기본=유저 설정. 전환 UI로 변경 ──
+var _viewCur = (function(){ try{ var v=localStorage.getItem('riq_viewcur'); if(v==='JPY'||v==='KRW') return v; }catch(e){} return _userCurCode(); })();
+function _rcCur(r){ return (r && r.currency) || _userCurCode(); }        // 영수증 통화(미태깅→유저설정)
+function _vcOK(r){ return _rcCur(r) === _viewCur; }                        // 현재 뷰 통화와 일치?
+function _vcDB(){ return DB.filter(_vcOK); }                               // 뷰 통화 영수증만
+function _ownCurs(){ var s={}; DB.forEach(function(r){ s[_rcCur(r)]=1; }); return ['JPY','KRW'].filter(function(c){return s[c];}); } // 보유 통화들
+function setViewCur(code){ if(code!=='JPY'&&code!=='KRW')return; _viewCur=code; try{localStorage.setItem('riq_viewcur',code);}catch(e){} _rerenderMoney(); }
+function _rerenderMoney(){
+  try{ _renderCurSwitches(); }catch(e){}
+  try{ if(typeof renderHome==='function') renderHome(); }catch(e){}
+  try{ if(typeof renderHistory==='function') renderHistory(typeof currentFilter!=='undefined'?currentFilter:'all'); }catch(e){}
+  try{ if(typeof renderReportSummary==='function') renderReportSummary(); }catch(e){}
+  try{ if(typeof renderCatBreakdown==='function') renderCatBreakdown(); }catch(e){}
+  try{ if(typeof renderBars==='function') renderBars(typeof _reportPeriod!=='undefined'?_reportPeriod:'week'); }catch(e){}
+  try{ var n=new Date(); if(typeof renderCalendar==='function') renderCalendar((typeof calYear!=='undefined'&&calYear)||n.getFullYear(),(typeof calMonth!=='undefined'&&calMonth)||n.getMonth()+1); }catch(e){}
+}
+/* 통화 전환 칩 렌더 — 보유 통화 2개 이상일 때만 노출(단일통화 유저는 숨김) */
+function _renderCurSwitch(elId){
+  var el = document.getElementById(elId); if(!el) return;
+  var curs = _ownCurs();
+  if (curs.length < 2){ el.style.display='none'; el.innerHTML=''; return; }
+  if (curs.indexOf(_viewCur)<0) { _viewCur = curs[0]; }  // 뷰 통화가 사라졌으면 보정
+  el.style.display='flex';
+  el.innerHTML = curs.map(function(c){
+    var on=(_viewCur===c);
+    return '<button onclick="setViewCur(\''+c+'\')" style="flex:none;padding:5px 13px;border-radius:16px;border:1.5px solid '+(on?'var(--green)':'var(--border-mid)')+';background:'+(on?'var(--green-light)':'var(--surface)')+';color:'+(on?'var(--green-dark)':'var(--text-3)')+';font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">'+_symOf(c)+' '+c+'</button>';
+  }).join('');
+}
+function _renderCurSwitches(){ ['cur-switch-home','cur-switch-hist'].forEach(_renderCurSwitch); }
 /* ══════════════════════════════
    Supabase 초기화
 ══════════════════════════════ */
@@ -9164,9 +9194,11 @@ function renderHome() {
   // '이번 달'을 월 시작일(급여 주기) 기준으로 계산. 시작일=1이면 기존 1일~말일과 동일.
   var _curRange = _periodRange(now);
   var _prevRef  = new Date(_curRange.start.getTime() - 86400000);  // 직전 주기의 임의 날짜(주기 시작 하루 전)
-  var monthReceipts = _periodReceipts(DB, now);
-  var prevReceipts  = _periodReceipts(DB, _prevRef);
-  var todayReceipts = DB.filter(function(r){ return r.date === todayStr; });
+  var _vdb = _vcDB();                                   // 뷰 통화 영수증만
+  try{ _renderCurSwitch('cur-switch-home'); }catch(e){}
+  var monthReceipts = _periodReceipts(_vdb, now);
+  var prevReceipts  = _periodReceipts(_vdb, _prevRef);
+  var todayReceipts = _vdb.filter(function(r){ return r.date === todayStr; });
 
   var totalAmt = monthReceipts.reduce(function(a,r){return a+r.total;},0);
   var prevAmt  = prevReceipts.reduce(function(a,r){return a+r.total;},0);
@@ -9428,8 +9460,10 @@ function changeHistMonth(dir) {
 
 function renderHistory(cat) {
   currentFilter = cat;
-  // 선택된 년/월로 1차 필터
+  try{ _renderCurSwitch('cur-switch-hist'); }catch(e){}
+  // 선택된 년/월로 1차 필터 (+뷰 통화)
   var filtered = DB.filter(function(r) {
+    if (!_vcOK(r)) return false;
     var p = r.date.split('-');
     return parseInt(p[0]) === histYear && parseInt(p[1]) === histMonth;
   });
@@ -10001,6 +10035,7 @@ function buildCatDetailHtml(cat) {
   var now = new Date();
   var y = now.getFullYear(), m = now.getMonth()+1, d = now.getDate();
   var filtered = DB.filter(function(r) {
+    if (!_vcOK(r)) return false;
     if (r.cat !== cat) return false;
     var parts = r.date.split('-');
     var ry=parseInt(parts[0]), rm=parseInt(parts[1]), rd2=parseInt(parts[2]);
@@ -10063,10 +10098,12 @@ function _avgDivDays(y, m){
 function renderReportSummary() {
   var el = document.getElementById('report-summary');
   if (!el) return;
+  try{ _renderCurSwitch('cur-switch-hist'); }catch(e){}
   var y = histYear, m = histMonth;
   var monthTotal = 0, monthCnt = 0;
   var catTotals = {};
   DB.forEach(function(r) {
+    if (!_vcOK(r)) return;   // 뷰 통화만
     var parts = r.date.split('-');
     if (parseInt(parts[0]) === y && parseInt(parts[1]) === m) {
       monthTotal += r.total;
@@ -10305,6 +10342,7 @@ function getReportPeriodReceipts() {
   var isCurrentMonth = (y === now.getFullYear() && m === now.getMonth()+1);
   var d = isCurrentMonth ? now.getDate() : new Date(y, m, 0).getDate();
   return DB.filter(function(r) {
+    if (!_vcOK(r)) return false;   // 뷰 통화만
     var parts = r.date.split('-');
     var ry=parseInt(parts[0]), rm=parseInt(parts[1]), rd2=parseInt(parts[2]);
     if (_reportPeriod === 'week') {
@@ -10408,6 +10446,7 @@ function setWeekStart(v){
 function buildCalData() {
   var map = {};
   DB.forEach(function(r){
+    if (!_vcOK(r)) return;   // 뷰 통화만
     var parts = r.date.split('-');
     var key = parseInt(parts[0])+'-'+parseInt(parts[1]);
     var d = parseInt(parts[2]);
@@ -10748,8 +10787,8 @@ function renderMonthReport(){
   var nb=document.getElementById('mr-next'); if(nb) nb.style.opacity=_periodContainsToday(curRg)?'.3':'1';
 
   var _curS=_ymd(curRg.start), _curE=_ymd(curRg.endExcl), _prvS=_ymd(prevRg.start), _prvE=_ymd(prevRg.endExcl);
-  var cur=DB.filter(function(r){return r.date>=_curS && r.date<_curE;});
-  var prev=DB.filter(function(r){return r.date>=_prvS && r.date<_prvE;});
+  var cur=_vcDB().filter(function(r){return r.date>=_curS && r.date<_curE;});
+  var prev=_vcDB().filter(function(r){return r.date>=_prvS && r.date<_prvE;});
 
   if(cur.length===0){ el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text-3);font-size:13px;">'+t('mr.empty')+'</div>'; return; }
 
@@ -31146,8 +31185,8 @@ function exportPeriodCsv(){
   var y=(typeof _mrY!=='undefined'&&_mrY)?_mrY:(new Date()).getFullYear();
   var m=(typeof _mrM!=='undefined'&&_mrM)?_mrM:((new Date()).getMonth()+1);
   var list;
-  if(typeof _periodForMonth==='function'){ var rg=_periodForMonth(y,m), s=_ymd(rg.start), e=_ymd(rg.endExcl); list=DB.filter(function(r){ return r.date>=s&&r.date<e; }); }
-  else { var key=y+'-'+String(m).padStart(2,'0'); list=DB.filter(function(r){ return (r.date||'').startsWith(key); }); }
+  if(typeof _periodForMonth==='function'){ var rg=_periodForMonth(y,m), s=_ymd(rg.start), e=_ymd(rg.endExcl); list=_vcDB().filter(function(r){ return r.date>=s&&r.date<e; }); }
+  else { var key=y+'-'+String(m).padStart(2,'0'); list=_vcDB().filter(function(r){ return (r.date||'').startsWith(key); }); }
   _downloadCsv(list, 'RetWork_'+y+String(m).padStart(2,'0')+'.csv');
 }
 
@@ -31179,8 +31218,8 @@ function renderYearReport(){
   var y=_yrY, now=new Date();
   document.getElementById('yr-label').textContent=y;
   var nb=document.getElementById('yr-next'); if(nb) nb.style.opacity=(y>=now.getFullYear())?'.3':'1';
-  var cur=DB.filter(function(r){ return (r.date||'').slice(0,4)===String(y); });
-  var prev=DB.filter(function(r){ return (r.date||'').slice(0,4)===String(y-1); });
+  var cur=_vcDB().filter(function(r){ return (r.date||'').slice(0,4)===String(y); });
+  var prev=_vcDB().filter(function(r){ return (r.date||'').slice(0,4)===String(y-1); });
   if(!cur.length){ el.innerHTML='<div style="text-align:center;padding:60px 20px;color:var(--text-3);font-size:13px;">'+t('yr.empty')+'</div>'; return; }
   var total=cur.reduce(function(a,r){return a+r.total;},0);
   var prevTotal=prev.reduce(function(a,r){return a+r.total;},0);
@@ -31235,7 +31274,7 @@ function renderYearReport(){
   el.innerHTML=html; el.scrollTop=0;
 }
 function yrShare(){
-  var y=_yrY, cur=DB.filter(function(r){ return (r.date||'').slice(0,4)===String(y); });
+  var y=_yrY, cur=_vcDB().filter(function(r){ return (r.date||'').slice(0,4)===String(y); });
   var total=cur.reduce(function(a,r){return a+r.total;},0);
   var txt=t('yr.share_text',{y:y,total:total.toLocaleString(),n:cur.length})+' https://retwork.jp';
   if(navigator.share){ navigator.share({text:txt}).catch(function(){}); }
@@ -31245,7 +31284,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 657;
+window.__APP_BUILD__ = 658;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
