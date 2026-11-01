@@ -1,4 +1,23 @@
-# RetWork (チリつも) — HANDOFF (build 652 시점)
+# RetWork (チリつも) — HANDOFF (build 659 시점)
+
+> # 📌 2026-11-01 작업 요약 (build 653→659) — 폴드6 safe-area(상/하단) + 앱시작 깜박임 + **영수증별 통화(¥/₩ 혼용)**
+> **다른 PC에서 이어가려면 이 블록부터.** 구조 불변: 단일 파일 `public/index.html`(~2MB) + Next.js API + Supabase + Vercel(`ret-work`), Capacitor 네이티브=`server.url=https://retwork.jp` 라이브 로드 → **JS/HTML 변경은 `git push`만으로 앱 반영**(네이티브만 AAB 재빌드). `CACHE_NAME`+`__APP_BUILD__` 항상 동반 bump. **커밋 전 node 문법검사 + 키 4블록 카운트(i18n) 필수**(규칙: `AGENTS.md`/`I18N_GUIDE.md`/`PARSING.md`).
+>
+> **🔴 실행 필요 SQL(이번 세션):** **`receipt_currency.sql`** — `alter table public.receipts add column if not exists currency text;` + 인덱스. **사용자 실행 완료.** (nullable=기본 NULL: 미태깅 과거 영수증은 클라가 유저 통화설정으로 귀속. 'JPY' 강제 금지.)
+>
+> **① 폴드6 safe-area (엣지투엣지 targetSDK36) — 상/하단 시스템바 간섭:**
+> - **하단(b653):** 광고 바텀시트 버튼이 네비바에 가림 → `.sheet` padding-bottom=`calc(36px+env(safe-area-inset-bottom))`, 인라인 바텀시트엔 `.bottom-sheet-overlay>div:not(.sheet){padding-bottom:env(safe-area-inset-bottom)}`. 더하는 방식이라 인셋 없는 기기(폴드3)엔 영향 0.
+> - **상단(b655):** 출석(`.att-hdr`)·어드민(`#apc-topbar` 베이스+모바일 미디어쿼리 둘 다) 헤더가 상태바와 겹침 → `padding-top`에 `env(safe-area-inset-top)` 추가.
+>
+> **② 앱 시작 1회 깜박임(b654):** 다크모드(`data-dark`)·테마가 `showApp` 안(비동기 `getSession` 후) 적용돼 흰 스플래시→다크로 깜박 + `_hideBootSplash`가 렌더 전 호출. → `<head>`에 인라인 `riq_dark` 조기적용(첫 페인트 전) + `_hideBootSplash`를 더블 `requestAnimationFrame`으로 지연(앱 그려진 뒤 페이드).
+>
+> **③ ⭐ 영수증별 통화 — ¥/₩ 혼용 (b656~659) — 설계결정: 환율변환 없음 → 통화별 분리 "전환" 방식:**
+> - **감지(b656)**: 스캔 시 `_detectCurrency(rawText)` — `₩`/숫자+`원`/한글→KRW, `¥`/`円`/가나→JPY, 애매→유저 설정(`_userCurCode`). 영수증에 `currency` 저장(`_doSaveOcrResult`+`_insertReceiptRow`=컬럼없으면 재시도), `loadFromSupabase`에서 `r.currency||_userCurCode()` 매핑(미태깅=유저통화 귀속, b657).
+> - **뷰 통화+전환(b658)**: `_viewCur`(기본=유저설정), `_cursym()`=뷰 통화 기호. 홈/내역·리포트 상단 `[¥|₩]` 전환칩(`_renderCurSwitch`, **보유 통화 2개 이상일 때만 노출** → 단일통화 유저 변화 0). 집계 전부 뷰 통화 필터: `_vcOK(r)`/`_vcDB()` 를 renderHome(`_periodReceipts(_vcDB())`)·renderHistory·getReportPeriodReceipts·renderReportSummary·buildCatDetailHtml·`buildCalData`(달력)·월/연리포트에 적용. 설정 통화변경→`_viewCur` 동기화.
+> - **스캔결과=영수증통화(b659)**: 결과/편집 화면은 뷰가 아니라 **그 영수증 감지통화**로 표시(`window._ocrCurOverride`, showOcrResult에서 set, renderHome/History/ReportSummary 진입 시 해제). 가격풀 `_contributeProductPrices`는 **JPY만 기여**(한국가격 일본풀 오염 방지).
+> - **남은 폴리시(미완):** ⓐ과거 영수증 편집 화면 `edit-total-disp` `¥` 고정 → 그 영수증 통화로(편집 시 통화 표시/변경) ⓑOCR 세금라벨 `消費税`→KRW면 `부가세`(영향 적음) ⓒ홈/달력 초기 플레이스홀더 `¥0` 1프레임 깜박 ⓓ예산은 주 통화 기준. ⓔ`showOcrDebugHybrid`(GPT 폴백 화면)도 override 적용되는지 확인 권장.
+>
+> **(참고) 광고 디버깅:** 무료유저 리워드 광고 안 뜸 신고 → 원인=**유저 VPN**(AdMob no-fill), 코드 무관. 광고 토글(`app_config.adpos_*`)은 현재 **전부 OFF**(의도) — 인라인 광고는 안 나오는 게 정상. 리워드(AdMob 실광고, `_ADMOB_TESTING=false`)는 정상.
 
 > # 📌 2026-10-30 작업 요약 (build 645→652) — 광고 정직화(가짜 자동재생 제거) + 어드민 광고토글 + 통화 바텀시트 + 부팅 스플래시 + 그루메 글
 > **다른 PC에서 이어가려면 이 블록부터.** 구조 불변: 단일 파일 `public/index.html`(1.9MB) + Next.js API + Supabase + Vercel(`ret-work`), Capacitor 네이티브는 `server.url=https://retwork.jp` 라이브 로드 → **JS/HTML 변경은 `git push`만으로 앱 반영**(네이티브만 AAB 재빌드). 현재 `CACHE_NAME='receiptiq-v0.9.0-b652'`(+`__APP_BUILD__`) — 둘 **항상 동반 bump**. **이번 세션 추가 SQL/Vercel 환경변수 없음**(`app_config` 테이블 기존 재사용).

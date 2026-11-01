@@ -85,7 +85,8 @@
 - 날짜: 프롬프트는 **원본 표기 그대로** 반환(元号 변환 금지) → **클라이언트가 元号→西暦 변환**(令和/平成 + 2자리 연도 등 처리).
 - 주차 품목: `_parseParkingMins()` 로 주차시간(분) 파싱 → items[].mins 보존(¥/시간 비교용).
 - 주유 품목: 수량이 리터수 → 월별 리포트에서 `_FUEL_RE` 로 감지해 "NL·리터당 ¥" 표기(b590).
-- 식료품(슈퍼/편의점)이면 `_contributeProductPrices()` 가 정규화 product_id + 가게 + 단가 + 좌표를 공개 `product_prices` 에 upsert (커뮤니티 가격 비교/검색의 원천).
+- 식료품(슈퍼/편의점)이면 `_contributeProductPrices()` 가 정규화 product_id + 가게 + 단가 + 좌표를 공개 `product_prices` 에 upsert (커뮤니티 가격 비교/검색의 원천). **단 JPY 영수증만 기여**(한국 가격이 일본 풀 오염 방지, b659).
+- **통화 감지(b656~659, ¥/₩ 혼용):** `_detectCurrency(rawText)` 로 영수증 통화 판정(`₩`/숫자+`원`/한글→KRW, `¥`/`円`/가나→JPY, 애매→유저 설정 `_userCurCode()`). 영수증마다 `currency` 저장(`receipts.currency`, nullable). 파서/프롬프트는 통화를 모르고 **숫자만** 읽음 — 통화는 이 후처리에서 태깅. 표시: 앱 일반화면=뷰 통화(`_viewCur`, 전환칩), 스캔 결과/편집 화면=그 영수증 통화(`window._ocrCurOverride`). 집계는 뷰 통화로 필터(`_vcOK`/`_vcDB`). 상세는 HANDOFF 2026-11-01 블록.
 
 ---
 
