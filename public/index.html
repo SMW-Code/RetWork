@@ -5122,14 +5122,8 @@ function toggleCurrency(){ setCurrency(_CUR === '¥' ? '₩' : '¥'); }
 function setCurrency(sym){
   _CUR = (sym === '₩') ? '₩' : '¥';
   try{ localStorage.setItem('riq_currency', _CUR); }catch(e){}
-  if (typeof _viewCur !== 'undefined') {
-    // 설정 통화로 뷰 전환 — 단, 그 통화 영수증이 없으면 데이터 있는 통화를 유지(홈이 0으로 비는 것 방지)
-    var _code = _codeOf(_CUR);
-    var _own = _ownCurs();
-    if (_own.length === 0 || _own.indexOf(_code) >= 0) _viewCur = _code;           // 신규/보유 통화면 전환
-    else if (_own.indexOf(_viewCur) < 0) _viewCur = _own[0];                        // 미보유 통화면 데이터 있는 통화로 스냅
-    try{ localStorage.setItem('riq_viewcur', _viewCur); }catch(e){}
-  }
+  // 설정 통화 = 보이는 통화. 뷰는 항상 설정값에 고정(전환칩 없음 — 설정 통화 영수증만 표시)
+  if (typeof _viewCur !== 'undefined') { _viewCur = _codeOf(_CUR); try{ localStorage.setItem('riq_viewcur', _viewCur); }catch(e){} }
   applyCurrency();
 }
 function applyCurrency(){
@@ -5186,7 +5180,7 @@ function _insertReceiptRow(payload){
   });
 }
 // ── 뷰 통화(현재 보는 통화). 기본=유저 설정. 전환 UI로 변경 ──
-var _viewCur = (function(){ try{ var v=localStorage.getItem('riq_viewcur'); if(v==='JPY'||v==='KRW') return v; }catch(e){} return _userCurCode(); })();
+var _viewCur = _userCurCode();   // 보이는 통화 = 설정 통화에 항상 고정(전환칩 미사용)
 function _rcCur(r){ return (r && r.currency) || _userCurCode(); }        // 영수증 통화(미태깅→유저설정)
 function _vcOK(r){ return _rcCur(r) === _viewCur; }                        // 현재 뷰 통화와 일치?
 function _vcDB(){ return DB.filter(_vcOK); }                               // 뷰 통화 영수증만
@@ -5201,17 +5195,10 @@ function _rerenderMoney(){
   try{ if(typeof renderBars==='function') renderBars(typeof _reportPeriod!=='undefined'?_reportPeriod:'week'); }catch(e){}
   try{ var n=new Date(); if(typeof renderCalendar==='function') renderCalendar((typeof calYear!=='undefined'&&calYear)||n.getFullYear(),(typeof calMonth!=='undefined'&&calMonth)||n.getMonth()+1); }catch(e){}
 }
-/* 통화 전환 칩 렌더 — 보유 통화 2개 이상일 때만 노출(단일통화 유저는 숨김) */
+/* 통화 전환 칩 — 설정 통화 단일 뷰로 변경되어 더 이상 노출하지 않음(항상 숨김) */
 function _renderCurSwitch(elId){
   var el = document.getElementById(elId); if(!el) return;
-  var curs = _ownCurs();
-  if (curs.length < 2){ el.style.display='none'; el.innerHTML=''; return; }
-  if (curs.indexOf(_viewCur)<0) { _viewCur = curs[0]; }  // 뷰 통화가 사라졌으면 보정
-  el.style.display='flex';
-  el.innerHTML = curs.map(function(c){
-    var on=(_viewCur===c);
-    return '<button onclick="setViewCur(\''+c+'\')" style="flex:none;padding:5px 13px;border-radius:16px;border:1.5px solid '+(on?'var(--green)':'var(--border-mid)')+';background:'+(on?'var(--green-light)':'var(--surface)')+';color:'+(on?'var(--green-dark)':'var(--text-3)')+';font-size:12px;font-weight:800;cursor:pointer;font-family:var(--font);">'+_symOf(c)+' '+c+'</button>';
-  }).join('');
+  el.style.display='none'; el.innerHTML='';
 }
 function _renderCurSwitches(){ ['cur-switch-home','cur-switch-hist'].forEach(_renderCurSwitch); }
 /* ══════════════════════════════
@@ -31300,7 +31287,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 660;
+window.__APP_BUILD__ = 661;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
