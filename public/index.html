@@ -600,7 +600,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 .avatar-opt.selected{border-color:var(--green);background:var(--green-light);transform:scale(1.1);}
 .nick-input{width:100%;border:1.5px solid var(--border-mid);border-radius:12px;padding:10px 14px;font-size:14px;font-family:var(--font);color:var(--text-1);outline:none;background:var(--bg);transition:border-color .15s;margin-top:6px;}
 .nick-input:focus{border-color:var(--green);}
-.sp-body{flex:1;overflow-y:auto;}
+.sp-body{flex:1;overflow-y:auto;padding-bottom:env(safe-area-inset-bottom,0px);}
 .sp-body::-webkit-scrollbar{display:none;}
 .prem-banner{margin:14px 16px 12px;background:var(--green-grad);border-radius:18px;padding:16px;color:#fff;display:flex;align-items:center;justify-content:space-between;cursor:pointer;box-shadow:var(--shadow-green);}
 .sg{background:var(--surface);margin:0 16px 12px;border-radius:16px;border:0.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow-xs);}
@@ -1217,7 +1217,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     運営者：RetWork 編集部 ・ 所在地：東京都中央区晴海 ・ お問い合わせ：<a href="mailto:info@retwork.jp" style="color:rgba(255,255,255,.6);pointer-events:auto;">info@retwork.jp</a></p>
   </footer>
 </div>
-<div style="position:fixed;left:0;right:0;bottom:0;z-index:301;padding:12px 16px;background:rgba(8,18,30,.94);border-top:1px solid rgba(255,255,255,.12);">
+<div style="position:fixed;left:0;right:0;bottom:0;z-index:301;padding:12px 16px calc(12px + env(safe-area-inset-bottom)) 16px;background:rgba(8,18,30,.94);border-top:1px solid rgba(255,255,255,.12);">
   <button onclick="landingEnter()"
     style="display:block;width:100%;max-width:728px;margin:0 auto;padding:15px;border:none;border-radius:14px;background:linear-gradient(90deg,#16a87a,#1bc28d);color:#fff;font-size:16px;font-weight:800;cursor:pointer;font-family:var(--font);">
     無料で始める →
@@ -1874,7 +1874,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 
   <!-- 필터 바텀시트 -->
   <div id="ct-filter-sheet" style="display:none;position:absolute;bottom:0;left:0;right:0;
-       background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 32px;z-index:100;
+       background:#fff;border-radius:20px 20px 0 0;padding:20px 16px calc(32px + env(safe-area-inset-bottom));z-index:100;
        box-shadow:0 -4px 30px rgba(0,0,0,.15);">
     <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 18px;"></div>
     <div style="font-size:15px;font-weight:800;color:var(--text-1);margin-bottom:4px;"><span data-i18n="ct.map.filter">フィルター</span> <span style="font-size:12px;color:var(--gold);font-weight:600;" data-i18n="ct.map.filter.applied">1個適用</span></div>
@@ -1908,7 +1908,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 
   <!-- 랭킹 바텀시트 -->
   <div id="ct-ranking-sheet" style="display:none;position:absolute;bottom:0;left:0;right:0;
-       background:#fff;border-radius:20px 20px 0 0;padding:16px 16px 32px;z-index:100;
+       background:#fff;border-radius:20px 20px 0 0;padding:16px 16px calc(32px + env(safe-area-inset-bottom));z-index:100;
        max-height:70%;overflow-y:auto;box-shadow:0 -4px 30px rgba(0,0,0,.15);">
     <div style="width:36px;height:4px;background:#E0E0E0;border-radius:2px;margin:0 auto 14px;"></div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -2278,7 +2278,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     </div>
   </div>
   <!-- 댓글 입력 고정 바 -->
-  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:.5px solid var(--border);padding:10px 14px;display:flex;gap:8px;align-items:center;">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:.5px solid var(--border);padding:10px 14px calc(10px + env(safe-area-inset-bottom)) 14px;display:flex;gap:8px;align-items:center;">
     <input id="cpd-comment-input" type="text" placeholder="コメントを書く..." data-i18n-placeholder="sd.write_comment"
       onkeydown="if(event.key==='Enter')ctAddCommentDetail()"
       style="flex:1;padding:10px 15px;border-radius:24px;border:1px solid var(--border-mid);background:var(--bg);font-size:13px;font-family:var(--font);outline:none;color:var(--text-1);">
@@ -20672,7 +20672,7 @@ function _shareChooser(onLink, onImage){
   var ov = document.createElement('div');
   ov.id = 'share-choice-pop';
   ov.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;';
-  ov.innerHTML = '<div style="width:100%;max-width:430px;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px 28px;box-sizing:border-box;">'
+  ov.innerHTML = '<div style="width:100%;max-width:430px;background:var(--surface);border-radius:18px 18px 0 0;padding:18px 16px calc(28px + env(safe-area-inset-bottom));box-sizing:border-box;">'
     + '<div style="width:36px;height:4px;border-radius:4px;background:var(--border-mid);margin:0 auto 14px;"></div>'
     + '<button id="shc-link" style="width:100%;padding:15px;border:none;border-radius:12px;background:var(--green-grad);color:#fff;font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🔗 リンクで共有<div style="font-size:11px;font-weight:600;opacity:.85;margin-top:3px;">タップで移動できるプレビューカード（おすすめ）</div></button>'
     + '<button id="shc-img" style="width:100%;padding:15px;border:1px solid var(--border-mid);border-radius:12px;background:var(--bg-2);color:var(--text-1);font-size:14px;font-weight:800;font-family:var(--font);margin-bottom:8px;cursor:pointer;">🖼 画像カードで共有<div style="font-size:11px;font-weight:600;color:var(--text-3);margin-top:3px;">お店・メニュー情報入りの画像1枚</div></button>'
@@ -31289,7 +31289,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 663;
+window.__APP_BUILD__ = 664;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

@@ -1,4 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 662 시점)
+# RetWork (チリつも) — HANDOFF (build 664 시점)
+
+> # 📌 2026-11-02 작업 요약 (build 663~664) — 하단 safe-area(네비바 가림) 전수 점검·수정
+> **다른 PC에서 이어가려면 이 블록부터.** 폴드6 등 엣지투엣지(targetSDK36)에서 **하단 고정 요소가 시스템 네비바에 가리는** 문제를 전수조사(서브에이전트)해 일괄 수정. 모두 CSS(bottom padding에 `env(safe-area-inset-bottom)` 가산)만 변경, JS 로직 무변경. 기존 보정: 탭바(@supports ~347), `.sheet`(~689 `calc(36px+env)`), `.bottom-sheet-overlay>div:not(.sheet)`(~619), 토스트(~17420).
+> - **b663:** 치리카드 필터 시트 `#cc-filter-sheet`(~2021) `28px`→`calc(28px+env)`.
+> - **b664(5곳 추가):** ① landing 하단 CTA 바(~1220, `무료로 시작`) ② 지도 필터 시트 `#ct-filter-sheet`(~1877, cc-filter의 쌍둥이, 초기화/적용) ③ 지도 랭킹 시트 `#ct-ranking-sheet`(~1911) ④ 치리톡 게시글 상세 **댓글 입력 고정 바**(~2281, `position:absolute;bottom:0` → 컨테이너 패딩으론 안 떠서 자체 패딩에 env) ⑤ `_shareChooser` 동적 공유 시트(~20675, body append라 `.bottom-sheet-overlay` 규칙 밖). + 설정 드로어 `.sp-body`(~603)에 `padding-bottom:env`(로그아웃/SNS/푸터 가림 방지).
+> - **점검 결과 SAFE(무수정):** `.bottom-sheet-overlay` 쓰는 모든 모달(ov-currency/budget/scan/edit/att-complete 등, 619 규칙 적용) · ov-reward-ad(상단 닫기·중앙 정렬) · ov-avatar-crop(중앙 정렬) · ov-img-viewer · ov-admin-pc(데스크탑 전용) · 치리톡 작성(제출=상단 헤더). 어드민 `class="overlay"` 패널들은 버튼이 스크롤 영역 안(bottom:0 고정 아님) — 저위험.
 
 > # 📌 2026-11-02 작업 요약 (build 662) — 치리카드(메뉴카드) 통화 분리
 > **다른 PC에서 이어가려면 이 블록부터.** 구조 불변. **🔴 실행 필요 SQL: `store_menu_cards_currency.sql`**(`alter table public.store_menu_cards add column if not exists currency text;` + 인덱스) — **사용자 실행 완료.** (nullable 기본 NULL, 미태깅 카드는 클라가 'JPY'로 귀속 — 일본 우선, 'JPY' 강제 UPDATE 없음)
