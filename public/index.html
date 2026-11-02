@@ -5122,7 +5122,14 @@ function toggleCurrency(){ setCurrency(_CUR === '¥' ? '₩' : '¥'); }
 function setCurrency(sym){
   _CUR = (sym === '₩') ? '₩' : '¥';
   try{ localStorage.setItem('riq_currency', _CUR); }catch(e){}
-  if (typeof _viewCur !== 'undefined') { _viewCur = _codeOf(_CUR); try{ localStorage.setItem('riq_viewcur', _viewCur); }catch(e){} } // 설정 변경 → 그 통화 뷰로
+  if (typeof _viewCur !== 'undefined') {
+    // 설정 통화로 뷰 전환 — 단, 그 통화 영수증이 없으면 데이터 있는 통화를 유지(홈이 0으로 비는 것 방지)
+    var _code = _codeOf(_CUR);
+    var _own = _ownCurs();
+    if (_own.length === 0 || _own.indexOf(_code) >= 0) _viewCur = _code;           // 신규/보유 통화면 전환
+    else if (_own.indexOf(_viewCur) < 0) _viewCur = _own[0];                        // 미보유 통화면 데이터 있는 통화로 스냅
+    try{ localStorage.setItem('riq_viewcur', _viewCur); }catch(e){}
+  }
   applyCurrency();
 }
 function applyCurrency(){
@@ -12773,6 +12780,9 @@ function parseWithGPT(rawText) {
 // 디버그 UI 렌더링 (GPT/룰기반 공통)
 function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
   var lines = rawText.split('\n');
+  // 이 영수증 통화 감지 → 미리보기 금액도 그 통화 기호로(원화 영수증이 ¥로 보이던 버그)
+  parsed.currency = parsed.currency || _detectCurrency(rawText);
+  var _cs = _symOf(parsed.currency);
 
   var linesHtml = '';
   for (var li = 0; li < lines.length; li++) {
@@ -12798,7 +12808,7 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
       rowsHtml += '<tr>'
         + '<td style="'+_cellB+'font-size:13px;color:#0F1A17;">' + _esc(it.name) + '</td>'
         + '<td style="'+_cellB+'text-align:center;font-size:12px;color:#67727e;font-variant-numeric:tabular-nums;white-space:nowrap;">&times;' + (it.qty||1) + '</td>'
-        + '<td style="'+_cellB+'text-align:right;font-size:13px;font-weight:800;color:#1D9E75;font-variant-numeric:tabular-nums;white-space:nowrap;">&#165;' + (it.price||0).toLocaleString() + '</td>'
+        + '<td style="'+_cellB+'text-align:right;font-size:13px;font-weight:800;color:#1D9E75;font-variant-numeric:tabular-nums;white-space:nowrap;">' + _cs + (it.price||0).toLocaleString() + '</td>'
         + '</tr>';
     }
     itemsHtml = '<table style="width:100%;border-collapse:collapse;">'
@@ -12818,13 +12828,13 @@ function _showDebugUI(previewSrc, rawText, parsed, isGpt) {
             || (_tot>0 && (Math.round(_sum*1.10)===_tot || Math.round(_sum*1.08)===_tot)));
   var _badge = _itemCnt>0
     ? (_ok
-        ? '<div style="margin-top:8px;font-size:11px;font-weight:800;color:#1D9E75;background:rgba(29,158,117,.12);border-radius:8px;padding:6px 10px;">&#10003; '+t('ocr.sum_ok')+' · &#165;'+_sum.toLocaleString()+'</div>'
-        : '<div style="margin-top:8px;font-size:11px;font-weight:800;color:#C77A12;background:rgba(255,171,0,.14);border-radius:8px;padding:6px 10px;">&#9888; '+t('ocr.sum_check')+' · &#165;'+_sum.toLocaleString()+(_tot?' / &#165;'+_tot.toLocaleString():'')+'</div>')
+        ? '<div style="margin-top:8px;font-size:11px;font-weight:800;color:#1D9E75;background:rgba(29,158,117,.12);border-radius:8px;padding:6px 10px;">&#10003; '+t('ocr.sum_ok')+' · '+_cs+_sum.toLocaleString()+'</div>'
+        : '<div style="margin-top:8px;font-size:11px;font-weight:800;color:#C77A12;background:rgba(255,171,0,.14);border-radius:8px;padding:6px 10px;">&#9888; '+t('ocr.sum_check')+' · '+_cs+_sum.toLocaleString()+(_tot?' / '+_cs+_tot.toLocaleString():'')+'</div>')
     : '';
   var summaryHtml = ''
     + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.store')+': <strong>' + _esc(parsed.store||t('ocr.store_unknown')) + '</strong></div>'
     + '<div style="font-size:12px;color:#0F1A17;margin-bottom:3px;">'+t('ocr.debug.items')+': <strong>' + t('ocr.debug.count_n',{n:_itemCnt}) + '</strong></div>'
-    + '<div style="font-size:12px;color:#0F1A17;">'+t('ocr.debug.total')+': <strong>&#165;' + (parsed.total||0).toLocaleString() + '</strong></div>'
+    + '<div style="font-size:12px;color:#0F1A17;">'+t('ocr.debug.total')+': <strong>' + _cs + (parsed.total||0).toLocaleString() + '</strong></div>'
     + _badge;
 
   var html = ''
@@ -13276,7 +13286,7 @@ function showOcrResult(previewSrc, result) {
         +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">'
         +'<button onclick="deleteOcrItem('+idx+')" style="background:none;border:none;font-size:16px;color:#ccc;cursor:pointer;padding:0;line-height:1;">✕</button>'
         +'<div style="display:flex;align-items:center;gap:3px;">'
-        +'<span style="font-size:11px;color:var(--green);font-weight:700;">¥</span>'
+        +'<span style="font-size:11px;color:var(--green);font-weight:700;">'+_cursym()+'</span>'
         +'<input type="number" id="in-price-'+idx+'" value="'+item.price+'" '+(item.price<0?'':'min="0" ')+'style="width:75px;font-size:14px;font-weight:800;color:'+(item.price<0?'var(--red)':'var(--green)')+';border:0.5px solid rgba(29,158,117,.3);border-radius:8px;padding:4px 6px;text-align:right;background:var(--green-light);" oninput="syncOcrItems()">'
         +'</div>'
         +((item.qty||1) > 1 ? '<div style="font-size:10px;color:var(--text-3);margin-top:1px;text-align:right;">@'+_cursym()+Math.round(item.price/(item.qty||1)).toLocaleString()+' × '+(item.qty||1)+'</div>' : '')
@@ -13353,7 +13363,7 @@ function showOcrResult(previewSrc, result) {
     +(result.totalItems > 0 ? '<span style="font-size:11px;color:var(--green);margin-left:8px;">'+result.totalItems+t('ocr.item_unit')+'</span>' : '')
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:1px;">'
-    +  '<span style="font-size:20px;font-weight:900;color:var(--green);">¥</span>'
+    +  '<span style="font-size:20px;font-weight:900;color:var(--green);">'+_cursym()+'</span>'
     +  '<input id="ocr-total-disp" type="number" inputmode="numeric" value="'+(result.total||0)+'" oninput="onOcrTotalEdit()" aria-label="total" style="width:112px;font-size:22px;font-weight:900;color:var(--green);text-align:right;border:none;border-bottom:1px dashed rgba(29,158,117,.45);background:transparent;outline:none;font-family:var(--font);letter-spacing:-1px;padding:2px 0;">'
     +'</div>'
     +'</div>'
@@ -31290,7 +31300,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 659;
+window.__APP_BUILD__ = 660;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

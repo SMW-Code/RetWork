@@ -1,4 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 659 시점)
+# RetWork (チリつも) — HANDOFF (build 660 시점)
+
+> # 📌 2026-11-02 작업 요약 (build 660) — 영수증별 통화 후속 버그 2건 수정
+> **다른 PC에서 이어가려면 이 블록부터.** 구조 불변(단일 `public/index.html` + Next.js API + Supabase + Vercel `ret-work`, Capacitor 라이브로드, `CACHE_NAME`+`__APP_BUILD__` 동반 bump). **추가 SQL/env 없음.** 전 세션(b656~659)의 ¥/₩ 혼용 기능에서 사용자 신고 2건:
+> - **① 원화 영수증인데 파싱결과가 ¥로 표시(표시 버그):** `_showDebugUI`(파싱 미리보기)가 금액 기호를 `&#165;`로 **하드코딩**(품목/합계배지/총액), `showOcrResult`도 2곳(`품목 기호`·`큰 총액 span`)만 `¥` 하드코딩. **저장/감지(`_detectCurrency`)는 정상 — 표시만 깨졌던 것.** → `_showDebugUI` 상단에서 `parsed.currency=parsed.currency||_detectCurrency(rawText)` + `var _cs=_symOf(...)`로 그 영수증 통화 기호 사용, `showOcrResult`의 2곳은 `_cursym()`(override 이미 set됨)로 교체. **ⓑ `消費税` 라벨은 여전히 JPY 고정(KRW면 부적절, 영향 적어 보류).**
+> - **② 설정에서 통화 변경 시 홈 지출카드 0:** 홈/리포트는 `_vcDB()`(뷰 통화 `_viewCur` 일치분만) 합산인데 `setCurrency`가 `_viewCur`를 설정 통화로 **강제** → 그 통화 영수증 0건이면 0 표시. **설계결정(사용자 택): "데이터 있는 통화 자동 표시".** `setCurrency` 수정 — `_own=_ownCurs()` 기준으로 신규(0건)/보유 통화면 그 통화로 전환, **미보유 통화면 데이터 있는 통화 유지**(미보유 전환 시 `_own[0]`로 스냅). 홈이 0으로 비지 않음. 트레이드오프: 가진 게 ¥뿐인데 설정만 ₩면 화면 기호는 ¥로 보일 수 있음(새 ₩ 영수증 찍으면 ₩ 등장).
+> - **검증:** JS 문법검사 오류 0. 실제 확인은 기기에서 "원화 영수증 스캔 → ₩ 표시 / 설정 통화 토글 → 홈 합계 유지"(즉시반영 push). ⚠️ 프리뷰 창은 2MB 단일파일 렌더 실패 + 로그인/OCR 필요라 로컬 시각검증 비현실적.
 
 > # 📌 2026-11-01 작업 요약 (build 653→659) — 폴드6 safe-area(상/하단) + 앱시작 깜박임 + **영수증별 통화(¥/₩ 혼용)**
 > **다른 PC에서 이어가려면 이 블록부터.** 구조 불변: 단일 파일 `public/index.html`(~2MB) + Next.js API + Supabase + Vercel(`ret-work`), Capacitor 네이티브=`server.url=https://retwork.jp` 라이브 로드 → **JS/HTML 변경은 `git push`만으로 앱 반영**(네이티브만 AAB 재빌드). `CACHE_NAME`+`__APP_BUILD__` 항상 동반 bump. **커밋 전 node 문법검사 + 키 4블록 카운트(i18n) 필수**(규칙: `AGENTS.md`/`I18N_GUIDE.md`/`PARSING.md`).
