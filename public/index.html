@@ -6449,7 +6449,7 @@ async function _ccEnsureData(src){
   var rows = [];
   try {
     var q = _sb.from('store_menu_cards')
-      .select('id,store_name,menu_name,price,category,image_url,rating_avg,rating_count,view_count,like_count,created_at,created_by')
+      .select('id,store_name,menu_name,price,category,image_url,rating_avg,rating_count,view_count,like_count,created_at,created_by,currency')
       .order('created_at', { ascending:false }).limit(1000);
     if (src==='mine') q = q.eq('created_by', _currentUser.id);
     var res = await q;
@@ -6621,6 +6621,8 @@ async function _ccApplyCardFilter(){
 function _ccFilteredRows(){
   var cat = _ccCat;
   return _ccActiveRows().filter(function(r){
+    // 내 카드 탭은 설정 통화 카드만 표시(전체 탭은 통화 무관 — 발견성 유지)
+    if (_ccTab==='mine' && (r.currency||'JPY') !== _codeOf(_CUR)) return false;
     if (_ccPriceMax < CC_PRICE_MAX) {
       var pr = Number(r.price)||0;
       if (pr<=0 || pr>_ccPriceMax) return false;
@@ -6717,7 +6719,7 @@ function _myCardItemHtml(c) {
     +   '<div style="font-size:15px;font-weight:800;color:var(--text-1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+_esc(c.menu_name||'')+'</div>'
     +   '<div style="font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 5px;">🏪 '+_esc(c.store_name||'')+'</div>'
     +   '<div style="display:flex;align-items:center;gap:12px;font-size:12px;margin-bottom:4px;">'
-    +     (c.price ? '<span style="font-weight:800;color:var(--text-1);">'+_cursym()+Number(c.price).toLocaleString()+'</span>' : '')
+    +     (c.price ? '<span style="font-weight:800;color:var(--text-1);">'+_symOf(c.currency||'JPY')+Number(c.price).toLocaleString()+'</span>' : '')
     +     '<span>'+rating+'</span>'
     +   '</div>'
     +   (dateStr ? '<div style="font-size:10px;color:var(--text-3);">🕐 '+dateStr+'</div>' : '')
@@ -14219,7 +14221,7 @@ async function submitChiriPublish() {
         // 신규 카드 생성 (대표 사진 + 평점)
         var _ins = await _sb.from('store_menu_cards').insert({
           store_name:store, store_id: await _resolveStoreId(store), menu_name:_it.name, category:_cpCategory||r.cat||'other',
-          price:_it.price, image_url:_mPhoto,
+          price:_it.price, image_url:_mPhoto, currency:_rcCur(r),
           rating_avg:_mR>0?_mR:0, rating_count:_mR>0?1:0, created_by:_currentUser.id
         }).select().maybeSingle();
         if (_ins.data) {
@@ -17067,7 +17069,7 @@ async function _mpPersistPhotosAndCards(store, items, category, storePhotoFile){
       } else {
         var ins = await _sb.from('store_menu_cards').insert({
           store_name:store, store_id: storeId, menu_name:it.name, category:category||'other',
-          price:parseInt(it.price)||0, image_url:photo,
+          price:parseInt(it.price)||0, image_url:photo, currency:_userCurCode(),
           rating_avg:0, rating_count:0, created_by:_currentUser.id
         }).select().maybeSingle();
         if (ins.data) emap[_norm(it.name)] = ins.data;
@@ -31287,7 +31289,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 661;
+window.__APP_BUILD__ = 662;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

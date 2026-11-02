@@ -1,4 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 661 시점)
+# RetWork (チリつも) — HANDOFF (build 662 시점)
+
+> # 📌 2026-11-02 작업 요약 (build 662) — 치리카드(메뉴카드) 통화 분리
+> **다른 PC에서 이어가려면 이 블록부터.** 구조 불변. **🔴 실행 필요 SQL: `store_menu_cards_currency.sql`**(`alter table public.store_menu_cards add column if not exists currency text;` + 인덱스) — **사용자 실행 완료.** (nullable 기본 NULL, 미태깅 카드는 클라가 'JPY'로 귀속 — 일본 우선, 'JPY' 강제 UPDATE 없음)
+> - 홈 통화 모델(b661)을 **치리카드에도 확장**. 설계결정(사용자 택): **"내 카드 탭=설정 통화 필터 / 전체(공개) 탭=카드별 자기 통화 표시"**(전체 탭 필터 시 일본앱이라 ₩유저 빈화면 → 발견성 위해 전체는 필터 안 함).
+> - 치리카드=`store_menu_cards` 테이블(원래 currency 컬럼 없었음, price만). 변경 5곳: ①`_ccEnsureData` select에 `currency` 추가 ②치리공개 insert(index.html ~14220)에 `currency:_rcCur(r)` ③수동핀 insert(~17068)에 `currency:_userCurCode()` ④`_myCardItemHtml` 가격 기호를 `_cursym()`(보는 사람 설정)→`_symOf(c.currency||'JPY')`(카드 자기 통화) — 지금껏 ¥카드가 ₩설정에서 ₩로 오표시되던 것도 해결 ⑤`_ccFilteredRows`에 `if(_ccTab==='mine' && (r.currency||'JPY')!==_codeOf(_CUR)) return false`.
+> - **순서 주의:** currency 컬럼 없이 코드 먼저 나가면 카드 로드(select)/저장(insert) 깨짐 → SQL 먼저 실행 후 배포함. JS 문법검사 오류 0.
 
 > # 📌 2026-11-02 작업 요약 (build 661) — 통화 모델 전환: "설정 통화 단일 뷰"
 > **다른 PC에서 이어가려면 이 블록부터.** 구조 불변. **추가 SQL/env 없음.** b656~660의 "통화별 분리 + 전환칩" 모델을 **사용자 결정으로 단순화**: **보이는 통화 = 설정 통화(¥/₩) 하나뿐.** 홈/내역/리포트는 설정 통화 영수증만 표시하고, 다른 통화 영수증은 **숨김(삭제 아님)** — 설정을 바꿔야 보임. **카드 위 `[¥|₩]` 전환칩 제거(항상 숨김).**
