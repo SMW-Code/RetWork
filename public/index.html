@@ -13360,9 +13360,9 @@ function showOcrResult(previewSrc, result) {
     +'<span class="lico" data-lico="receipt" data-size="17" data-color="#fff"></span>'
     +'<span data-i18n="'+(_isPremium?'ocr.save_budget':'wad.save.dt')+'">'+t(_isPremium?'ocr.save_budget':'wad.save.dt')+'</span>'
     +'</button>'
-    +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
+    +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri(true)" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
     +'<span class="lico" data-lico="map_pin" data-size="17" data-color="#fff"></span>'
-    +'<span data-i18n="ocr.save_publish">'+t('ocr.save_publish')+'</span>'
+    +'<span data-i18n="'+(_isPremium?'ocr.save_publish':'ocr.save_publish_ad')+'">'+t(_isPremium?'ocr.save_publish':'ocr.save_publish_ad')+'</span>'
     +'<span style="background:rgba(255,255,255,.25);border-radius:20px;padding:2px 8px;font-size:11px;">+10チリ</span>'
     +'</button>'
     +'<div style="text-align:center;font-size:12px;color:var(--text-3);margin-top:10px;cursor:pointer;" onclick="closeOv(\'ov-ocr\')">'+t('btn.cancel')+'</div>';
@@ -13825,7 +13825,7 @@ async function _loadChiriPublishedCache(force){
   window._chiriPubLoading = false;
 }
 
-function saveAndPublishChiri() {
+function saveAndPublishChiri(directAd) {
   syncOcrItems();
   if (!window._ocrResult) return;
   window._cpFromMap = false;   // 스캔→저장+공개 — 가계부 저장 필요
@@ -14253,8 +14253,14 @@ async function submitChiriPublish() {
   // (전역 _cpFromMap 은 함수 진입 시 이미 리셋됨 — 여기선 지역 스냅샷 _fromMap 사용)
 
   if (!_isPremium) {
-    // 광고는 치리 공개 완료 알림 + 핀 렌더만 담당 (가계부는 이미 저장됨)
-    showAdModal(function() { _afterChiriPublish(); }, 'chiri');
+    if (directAd) {
+      // 공개 버튼 라벨이 "광고 보고 저장&공개"로 고지+명시 동의 → 중간 고지페이지 생략, 바로 광고
+      _adContext = 'chiri';
+      ctOpenFullscreenAd('save', function() { _afterChiriPublish(); });
+    } else {
+      // 자동 경로(스캔→치리맵 등): 버튼 고지가 없으므로 고지페이지로 명시 동의 받은 뒤 광고
+      showAdModal(function() { _afterChiriPublish(); }, 'chiri');
+    }
   } else {
     _afterChiriPublish();
   }
@@ -14507,7 +14513,7 @@ var I18N = {
     'ocr.col_item':'品目','ocr.col_amount':'金額','ocr.sum_ok':'合計一致','ocr.sum_check':'合計と不一致 — 要確認',
     'nav.back_exit':'もう一度押すと終了します',
     'ocr.recognize_fail':'⚠ 品目の認識に失敗','ocr.debug.title':'🔍 OCR分析結果','ocr.debug.next':'✅ 次へ → 保存画面',
-    'ocr.store_unknown':'不明','ocr.save_budget':'家計簿に保存','ocr.save_publish':'家計簿に保存 ＆ チリつもに公開','ocr.item_unit':'品目',
+    'ocr.store_unknown':'不明','ocr.save_budget':'家計簿に保存','ocr.save_publish':'家計簿に保存 ＆ チリつもに公開','ocr.save_publish_ad':'広告を見て保存＆チリ公開','ocr.item_unit':'品目',
     'ocr.title':'📷 レシート解析中...','ocr.title_split':'📜 分割レシート解析中...','ocr.checking':'レシートを確認しています','ocr.organizing':'商品を整理しています','ocr.wait':'しばらくお待ちください','ocr.reading_page':'{i}/{n}枚目を読み取り中','ocr.ad_badge':'分析中...',
     'ocr.debug.parse_result':'解析結果','ocr.debug.store':'店名','ocr.debug.items':'認識品目','ocr.debug.total':'合計','ocr.debug.raw_text':'API元テキスト','ocr.debug.count_n':'{n}件','ocr.debug.lines_n':'{n}行',
     // 편집 모달
@@ -14782,7 +14788,7 @@ var I18N = {
     'ocr.col_item':'품목','ocr.col_amount':'금액','ocr.sum_ok':'합계 일치','ocr.sum_check':'합계 불일치 — 확인 필요',
     'nav.back_exit':'뒤로 버튼을 한 번 더 누르면 종료됩니다',
     'ocr.recognize_fail':'⚠ 품목 인식 실패','ocr.debug.title':'🔍 OCR 분석 결과','ocr.debug.next':'✅ 다음 → 저장 화면',
-    'ocr.store_unknown':'불명','ocr.save_budget':'가계부에 저장하기','ocr.save_publish':'가계부 저장 ＆ 치리츠모 공개','ocr.item_unit':'품목',
+    'ocr.store_unknown':'불명','ocr.save_budget':'가계부에 저장하기','ocr.save_publish':'가계부 저장 ＆ 치리츠모 공개','ocr.save_publish_ad':'광고 보고 저장 & 치리 공개','ocr.item_unit':'품목',
     'ocr.title':'📷 영수증 분석 중...','ocr.title_split':'📜 분할 영수증 분석 중...','ocr.checking':'영수증을 확인하고 있어요','ocr.organizing':'품목을 정리하고 있어요','ocr.wait':'잠시만 기다려주세요','ocr.reading_page':'{i}/{n}장 읽고 있어요','ocr.ad_badge':'분석 중...',
     'ocr.debug.parse_result':'파싱 결과','ocr.debug.store':'점포명','ocr.debug.items':'인식 품목','ocr.debug.total':'합계','ocr.debug.raw_text':'API 원본 텍스트','ocr.debug.count_n':'{n}개','ocr.debug.lines_n':'{n}줄',
     'edit.add_item':'+ 품목 추가','edit.total':'합계','edit.total_amount':'합계 금액 (¥)','edit.qty':'수량',
@@ -15047,7 +15053,7 @@ var I18N = {
     'ocr.col_item':'Item','ocr.col_amount':'Amount','ocr.sum_ok':'Total matches','ocr.sum_check':'Total mismatch — check',
     'nav.back_exit':'Press back again to exit',
     'ocr.recognize_fail':'⚠ Failed to recognize items','ocr.debug.title':'🔍 OCR Analysis','ocr.debug.next':'✅ Next → Save',
-    'ocr.store_unknown':'Unknown','ocr.save_budget':'Save to Budget','ocr.save_publish':'Save & Publish to Chiri','ocr.item_unit':'items',
+    'ocr.store_unknown':'Unknown','ocr.save_budget':'Save to Budget','ocr.save_publish':'Save & Publish to Chiri','ocr.save_publish_ad':'Watch an ad to save & publish','ocr.item_unit':'items',
     'ocr.title':'📷 Analyzing receipt...','ocr.title_split':'📜 Analyzing split receipt...','ocr.checking':'Reading your receipt','ocr.organizing':'Organizing items','ocr.wait':'Please wait a moment','ocr.reading_page':'Reading page {i}/{n}','ocr.ad_badge':'Analyzing...',
     'ocr.debug.parse_result':'Parse result','ocr.debug.store':'Store','ocr.debug.items':'Items','ocr.debug.total':'Total','ocr.debug.raw_text':'API raw text','ocr.debug.count_n':'{n}','ocr.debug.lines_n':'{n} lines',
     'edit.add_item':'+ Add Item','edit.total':'Total','edit.total_amount':'Total (¥)','edit.qty':'Qty',
@@ -15312,7 +15318,7 @@ var I18N = {
     'ocr.col_item':'品目','ocr.col_amount':'金额','ocr.sum_ok':'合计一致','ocr.sum_check':'合计不符 — 请确认',
     'nav.back_exit':'再按一次返回退出',
     'ocr.recognize_fail':'⚠ 商品识别失败','ocr.debug.title':'🔍 OCR分析结果','ocr.debug.next':'✅ 下一步 → 保存',
-    'ocr.store_unknown':'未知','ocr.save_budget':'保存到账本','ocr.save_publish':'保存账本并发布到Chiri','ocr.item_unit':'件',
+    'ocr.store_unknown':'未知','ocr.save_budget':'保存到账本','ocr.save_publish':'保存账本并发布到Chiri','ocr.save_publish_ad':'看广告保存并公开','ocr.item_unit':'件',
     'ocr.title':'📷 正在分析票据...','ocr.title_split':'📜 正在分析分割票据...','ocr.checking':'正在确认票据','ocr.organizing':'正在整理商品','ocr.wait':'请稍候','ocr.reading_page':'正在读取第 {i}/{n} 张','ocr.ad_badge':'分析中...',
     'ocr.debug.parse_result':'解析结果','ocr.debug.store':'店名','ocr.debug.items':'识别商品','ocr.debug.total':'合计','ocr.debug.raw_text':'API原始文本','ocr.debug.count_n':'{n}件','ocr.debug.lines_n':'{n}行',
     'edit.add_item':'+ 添加商品','edit.total':'合计','edit.total_amount':'合计金额 (¥)','edit.qty':'数量',
@@ -31283,7 +31289,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 667;
+window.__APP_BUILD__ = 668;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

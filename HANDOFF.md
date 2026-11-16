@@ -1,4 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 667 시점)
+# RetWork (チリつも) — HANDOFF (build 668 시점)
+
+> # 📌 2026-11-16 작업 요약 (build 668) — 치리 공개 버튼도 1단계화(저장 버튼과 통일)
+> **다른 PC에서 이어가려면 이 블록부터.** b667(저장 버튼 1단계)에 이어 **"저장 & 치리 공개 +10チリ" 버튼도 1단계화.** 단 `saveAndPublishChiri`가 **스캔→치리맵 자동경로(13378)에서도 호출**되므로, 버튼 경로만 직접-광고로 바꾸고 자동경로는 고지페이지 유지(그렇지 않으면 동의 없이 광고=위반).
+> - **변경:** ① `saveAndPublishChiri(directAd)` 파라미터 추가 — `directAd`면 `_adContext='chiri'; ctOpenFullscreenAd('save', _afterChiriPublish)`(바로 광고), 아니면 기존 `showAdModal(...,'chiri')`(고지페이지). ② 공개 버튼 `onclick="saveAndPublishChiri(true)"`. ③ 버튼 라벨 조건부: 무료=`ocr.save_publish_ad`(신규 i18n 4언어, "광고 보고 저장 & 치리 공개") / 프리미엄=`ocr.save_publish`. ④ 자동경로(13378)·secondary(19308)는 무인자→고지페이지 유지.
+> - **정책:** 버튼이 광고+행동+보상(+10チリ) 명확 공개 → 리워드 정책 OK. 자동경로는 고지페이지로 opt-in 유지.
+> - JS문법 0.
 
 > # 📌 2026-11-16 작업 요약 (build 667) — 영수증 저장 광고 흐름 2단계→1단계 (피로도 개선, 정책 유지)
 > **다른 PC에서 이어가려면 이 블록부터.** b666에서 네이티브 저장 전 고지페이지(openWatchAdPage)를 넣었더니 **OCR 결과화면 + 고지페이지 = 팝업 2단계**라 피로도 호소. 해결: **"가계부에 저장하기" 버튼 자체를 고지+동의로** 만들어 중간 고지페이지 생략(1단계화).
