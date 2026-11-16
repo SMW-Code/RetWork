@@ -50,4 +50,7 @@
     <!-- 위치 (치리맵 현재 위치 · 주변 가격비교) b600 -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- 카메라 (영수증 후면 촬영 @capacitor/camera, b669) -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 </manifest>

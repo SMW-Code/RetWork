@@ -1,4 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 668 시점)
+# RetWork (チリつも) — HANDOFF (build 669 시점)
+
+> # 📌 2026-11-16 작업 요약 (build 669) — 영수증 후면 카메라 강제(@capacitor/camera) ⚠️AAB 재빌드 필요
+> **다른 PC에서 이어가려면 이 블록부터.** 문제: 영수증 촬영 시 시스템 카메라가 마지막 렌즈(전면)로 열림. `capture="environment"`는 힌트라 일부 기기(삼성 등)가 무시. 기존 manifest에 CAMERA 권한·getUserMedia 없음 → 파일input(시스템카메라 위임) 구조. **해결: `@capacitor/camera`로 앱 내 카메라 `direction:'REAR'` 강제.**
+> - **웹 코드(배포됨, 플러그인 전엔 무해·폴백):** `_camPluginAvail()`(네이티브+Camera플러그인 있을 때만) · `_nativeRearPhotoFile()`(getPhoto dataUrl→File) · 단일 라벨(2859) `onclick=_scanSingleTap(event)` / 다중 카메라 라벨(2889) `onclick=_multiCamTap(event)` — 네이티브면 `ev.preventDefault()` 후 후면카메라, 아니면 label 기본(file input). `handleImageFile`/`handleMultiImageFile`가 **File 직접도 받게** 리팩터(요소 or File). 플러그인 없으면 `_camPluginAvail()`=false→기존 흐름(안전).
+> - **네이티브(재빌드 필요):** package.json에 `@capacitor/camera ^8.0.0` 추가 · AndroidManifest에 `CAMERA` 권한 + `uses-feature camera required=false` 추가. **사용자 조치: `npm install @capacitor/camera` → `npx cap sync` → AAB 재빌드(versionCode++) → Play 업로드.** 이거 올라가기 전엔 웹 코드가 폴백이라 현행 유지(전면 문제 그대로).
+> - **미적용:** 메뉴/카드 사진(sd-card-photo-cam 등)은 이번 범위 아님(원하면 동일 적용 가능). JS문법 0.
 
 > # 📌 2026-11-16 작업 요약 (build 668) — 치리 공개 버튼도 1단계화(저장 버튼과 통일)
 > **다른 PC에서 이어가려면 이 블록부터.** b667(저장 버튼 1단계)에 이어 **"저장 & 치리 공개 +10チリ" 버튼도 1단계화.** 단 `saveAndPublishChiri`가 **스캔→치리맵 자동경로(13378)에서도 호출**되므로, 버튼 경로만 직접-광고로 바꾸고 자동경로는 고지페이지 유지(그렇지 않으면 동의 없이 광고=위반).

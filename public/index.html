@@ -2856,7 +2856,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     <div class="sheet-title" data-i18n="scan.cam.title">カメラで撮影</div>
     <div class="sheet-sub" style="margin-bottom:14px;" data-i18n="scan.cam.subtitle">1枚または長いレシートを複数枚で</div>
     <!-- 한 장 -->
-    <label class="scan-opt">
+    <label class="scan-opt" onclick="_scanSingleTap(event)">
       <div class="scan-ic" style="background:linear-gradient(135deg,var(--green-light),rgba(29,158,117,.18));">
         <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </div>
@@ -2886,7 +2886,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     <div id="multi-preview-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
 
     <!-- 촬영 버튼들 -->
-    <label class="scan-opt" style="display:flex;margin-bottom:6px;">
+    <label class="scan-opt" style="display:flex;margin-bottom:6px;" onclick="_multiCamTap(event)">
       <span style="font-size:22px;">📷</span>
       <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="multi.next.camera">次の1枚（カメラ）</div></div>
       <input type="file" id="multi-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleMultiImageFile(this)">
@@ -11005,6 +11005,39 @@ function _scanCameraSingleDone(inputEl){
   if (typeof handleImageFile === 'function') handleImageFile(inputEl);
 }
 
+// ── 네이티브 후면 카메라(@capacitor/camera) — 시스템 카메라가 마지막 렌즈(전면)로 열리는 문제 해결 ──
+//   플러그인 없으면(웹/구버전 앱) 기존 file input(capture=environment) 흐름 유지.
+function _camPluginAvail(){
+  return _isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+}
+async function _nativeRearPhotoFile(){
+  var photo = await window.Capacitor.Plugins.Camera.getPhoto({
+    quality: 85, allowEditing: false,
+    resultType: 'dataUrl',   // CameraResultType.DataUrl
+    source: 'CAMERA',        // CameraSource.Camera
+    direction: 'REAR',       // CameraDirection.Rear — 후면 강제
+    correctOrientation: true, saveToGallery: false
+  });
+  if (!photo || !photo.dataUrl) return null;
+  var blob = await (await fetch(photo.dataUrl)).blob();
+  return new File([blob], 'receipt.jpg', { type: blob.type || 'image/jpeg' });
+}
+// 단일 촬영 탭: 네이티브면 후면 카메라, 아니면 label 기본 동작(file input) 유지
+async function _scanSingleTap(ev){
+  if (!_camPluginAvail()) return;
+  ev.preventDefault();
+  closeOv('ov-scan-camera');
+  try { var f = await _nativeRearPhotoFile(); if (f) handleImageFile(f); }
+  catch(e){ console.warn('[native cam single]', e && e.message); }  // 사용자 취소/실패 → 조용히
+}
+// 분할 촬영 '카메라' 탭
+async function _multiCamTap(ev){
+  if (!_camPluginAvail()) return;
+  ev.preventDefault();
+  try { var f = await _nativeRearPhotoFile(); if (f) handleMultiImageFile(f); }
+  catch(e){ console.warn('[native cam multi]', e && e.message); }
+}
+
 function startMultiScan() {
   multiPages = []; // 초기화
   closeOv('ov-scan');
@@ -11021,12 +11054,12 @@ function cancelMultiScan() {
 
 // 각 장 이미지 파일 처리
 function handleMultiImageFile(input) {
-  if (!input.files || !input.files[0]) return;
+  var file = (input && input.files) ? input.files[0] : input;
+  if (!file) return;
   if (multiPages.length >= 5) {
     alert(t('photo.max5'));
     return;
   }
-  var file = input.files[0];
   // 분할 촬영도 동일 전처리 적용 → OCR 정확도 향상
   preprocessReceiptImage(file)
     .then(function(pre){
@@ -11043,7 +11076,7 @@ function handleMultiImageFile(input) {
       reader.readAsDataURL(file);
     });
   // input 초기화 (같은 파일 다시 선택 가능하게)
-  input.value = '';
+  try { if (input && input.files) input.value = ''; } catch(e){}
 }
 
 // 분할 촬영 UI 업데이트 (미리보기 목록 + 버튼 상태)
@@ -11495,11 +11528,11 @@ async function preprocessReceiptImage(file, opts){
 }
 
 async function handleImageFile(input) {
-  if (!input.files || !input.files[0]) return;
-  var file = input.files[0];
+  // input: <input type=file> 요소 또는 File 직접(네이티브 후면 카메라 경로)
+  var file = (input && input.files) ? input.files[0] : input;
+  if (!file) return;
   // 같은 파일 재선택 시 onchange 미발생 방지: 파일 참조 확보 후 value 초기화.
-  //   (촬영/업로드 → 파싱 → 캔슬 → 같은 사진 재선택 시 분석 안 되던 문제)
-  try { input.value = ''; } catch(e){}
+  try { if (input && input.files) input.value = ''; } catch(e){}
   closeOv('ov-scan');
 
   // 0) 전처리 → 1) 미리보기 → 2) OCR
@@ -31289,7 +31322,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 668;
+window.__APP_BUILD__ = 669;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
