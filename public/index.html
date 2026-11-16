@@ -13358,7 +13358,7 @@ function showOcrResult(previewSrc, result) {
     +'</div>'
     +'<button class="save-btn" onclick="saveOcrResult()" style="display:flex;align-items:center;justify-content:center;gap:8px;">'
     +'<span class="lico" data-lico="receipt" data-size="17" data-color="#fff"></span>'
-    +'<span data-i18n="ocr.save_budget">'+t('ocr.save_budget')+'</span>'
+    +'<span data-i18n="'+(_isPremium?'ocr.save_budget':'wad.save.dt')+'">'+t(_isPremium?'ocr.save_budget':'wad.save.dt')+'</span>'
     +'</button>'
     +'<button id="btn-publish-chiri" onclick="saveAndPublishChiri()" style="width:100%;padding:14px;border-radius:14px;border:none;background:var(--gold-grad);color:#fff;font-size:14px;font-weight:800;cursor:pointer;font-family:var(--font);margin-top:8px;display:'+(_shouldShowChiriPublish(result.cat)?'flex':'none')+';align-items:center;justify-content:center;gap:8px;box-shadow:var(--gold-shadow);">'
     +'<span class="lico" data-lico="map_pin" data-size="17" data-color="#fff"></span>'
@@ -13560,8 +13560,10 @@ function saveOcrResult() {
   _dbg('[save] _ocrResult:', !!r, '| _ocrItems len:', (window._ocrItems||[]).length, '| _isPremium:', _isPremium);
   if (!r) { console.warn('[save] _ocrResult 없음 — abort'); return; }
   if (!_isPremium) {
-    _dbg('[save] showAdModal 호출');
-    showAdModal(function() {
+    // 저장 버튼 라벨 자체가 "광고 보고 가계부에 무료 저장"(고지+명시 동의) → 중간 고지페이지 생략, 바로 광고(AdMob 리워드)
+    _dbg('[save] 광고 보고 저장 — ctOpenFullscreenAd 직접');
+    _adContext = 'save';
+    ctOpenFullscreenAd('save', function() {
       _dbg('[save] ad callback — _doSaveOcrResult 실행');
       _doSaveOcrResult();
     });
@@ -31281,7 +31283,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 666;
+window.__APP_BUILD__ = 667;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
