@@ -2856,7 +2856,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     <div class="sheet-title" data-i18n="scan.cam.title">カメラで撮影</div>
     <div class="sheet-sub" style="margin-bottom:14px;" data-i18n="scan.cam.subtitle">1枚または長いレシートを複数枚で</div>
     <!-- 한 장 -->
-    <label class="scan-opt">
+    <label class="scan-opt" onclick="_scanSingle(event)">
       <div class="scan-ic" style="background:linear-gradient(135deg,var(--green-light),rgba(29,158,117,.18));">
         <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
       </div>
@@ -2864,7 +2864,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="_scanCameraSingleDone(this)">
     </label>
     <!-- 긴 영수증 여러 장 -->
-    <div class="scan-opt" onclick="closeOv('ov-scan-camera');setTimeout(startMultiScan,150);">
+    <div class="scan-opt" onclick="_scanMulti(event)">
       <div class="scan-ic" style="background:linear-gradient(135deg,#EEF1FE,rgba(99,102,241,.18));">
         <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2zM8 7h8M8 11h8M8 15h5"/></svg>
       </div>
@@ -11005,9 +11005,78 @@ function _scanCameraSingleDone(inputEl){
   if (typeof handleImageFile === 'function') handleImageFile(inputEl);
 }
 
-// 카메라 촬영 = OS 네이티브 카메라 앱에 위임(label 안의 file input capture=environment).
-// 인앱 getUserMedia 카메라(b670~675)는 이 기기 WebView가 프리뷰 초점 제어를 안 받아줘서 폐기,
-// 네이티브 카메라 앱 방식으로 원복(초점·화질·방향은 OS가 처리). 전면 렌즈 문제는 별도 처리. (b676)
+// ── 네이티브 문서 스캐너(Google ML Kit, @capacitor-mlkit/document-scanner) — b677 ──
+//   후면 고정 + 자동초점 + 테두리 자동검출 + 원근보정 + 크롭을 네이티브가 처리(완전 무료·온디바이스).
+//   플러그인 없으면(웹/구버전 앱/저사양 기기) 기존 OS 카메라 앱(file input capture=environment) 폴백.
+function _mlkitAvail(){
+  return _isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.DocumentScanner;
+}
+// ML Kit 스캐너 실행 → File[] 반환(취소 시 빈 배열)
+async function _mlkitScan(pageLimit){
+  var DS = window.Capacitor.Plugins.DocumentScanner;
+  var res = await DS.scanDocument({
+    galleryImportAllowed: true,
+    pageLimit: pageLimit || 1,
+    resultFormats: 'JPEG',      // OCR엔 이미지만 필요(PDF 생성 생략 → 빠름)
+    scannerMode: 'FULL'         // 테두리 검출+크롭+얼룩/손가락 제거
+  });
+  var uris = (res && res.scannedImages) || [];
+  var files = [];
+  for (var i = 0; i < uris.length; i++){
+    var f = await _uriToFile(uris[i]);
+    if (f) files.push(f);
+  }
+  return files;
+}
+// 네이티브 file/content URI → File (WebView용 URL 변환 후 fetch)
+async function _uriToFile(uri){
+  try{
+    var url = (window.Capacitor && window.Capacitor.convertFileSrc) ? window.Capacitor.convertFileSrc(uri) : uri;
+    var blob = await (await fetch(url)).blob();
+    return new File([blob], 'scan.jpg', { type: blob.type || 'image/jpeg' });
+  }catch(e){ console.warn('[mlkit] uri→file 실패', e && e.message); return null; }
+}
+// 저사양(RAM<1.7GB)·모듈 미설치 등 '지원 안 됨' 류 에러 → 기존 카메라로 폴백해야 하는 상황
+function _mlkitUnsupported(e){
+  var m = (e && (e.code || e.message) || '') + '';
+  return /unsupported|not available|module|play services|unavailable/i.test(m);
+}
+// 단일 촬영: ML Kit 스캐너 → 1장 → 단일 OCR. 없으면 label 기본(file input).
+async function _scanSingle(ev){
+  if (!_mlkitAvail()) return;              // 웹/구버전 → label 기본(file input)
+  ev.preventDefault();
+  var inp = ev.currentTarget ? ev.currentTarget.querySelector('input[type=file]') : null;
+  closeOv('ov-scan-camera');
+  try{
+    var files = await _mlkitScan(1);
+    if (files && files[0]) handleImageFile(files[0]);   // 빈 배열=취소 → 아무것도 안 함
+  }catch(e){
+    console.warn('[mlkit single]', e && e.message);
+    if (_mlkitUnsupported(e) && inp) inp.click();        // 저사양 등 → 기존 카메라 폴백
+  }
+}
+// 분할(긴 영수증): ML Kit 스캐너 다중 페이지 → 1장이면 단일, 여러 장이면 분할 OCR 리뷰(ov-multi).
+async function _scanMulti(ev){
+  if (!_mlkitAvail()){ closeOv('ov-scan-camera'); setTimeout(startMultiScan, 150); return; } // 폴백: 기존 분할 흐름
+  if (ev && ev.preventDefault) ev.preventDefault();
+  closeOv('ov-scan-camera');
+  try{
+    var files = await _mlkitScan(5);
+    if (!files || !files.length) return;                 // 취소
+    if (files.length === 1){ handleImageFile(files[0]); return; }
+    multiPages = [];
+    for (var i = 0; i < files.length; i++){
+      var pre = null;
+      try{ pre = await preprocessReceiptImage(files[i]); }catch(e){}
+      if (pre) multiPages.push({ base64: pre.base64, previewSrc: pre.dataUrl, rawText: '' });
+    }
+    updateMultiUI();
+    openOv('ov-multi');
+  }catch(e){
+    console.warn('[mlkit multi]', e && e.message);
+    if (_mlkitUnsupported(e)){ setTimeout(startMultiScan, 150); }  // 저사양 등 → 기존 분할 흐름
+  }
+}
 
 function startMultiScan() {
   multiPages = []; // 초기화
@@ -31293,7 +31362,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 676;
+window.__APP_BUILD__ = 677;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

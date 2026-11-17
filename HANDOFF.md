@@ -1,4 +1,11 @@
-# RetWork (チリつも) — HANDOFF (build 676 시점)
+# RetWork (チリつも) — HANDOFF (build 677 시점)
+
+> # 📌 2026-11-17 작업 요약 (build 677) — ⭐ Google ML Kit 문서 스캐너 도입 (⚠️AAB v8 재빌드 필요)
+> **결정(사용자): 전면 렌즈 문제 근본해결 + "진짜 스캐너 앱" 경험을 위해 네이티브 문서 스캐너 도입.** 플러그인 `@capacitor-mlkit/document-scanner@8.2.2`(Apache-2.0 **무료**, capawesome팀, Capacitor8 호환). **ML Kit 문서 스캐너 = Google Play Services 온디바이스 API = 완전 무료**(API키·클라우드 과금·건당요금·할당량 없음. OCR용 Vision 클라우드와 별개, OCR 비용 불변). 후면 고정+AF+**테두리 자동검출·원근보정·크롭**+얼룩/손가락 제거(scannerMode FULL).
+> - **설치:** `npm i @capacitor-mlkit/document-scanner` + `npx cap sync android`(완료). gradle 자동반영(capacitor.build.gradle/capacitor.settings.gradle). 등록명 `window.Capacitor.Plugins.DocumentScanner`. **manifest 추가 불필요**(ML Kit이 자체 처리). 저사양(RAM<1.7GB)은 UNSUPPORTED 리젝.
+> - **웹 코드(index.html, 배포됨·플러그인 없으면 무해 폴백):** `_mlkitAvail()`(네이티브+플러그인) · `_mlkitScan(pageLimit)`(scanDocument JPEG/FULL → scannedImages URI[] → `_uriToFile`(convertFileSrc+fetch→File)) · `_scanSingle(ev)`(단일, 1장→handleImageFile, 실패+unsupported→file input 폴백) · `_scanMulti(ev)`(pageLimit5, 1장→단일 / 여러장→multiPages 푸시→ov-multi 리뷰→analyzeMultiReceipt). 단일 라벨(2859) `onclick=_scanSingle(event)` / 긴영수증 div(2867) `onclick=_scanMulti(event)`. **플러그인 없는 v7에선 `_mlkitAvail()`=false → 기존 OS 카메라 앱(file input) 유지(안전).**
+> - **⚠️ 네이티브 재빌드 필수:** build.gradle **versionCode 7→8, versionName 1.0.6→1.0.7**. **사용자 조치: Android Studio(android 폴더)>Build>Generate Signed App Bundle>signing.keystore(B3:A2, 비번 WnX4zpMSoAnP, 별칭 my-key-alias)>release → Play 프로덕션 업로드.** 올라가야 스캐너 실작동(그 전엔 기존 카메라 폴백).
+> - **전면 문제:** 스캐너가 후면 고정이라 **자연 해결**. @capacitor/camera·CAMERA manifest 권한(v7)은 이제 안 씀(무해). JS문법 0. **기기 확인(v8 후): 스캔 UI 뜨고 후면·크롭·화질 OK인지, 단일/긴영수증 둘 다.**
 
 > # 📌 2026-11-17 작업 요약 (build 676) — 🔙 인앱 카메라 전면 폐기 → 네이티브 카메라 앱 방식으로 원복
 > **결정(사용자): b670~675 인앱 getUserMedia 카메라를 통째로 걷어내고 "원점(OS 네이티브 카메라 앱 위임)"으로 복귀. 전면 렌즈 문제만 별도 해결.**
