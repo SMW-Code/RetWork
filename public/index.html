@@ -2886,7 +2886,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
   <!-- 상단 힌트 -->
   <div style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 18px);left:0;right:0;text-align:center;padding:0 24px;pointer-events:none;">
-    <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.45);padding:7px 14px;border-radius:20px;" data-i18n="incam.hint">レシートを枠内に収めて撮影</span>
+    <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.45);padding:7px 14px;border-radius:20px;" data-i18n="incam.hint">レシートを枠内に収め、画面をタップしてピント</span>
   </div>
   <!-- 하단 컨트롤 -->
   <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 28px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex;align-items:center;justify-content:space-between;">
@@ -11036,7 +11036,7 @@ var _incamStream = null, _incamResolve = null, _incamVisBound = false;
 function _getRearStream(){
   var md = navigator.mediaDevices;
   if (!md || !md.getUserMedia) return Promise.reject(new Error('no getUserMedia'));
-  var hi = { width:{ ideal:3840 }, height:{ ideal:2160 } }; // 영수증 OCR용 고해상도(가능한 최대로 협상)
+  var hi = { width:{ ideal:2560 }, height:{ ideal:1440 } }; // 4K는 과함 → 2.5K급(OCR 충분, 가능한 값으로 협상)
   return md.getUserMedia({ video: Object.assign({ facingMode:{ exact:'environment' } }, hi), audio:false })
     .catch(function(){ // 후면 지정 실패(후면 없음 등) → 완화해서 재시도
       return md.getUserMedia({ video: Object.assign({ facingMode:{ ideal:'environment' } }, hi), audio:false });
@@ -11100,11 +11100,9 @@ function _incamCancel(){
 function _incamApplyAF(stream){
   try{
     var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
-    if (!track || !track.getCapabilities || !track.applyConstraints) return;
-    var caps = track.getCapabilities();
-    if (caps.focusMode && caps.focusMode.indexOf('continuous') >= 0){
-      track.applyConstraints({ advanced:[{ focusMode:'continuous' }] }).catch(function(){});
-    }
+    if (!track || !track.applyConstraints) return;
+    // caps 목록이 불완전한 기기 있음(현재 continuous인데 목록엔 manual만) → 목록 믿지 말고 연속AF 시도
+    track.applyConstraints({ advanced:[{ focusMode:'continuous' }] }).catch(function(){});
   }catch(e){}
 }
 // 탭하여 초점 + 포커스 링 피드백
@@ -11120,20 +11118,20 @@ function _incamTapFocus(ev){
   }
   try{
     var track = _incamStream && _incamStream.getVideoTracks && _incamStream.getVideoTracks()[0];
-    if (!track || !track.getCapabilities || !track.applyConstraints) return;
-    var caps = track.getCapabilities();
-    if (!caps.focusMode) return;
-    var adv = {};
+    if (!track || !track.applyConstraints) return;
+    // 탭 지점(지원 기기만). caps 목록은 불완전할 수 있어 신뢰하지 않고 적용 자체를 시도.
+    var poi = null, caps = {};
+    try{ caps = track.getCapabilities ? track.getCapabilities() : {}; }catch(e){}
     if (caps.pointsOfInterest && v){
       var rect = v.getBoundingClientRect();
-      adv.pointsOfInterest = [{
-        x: Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)),
-        y: Math.min(1, Math.max(0, (ev.clientY - rect.top) / rect.height))
-      }];
+      poi = [{ x: Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)),
+               y: Math.min(1, Math.max(0, (ev.clientY - rect.top) / rect.height)) }];
     }
-    if (caps.focusMode.indexOf('single-shot') >= 0) adv.focusMode = 'single-shot';
-    else if (caps.focusMode.indexOf('continuous') >= 0) adv.focusMode = 'continuous';
-    track.applyConstraints({ advanced:[adv] }).catch(function(){});
+    // single-shot 으로 그 지점 재초점 → 실패하면 continuous 재적용(재초점 유도)
+    var c1 = { focusMode:'single-shot' }; if (poi) c1.pointsOfInterest = poi;
+    track.applyConstraints({ advanced:[c1] }).catch(function(){
+      track.applyConstraints({ advanced:[{ focusMode:'continuous' }] }).catch(function(){});
+    });
   }catch(e){}
 }
 var _incamRingT = null;
@@ -14493,7 +14491,7 @@ var I18N = {
     'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.gourmet_blog':'グルメブログ','settings.view_landing':'ランディングページを見る','settings.logout':'ログアウト',
     'settings.profile':'プロフィール','settings.notif.title':'通知','settings.account':'アカウント','settings.legal':'規約・お問い合わせ',
     // 공통 버튼
-    'btn.save':'保存','btn.cancel':'キャンセル','btn.close':'閉じる','btn.delete':'削除','btn.edit':'編集','btn.add':'追加','btn.share':'共有','btn.register':'登録','btn.confirm':'確認','btn.ok':'OK','btn.next':'次へ','btn.back':'戻る','btn.retry':'再試行','incam.hint':'レシートを枠内に収めて撮影',
+    'btn.save':'保存','btn.cancel':'キャンセル','btn.close':'閉じる','btn.delete':'削除','btn.edit':'編集','btn.add':'追加','btn.share':'共有','btn.register':'登録','btn.confirm':'確認','btn.ok':'OK','btn.next':'次へ','btn.back':'戻る','btn.retry':'再試行','incam.hint':'レシートを枠内に収め、画面をタップしてピント',
     // 스캔/영수증
     'scan.title':'レシートをスキャン','scan.camera':'カメラ','scan.gallery':'ギャラリー','scan.cancel':'キャンセル',
     'rcpt.title':'レシート','rcpt.store':'店舗','rcpt.date':'日付','rcpt.total':'合計','rcpt.items':'品目','rcpt.tax':'税','rcpt.memo':'メモ','rcpt.category':'カテゴリ',
@@ -14806,7 +14804,7 @@ var I18N = {
     'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일','settings.month_start':'월 시작일','settings.month_start_hint':'급여일 기준으로 한 달을 잡으려면 변경 (예: 25일)','settings.month_start_first':'1일 (기본)','settings.month_start_nth':'{d}일',
     'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.gourmet_blog':'그루메 블로그','settings.view_landing':'랜딩 페이지 보기','settings.logout':'로그아웃',
     'settings.profile':'프로필','settings.notif.title':'알림','settings.account':'계정','settings.legal':'약관 · 문의',
-    'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도','incam.hint':'영수증을 프레임 안에 맞춰 촬영하세요',
+    'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도','incam.hint':'영수증을 프레임에 맞추고, 화면을 탭해 초점',
     'scan.title':'영수증 스캔','scan.camera':'카메라','scan.gallery':'갤러리','scan.cancel':'취소',
     'rcpt.title':'영수증','rcpt.store':'가게','rcpt.date':'날짜','rcpt.total':'합계','rcpt.items':'품목','rcpt.tax':'세금','rcpt.memo':'메모','rcpt.category':'카테고리',
     'ad.watching':'광고 재생 중...','ad.skip':'광고 건너뛰기','ad.save':'광고 보고 저장','ad.publish':'치리츠모에 공개','ad.skipBtn':'건너뛰기',
@@ -15071,7 +15069,7 @@ var I18N = {
     'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday','settings.month_start':'Month start day','settings.month_start_hint':'Change to align the month with your payday (e.g. 25)','settings.month_start_first':'Day 1 (default)','settings.month_start_nth':'Day {d}',
     'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.gourmet_blog':'Gourmet Blog','settings.view_landing':'View landing page','settings.logout':'Logout',
     'settings.profile':'Profile','settings.notif.title':'Notifications','settings.account':'Account','settings.legal':'Legal & Contact',
-    'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry','incam.hint':'Fit the receipt inside the frame',
+    'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry','incam.hint':'Fit the receipt in frame, tap to focus',
     'scan.title':'Scan Receipt','scan.camera':'Camera','scan.gallery':'Gallery','scan.cancel':'Cancel',
     'rcpt.title':'Receipt','rcpt.store':'Store','rcpt.date':'Date','rcpt.total':'Total','rcpt.items':'Items','rcpt.tax':'Tax','rcpt.memo':'Memo','rcpt.category':'Category',
     'ad.watching':'Playing ad...','ad.skip':'Skip Ad','ad.save':'Watch ad & save','ad.publish':'Publish to Chiri','ad.skipBtn':'Skip',
@@ -15336,7 +15334,7 @@ var I18N = {
     'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一','settings.month_start':'每月起始日','settings.month_start_hint':'想按发薪日划分一个月就修改（例如25日）','settings.month_start_first':'1日（默认）','settings.month_start_nth':'{d}日',
     'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.gourmet_blog':'美食博客','settings.view_landing':'查看着陆页','settings.logout':'登出',
     'settings.profile':'个人信息','settings.notif.title':'通知','settings.account':'账户','settings.legal':'条款与联系',
-    'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试','incam.hint':'将收据放入框内拍摄',
+    'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试','incam.hint':'将收据放入框内，点击屏幕对焦',
     'scan.title':'扫描票据','scan.camera':'相机','scan.gallery':'相册','scan.cancel':'取消',
     'rcpt.title':'票据','rcpt.store':'店铺','rcpt.date':'日期','rcpt.total':'合计','rcpt.items':'商品','rcpt.tax':'税','rcpt.memo':'备注','rcpt.category':'类别',
     'ad.watching':'广告播放中...','ad.skip':'跳过广告','ad.save':'看广告保存','ad.publish':'公开到 Chiri','ad.skipBtn':'跳过',
@@ -31444,7 +31442,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 674;
+window.__APP_BUILD__ = 675;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
