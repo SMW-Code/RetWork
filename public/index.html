@@ -2864,7 +2864,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
       <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="_scanCameraSingleDone(this)">
     </label>
     <!-- 긴 영수증 여러 장 -->
-    <div class="scan-opt" onclick="closeOv('ov-scan-camera');setTimeout(startMultiScan,150);">
+    <div class="scan-opt" onclick="_scanMulti(event)">
       <div class="scan-ic" style="background:linear-gradient(135deg,#EEF1FE,rgba(99,102,241,.18));">
         <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2zM8 7h8M8 11h8M8 15h5"/></svg>
       </div>
@@ -2886,7 +2886,7 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
     <div id="multi-preview-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;"></div>
 
     <!-- 촬영 버튼들 -->
-    <label class="scan-opt" style="display:flex;margin-bottom:6px;" onclick="_multiScanOne(event)">
+    <label class="scan-opt" style="display:flex;margin-bottom:6px;">
       <span style="font-size:22px;">📷</span>
       <div><div style="font-size:14px;font-weight:700;color:var(--text-1);" data-i18n="multi.next.camera">次の1枚（カメラ）</div></div>
       <input type="file" id="multi-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleMultiImageFile(this)">
@@ -11055,24 +11055,26 @@ async function _scanSingle(ev){
     if (_mlkitUnsupported(e) && inp) inp.click();        // 저사양 등 → 기존 카메라 폴백
   }
 }
-// 분할 '다음 1장(카메라)': ML Kit 단일 스캔 1장을 multiPages에 추가.
-//   구글 네이티브 다중페이지 화면("다음"=완료 vs 서류"+"=추가)이 헷갈린다는 피드백 →
-//   '다음 장'은 우리 ov-multi 버튼("다음 1장" / "분석")으로 명확화, 각 장은 단일 스캔(+ 안 뜸).
-async function _multiScanOne(ev){
-  if (!_mlkitAvail()) return;              // 플러그인 없으면 label 기본(file input)
-  ev.preventDefault();
-  if (multiPages.length >= 5){ alert(t('photo.max5')); return; }
-  var inp = document.getElementById('multi-camera-input');
+// 분할(긴 영수증): ML Kit 스캐너 다중 페이지 → 1장이면 단일, 여러 장이면 분할 OCR 리뷰(ov-multi).
+async function _scanMulti(ev){
+  if (!_mlkitAvail()){ closeOv('ov-scan-camera'); setTimeout(startMultiScan, 150); return; } // 폴백: 기존 분할 흐름
+  if (ev && ev.preventDefault) ev.preventDefault();
+  closeOv('ov-scan-camera');
   try{
-    var files = await _mlkitScan(1);
-    if (files && files[0]){
+    var files = await _mlkitScan(5);
+    if (!files || !files.length) return;                 // 취소
+    if (files.length === 1){ handleImageFile(files[0]); return; }
+    multiPages = [];
+    for (var i = 0; i < files.length; i++){
       var pre = null;
-      try{ pre = await preprocessReceiptImage(files[0]); }catch(e){}
-      if (pre){ multiPages.push({ base64: pre.base64, previewSrc: pre.dataUrl, rawText: '' }); updateMultiUI(); }
+      try{ pre = await preprocessReceiptImage(files[i]); }catch(e){}
+      if (pre) multiPages.push({ base64: pre.base64, previewSrc: pre.dataUrl, rawText: '' });
     }
+    updateMultiUI();
+    openOv('ov-multi');
   }catch(e){
-    console.warn('[mlkit multi one]', e && e.message);
-    if (_mlkitUnsupported(e) && inp) inp.click();   // 저사양 등 → 기존 카메라 폴백
+    console.warn('[mlkit multi]', e && e.message);
+    if (_mlkitUnsupported(e)){ setTimeout(startMultiScan, 150); }  // 저사양 등 → 기존 분할 흐름
   }
 }
 
@@ -31360,7 +31362,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 678;
+window.__APP_BUILD__ = 679;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

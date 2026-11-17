@@ -1,6 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 678 시점)
+# RetWork (チリつも) — HANDOFF (build 679 시점)
 
-> # 📌 2026-11-17 작업 요약 (build 678) — 분할 촬영 '다음 장' 혼란 해소 (웹 전용, AAB 불필요)
+> # 📌 2026-11-17 작업 요약 (build 679) — b678 되돌림(구글 다중페이지 그대로 수용)
+> **사용자 결정: 구글 스캐너 UI(라벨·버튼색)는 변경 불가임을 확인 → b678(한 장씩 우회) 되돌리고 구글 네이티브 다중페이지 그대로 사용.** `_multiScanOne` 삭제→`_scanMulti`(pageLimit5 다중페이지) 복원, "긴 영수증" div `onclick=_scanMulti(event)`, ov-multi 카메라 라벨 onclick 제거(폴백용 file input). **버튼 색상도 변경 불가**(ML Kit UI=구글 소유, 플러그인에 테마/색상 옵션 없음, 앱 테마 안 따라감). 순수 웹, JS문법 0.
+
+> # 📌 2026-11-17 작업 요약 (build 678, 되돌림) — 분할 촬영 '다음 장' 혼란 해소 시도 (b679에서 원복)
 > **기기확인: b677 ML Kit 스캐너 단일 완벽(크롭·화질 OK).** 피드백: 긴 영수증(다중페이지) 시 **구글 네이티브 스캐너 화면의 "다음"(=완료)과 서류"+"(=다음 장 추가)가 헷갈림.** 구글 UI라 **라벨 변경 불가** → **우회:** 긴 영수증을 구글 다중페이지 대신 **우리 ov-multi에서 한 장씩**. "긴 영수증" div는 `startMultiScan()`(ov-multi 열기)로 복귀, ov-multi "다음 1장(카메라)" 라벨(2889) `onclick=_multiScanOne(event)`(=`_mlkitScan(1)` 1장 스캔→multiPages 푸시→updateMultiUI). `_scanMulti` 삭제. 각 장이 단일 스캔(pageLimit1)이라 "+" 안 뜸, '다음 장 추가'/'분석(완료)'가 우리 버튼이라 명확. 플러그인 없으면 file input 폴백. 단일(`_scanSingle`)은 그대로. **순수 웹(v8 플러그인 사용) → push만, 재빌드 X.** JS문법 0.
 
 > # 📌 2026-11-17 작업 요약 (build 677) — ⭐ Google ML Kit 문서 스캐너 도입 (AAB v8)
