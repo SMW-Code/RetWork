@@ -1,4 +1,10 @@
-# RetWork (チリつも) — HANDOFF (build 672 시점)
+# RetWork (チリつも) — HANDOFF (build 674 시점)
+
+> # 📌 2026-11-17 작업 요약 (build 674) — 인앱 카메라 방향 수정 + 진단 제거 (완료)
+> **기기 진단 결과(갤럭시 WebView): `res 2160×3840`(세로 고해상도 OK), `focusMode caps=['manual']`만 but `curFocus=continuous`(=연속AF 이미 켜짐·프리뷰 선명), `ImageCapture 지원`.** 결론: **초점은 정상(연속AF), 화질 정상. 진짜 문제는 방향** — b673의 `ImageCapture.takePhoto()`가 **센서 가로 스틸**을 줘서 세로 프리뷰와 어긋나 결과가 가로로 저장됨.
+> - **수정:** `_incamShoot`를 **ImageCapture 폐기 → 비디오 프레임 canvas 캡처**로 되돌림(`drawImage(v)`, videoWidth/Height=2160×3840 세로=프리뷰와 방향·해상도 일치, JPEG 0.95). → 결과도 세로 upright.
+> - **진단 제거:** `#incam-diag` div·`_incamDiag()`·호출 제거(b673 임시였음).
+> - **초점:** 이 기기는 focusMode 제어 불가(caps manual만)지만 하드웨어 연속AF가 기본 동작 → `_incamApplyAF`(continuous 있으면 적용, 이 기기선 no-op)·탭포커스 링은 무해하게 유지(다른 기기 대비). JS문법 0. **기기 확인: 세로로 저장되는지.**
 
 > # 📌 2026-11-17 작업 요약 (build 672) — 인앱 카메라 초점 제어
 > **기기확인: b671로 화질↑·▶️ 사라짐 OK.** 초점 요청 반영: ① **연속 자동초점** `_incamApplyAF(stream)` — 스트림 track `getCapabilities().focusMode`에 'continuous' 있으면 `applyConstraints({advanced:[{focusMode:'continuous'}]})`. `.then`에서 play 후 호출. ② **탭하여 초점** `_incamTapFocus(ev)` — video `onclick`, 포커스 링(`#incam-focus-ring`+`@keyframes incamFocusPulse`) 피드백 + `pointsOfInterest`(지원 시 탭좌표)·`focusMode:'single-shot'` 적용. 미지원 기기는 조용히 무시(try/catch). JS문법 0.
