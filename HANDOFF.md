@@ -1,6 +1,9 @@
-# RetWork (チリつも) — HANDOFF (build 677 시점)
+# RetWork (チリつも) — HANDOFF (build 678 시점)
 
-> # 📌 2026-11-17 작업 요약 (build 677) — ⭐ Google ML Kit 문서 스캐너 도입 (⚠️AAB v8 재빌드 필요)
+> # 📌 2026-11-17 작업 요약 (build 678) — 분할 촬영 '다음 장' 혼란 해소 (웹 전용, AAB 불필요)
+> **기기확인: b677 ML Kit 스캐너 단일 완벽(크롭·화질 OK).** 피드백: 긴 영수증(다중페이지) 시 **구글 네이티브 스캐너 화면의 "다음"(=완료)과 서류"+"(=다음 장 추가)가 헷갈림.** 구글 UI라 **라벨 변경 불가** → **우회:** 긴 영수증을 구글 다중페이지 대신 **우리 ov-multi에서 한 장씩**. "긴 영수증" div는 `startMultiScan()`(ov-multi 열기)로 복귀, ov-multi "다음 1장(카메라)" 라벨(2889) `onclick=_multiScanOne(event)`(=`_mlkitScan(1)` 1장 스캔→multiPages 푸시→updateMultiUI). `_scanMulti` 삭제. 각 장이 단일 스캔(pageLimit1)이라 "+" 안 뜸, '다음 장 추가'/'분석(완료)'가 우리 버튼이라 명확. 플러그인 없으면 file input 폴백. 단일(`_scanSingle`)은 그대로. **순수 웹(v8 플러그인 사용) → push만, 재빌드 X.** JS문법 0.
+
+> # 📌 2026-11-17 작업 요약 (build 677) — ⭐ Google ML Kit 문서 스캐너 도입 (AAB v8)
 > **결정(사용자): 전면 렌즈 문제 근본해결 + "진짜 스캐너 앱" 경험을 위해 네이티브 문서 스캐너 도입.** 플러그인 `@capacitor-mlkit/document-scanner@8.2.2`(Apache-2.0 **무료**, capawesome팀, Capacitor8 호환). **ML Kit 문서 스캐너 = Google Play Services 온디바이스 API = 완전 무료**(API키·클라우드 과금·건당요금·할당량 없음. OCR용 Vision 클라우드와 별개, OCR 비용 불변). 후면 고정+AF+**테두리 자동검출·원근보정·크롭**+얼룩/손가락 제거(scannerMode FULL).
 > - **설치:** `npm i @capacitor-mlkit/document-scanner` + `npx cap sync android`(완료). gradle 자동반영(capacitor.build.gradle/capacitor.settings.gradle). 등록명 `window.Capacitor.Plugins.DocumentScanner`. **manifest 추가 불필요**(ML Kit이 자체 처리). 저사양(RAM<1.7GB)은 UNSUPPORTED 리젝.
 > - **웹 코드(index.html, 배포됨·플러그인 없으면 무해 폴백):** `_mlkitAvail()`(네이티브+플러그인) · `_mlkitScan(pageLimit)`(scanDocument JPEG/FULL → scannedImages URI[] → `_uriToFile`(convertFileSrc+fetch→File)) · `_scanSingle(ev)`(단일, 1장→handleImageFile, 실패+unsupported→file input 폴백) · `_scanMulti(ev)`(pageLimit5, 1장→단일 / 여러장→multiPages 푸시→ov-multi 리뷰→analyzeMultiReceipt). 단일 라벨(2859) `onclick=_scanSingle(event)` / 긴영수증 div(2867) `onclick=_scanMulti(event)`. **플러그인 없는 v7에선 `_mlkitAvail()`=false → 기존 OS 카메라 앱(file input) 유지(안전).**
