@@ -1,4 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 671 시점)
+# RetWork (チリつも) — HANDOFF (build 672 시점)
+
+> # 📌 2026-11-17 작업 요약 (build 672) — 인앱 카메라 초점 제어
+> **기기확인: b671로 화질↑·▶️ 사라짐 OK.** 초점 요청 반영: ① **연속 자동초점** `_incamApplyAF(stream)` — 스트림 track `getCapabilities().focusMode`에 'continuous' 있으면 `applyConstraints({advanced:[{focusMode:'continuous'}]})`. `.then`에서 play 후 호출. ② **탭하여 초점** `_incamTapFocus(ev)` — video `onclick`, 포커스 링(`#incam-focus-ring`+`@keyframes incamFocusPulse`) 피드백 + `pointsOfInterest`(지원 시 탭좌표)·`focusMode:'single-shot'` 적용. 미지원 기기는 조용히 무시(try/catch). JS문법 0.
 
 > # 📌 2026-11-17 작업 요약 (build 671) — 인앱 카메라 기동 UX 2건 (기기확인 반영)
 > **b670 인앱 카메라 기기 테스트 결과: 후면 정상 작동 ✅.** 다만 기동 중 2문제 수정: ① **큰 ▶️ 플레이스홀더** = `<video>`에 프레임 들어오기 전 WebView 기본 포스터 → 비디오를 `visibility:hidden`으로 시작, `playing`/`loadeddata` 이벤트(+2s 안전장치)에 노출. ② **화질 낮음** = getUserMedia 해상도 미지정→기본 저해상도(640×480급) → `width/height ideal 3840×2160` 추가(최대로 협상). `_incamTeardown`에서 visibility 리셋. JS문법 0. (방향 회전은 프리뷰 정상이라 캡처도 정상으로 추정 — 저장본으로 최종확인.)

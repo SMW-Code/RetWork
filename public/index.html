@@ -2877,7 +2877,9 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
 
 <!-- ══ 인앱 후면 카메라(getUserMedia) — OS 카메라가 전면으로 열리는 문제 해결 ══ -->
 <div id="ov-incam" style="display:none;position:fixed;inset:0;z-index:100000;background:#000;flex-direction:column;">
-  <video id="incam-video" autoplay playsinline muted webkit-playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;"></video>
+  <style>@keyframes incamFocusPulse{0%{transform:scale(1.7);opacity:0}40%{opacity:1}100%{transform:scale(1);opacity:.9}}</style>
+  <video id="incam-video" autoplay playsinline muted webkit-playsinline onclick="_incamTapFocus(event)" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;"></video>
+  <div id="incam-focus-ring" style="display:none;position:fixed;width:72px;height:72px;margin:-36px 0 0 -36px;border:2px solid #fff;border-radius:50%;pointer-events:none;box-shadow:0 0 8px rgba(0,0,0,.65),inset 0 0 6px rgba(0,0,0,.35);z-index:1;"></div>
   <!-- 영수증 프레임 가이드 (주변 어둡게) -->
   <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;">
     <div style="width:74%;height:60%;border:2px solid rgba(255,255,255,.85);border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.30);"></div>
@@ -11061,6 +11063,7 @@ function _openInAppCamera(){
       setTimeout(reveal, 2000);        // 안전장치(이벤트 누락 대비)
       v.srcObject = stream;
       var p = v.play(); if (p && p.catch) p.catch(function(){});
+      _incamApplyAF(stream);           // 연속 자동초점(지원 시)
     }).catch(function(e){
       console.warn('[incam] getUserMedia 실패 → file input 폴백', e && e.message);
       _incamTeardown();
@@ -11092,6 +11095,47 @@ function _incamCancel(){
   _incamTeardown();
   if (r) r('CANCEL');
 }
+// 연속 자동초점(지원 기기만)
+function _incamApplyAF(stream){
+  try{
+    var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+    if (!track || !track.getCapabilities || !track.applyConstraints) return;
+    var caps = track.getCapabilities();
+    if (caps.focusMode && caps.focusMode.indexOf('continuous') >= 0){
+      track.applyConstraints({ advanced:[{ focusMode:'continuous' }] }).catch(function(){});
+    }
+  }catch(e){}
+}
+// 탭하여 초점 + 포커스 링 피드백
+function _incamTapFocus(ev){
+  var v = document.getElementById('incam-video');
+  var ring = document.getElementById('incam-focus-ring');
+  if (ring){ // 시각 피드백(지원 여부와 무관하게 표시)
+    ring.style.left = ev.clientX + 'px';
+    ring.style.top  = ev.clientY + 'px';
+    ring.style.display = 'block';
+    ring.style.animation = 'none'; void ring.offsetWidth; ring.style.animation = 'incamFocusPulse .6s ease-out';
+    clearTimeout(_incamRingT); _incamRingT = setTimeout(function(){ ring.style.display = 'none'; }, 700);
+  }
+  try{
+    var track = _incamStream && _incamStream.getVideoTracks && _incamStream.getVideoTracks()[0];
+    if (!track || !track.getCapabilities || !track.applyConstraints) return;
+    var caps = track.getCapabilities();
+    if (!caps.focusMode) return;
+    var adv = {};
+    if (caps.pointsOfInterest && v){
+      var rect = v.getBoundingClientRect();
+      adv.pointsOfInterest = [{
+        x: Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)),
+        y: Math.min(1, Math.max(0, (ev.clientY - rect.top) / rect.height))
+      }];
+    }
+    if (caps.focusMode.indexOf('single-shot') >= 0) adv.focusMode = 'single-shot';
+    else if (caps.focusMode.indexOf('continuous') >= 0) adv.focusMode = 'continuous';
+    track.applyConstraints({ advanced:[adv] }).catch(function(){});
+  }catch(e){}
+}
+var _incamRingT = null;
 
 // 단일 촬영 탭: 네이티브면 인앱 후면 카메라, 웹은 label 기본 동작(file input) 유지
 async function _scanSingleTap(ev){
@@ -31399,7 +31443,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 671;
+window.__APP_BUILD__ = 672;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
