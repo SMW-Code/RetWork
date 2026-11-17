@@ -1,4 +1,8 @@
-# RetWork (チリつも) — HANDOFF (build 679 시점)
+# RetWork (チリつも) — HANDOFF (build 681 시점)
+
+> # 📌 2026-11-17 작업 요약 (build 680~681) — 설정 전체화면 + 탭 전환 방향 슬라이드 (웹 전용)
+> - **b680 설정 전체화면:** `.settings-panel` width `290px`→`100%`(드로어→전체화면, box-shadow 제거). 오른쪽에서 전체화면 밀려 들어오는 전환 유지(`slideIn`).
+> - **b681 탭 방향 슬라이드:** CSS `@keyframes screenSlideL/R`(translateX ∓100%→0) + `.screen/.ct-screen.slide-l/.slide-r`(.28s). 헬퍼 `_applyScreenSlide(el,dir)`(remove→reflow`void offsetWidth`→add로 매번 재생). `switchTab`: 홈·내역=`l`/달력·맵=`r`. `ctSwitchTab`: map(치즈)·mycard=`l`/community·reward=`r`. `.phone`가 overflow:hidden이라 가로넘침 없음. fill-mode 없어 애니 후 transform 잔존X(지도·fixed 자식 영향 없음). 사용자 확인 OK. JS문법 0.
 
 > # 📌 2026-11-17 작업 요약 (build 679) — b678 되돌림(구글 다중페이지 그대로 수용)
 > **사용자 결정: 구글 스캐너 UI(라벨·버튼색)는 변경 불가임을 확인 → b678(한 장씩 우회) 되돌리고 구글 네이티브 다중페이지 그대로 사용.** `_multiScanOne` 삭제→`_scanMulti`(pageLimit5 다중페이지) 복원, "긴 영수증" div `onclick=_scanMulti(event)`, ov-multi 카메라 라벨 onclick 제거(폴백용 file input). **버튼 색상도 변경 불가**(ML Kit UI=구글 소유, 플러그인에 테마/색상 옵션 없음, 앱 테마 안 따라감). 순수 웹, JS문법 0.
