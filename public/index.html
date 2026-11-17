@@ -2888,6 +2888,8 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   <div style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 18px);left:0;right:0;text-align:center;padding:0 24px;pointer-events:none;">
     <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.45);padding:7px 14px;border-radius:20px;" data-i18n="incam.hint">レシートを枠内に収めて撮影</span>
   </div>
+  <!-- [임시 진단] 기기 카메라 지원정보 -->
+  <div id="incam-diag" style="display:none;position:absolute;top:calc(env(safe-area-inset-top,0px) + 56px);left:0;right:0;text-align:center;padding:0 14px;pointer-events:none;font-size:11px;line-height:1.6;color:#9feaff;text-shadow:0 1px 3px #000;white-space:pre-wrap;"></div>
   <!-- 하단 컨트롤 -->
   <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 28px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex;align-items:center;justify-content:space-between;">
     <button type="button" onclick="_incamCancel()" style="min-width:68px;text-align:left;background:none;border:none;color:#fff;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;padding:10px 4px;" data-i18n="btn.cancel">キャンセル</button>
@@ -11064,6 +11066,7 @@ function _openInAppCamera(){
       v.srcObject = stream;
       var p = v.play(); if (p && p.catch) p.catch(function(){});
       _incamApplyAF(stream);           // 연속 자동초점(지원 시)
+      _incamDiag(stream);              // [임시] 기기 카메라 지원정보 표시
     }).catch(function(e){
       console.warn('[incam] getUserMedia 실패 → file input 폴백', e && e.message);
       _incamTeardown();
@@ -11077,18 +11080,30 @@ function _incamTeardown(){
   var ov = document.getElementById('ov-incam'); if (ov) ov.style.display = 'none';
   var v = document.getElementById('incam-video'); if (v){ try{ v.pause(); }catch(e){} v.srcObject = null; v.style.visibility = ''; }
 }
-function _incamShoot(){
+async function _incamShoot(){
   var v = document.getElementById('incam-video');
   if (!v || !v.videoWidth){ return; }
-  var c = document.createElement('canvas');
-  c.width = v.videoWidth; c.height = v.videoHeight;
-  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
   var r = _incamResolve; _incamResolve = null;
+  var file = null;
+  // 1) ImageCapture 풀해상도 스틸(하드웨어 초점/노출 적용) 시도
+  try{
+    var track = _incamStream && _incamStream.getVideoTracks && _incamStream.getVideoTracks()[0];
+    if (track && window.ImageCapture){
+      var blob = await (new ImageCapture(track)).takePhoto();
+      if (blob && blob.size > 0) file = new File([blob], 'receipt.jpg', { type: blob.type || 'image/jpeg' });
+    }
+  }catch(e){ console.warn('[incam] takePhoto 실패→canvas', e && e.message); }
+  // 2) 폴백: 비디오 프레임 canvas 캡처
+  if (!file){
+    try{
+      var c = document.createElement('canvas');
+      c.width = v.videoWidth; c.height = v.videoHeight;
+      c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+      file = await new Promise(function(res){ c.toBlob(function(b){ res(b ? new File([b],'receipt.jpg',{type:'image/jpeg'}) : null); }, 'image/jpeg', 0.92); });
+    }catch(e2){}
+  }
   _incamTeardown();
-  c.toBlob(function(blob){
-    var file = blob ? new File([blob], 'receipt.jpg', { type:'image/jpeg' }) : null;
-    if (r) r(file);
-  }, 'image/jpeg', 0.92);
+  if (r) r(file || 'CANCEL');   // 캡처 실패 시엔 그냥 닫기(OS카메라 재오픈 방지)
 }
 function _incamCancel(){
   var r = _incamResolve; _incamResolve = null;
@@ -11105,6 +11120,22 @@ function _incamApplyAF(stream){
       track.applyConstraints({ advanced:[{ focusMode:'continuous' }] }).catch(function(){});
     }
   }catch(e){}
+}
+// [임시 진단] 기기 카메라 capabilities/settings 화면 표시
+function _incamDiag(stream){
+  var el = document.getElementById('incam-diag'); if (!el) return;
+  try{
+    var track = stream.getVideoTracks()[0];
+    var caps = (track.getCapabilities && track.getCapabilities()) || {};
+    var set  = (track.getSettings && track.getSettings()) || {};
+    var L = [];
+    L.push('res '+(set.width||'?')+'x'+(set.height||'?')+'  fps'+(Math.round(set.frameRate)||'?'));
+    L.push('focusMode: '+(caps.focusMode ? caps.focusMode.join('/') : '없음(미지원)'));
+    L.push('curFocus: '+(set.focusMode||'-')+'  focusDist: '+(caps.focusDistance?'Y':'N'));
+    L.push('POI: '+(caps.pointsOfInterest?'Y':'N')+'  torch: '+(caps.torch?'Y':'N')+'  zoom: '+(caps.zoom?'Y':'N'));
+    L.push('ImageCapture: '+(('ImageCapture' in window)?'지원':'미지원'));
+    el.textContent = L.join('\n'); el.style.display='block';
+  }catch(e){ el.textContent='diag err: '+(e&&e.message); el.style.display='block'; }
 }
 // 탭하여 초점 + 포커스 링 피드백
 function _incamTapFocus(ev){
@@ -31443,7 +31474,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 672;
+window.__APP_BUILD__ = 673;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
