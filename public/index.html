@@ -2875,6 +2875,25 @@ body.has-admob-banner .phone{ box-sizing:border-box; padding-bottom:var(--admob-
   </div>
 </div>
 
+<!-- ══ 인앱 후면 카메라(getUserMedia) — OS 카메라가 전면으로 열리는 문제 해결 ══ -->
+<div id="ov-incam" style="display:none;position:fixed;inset:0;z-index:100000;background:#000;flex-direction:column;">
+  <video id="incam-video" autoplay playsinline muted webkit-playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#000;"></video>
+  <!-- 영수증 프레임 가이드 (주변 어둡게) -->
+  <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;">
+    <div style="width:74%;height:60%;border:2px solid rgba(255,255,255,.85);border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.30);"></div>
+  </div>
+  <!-- 상단 힌트 -->
+  <div style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 18px);left:0;right:0;text-align:center;padding:0 24px;pointer-events:none;">
+    <span style="display:inline-block;font-size:13px;font-weight:700;color:#fff;background:rgba(0,0,0,.45);padding:7px 14px;border-radius:20px;" data-i18n="incam.hint">レシートを枠内に収めて撮影</span>
+  </div>
+  <!-- 하단 컨트롤 -->
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 28px calc(env(safe-area-inset-bottom,0px) + 24px);display:flex;align-items:center;justify-content:space-between;">
+    <button type="button" onclick="_incamCancel()" style="min-width:68px;text-align:left;background:none;border:none;color:#fff;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;padding:10px 4px;" data-i18n="btn.cancel">キャンセル</button>
+    <button type="button" onclick="_incamShoot()" aria-label="capture" style="width:72px;height:72px;border-radius:50%;background:#fff;border:4px solid rgba(255,255,255,.45);box-shadow:0 2px 12px rgba(0,0,0,.45);cursor:pointer;flex-shrink:0;padding:0;"></button>
+    <span style="min-width:68px;"></span>
+  </div>
+</div>
+
 <!-- 분할 촬영 전용 오버레이 -->
 <div class="overlay bottom-sheet-overlay" id="ov-multi" onclick="closeOvOutside(event,'ov-multi')">
   <div class="sheet" style="max-height:85vh;overflow-y:auto;">
@@ -11005,37 +11024,89 @@ function _scanCameraSingleDone(inputEl){
   if (typeof handleImageFile === 'function') handleImageFile(inputEl);
 }
 
-// ── 네이티브 후면 카메라(@capacitor/camera) — 시스템 카메라가 마지막 렌즈(전면)로 열리는 문제 해결 ──
-//   플러그인 없으면(웹/구버전 앱) 기존 file input(capture=environment) 흐름 유지.
-function _camPluginAvail(){
-  return _isNativeApp() && window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Camera;
+// ── 인앱 후면 카메라(getUserMedia) ──
+//   안드로이드는 OS 카메라 앱/‘capture’ 힌트/@capacitor/camera 로는 렌즈를 강제할 수 없다
+//   (마지막 쓴 렌즈=전면으로 열림. direction:REAR 은 iOS/웹 전용, 안드로이드 무시).
+//   → 앱 안에서 직접 미리보기를 띄워 facingMode:environment 로 후면을 강제한다.
+//   네이티브 앱에서만 사용(웹은 기존 file input 유지), 실패하면 file input 으로 폴백.
+var _incamStream = null, _incamResolve = null, _incamVisBound = false;
+
+function _getRearStream(){
+  var md = navigator.mediaDevices;
+  if (!md || !md.getUserMedia) return Promise.reject(new Error('no getUserMedia'));
+  return md.getUserMedia({ video:{ facingMode:{ exact:'environment' } }, audio:false })
+    .catch(function(){ // 후면 지정 실패(후면 없음 등) → 완화해서 재시도
+      return md.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false });
+    });
 }
-async function _nativeRearPhotoFile(){
-  var photo = await window.Capacitor.Plugins.Camera.getPhoto({
-    quality: 85, allowEditing: false,
-    resultType: 'dataUrl',   // CameraResultType.DataUrl
-    source: 'CAMERA',        // CameraSource.Camera
-    direction: 'REAR',       // CameraDirection.Rear — 후면 강제
-    correctOrientation: true, saveToGallery: false
+// 결과: File(촬영) | 'CANCEL'(사용자 취소) | null(카메라 사용불가 → 호출측에서 file input 폴백)
+function _openInAppCamera(){
+  return new Promise(function(resolve){
+    _incamResolve = resolve;
+    var ov = document.getElementById('ov-incam');
+    var v  = document.getElementById('incam-video');
+    if (!ov || !v){ resolve(null); return; }
+    ov.style.display = 'flex';
+    if (!_incamVisBound){ // 앱이 백그라운드로 가면 스트림 정리(카메라 LED 꺼짐)
+      document.addEventListener('visibilitychange', function(){ if (document.hidden && _incamStream) _incamCancel(); });
+      _incamVisBound = true;
+    }
+    _getRearStream().then(function(stream){
+      _incamStream = stream;
+      v.srcObject = stream;
+      var p = v.play(); if (p && p.catch) p.catch(function(){});
+    }).catch(function(e){
+      console.warn('[incam] getUserMedia 실패 → file input 폴백', e && e.message);
+      _incamTeardown();
+      var r = _incamResolve; _incamResolve = null;
+      if (r) r(null);
+    });
   });
-  if (!photo || !photo.dataUrl) return null;
-  var blob = await (await fetch(photo.dataUrl)).blob();
-  return new File([blob], 'receipt.jpg', { type: blob.type || 'image/jpeg' });
 }
-// 단일 촬영 탭: 네이티브면 후면 카메라, 아니면 label 기본 동작(file input) 유지
+function _incamTeardown(){
+  if (_incamStream){ try{ _incamStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} _incamStream = null; }
+  var ov = document.getElementById('ov-incam'); if (ov) ov.style.display = 'none';
+  var v = document.getElementById('incam-video'); if (v){ try{ v.pause(); }catch(e){} v.srcObject = null; }
+}
+function _incamShoot(){
+  var v = document.getElementById('incam-video');
+  if (!v || !v.videoWidth){ return; }
+  var c = document.createElement('canvas');
+  c.width = v.videoWidth; c.height = v.videoHeight;
+  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  var r = _incamResolve; _incamResolve = null;
+  _incamTeardown();
+  c.toBlob(function(blob){
+    var file = blob ? new File([blob], 'receipt.jpg', { type:'image/jpeg' }) : null;
+    if (r) r(file);
+  }, 'image/jpeg', 0.92);
+}
+function _incamCancel(){
+  var r = _incamResolve; _incamResolve = null;
+  _incamTeardown();
+  if (r) r('CANCEL');
+}
+
+// 단일 촬영 탭: 네이티브면 인앱 후면 카메라, 웹은 label 기본 동작(file input) 유지
 async function _scanSingleTap(ev){
-  if (!_camPluginAvail()) return;
+  if (!_isNativeApp()) return;            // 웹 → label 기본(file input)
   ev.preventDefault();
+  var inp = ev.currentTarget ? ev.currentTarget.querySelector('input[type=file]') : null;
   closeOv('ov-scan-camera');
-  try { var f = await _nativeRearPhotoFile(); if (f) handleImageFile(f); }
-  catch(e){ console.warn('[native cam single]', e && e.message); }  // 사용자 취소/실패 → 조용히
+  var res = await _openInAppCamera();
+  if (res === null){ if (inp) inp.click(); return; }   // 카메라 불가(구버전 권한없음 등) → 기존 방식 폴백
+  if (res === 'CANCEL') return;
+  if (typeof handleImageFile === 'function') handleImageFile(res);
 }
-// 분할 촬영 '카메라' 탭
+// 분할 촬영 '카메라' 탭 (ov-multi 는 열어둔 채 위에 카메라 오버레이)
 async function _multiCamTap(ev){
-  if (!_camPluginAvail()) return;
+  if (!_isNativeApp()) return;
   ev.preventDefault();
-  try { var f = await _nativeRearPhotoFile(); if (f) handleMultiImageFile(f); }
-  catch(e){ console.warn('[native cam multi]', e && e.message); }
+  var inp = document.getElementById('multi-camera-input');
+  var res = await _openInAppCamera();
+  if (res === null){ if (inp) inp.click(); return; }
+  if (res === 'CANCEL') return;
+  if (typeof handleMultiImageFile === 'function') handleMultiImageFile(res);
 }
 
 function startMultiScan() {
@@ -14371,7 +14442,7 @@ var I18N = {
     'settings.about':'サイトについて','settings.privacy':'プライバシーポリシー','settings.terms':'利用規約','settings.blog':'節約ブログ','settings.gourmet_blog':'グルメブログ','settings.view_landing':'ランディングページを見る','settings.logout':'ログアウト',
     'settings.profile':'プロフィール','settings.notif.title':'通知','settings.account':'アカウント','settings.legal':'規約・お問い合わせ',
     // 공통 버튼
-    'btn.save':'保存','btn.cancel':'キャンセル','btn.close':'閉じる','btn.delete':'削除','btn.edit':'編集','btn.add':'追加','btn.share':'共有','btn.register':'登録','btn.confirm':'確認','btn.ok':'OK','btn.next':'次へ','btn.back':'戻る','btn.retry':'再試行',
+    'btn.save':'保存','btn.cancel':'キャンセル','btn.close':'閉じる','btn.delete':'削除','btn.edit':'編集','btn.add':'追加','btn.share':'共有','btn.register':'登録','btn.confirm':'確認','btn.ok':'OK','btn.next':'次へ','btn.back':'戻る','btn.retry':'再試行','incam.hint':'レシートを枠内に収めて撮影',
     // 스캔/영수증
     'scan.title':'レシートをスキャン','scan.camera':'カメラ','scan.gallery':'ギャラリー','scan.cancel':'キャンセル',
     'rcpt.title':'レシート','rcpt.store':'店舗','rcpt.date':'日付','rcpt.total':'合計','rcpt.items':'品目','rcpt.tax':'税','rcpt.memo':'メモ','rcpt.category':'カテゴリ',
@@ -14684,7 +14755,7 @@ var I18N = {
     'settings.week_start':'주 시작 요일','week.sun':'일요일','week.mon':'월요일','settings.month_start':'월 시작일','settings.month_start_hint':'급여일 기준으로 한 달을 잡으려면 변경 (예: 25일)','settings.month_start_first':'1일 (기본)','settings.month_start_nth':'{d}일',
     'settings.about':'사이트 소개','settings.privacy':'개인정보 처리방침','settings.terms':'이용약관','settings.blog':'절약 블로그','settings.gourmet_blog':'그루메 블로그','settings.view_landing':'랜딩 페이지 보기','settings.logout':'로그아웃',
     'settings.profile':'프로필','settings.notif.title':'알림','settings.account':'계정','settings.legal':'약관 · 문의',
-    'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도',
+    'btn.save':'저장','btn.cancel':'취소','btn.close':'닫기','btn.delete':'삭제','btn.edit':'수정','btn.add':'추가','btn.share':'공유','btn.register':'등록','btn.confirm':'확인','btn.ok':'확인','btn.next':'다음','btn.back':'뒤로','btn.retry':'다시 시도','incam.hint':'영수증을 프레임 안에 맞춰 촬영하세요',
     'scan.title':'영수증 스캔','scan.camera':'카메라','scan.gallery':'갤러리','scan.cancel':'취소',
     'rcpt.title':'영수증','rcpt.store':'가게','rcpt.date':'날짜','rcpt.total':'합계','rcpt.items':'품목','rcpt.tax':'세금','rcpt.memo':'메모','rcpt.category':'카테고리',
     'ad.watching':'광고 재생 중...','ad.skip':'광고 건너뛰기','ad.save':'광고 보고 저장','ad.publish':'치리츠모에 공개','ad.skipBtn':'건너뛰기',
@@ -14949,7 +15020,7 @@ var I18N = {
     'settings.week_start':'Week starts on','week.sun':'Sunday','week.mon':'Monday','settings.month_start':'Month start day','settings.month_start_hint':'Change to align the month with your payday (e.g. 25)','settings.month_start_first':'Day 1 (default)','settings.month_start_nth':'Day {d}',
     'settings.about':'About','settings.privacy':'Privacy Policy','settings.terms':'Terms','settings.blog':'Savings Blog','settings.gourmet_blog':'Gourmet Blog','settings.view_landing':'View landing page','settings.logout':'Logout',
     'settings.profile':'Profile','settings.notif.title':'Notifications','settings.account':'Account','settings.legal':'Legal & Contact',
-    'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry',
+    'btn.save':'Save','btn.cancel':'Cancel','btn.close':'Close','btn.delete':'Delete','btn.edit':'Edit','btn.add':'Add','btn.share':'Share','btn.register':'Register','btn.confirm':'OK','btn.ok':'OK','btn.next':'Next','btn.back':'Back','btn.retry':'Retry','incam.hint':'Fit the receipt inside the frame',
     'scan.title':'Scan Receipt','scan.camera':'Camera','scan.gallery':'Gallery','scan.cancel':'Cancel',
     'rcpt.title':'Receipt','rcpt.store':'Store','rcpt.date':'Date','rcpt.total':'Total','rcpt.items':'Items','rcpt.tax':'Tax','rcpt.memo':'Memo','rcpt.category':'Category',
     'ad.watching':'Playing ad...','ad.skip':'Skip Ad','ad.save':'Watch ad & save','ad.publish':'Publish to Chiri','ad.skipBtn':'Skip',
@@ -15214,7 +15285,7 @@ var I18N = {
     'settings.week_start':'每周起始','week.sun':'星期日','week.mon':'星期一','settings.month_start':'每月起始日','settings.month_start_hint':'想按发薪日划分一个月就修改（例如25日）','settings.month_start_first':'1日（默认）','settings.month_start_nth':'{d}日',
     'settings.about':'关于','settings.privacy':'隐私政策','settings.terms':'使用条款','settings.blog':'省钱博客','settings.gourmet_blog':'美食博客','settings.view_landing':'查看着陆页','settings.logout':'登出',
     'settings.profile':'个人信息','settings.notif.title':'通知','settings.account':'账户','settings.legal':'条款与联系',
-    'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试',
+    'btn.save':'保存','btn.cancel':'取消','btn.close':'关闭','btn.delete':'删除','btn.edit':'编辑','btn.add':'添加','btn.share':'分享','btn.register':'注册','btn.confirm':'确认','btn.ok':'确定','btn.next':'下一步','btn.back':'返回','btn.retry':'重试','incam.hint':'将收据放入框内拍摄',
     'scan.title':'扫描票据','scan.camera':'相机','scan.gallery':'相册','scan.cancel':'取消',
     'rcpt.title':'票据','rcpt.store':'店铺','rcpt.date':'日期','rcpt.total':'合计','rcpt.items':'商品','rcpt.tax':'税','rcpt.memo':'备注','rcpt.category':'类别',
     'ad.watching':'广告播放中...','ad.skip':'跳过广告','ad.save':'看广告保存','ad.publish':'公开到 Chiri','ad.skipBtn':'跳过',
@@ -31322,7 +31393,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 669;
+window.__APP_BUILD__ = 670;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.

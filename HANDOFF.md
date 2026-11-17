@@ -1,6 +1,13 @@
-# RetWork (チリつも) — HANDOFF (build 669 시점)
+# RetWork (チリつも) — HANDOFF (build 670 시점)
 
-> # 📌 2026-11-16 작업 요약 (build 669) — 영수증 후면 카메라 강제(@capacitor/camera) ⚠️AAB 재빌드 필요
+> # 📌 2026-11-17 작업 요약 (build 670) — 🔴 후면 카메라 재수정: @capacitor/camera 폐기 → 인앱 getUserMedia 카메라
+> **다른 PC에서 이어가려면 이 블록부터.** **b669의 `@capacitor/camera direction:'REAR'`는 안드로이드에서 안 먹힘**(공식문서: direction은 iOS/웹 전용. 안드로이드는 시스템 카메라 액티비티를 실행 → 렌즈는 폰 카메라앱이 결정). 사용자 v7(1.0.6) 설치 후에도 전면 카메라 열림 확인 → **진단 확정.** 안드로이드에서 후면을 확실히 강제하려면 **앱이 직접 카메라 미리보기를 띄워야** 함. **해결: 순수 웹 `getUserMedia({video:{facingMode:{exact:'environment'}}})` 인앱 카메라.**
+> - **동작:** 촬영 탭(네이티브만) → 전체화면 오버레이 `#ov-incam`(video + 프레임가이드 + 셔터/취소 버튼) 뜸 → `facingMode:exact environment`로 **후면 강제**, 셔터→canvas 캡처→`File`→기존 파이프라인(`handleImageFile`/`handleMultiImageFile`). exact 실패 시 ideal 재시도, 그래도 실패(구버전 권한없음 등)면 **기존 file input 자동 폴백**(=b669 이전 동작, 무해). 웹은 `_isNativeApp()` false라 기존 file input 유지.
+> - **코드(index.html):** `_getRearStream`/`_openInAppCamera`(결과 File|'CANCEL'|null)/`_incamShoot`/`_incamCancel`/`_incamTeardown` 신규. `_scanSingleTap`/`_multiCamTap` 를 이 흐름으로 교체(옛 `_camPluginAvail`/`_nativeRearPhotoFile` 삭제). 오버레이 HTML은 `ov-scan-camera` 뒤. i18n `incam.hint` 4언어. visibilitychange→백그라운드시 스트림 정리.
+> - **활성 조건:** getUserMedia는 **CAMERA 권한 필요 → v7(1.0.6)에 이미 포함.** 즉 v7이 프로덕션에 올라가야 실제 작동. v6에선 권한없어 폴백(전면 문제 그대로). **@capacitor/camera 플러그인은 이제 안 씀**(package.json에 남아있어도 무해, 정리는 선택).
+> - **⚠️ 기기 확인 필수(웹프리뷰 불가):** v7 설치 후 ① 촬영 탭 시 **인앱 카메라+후면**으로 열리는지 ② 캡처 이미지 **방향(회전)** 정상인지(getUserMedia canvas는 EXIF 없음 — 90°돌아가면 회전보정 추가 필요) ③ 분할촬영도 동일. JS문법 0.
+
+> # 📌 2026-11-16 작업 요약 (build 669) — 영수증 후면 카메라 강제(@capacitor/camera) ⚠️AAB 재빌드 필요 (❌b670에서 폐기: 안드로이드 미작동)
 > **다른 PC에서 이어가려면 이 블록부터.** 문제: 영수증 촬영 시 시스템 카메라가 마지막 렌즈(전면)로 열림. `capture="environment"`는 힌트라 일부 기기(삼성 등)가 무시. 기존 manifest에 CAMERA 권한·getUserMedia 없음 → 파일input(시스템카메라 위임) 구조. **해결: `@capacitor/camera`로 앱 내 카메라 `direction:'REAR'` 강제.**
 > - **웹 코드(배포됨, 플러그인 전엔 무해·폴백):** `_camPluginAvail()`(네이티브+Camera플러그인 있을 때만) · `_nativeRearPhotoFile()`(getPhoto dataUrl→File) · 단일 라벨(2859) `onclick=_scanSingleTap(event)` / 다중 카메라 라벨(2889) `onclick=_multiCamTap(event)` — 네이티브면 `ev.preventDefault()` 후 후면카메라, 아니면 label 기본(file input). `handleImageFile`/`handleMultiImageFile`가 **File 직접도 받게** 리팩터(요소 or File). 플러그인 없으면 `_camPluginAvail()`=false→기존 흐름(안전).
 > - **네이티브(재빌드 필요):** package.json에 `@capacitor/camera ^8.0.0` 추가 · AndroidManifest에 `CAMERA` 권한 + `uses-feature camera required=false` 추가. **사용자 조치: `npm install @capacitor/camera` → `npx cap sync` → AAB 재빌드(versionCode++) → Play 업로드.** 이거 올라가기 전엔 웹 코드가 폴백이라 현행 유지(전면 문제 그대로).
