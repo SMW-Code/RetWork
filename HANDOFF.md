@@ -1,6 +1,12 @@
-# RetWork (チリつも) — HANDOFF (build 674 시점)
+# RetWork (チリつも) — HANDOFF (build 676 시점)
 
-> # 📌 2026-11-17 작업 요약 (build 674) — 인앱 카메라 방향 수정 + 진단 제거 (완료)
+> # 📌 2026-11-17 작업 요약 (build 676) — 🔙 인앱 카메라 전면 폐기 → 네이티브 카메라 앱 방식으로 원복
+> **결정(사용자): b670~675 인앱 getUserMedia 카메라를 통째로 걷어내고 "원점(OS 네이티브 카메라 앱 위임)"으로 복귀. 전면 렌즈 문제만 별도 해결.**
+> **왜 폐기:** 기존 방식(`<input type=file capture=environment>`)은 **문제가 딱 1개(마지막 쓴 렌즈=전면으로 열림)** 뿐이었는데, 인앱 카메라로 바꾸면서 초점·화질·방향 3개가 새로 생김. 특히 이 기기(갤럭시) WebView는 **getUserMedia 프리뷰 초점 제어를 아예 안 받아줌**(focusMode applyConstraints no-op, 탭 초점도 안 먹음) → 네이티브 카메라 앱이 공짜로 주던 AF/화질/방향을 못 따라감. "병보다 약이 센" 상황이라 원복.
+> - **제거:** `ov-incam` 오버레이 HTML · `_getRearStream/_openInAppCamera/_incamShoot/_incamCancel/_incamTeardown/_incamApplyAF/_incamTapFocus/_scanSingleTap/_multiCamTap` JS 전부 · `incam.hint` i18n 4언어 · 단일/다중 카메라 라벨의 `onclick="_scan/multiCamTap"` 제거. 이제 라벨 탭 → 내부 `<input capture=environment>` → **OS 카메라 앱**(초점·화질·방향 OS 처리). `_scanCameraSingleDone`·`handleImageFile/handleMultiImageFile`(File or input 둘 다 받는 리팩터)는 유지. JS문법 0.
+> - **⚠️ 남은 일 = 전면 렌즈 문제 별도 해결(미착수):** `capture="environment"`는 **힌트**라 직전에 전면 카메라를 쓴 기기는 전면으로 열림. 웹 표준 레버는 이것뿐(확실한 강제 불가). 후보: ①대부분 기기는 environment로 후면 열림 → 실제 빈도 확인 후 수용 ②네이티브 WebChromeClient `onShowFileChooser`에서 카메라 인텐트에 후면 extras 강제(AAB 재빌드, 삼성은 무시할 수도) — 리서치 필요. **@capacitor/camera 플러그인·manifest CAMERA 권한은 v7에 들어가 있으나 이제 안 씀(무해).**
+
+> # 📌 2026-11-17 작업 요약 (build 674) — 인앱 카메라 방향 수정 + 진단 제거 (폐기됨, b676에서 원복)
 > **기기 진단 결과(갤럭시 WebView): `res 2160×3840`(세로 고해상도 OK), `focusMode caps=['manual']`만 but `curFocus=continuous`(=연속AF 이미 켜짐·프리뷰 선명), `ImageCapture 지원`.** 결론: **초점은 정상(연속AF), 화질 정상. 진짜 문제는 방향** — b673의 `ImageCapture.takePhoto()`가 **센서 가로 스틸**을 줘서 세로 프리뷰와 어긋나 결과가 가로로 저장됨.
 > - **수정:** `_incamShoot`를 **ImageCapture 폐기 → 비디오 프레임 canvas 캡처**로 되돌림(`drawImage(v)`, videoWidth/Height=2160×3840 세로=프리뷰와 방향·해상도 일치, JPEG 0.95). → 결과도 세로 upright.
 > - **진단 제거:** `#incam-diag` div·`_incamDiag()`·호출 제거(b673 임시였음).
