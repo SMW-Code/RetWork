@@ -1,4 +1,7 @@
-# RetWork (チリつも) — HANDOFF (build 670 시점)
+# RetWork (チリつも) — HANDOFF (build 671 시점)
+
+> # 📌 2026-11-17 작업 요약 (build 671) — 인앱 카메라 기동 UX 2건 (기기확인 반영)
+> **b670 인앱 카메라 기기 테스트 결과: 후면 정상 작동 ✅.** 다만 기동 중 2문제 수정: ① **큰 ▶️ 플레이스홀더** = `<video>`에 프레임 들어오기 전 WebView 기본 포스터 → 비디오를 `visibility:hidden`으로 시작, `playing`/`loadeddata` 이벤트(+2s 안전장치)에 노출. ② **화질 낮음** = getUserMedia 해상도 미지정→기본 저해상도(640×480급) → `width/height ideal 3840×2160` 추가(최대로 협상). `_incamTeardown`에서 visibility 리셋. JS문법 0. (방향 회전은 프리뷰 정상이라 캡처도 정상으로 추정 — 저장본으로 최종확인.)
 
 > # 📌 2026-11-17 작업 요약 (build 670) — 🔴 후면 카메라 재수정: @capacitor/camera 폐기 → 인앱 getUserMedia 카메라
 > **다른 PC에서 이어가려면 이 블록부터.** **b669의 `@capacitor/camera direction:'REAR'`는 안드로이드에서 안 먹힘**(공식문서: direction은 iOS/웹 전용. 안드로이드는 시스템 카메라 액티비티를 실행 → 렌즈는 폰 카메라앱이 결정). 사용자 v7(1.0.6) 설치 후에도 전면 카메라 열림 확인 → **진단 확정.** 안드로이드에서 후면을 확실히 강제하려면 **앱이 직접 카메라 미리보기를 띄워야** 함. **해결: 순수 웹 `getUserMedia({video:{facingMode:{exact:'environment'}}})` 인앱 카메라.**

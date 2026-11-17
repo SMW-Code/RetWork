@@ -11034,9 +11034,10 @@ var _incamStream = null, _incamResolve = null, _incamVisBound = false;
 function _getRearStream(){
   var md = navigator.mediaDevices;
   if (!md || !md.getUserMedia) return Promise.reject(new Error('no getUserMedia'));
-  return md.getUserMedia({ video:{ facingMode:{ exact:'environment' } }, audio:false })
+  var hi = { width:{ ideal:3840 }, height:{ ideal:2160 } }; // 영수증 OCR용 고해상도(가능한 최대로 협상)
+  return md.getUserMedia({ video: Object.assign({ facingMode:{ exact:'environment' } }, hi), audio:false })
     .catch(function(){ // 후면 지정 실패(후면 없음 등) → 완화해서 재시도
-      return md.getUserMedia({ video:{ facingMode:{ ideal:'environment' } }, audio:false });
+      return md.getUserMedia({ video: Object.assign({ facingMode:{ ideal:'environment' } }, hi), audio:false });
     });
 }
 // 결과: File(촬영) | 'CANCEL'(사용자 취소) | null(카메라 사용불가 → 호출측에서 file input 폴백)
@@ -11047,12 +11048,17 @@ function _openInAppCamera(){
     var v  = document.getElementById('incam-video');
     if (!ov || !v){ resolve(null); return; }
     ov.style.display = 'flex';
+    v.style.visibility = 'hidden';   // 기동 중 WebView 기본 ▶️ 플레이스홀더 숨김 → 실제 재생 시 노출
     if (!_incamVisBound){ // 앱이 백그라운드로 가면 스트림 정리(카메라 LED 꺼짐)
       document.addEventListener('visibilitychange', function(){ if (document.hidden && _incamStream) _incamCancel(); });
       _incamVisBound = true;
     }
     _getRearStream().then(function(stream){
       _incamStream = stream;
+      var reveal = function(){ v.style.visibility = 'visible'; };
+      v.addEventListener('playing', reveal, { once:true });
+      v.addEventListener('loadeddata', reveal, { once:true });
+      setTimeout(reveal, 2000);        // 안전장치(이벤트 누락 대비)
       v.srcObject = stream;
       var p = v.play(); if (p && p.catch) p.catch(function(){});
     }).catch(function(e){
@@ -11066,7 +11072,7 @@ function _openInAppCamera(){
 function _incamTeardown(){
   if (_incamStream){ try{ _incamStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} _incamStream = null; }
   var ov = document.getElementById('ov-incam'); if (ov) ov.style.display = 'none';
-  var v = document.getElementById('incam-video'); if (v){ try{ v.pause(); }catch(e){} v.srcObject = null; }
+  var v = document.getElementById('incam-video'); if (v){ try{ v.pause(); }catch(e){} v.srcObject = null; v.style.visibility = ''; }
 }
 function _incamShoot(){
   var v = document.getElementById('incam-video');
@@ -31393,7 +31399,7 @@ function yrShare(){
 
 window.__APP_VERSION__ = 'v0.9.0';
 // 내부 빌드 번호 (어드민 대시보드·캐시·디버깅용, 매 push마다 증가)
-window.__APP_BUILD__ = 670;
+window.__APP_BUILD__ = 671;
 // Web Push VAPID Public Key — Vercel(ret-work 프로젝트) 환경변수 VAPID_PRIVATE_KEY 와 짝.
 //   ⚠️ 이 키는 공개되어도 안전 (서명용 public key). Private Key 는 Vercel 환경변수에만 보관.
 //   변경 시: npx web-push generate-vapid-keys 후 양쪽 모두 갱신해야 함.
